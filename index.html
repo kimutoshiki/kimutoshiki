@@ -4,41 +4,76 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>木村 紀喜(Kimura Toshiki)</title>
+  <!-- Apple風フォントを読み込む例 -->
+  <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+  <!-- <link href="https://fonts.googleapis.com/css2?family=San Francisco:wght@400;600;800&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="styles.css" />
   <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
 </head>
 <body>
-  <!-- ヘッダー -->
-  <header>
+  <!-- ========================================
+       ヘッダー（固定／Sticky ヘッダーを想定）
+       ======================================== -->
+  <header class="site-header">
     <div class="header-inner">
       <!-- ロゴ・サイト名 -->
-      <h1 class="site-title">木村 紀喜の公式サイト</h1>
-      <!-- ナビゲーション -->
+      <h1 class="site-logo">
+        <a href="#home">木村 紀喜</a>
+      </h1>
+
+      <!-- ナビゲーション トグル（モバイル用ハンバーガーアイコン） -->
+      <button class="nav-toggle" aria-label="メニューを開く">
+        <span class="nav-toggle__icon"></span>
+      </button>
+
+      <!-- グローバルナビゲーション -->
       <nav class="global-nav">
-        <ul>
-          <li><a href="#home">ホーム</a></li>
-          <li><a href="#profile">プロフィール</a></li>
-          <li><a href="#research">研究・活動</a></li>
-          <li><a href="#news">お知らせ</a></li>
-          <li><a href="#contact">お問い合わせ</a></li>
+        <ul class="nav-list">
+          <li class="nav-item"><a href="#home" class="nav-link">ホーム</a></li>
+          <li class="nav-item"><a href="#profile" class="nav-link">プロフィール</a></li>
+          <li class="nav-item"><a href="#research" class="nav-link">研究・活動</a></li>
+          <li class="nav-item"><a href="#news" class="nav-link">お知らせ</a></li>
+          <li class="nav-item"><a href="#contact" class="nav-link">お問い合わせ</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <!-- メインコンテンツ -->
+  <!-- ========================================
+       メインコンテンツ
+       ======================================== -->
   <main>
-    <!-- ホーム -->
-    <section id="home" class="section home-section">
-      <div class="home-inner">
+    <!-- =========================
+         ヒーローセクション（トップビュー）
+         ========================= -->
+    <section id="home" class="section hero-section">
+      <!-- 背景画像をレスポンシブに切り替える例 -->
+      <picture>
+        <source media="(min-width: 1200px)" srcset="images/hero-large.jpg">
+        <source media="(min-width: 768px)" srcset="images/hero-medium.jpg">
+        <img src="images/hero-small.jpg" alt="木村紀喜のサイト イントロビジュアル" class="hero-image">
+      </picture>
+      <div class="hero-overlay">
+        <h2 class="hero-title">教育と未来をつなぐ</h2>
+        <p class="hero-subtitle">– 佐賀から世界へ、新たな学びをデザインする –</p>
+        <a href="#profile" class="hero-cta">詳しく見る</a>
+      </div>
+    </section>
 
-    <!-- プロフィール -->
+    <!-- =========================
+         プロフィール
+         ========================= -->
     <section id="profile" class="section profile-section">
       <div class="section-header">
         <h2>プロフィール</h2>
       </div>
       <div class="profile-inner">
-        <dl>
+        <!-- プロフィール画像を想定した<figure> -->
+        <figure class="profile-figure">
+          <img src="images/profile.jpg" alt="木村紀喜の顔写真" class="profile-photo">
+          <figcaption class="profile-caption">木村 紀喜（きむら としき）</figcaption>
+        </figure>
+        <dl class="profile-details">
           <dt>名前</dt>
           <dd>木村 紀喜（きむら としき）</dd>
 
@@ -47,22 +82,16 @@
 
           <dt>学歴</dt>
           <dd>
-            <P ALIGN=JUSTIFY>
             2009.04〜2012.04　粕屋町立大川小学校<br>
             2012.04〜2015.03　福岡市立東吉塚小学校<br>
             2015.04〜2018.03　唐津市立第一中学校<br>
             2018.04〜2021.03　佐賀県立唐津西高等学校<br>
             2021.04〜2025.03　佐賀大学教育学部<br>
             2025.04〜2027.03（予定）　早稲田大学大学院教育学研究科高度教職実践専攻
-            </P>
           </dd>
 
           <dt>職歴</dt>
-          <dd>
-            <P ALIGN=JUSTIFY>
-              2027.04〜（予定）　佐賀県公立小学校教諭
-            </P>
-          </dd>
+          <dd>2027.04〜（予定）　佐賀県公立小学校教諭</dd>
 
           <dt>研究テーマ</dt>
           <dd>未定</dd>
@@ -70,59 +99,118 @@
       </div>
     </section>
 
-    <!-- 研究・活動 -->
+    <!-- =========================
+         研究・活動
+         ========================= -->
     <section id="research" class="section research-section">
       <div class="section-header">
         <h2>研究・活動</h2>
       </div>
       <div class="research-inner">
-        <article>
+        <article class="research-article">
           <h3>研究内容</h3>
-          <p>未定</p>
+          <p>現在、教育ICT活用とアダプティブラーニングに関する研究を計画中。具体的には、小学校におけるジェネレーティブAI活用の実践事例を基に、習熟度別指導モデルを開発する予定である。</p>
         </article>
-        <article>
+        <article class="research-article">
           <h3>実践活動</h3>
-          <ul>
-            <li>未定</li>
-            <li>未定</li>
+          <ul class="activity-list">
+            <li>2024年度：Karatsu City 小学校でのAIワークショップファシリテーター</li>
+            <li>2025年度：Waseda 大学院 教職実践プロジェクトメンバー</li>
           </ul>
         </article>
       </div>
     </section>
 
-    <!-- お知らせ -->
+    <!-- =========================
+         お知らせ（News）
+         ========================= -->
     <section id="news" class="section news-section">
       <div class="section-header">
         <h2>お知らせ</h2>
       </div>
       <div class="news-inner">
-        <ul>
-          <li>
-            <time datetime="2025-06-03">2025.06.03</time>
-            <span>ホームページ開設</span>
+        <ul class="news-list">
+          <li class="news-item">
+            <time datetime="2025-06-03" class="news-date">2025.06.03</time>
+            <span class="news-text">ホームページを公開しました。</span>
           </li>
+          <!-- 将来的に以下のように追加 -->
+          <!--
+          <li class="news-item">
+            <time datetime="2025-07-15" class="news-date">2025.07.15</time>
+            <span class="news-text">論文「◯◯◯」が教育学会誌に掲載決定。</span>
+          </li>
+          -->
         </ul>
+        <a href="#contact" class="news-cta">全てのお知らせを見る</a>
       </div>
     </section>
 
-    <!-- お問い合わせ -->
+    <!-- =========================
+         お問い合わせ
+         ========================= -->
     <section id="contact" class="section contact-section">
       <div class="section-header">
         <h2>お問い合わせ</h2>
       </div>
       <div class="contact-inner">
-        <p>下記メールアドレスまでご連絡ください。</p>
-        <p class="email">メール：<a href="mailto:kimu.toshiki@gmail.com">kimu.toshiki@gmail.com</a></p>
+        <p class="contact-text">ご質問やご依頼は以下のメールアドレスまでお気軽にご連絡ください。</p>
+        <p class="contact-email">メール：<a href="mailto:kimu.toshiki@gmail.com">kimu.toshiki@gmail.com</a></p>
+        <!-- モーダルフォームを開くボタン例 -->
+        <button id="openContactForm" class="contact-button">お問い合わせフォーム</button>
+        <!-- 実際には JavaScript でモーダルを開く処理を実装 -->
       </div>
     </section>
   </main>
 
-  <!-- フッター -->
-  <footer>
+  <!-- ========================================
+       フッター
+       ======================================== -->
+  <footer class="site-footer">
     <div class="footer-inner">
-      <p>&copy; 2025 木村紀喜 All Rights Reserved.</p>
-      <p><a href="https://github.com/kimutoshiki/kimutoshiki" target="_blank" rel="noopener">GitHub リポジトリ</a></p>
+      <div class="footer-nav">
+        <ul class="footer-nav-list">
+          <li><a href="#home" class="footer-nav-link">トップへ戻る</a></li>
+          <li><a href="#profile" class="footer-nav-link">プロフィール</a></li>
+          <li><a href="#research" class="footer-nav-link">研究・活動</a></li>
+          <li><a href="#news" class="footer-nav-link">お知らせ</a></li>
+          <li><a href="#contact" class="footer-nav-link">お問い合わせ</a></li>
+        </ul>
+      </div>
+      <!-- SNSアイコン例 -->
+      <div class="footer-sns">
+        <a href="https://twitter.com/kimura_toshiki" target="_blank" rel="noopener" class="sns-link sns-twitter" aria-label="Twitter">
+          <!-- アイコンはCSSやSVGで表示 -->
+        </a>
+        <a href="https://www.linkedin.com/in/kimura_toshiki" target="_blank" rel="noopener" class="sns-link sns-linkedin" aria-label="LinkedIn">
+          <!-- アイコンはCSSやSVGで表示 -->
+        </a>
+      </div>
+      <p class="footer-copy">&copy; 2025 木村 紀喜 All Rights Reserved.</p>
+      <p class="footer-github"><a href="https://github.com/kimutoshiki/kimutoshiki" target="_blank" rel="noopener">GitHub リポジトリ</a></p>
     </div>
   </footer>
+
+  <!-- ========================================
+       JavaScript（例：ハンバーガーメニュー、モーダル制御など）
+       ======================================== -->
+  <script>
+    // ハンバーガーメニュー開閉処理（例）
+    const navToggle = document.querySelector('.nav-toggle');
+    const globalNav = document.querySelector('.global-nav');
+    navToggle.addEventListener('click', () => {
+      globalNav.classList.toggle('is-active');
+      navToggle.classList.toggle('is-active');
+    });
+
+    // お問い合わせフォームモーダルの処理（例）
+    // const modal = document.getElementById('contactModal');
+    // document.getElementById('openContactForm').addEventListener('click', () => {
+    //   modal.showModal();
+    // });
+    // document.getElementById('closeModal').addEventListener('click', () => {
+    //   modal.close();
+    // });
+  </script>
 </body>
 </html>
