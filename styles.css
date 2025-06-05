@@ -12,7 +12,7 @@
 body {
   font-family: "ヒラギノ角ゴ ProN","Hiragino Kaku Gothic ProN",Meiryo,Arial, sans-serif;
   line-height: 1.6;
-  color: #ffffff;
+  color: #000000;
   background-color: #ffffff;
 }
 
@@ -79,7 +79,7 @@ header {
   border-left: 6px solid #0051a2;
   padding-left: 10px;
   margin-bottom: 16px;
-  color: #0051a2;
+  color: #b94047;
 }
 
 /* ---------------------------------------
@@ -91,7 +91,7 @@ header {
 
 .home-section h2 {
   font-size: 2em;
-  color: #0051a2;
+  color: #b94047;
   margin-bottom: 12px;
 }
 
@@ -112,7 +112,7 @@ header {
 
 .profile-inner dt {
   font-weight: bold;
-  color: #0051a2;
+  color: #b94047;
 }
 
 .profile-inner dd {
@@ -128,7 +128,7 @@ header {
 
 .research-inner h3 {
   font-size: 1.2em;
-  color: #0051a2;
+  color: #b94047;
   margin-bottom: 8px;
 }
 
@@ -158,7 +158,7 @@ header {
 .news-inner time {
   display: inline-block;
   width: 100px;
-  color: #555;
+  color: #b94047;
   font-size: 0.9em;
 }
 
