@@ -7,11 +7,22 @@
     <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
-    <!-- style.cssに以下のような変数を追加することを推奨します
-    :root {
-        --custom-bg-alt: #b94047; /* 臙脂色 */
+    <style>
+    /* 背景画像とアニメーションを適用するクラス */
+    .hero-section-custom-bg {
+        background-image: url('IMG_1785.jpg'); /* 背景画像を指定 */
+        background-size: cover;
+        background-repeat: no-repeat;
+        /* アニメーションを実行（40秒かけて、無限に、行ったり来たり） */
+        animation: scrollBackground 40s linear infinite alternate;
     }
-    -->
+
+    /* 背景をスクロールさせるアニメーションの設計図 */
+    @keyframes scrollBackground {
+        from { background-position: center top; }
+        to { background-position: center bottom; }
+    }
+    </style>
 </head>
 
 <body class="bg-[var(--custom-bg)] text-[var(--custom-text)] antialiased">
