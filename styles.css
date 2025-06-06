@@ -5,12 +5,13 @@ body {
     font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    line-height: 1.6; /* 既存CSSから反映 */
+    line-height: 1.6;
 }
 
 /* カスタム配色 */
 :root {
     --custom-bg: #ffffff; /* 背景: 白 */
+    --custom-bg-alt: #f5f5f7; /* 代替背景色 (例: 薄いグレー) */
     --custom-text: #000000; /* 文字: 黒 */
     --custom-text-secondary: #333333; /* サブテキスト: 濃い灰色 */
     --custom-link: #0066cc; /* リンク色: 青 */
@@ -18,15 +19,15 @@ body {
     --hero-bg: #111111; /* ヒーローセクション背景: 黒系 */
     --hero-text: #ffffff; /* ヒーローセクション文字: 白 */
     
-    --header-bg-color: #9b1e2f; /* ヘッダー: 臙脂色 (純色 #b94047 に近い濃い赤) */
-    --header-bg: rgba(155, 30, 47, 0.85); /* ヘッダー: 臙脂色 (半透明) - 既存CSSの #b94047 に近い値 */
+    --header-bg-color: #9b1e2f; /* ヘッダー: 臙脂色 */
+    --header-bg: rgba(155, 30, 47, 0.85); /* ヘッダー: 臙脂色 (半透明) */
     --mobile-nav-bg: rgba(155, 30, 47, 0.95); /* モバイルナビゲーション: 濃い臙脂色 */
 
     --footer-bg: #004B8C; /* フッター: 紺碧色 */
-    --footer-text: #ffffff; /* フッター文字: 白 (ユーザー指定) */
+    --footer-text: #ffffff; /* フッター文字: 白 */
     
     --border-color: #d2d2d7; /* 境界線色 */
-    --section-border-color: #dddddd; /* 既存CSSのセクション境界線色 */
+    --section-border-color: #dddddd; /* セクション境界線色 */
 }
 
 /* スムーズスクロール */
@@ -48,7 +49,7 @@ html {
 .hero-section-custom-bg h2 {
      text-shadow: 0px 1px 3px rgba(0,0,0,0.3);
 }
- .hero-section-custom-bg p {
+.hero-section-custom-bg p {
      text-shadow: 0px 1px 2px rgba(0,0,0,0.2);
 }
 
@@ -59,16 +60,34 @@ html {
 }
 
 /* セクションタイトルのスタイル */
-.section-header h2 { /* 既存CSSのスタイルを適用 */
-    font-size: 1.6em; /* 既存CSSから。Tailwindのクラスも併用するため注意 */
-    border-left: 6px solid var(--header-bg-color); /* ヘッダーの臙脂色 */
-    padding-left: 10px; /* Tailwind: pl-2.5 */
-    margin-bottom: 16px; /* 既存CSSから。Tailwind: mb-4 */
-    color: var(--header-bg-color) !important; /* ヘッダーの臙脂色, !importantでTailwindのクラスより優先 */
-    font-weight: bold; /* 既存の太さを維持しつつ、文字の太さを強調 */
+/* HTML側でTailwindクラスを使って直接スタイル指定しているため、ここでは不要な場合もありますが、
+   既存のCSSとの互換性や特定のカスケーディングのために残しています。
+   HTMLの<header class="section-header ...">内の<h2>に適用されます。 */
+.section-header h2 {
+    font-size: 1.6em; /* Tailwindのレスポンシブなフォントサイズと競合する可能性あり */
+    border-left: 6px solid var(--header-bg-color);
+    padding-left: 10px;
+    margin-bottom: 16px; /* Tailwindのmb-16やmb-20とどちらを優先するか確認 */
+    color: var(--header-bg-color) !important; /* !importantで優先度を上げていますが、極力避けるのが望ましい */
+    font-weight: bold;
 }
+/* 注意: HTML (`kimura_portfolio_html_dynamic_v2`) のプロフィール、研究・活動などのセクションタイトルでは、
+   <h2 class="text-4xl md:text-5xl font-bold"> のようにTailwindクラスが直接指定されています。
+   そのため、上記の .section-header h2 の font-size や color は、
+   HTML側でより詳細な指定（例：!text-[var(--header-bg-color)]）がない限り、
+   Tailwindのユーティリティクラスによって上書きされる可能性が高いです。
+   もしこのCSSを確実に効かせたい場合は、HTML側の該当h2タグからTailwindのフォントサイズや色のクラスを削除し、
+   <header class="section-header">で囲む構造にする必要があります。
+   現状のHTMLでは、この.section-header h2のスタイルは限定的にしか効かない可能性があります。
+*/
+
 
 /* お知らせアイテムの境界線 */
+/* HTML (`kimura_portfolio_html_dynamic_v2`)では、
+   <li class="news-item ... border-b border-gray-200 last:border-b-0">
+   のようにTailwindクラスで境界線が指定されています。
+   この.news-item-customは、もしHTML側でそのクラスが使われていれば適用されます。
+*/
 .news-item-custom:not(:last-child) {
     border-bottom: 1px solid var(--border-color);
 }
@@ -94,17 +113,17 @@ a {
     background-color: var(--mobile-nav-bg); 
 }
 
-/* 既存CSSからセクション共通の罫線 */
+/* セクション共通の罫線 (HTML側でstyled-section-borderクラスを使用している場合に適用) */
 .styled-section-border {
     border-bottom: 1px solid var(--section-border-color);
-    padding-bottom: 40px; /* 既存CSSから */
-    margin-bottom: 0; /* py-16/24で上下のmargin/paddingを制御するため、重複を避ける */
+    /* padding-bottom: 40px; HTML側の py-20 md:py-32 と重複するためコメントアウト推奨 */
+    /* margin-bottom: 0;  HTML側の padding で制御しているため不要 */
 }
 /* 最後のセクションは罫線なし */
 main > section:last-of-type.styled-section-border {
     border-bottom: none;
-    padding-bottom: 0; /* 通常のpy-16/24に任せる */
+    /* padding-bottom: 0; HTML側の padding で制御 */
 }
-main > section:last-of-type { /* 最後のセクションのpadding-bottomを調整 */
-     padding-bottom: 40px; /* 必要に応じて調整 */
-}
+/* main > section:last-of-type {
+     padding-bottom: 40px; HTML側の padding で制御 
+}*/
