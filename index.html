@@ -23,6 +23,49 @@
         to { background-position: center bottom; }
     }
     </style>
+    <style>
+        /* ページ全体の基本スタイル */
+        body {
+            background-color: #FFFFFF; /* 背景を白に設定 */
+            color: #9B1E3C;           /* 基本の文字色を臙脂色に設定 */
+            font-family: sans-serif;   /* 文字化けしにくい基本フォントを指定 */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ヘッダーのスタイル */
+        header {
+            background-color: #9B1E3C; /* ヘッダーの背景を臙脂色（えんじいろ）に設定 */
+            color: #FFFFFF;           /* ヘッダー内の文字色を白に（背景が濃色のため）*/
+            padding: 1.5rem 2rem;       /* ヘッダー内の余白 */
+            text-align: center;
+        }
+
+        /* フッターのスタイル */
+        footer {
+            background-color: #007B9A; /* フッターの背景を紺碧色（こんぺきいろ）に設定 */
+            color: #FFFFFF;           /* フッター内の文字色を白に（背景が濃色のため）*/
+            padding: 1.5rem 2rem;       /* フッター内の余白 */
+            text-align: center;
+            margin-top: 4rem;          /* コンテンツとの間に余白を設ける */
+        }
+        
+        /* リンクの文字色も基本色に合わせる */
+        a {
+            color: #9B1E3C;
+        }
+
+        /* ヘッダー内、フッター内のリンクは白にする */
+        header a,
+        footer a {
+            color: #FFFFFF;
+            text-decoration: underline; /* リンクの下線 */
+        }
+        header a:hover,
+        footer a:hover {
+            text-decoration: none; /* ホバー時に下線を消す */
+        }
+    </style>
 </head>
 
 <body class="bg-[var(--custom-bg)] text-[var(--custom-text)] antialiased">
