@@ -1,189 +1,355 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>木村 紀喜(Kimura Toshiki)</title>
-  <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
-  <!-- <link href="https://fonts.googleapis.com/css2?family=San Francisco:wght@400;600;800&display=swap" rel="stylesheet"> -->
-  <link rel="stylesheet" href="styles.css" />
-  <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>木村 紀喜 (Toshiki Kimura) - Official Site</title>
+    <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tailwind CSSの基本設定とカスタムフォント */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* カスタム配色 */
+        :root {
+            --custom-bg: #ffffff; /* 背景: 白 */
+            --custom-text: #000000; /* 文字: 黒 */
+            --custom-text-secondary: #333333; /* サブテキスト: 濃い灰色 */
+            --custom-link: #0066cc; /* リンク色: 青 (変更なし) */
+            
+            --hero-bg: #111111; /* ヒーローセクション背景: 黒系 (変更なし) */
+            --hero-text: #ffffff; /* ヒーローセクション文字: 白 (変更なし) */
+            
+            --header-bg: rgba(155, 30, 47, 0.85); /* ヘッダー: 臙脂色 (半透明) */
+            --mobile-nav-bg: rgba(155, 30, 47, 0.95); /* モバイルナビゲーション: 濃い臙脂色 */
+
+            --footer-bg: #004B8C; /* フッター: 紺碧色 */
+            --footer-text: #e0e0e0; /* フッター文字: 明るい灰色 */
+            
+            --border-color: #d2d2d7; /* 境界線色 (変更なし) */
+        }
+
+        /* スムーズスクロール */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* ヘッダーのスタイル */
+        .custom-header {
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+        }
+
+        /* ヒーローセクションの背景（現状維持） */
+        .hero-section-custom-bg {
+            background-color: var(--hero-bg);
+            /* より良い画像があれば差し替えてください 
+            background-image: url('https://placehold.co/1920x1080/111111/333333?text=Hero+Background');
+            background-size: cover;
+            background-position: center;
+            */
+        }
+
+        .hero-section-custom-bg h2 {
+             text-shadow: 0px 1px 3px rgba(0,0,0,0.3);
+        }
+         .hero-section-custom-bg p {
+             text-shadow: 0px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* プロフィール写真のスタイル */
+        .profile-photo-custom {
+            border: 4px solid white;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* セクションタイトルのスタイル */
+        .section-title-custom {
+            letter-spacing: -0.02em; /* 文字間を少し詰める */
+        }
+
+        /* お知らせアイテムの境界線 */
+        .news-item-custom:not(:last-child) {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* リンクのスタイル */
+        a {
+            transition: opacity 0.2s ease-in-out;
+        }
+        /* Tailwindで指定するため、汎用的なa:hoverは削除。個別指定を優先 */
+        /*
+        a:hover {
+            opacity: 0.75;
+        }
+        */
+
+        /* ハンバーガーメニューアイコンのスタイル */
+        .nav-toggle__icon span,
+        .nav-toggle__icon span::before,
+        .nav-toggle__icon span::after {
+            background-color: var(--hero-text); /* アイコンの色を白に（ヘッダー背景が濃色のため） */
+        }
+        
+        .nav-toggle {
+            z-index: 1001; /* ナビゲーションメニューより手前に */
+        }
+        
+        /* モバイルナビゲーションの背景 */
+        .mobile-nav-custom {
+            background-color: var(--mobile-nav-bg); 
+        }
+
+    </style>
 </head>
-<body>
-  <!-- ========================================
-       ヘッダー
-       ======================================== -->
-  <header class="site-header">
-    <div class="header-inner">
-      <!-- ロゴ・サイト名 -->
-      <h1 class="site-logo">
-        <a>木村 紀喜</a>
-      </h1>
+<body class="bg-[var(--custom-bg)] text-[var(--custom-text)]">
 
-      <!-- ナビゲーション トグル　-->
-      <button class="nav-toggle" aria-label="メニューを開く">
-        <span class="nav-toggle__icon"></span>
-      </button>
+    <!-- ========================================
+         ヘッダー
+         ======================================== -->
+    <header class="site-header sticky top-0 z-50 w-full custom-header bg-[var(--header-bg)]">
+        <div class="header-inner container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
+            <!-- ロゴ・サイト名 -->
+            <h1 class="site-logo text-xl font-semibold text-gray-100">
+                <a href="#home">木村 紀喜</a>
+            </h1>
 
-      <!-- グローバルナビゲーション -->
-      <nav class="global-nav">
-        <ul class="nav-list">
-          <li class="nav-item"><a href="#home" class="nav-link">ホーム</a></li>
-          <li class="nav-item"><a href="#profile" class="nav-link">プロフィール</a></li>
-          <li class="nav-item"><a href="#research" class="nav-link">研究・活動</a></li>
-          <li class="nav-item"><a href="#news" class="nav-link">お知らせ</a></li>
-          <li class="nav-item"><a href="#contact" class="nav-link">お問い合わせ</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+            <!-- ナビゲーション トグル (モバイル用) -->
+            <button id="navToggle" class="nav-toggle md:hidden" aria-label="メニューを開く">
+                <span class="nav-toggle__icon block relative w-6 h-5">
+                    <span class="absolute block w-full h-0.5 top-0 transform transition-transform duration-300"></span>
+                    <span class="absolute block w-full h-0.5 top-1/2 -translate-y-1/2 transform transition-transform duration-300"></span>
+                    <span class="absolute block w-full h-0.5 bottom-0 transform transition-transform duration-300"></span>
+                </span>
+            </button>
+            
+            <!-- グローバルナビゲーション (デスクトップ用) -->
+            <nav class="global-nav hidden md:block">
+                <ul class="nav-list flex space-x-3 lg:space-x-5">
+                    <li><a href="#home" class="nav-link text-sm text-gray-200 hover:text-white px-2 py-1">ホーム</a></li>
+                    <li><a href="#profile" class="nav-link text-sm text-gray-200 hover:text-white px-2 py-1">プロフィール</a></li>
+                    <li><a href="#research" class="nav-link text-sm text-gray-200 hover:text-white px-2 py-1">研究・活動</a></li>
+                    <li><a href="#news" class="nav-link text-sm text-gray-200 hover:text-white px-2 py-1">お知らせ</a></li>
+                    <li><a href="#contact" class="nav-link text-sm text-gray-200 hover:text-white px-2 py-1">お問い合わせ</a></li>
+                </ul>
+            </nav>
+        </div>
+        <!-- モバイルナビゲーション -->
+        <nav id="mobileNav" class="global-nav-mobile mobile-nav-custom md:hidden absolute top-full left-0 w-full transform -translate-y-full opacity-0 transition-all duration-300 ease-in-out invisible">
+            <ul class="nav-list-mobile flex flex-col items-center py-4 space-y-3">
+                <li><a href="#home" class="nav-link-mobile text-lg text-gray-100 hover:text-white py-2">ホーム</a></li>
+                <li><a href="#profile" class="nav-link-mobile text-lg text-gray-100 hover:text-white py-2">プロフィール</a></li>
+                <li><a href="#research" class="nav-link-mobile text-lg text-gray-100 hover:text-white py-2">研究・活動</a></li>
+                <li><a href="#news" class="nav-link-mobile text-lg text-gray-100 hover:text-white py-2">お知らせ</a></li>
+                <li><a href="#contact" class="nav-link-mobile text-lg text-gray-100 hover:text-white py-2">お問い合わせ</a></li>
+            </ul>
+        </nav>
+    </header>
 
-  <!-- ========================================
-       メインコンテンツ
-       ======================================== -->
-  <main>
-    <!-- =========================
-         トップビュー
-         ========================= -->
-    <section id="home" class="section hero-section">
-      <!-- 背景画像をレスポンシブに切り替える例 -->
-      <picture>
-        <source media="(min-width: 1200px)" srcset="images/hero-large.jpg">
-        <source media="(min-width: 768px)" srcset="images/hero-medium.jpg">
-        <img src="profile.png" alt="木村紀喜のサイト イントロビジュアル" class="hero-image">
-      </picture>
-      <div class="hero-overlay">
-        <h2 class="hero-title"></h2>
-        <p class="hero-subtitle"></p>
-        <a href="#profile" class="hero-cta">詳しく見る</a>
-      </div>
-    </section>
+    <!-- ========================================
+         メインコンテンツ
+         ======================================== -->
+    <main>
+        <!-- =========================
+             トップビュー
+             ========================= -->
+        <section id="home" class="hero-section-custom-bg section min-h-[75vh] md:min-h-[85vh] flex flex-col items-center justify-center text-center p-6 text-[var(--hero-text)]">
+            <div class="max-w-3xl">
+                <h2 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 md:mb-6 leading-tight">
+                    教育の未来を、共に創造する。
+                </h2>
+                <p class="text-lg sm:text-xl md:text-2xl mb-8 md:mb-10 text-gray-300">
+                    木村 紀喜 / Toshiki Kimura
+                </p>
+                <a href="#profile" class="hero-cta inline-block bg-[var(--custom-link)] hover:opacity-80 text-white font-medium py-3 px-8 rounded-full text-base md:text-lg transition-opacity duration-300">
+                    私について詳しく
+                </a>
+            </div>
+        </section>
 
-    <!-- =========================
-         プロフィール
-         ========================= -->
-    <section id="profile" class="section profile-section">
-      <div class="section-header">
-        <h2>プロフィール</h2>
-      </div>
-      <div class="profile-inner">
-        <!-- プロフィール画像を想定した<figure> -->
-      <figure class="profile-figure">
-        <img src="https://chatgpt.com/backend-api/public_content/enc/eyJpZCI6Im1fNjg0MWE2ODk4NjRjODE5MWFkMzVlODAzOWE3YmJmNGQ6ZmlsZV8wMDAwMDAwMGY5YTA2MjMwOWZjOTk2ZmVjNzBjOTE4MSIsInRzIjoiNDg1ODcwIiwicCI6InB5aSIsInNpZyI6ImY1YmFkNzRjNDM4OTUzNDhmNDM0NGEwNmYxNjA1YmNkZWMyYmI4MTM1OTQyYTllMTgxMjBlYzE3ZGE2NzFiMDMiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsfQ==" 
-              alt="木村紀喜の顔写真" 
-              width="500" height="400" 
-               class="profile-photo" />
-      </figure>
+        <!-- =========================
+             プロフィール
+             ========================= -->
+        <section id="profile" class="section py-16 md:py-24 bg-[var(--custom-bg)]"> {/* bg-white は var(--custom-bg) と同じなのでそのまま */}
+            <div class="container mx-auto px-6 lg:px-8">
+                <header class="section-header text-center mb-12 md:mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold section-title-custom text-[var(--custom-text)]">プロフィール</h2>
+                </header>
+                <div class="profile-inner flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12 lg:gap-16 max-w-4xl mx-auto">
+                    <figure class="profile-figure flex-shrink-0">
+                         <!-- ★画像URLをここに設定★ -->
+                        <img src="https://placehold.co/250x250/EFEFEF/AAAAAA?text=ここに画像" 
+                             alt="木村紀喜の顔写真" 
+                             class="profile-photo-custom w-48 h-48 md:w-64 md:h-64 rounded-full object-cover">
+                    </figure>
+                    <div class="profile-details text-center md:text-left">
+                        <dl>
+                            <div class="mb-4">
+                                <dt class="font-semibold text-lg text-[var(--custom-text)]">名前</dt>
+                                <dd class="text-[var(--custom-text-secondary)]">木村 紀喜（きむら としき）</dd>
+                            </div>
+                            <div class="mb-4">
+                                <dt class="font-semibold text-lg text-[var(--custom-text)]">出身</dt>
+                                <dd class="text-[var(--custom-text-secondary)]">佐賀県唐津市</dd>
+                            </div>
+                            <div class="mb-4">
+                                <dt class="font-semibold text-lg text-[var(--custom-text)]">学歴</dt>
+                                <dd class="text-[var(--custom-text-secondary)] leading-relaxed">
+                                    2009.04〜2012.04　粕屋町立大川小学校<br>
+                                    2012.04〜2015.03　福岡市立東吉塚小学校<br>
+                                    2015.04〜2018.03　唐津市立第一中学校<br>
+                                    2018.04〜2021.03　佐賀県立唐津西高等学校<br>
+                                    2021.04〜2025.03　佐賀大学教育学部<br>
+                                    2025.04〜2027.03（予定）〠早稲田大学大学院教育学研究科高度教職実践専攻
+                                </dd>
+                            </div>
+                            <div class="mb-4">
+                                <dt class="font-semibold text-lg text-[var(--custom-text)]">職歴</dt>
+                                <dd class="text-[var(--custom-text-secondary)]">2027.04〜（予定）　佐賀県公立小学校教諭</dd>
+                            </div>
+                            <div>
+                                <dt class="font-semibold text-lg text-[var(--custom-text)]">研究テーマ</dt>
+                                <dd class="text-[var(--custom-text-secondary)]">未定</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <dl class="profile-details">
-          <dt>名前</dt>
-          <dd>木村 紀喜（きむら としき）</dd>
+        <!-- =========================
+             研究・活動
+             ========================= -->
+        <section id="research" class="section py-16 md:py-24 bg-[var(--custom-bg)]"> {/* var(--apple-bg) を var(--custom-bg) に変更 */}
+            <div class="container mx-auto px-6 lg:px-8">
+                <header class="section-header text-center mb-12 md:mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold section-title-custom text-[var(--custom-text)]">研究・活動</h2>
+                </header>
+                <div class="research-inner grid md:grid-cols-2 gap-10 md:gap-12 lg:gap-16 max-w-5xl mx-auto">
+                    <article class="research-article bg-white p-6 md:p-8 rounded-xl shadow-lg"> {/* カード背景は白のまま */}
+                        <h3 class="text-2xl font-semibold mb-4 text-[var(--custom-text)]">研究内容</h3>
+                        <p class="text-[var(--custom-text-secondary)] leading-relaxed">未定<br>教育現場における課題解決と、子どもたちの可能性を最大限に引き出すための実践的研究に取り組んでいく予定です。詳細が決まり次第、こちらでご報告いたします。</p>
+                    </article>
+                    <article class="research-article bg-white p-6 md:p-8 rounded-xl shadow-lg"> {/* カード背景は白のまま */}
+                        <h3 class="text-2xl font-semibold mb-4 text-[var(--custom-text)]">活動</h3>
+                        <ul class="activity-list space-y-2 text-[var(--custom-text-secondary)]">
+                            <li>2022.08　唐津市立小学校　教育ボランティア</li>
+                            <li>2023.09　佐賀市立小学校　教育実習</li>
+                            <li>2024.09　唐津市立中学校　教育実習</li>
+                            <li>2024　唐津市立中学校（２校）　放課後等学習支援員</li>
+                            <li>2025　新宿区立小学校　学校臨床実習</li>
+                        </ul>
+                    </article>
+                </div>
+            </div>
+        </section>
 
-          <dt>出身</dt>
-          <dd>佐賀県唐津市</dd>
+        <!-- =========================
+             お知らせ
+             ========================= -->
+        <section id="news" class="section py-16 md:py-24 bg-[var(--custom-bg)]"> {/* bg-white は var(--custom-bg) と同じ */}
+            <div class="container mx-auto px-6 lg:px-8">
+                <header class="section-header text-center mb-12 md:mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold section-title-custom text-[var(--custom-text)]">お知らせ</h2>
+                </header>
+                <div class="news-inner max-w-2xl mx-auto">
+                    <ul class="news-list space-y-6">
+                        <li class="news-item-custom news-item flex flex-col sm:flex-row sm:items-baseline pb-6">
+                            <time datetime="2025-06-03" class="news-date text-sm text-[var(--custom-text-secondary)] mr-4 mb-1 sm:mb-0 whitespace-nowrap">2025.06.03</time>
+                            <span class="news-text font-medium text-[var(--custom-text)]">ホームページをリニューアル公開しました。</span>
+                        </li>
+                        <!-- 将来的なお知らせのサンプル -->
+                        <!--
+                        <li class="news-item-custom news-item flex flex-col sm:flex-row sm:items-baseline pb-6">
+                            <time datetime="2025-07-15" class="news-date text-sm text-[var(--custom-text-secondary)] mr-4 mb-1 sm:mb-0 whitespace-nowrap">2025.07.15</time>
+                            <span class="news-text font-medium text-[var(--custom-text)]">論文「教育におけるテクノロジー活用」が学会誌に掲載決定。</span>
+                        </li>
+                        -->
+                    </ul>
+                    <!-- <a href="#contact" class="news-cta block text-center mt-10 text-[var(--custom-link)] hover:underline">全てのお知らせを見る</a> -->
+                </div>
+            </div>
+        </section>
 
-          <dt>学歴</dt>
-          <dd>
-            2009.04〜2012.04　粕屋町立大川小学校<br>
-            2012.04〜2015.03　福岡市立東吉塚小学校<br>
-            2015.04〜2018.03　唐津市立第一中学校<br>
-            2018.04〜2021.03　佐賀県立唐津西高等学校<br>
-            2021.04〜2025.03　佐賀大学教育学部<br>
-            2025.04〜2027.03（予定）　早稲田大学大学院教育学研究科高度教職実践専攻
-          </dd>
+        <!-- =========================
+             お問い合わせ
+             ========================= -->
+        <section id="contact" class="section py-16 md:py-24 bg-[var(--custom-bg)]"> {/* var(--apple-bg) を var(--custom-bg) に変更 */}
+            <div class="container mx-auto px-6 lg:px-8">
+                <header class="section-header text-center mb-10 md:mb-12">
+                    <h2 class="text-4xl md:text-5xl font-bold section-title-custom text-[var(--custom-text)]">お問い合わせ</h2>
+                </header>
+                <div class="contact-inner text-center max-w-xl mx-auto">
+                    <p class="contact-text text-lg text-[var(--custom-text-secondary)] mb-6">
+                        ご質問、ご依頼、その他メッセージがございましたら、以下のメールアドレスまでお気軽にご連絡ください。
+                    </p>
+                    <p class="contact-email text-xl md:text-2xl font-medium">
+                        <a href="mailto:kimu.toshiki@gmail.com" class="text-[var(--custom-link)] hover:underline">kimu.toshiki@gmail.com</a>
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
 
-          <dt>職歴</dt>
-          <dd>2027.04〜（予定）　佐賀県公立小学校教諭</dd>
+    <!-- ========================================
+         フッター
+         ======================================== -->
+    <footer class="site-footer bg-[var(--footer-bg)] text-[var(--footer-text)] py-12 md:py-16">
+        <div class="footer-inner container mx-auto px-6 lg:px-8 text-center text-sm">
+            <p class="footer-copy mb-2">&copy; 2025 木村 紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+            <p class="footer-github">
+                <a href="https://github.com/kimutoshiki/kimutoshiki" target="_blank" rel="noopener" class="hover:text-white hover:underline">GitHub リポジトリ</a>
+            </p>
+        </div>
+    </footer>
 
-          <dt>研究テーマ</dt>
-          <dd>未定</dd>
-        </dl>
-      </div>
-    </section>
+    <script>
+        // モバイルナビゲーションのトグル機能
+        const navToggle = document.getElementById('navToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        const navToggleIconSpans = navToggle.querySelectorAll('.nav-toggle__icon span');
 
-    <!-- =========================
-         研究・活動
-         ========================= -->
-    <section id="research" class="section research-section">
-      <div class="section-header">
-        <h2>研究・活動</h2>
-      </div>
-      <div class="research-inner">
-        <article class="research-article">
-          <h3>研究内容</h3>
-          <p>未定</p>
-        </article>
-        <article class="research-article">
-          <h3>活動</h3>
-          <ul class="activity-list">
-            <dd>2022.08　唐津市立小学校　教育ボランティア</dd>
-            <dd>2023.09　佐賀市立小学校　教育実習</dd>
-            <dd>2024.09　唐津市立中学校　教育実習</dd>
-            <dd>2024　唐津市立中学校（２校）　放課後等学習支援員</dd>
-            <dd>2025　新宿区立小学校　学校臨床実習</dd>
-          </ul>
-        </article>
-      </div>
-    </section>
+        navToggle.addEventListener('click', () => {
+            const isVisible = mobileNav.classList.contains('opacity-100');
+            if (isVisible) {
+                mobileNav.classList.remove('opacity-100', 'visible');
+                mobileNav.classList.add('-translate-y-full', 'opacity-0', 'invisible');
+                // アイコンを元に戻す
+                navToggleIconSpans[0].classList.remove('rotate-45', 'translate-y-[9px]');
+                navToggleIconSpans[1].classList.remove('opacity-0');
+                navToggleIconSpans[2].classList.remove('-rotate-45', '-translate-y-[9px]');
+                navToggle.setAttribute('aria-label', 'メニューを開く');
 
-    <!-- =========================
-         お知らせ（News）
-         ========================= -->
-    <section id="news" class="section news-section">
-      <div class="section-header">
-        <h2>お知らせ</h2>
-      </div>
-      <div class="news-inner">
-        <ul class="news-list">
-          <li class="news-item">
-            <time datetime="2025-06-03" class="news-date">2025.06.03</time>
-            <span class="news-text">ホームページを公開しました。</span>
-          </li>
-        </ul>
-        <a href="#contact" class="news-cta">全てのお知らせを見る</a>
-      </div>
-    </section>
+            } else {
+                mobileNav.classList.remove('-translate-y-full', 'opacity-0', 'invisible');
+                mobileNav.classList.add('opacity-100', 'visible');
+                // アイコンをX印に変更
+                navToggleIconSpans[0].classList.add('rotate-45', 'translate-y-[9px]'); 
+                navToggleIconSpans[1].classList.add('opacity-0');
+                navToggleIconSpans[2].classList.add('-rotate-45', '-translate-y-[9px]');
+                 navToggle.setAttribute('aria-label', 'メニューを閉じる');
+            }
+        });
 
-    <!-- =========================
-         お問い合わせ
-         ========================= -->
-    <section id="contact" class="section contact-section">
-      <div class="section-header">
-        <h2>お問い合わせ</h2>
-      </div>
-      <div class="contact-inner">
-        <p class="contact-text">ご質問やご依頼は以下のメールアドレスまでお気軽にご連絡ください。</p>
-        <p class="contact-email">メール：<a href="mailto:kimu.toshiki@gmail.com">kimu.toshiki@gmail.com</a></p>
-      </div>
-    </section>
-  </main>
+        // モバイルナビゲーションのリンククリックでメニューを閉じる
+        const mobileNavLinks = mobileNav.querySelectorAll('.nav-link-mobile');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileNav.classList.remove('opacity-100', 'visible');
+                mobileNav.classList.add('-translate-y-full', 'opacity-0', 'invisible');
+                navToggleIconSpans[0].classList.remove('rotate-45', 'translate-y-[9px]');
+                navToggleIconSpans[1].classList.remove('opacity-0');
+                navToggleIconSpans[2].classList.remove('-rotate-45', '-translate-y-[9px]');
+                navToggle.setAttribute('aria-label', 'メニューを開く');
+            });
+        });
+    </script>
 
-  <!-- ========================================
-       フッター
-       ======================================== -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-nav">
-        <ul class="footer-nav-list">
-          <li><a href="#home" class="footer-nav-link">トップへ戻る</a></li>
-          <li><a href="#profile" class="footer-nav-link">プロフィール</a></li>
-          <li><a href="#research" class="footer-nav-link">研究・活動</a></li>
-          <li><a href="#news" class="footer-nav-link">お知らせ</a></li>
-          <li><a href="#contact" class="footer-nav-link">お問い合わせ</a></li>
-        </ul>
-      </div>
-      <!-- SNSアイコン例 -->
-      <div class="footer-sns">
-        <a href="https://twitter.com/kimura_toshiki" target="_blank" rel="noopener" class="sns-link sns-twitter" aria-label="Twitter">
-          <!-- アイコンはCSSやSVGで表示 -->
-        </a>
-        <a href="https://www.linkedin.com/in/kimura_toshiki" target="_blank" rel="noopener" class="sns-link sns-linkedin" aria-label="LinkedIn">
-          <!-- アイコンはCSSやSVGで表示 -->
-        </a>
-      </div>
-      <p class="footer-copy">&copy; 2025 木村 紀喜 All Rights Reserved.</p>
-      <p class="footer-github"><a href="https://github.com/kimutoshiki/kimutoshiki" target="_blank" rel="noopener">GitHub リポジトリ</a></p>
-    </div>
-  </footer>
 </body>
 </html>
