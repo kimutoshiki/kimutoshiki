@@ -5,65 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>木村 紀喜 (Toshiki Kimura) - Official Site</title>
     <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'enji': '#9B1E3C',      // 臙脂色を 'enji' として定義
+                        'konpeki': '#007B9A'   // 紺碧色を 'konpeki' として定義
+                    }
+                }
+            }
+        }
+    </script>
+    
     <style>
-    /* 背景画像とアニメーションを適用するクラス */
-    .hero-section-custom-bg {
-        background-image: url('IMG_1785.jpg'); /* 背景画像を指定 */
-        background-size: cover;
-        background-repeat: no-repeat;
-        /* アニメーションを実行（30秒かけて、無限に、行ったり来たり） */
-        animation: scrollBackground 30s linear infinite alternate;
-    }
+        /* ヒーローセクションの背景アニメーション（ここは変更なし） */
+        .hero-section-custom-bg {
+            background-image: url('IMG_1785.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            animation: scrollBackground 30s linear infinite alternate;
+        }
+        @keyframes scrollBackground {
+            from { background-position: center top; }
+            to { background-position: center bottom; }
+        }
 
-    /* 背景をスクロールさせるアニメーションの設計図 */
-    @keyframes scrollBackground {
-        from { background-position: center top; }
-        to { background-position: center bottom; }
-    }
-    </style>
-    <style>
-        /* ページ全体の基本スタイル */
+        /* ページ全体の基本文字色を設定 */
         body {
-            background-color: #FFFFFF; /* 背景を白に設定 */
-            color: #9B1E3C;           /* 基本の文字色を臙脂色に設定 */
-            font-family: sans-serif;   /* 文字化けしにくい基本フォントを指定 */
-            margin: 0;
-            padding: 0;
-        }
-
-        /* ヘッダーのスタイル */
-        header {
-            background-color: #9B1E3C; /* ヘッダーの背景を臙脂色（えんじいろ）に設定 */
-            color: #FFFFFF;           /* ヘッダー内の文字色を白に（背景が濃色のため）*/
-            padding: 1.5rem 2rem;       /* ヘッダー内の余白 */
-            text-align: center;
-        }
-
-        /* フッターのスタイル */
-        footer {
-            background-color: #007B9A; /* フッターの背景を紺碧色（こんぺきいろ）に設定 */
-            color: #FFFFFF;           /* フッター内の文字色を白に（背景が濃色のため）*/
-            padding: 1.5rem 2rem;       /* フッター内の余白 */
-            text-align: center;
-            margin-top: 4rem;          /* コンテンツとの間に余白を設ける */
+            color: #9B1E3C; /* 基本の文字色を臙脂色に */
         }
         
-        /* リンクの文字色も基本色に合わせる */
-        a {
-            color: #9B1E3C;
+        /* ボタンのスタイルを修正 */
+        .custom-button {
+            border: 2px solid #9B1E3C;    /* 枠線を臙脂色で太さ2pxに設定 */
+            color: #9B1E3C;               /* 文字色を臙脂色に */
+            background-color: transparent; /* 背景を透明に */
+            transition: all 0.3s ease;     /* ホバー時のアニメーション効果 */
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
         }
-
-        /* ヘッダー内、フッター内のリンクは白にする */
-        header a,
-        footer a {
-            color: #FFFFFF;
-            text-decoration: underline; /* リンクの下線 */
-        }
-        header a:hover,
-        footer a:hover {
-            text-decoration: none; /* ホバー時に下線を消す */
+        /* ボタンホバー時のスタイル */
+        .custom-button:hover {
+            background-color: #9B1E3C;    /* 背景を臙脂色に */
+            color: #FFFFFF;               /* 文字を白に */
         }
     </style>
 </head>
