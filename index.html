@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>木村 紀喜(Kimura Toshiki)</title>
-  <!-- Apple風フォントを読み込む例 -->
   <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
   <!-- <link href="https://fonts.googleapis.com/css2?family=San Francisco:wght@400;600;800&display=swap" rel="stylesheet"> -->
   <link rel="stylesheet" href="styles.css" />
@@ -12,7 +11,7 @@
 </head>
 <body>
   <!-- ========================================
-       ヘッダー（固定／Sticky ヘッダーを想定）
+       ヘッダー
        ======================================== -->
   <header class="site-header">
     <div class="header-inner">
@@ -21,7 +20,7 @@
         <a>木村 紀喜</a>
       </h1>
 
-      <!-- ナビゲーション トグル（モバイル用ハンバーガーアイコン） -->
+      <!-- ナビゲーション トグル　-->
       <button class="nav-toggle" aria-label="メニューを開く">
         <span class="nav-toggle__icon"></span>
       </button>
@@ -44,7 +43,7 @@
        ======================================== -->
   <main>
     <!-- =========================
-         ヒーローセクション（トップビュー）
+         トップビュー
          ========================= -->
     <section id="home" class="section hero-section">
       <!-- 背景画像をレスポンシブに切り替える例 -->
@@ -162,9 +161,6 @@
       <div class="contact-inner">
         <p class="contact-text">ご質問やご依頼は以下のメールアドレスまでお気軽にご連絡ください。</p>
         <p class="contact-email">メール：<a href="mailto:kimu.toshiki@gmail.com">kimu.toshiki@gmail.com</a></p>
-        <!-- モーダルフォームを開くボタン例 -->
-        <button id="openContactForm" class="contact-button">お問い合わせフォーム</button>
-        <!-- 実際には JavaScript でモーダルを開く処理を実装 -->
       </div>
     </section>
   </main>
@@ -196,27 +192,5 @@
       <p class="footer-github"><a href="https://github.com/kimutoshiki/kimutoshiki" target="_blank" rel="noopener">GitHub リポジトリ</a></p>
     </div>
   </footer>
-
-  <!-- ========================================
-       JavaScript（例：ハンバーガーメニュー、モーダル制御など）
-       ======================================== -->
-  <script>
-    // ハンバーガーメニュー開閉処理（例）
-    const navToggle = document.querySelector('.nav-toggle');
-    const globalNav = document.querySelector('.global-nav');
-    navToggle.addEventListener('click', () => {
-      globalNav.classList.toggle('is-active');
-      navToggle.classList.toggle('is-active');
-    });
-
-    // お問い合わせフォームモーダルの処理（例）
-    // const modal = document.getElementById('contactModal');
-    // document.getElementById('openContactForm').addEventListener('click', () => {
-    //   modal.showModal();
-    // });
-    // document.getElementById('closeModal').addEventListener('click', () => {
-    //   modal.close();
-    // });
-  </script>
 </body>
 </html>
