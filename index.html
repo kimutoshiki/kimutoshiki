@@ -22,38 +22,73 @@
     </script>
     
     <style>
-        /* ヒーローセクションの背景アニメーション（ここは変更なし） */
-        .hero-section-custom-bg {
-            background-image: url('IMG_1785.jpg');
-            background-size: cover;
-            background-repeat: no-repeat;
-            animation: scrollBackground 30s linear infinite alternate;
-        }
-        @keyframes scrollBackground {
-            from { background-position: center top; }
-            to { background-position: center bottom; }
-        }
+    /* ---------------------------------- */
+    /* --- ページ全体の基本スタイル --- */
+    /* ---------------------------------- */
+    body {
+        background-color: #FFFFFF !important; /* 背景を白に設定 */
+        color: #9B1E3C !important;           /* 基本の文字色を臙脂色に設定 */
+    }
 
-        /* ページ全体の基本文字色を設定 */
-        body {
-            color: #9B1E3C; /* 基本の文字色を臙脂色に */
-        }
-        
-        /* ボタンのスタイルを修正 */
-        .custom-button {
-            border: 2px solid #9B1E3C;    /* 枠線を臙脂色で太さ2pxに設定 */
-            color: #9B1E3C;               /* 文字色を臙脂色に */
-            background-color: transparent; /* 背景を透明に */
-            transition: all 0.3s ease;     /* ホバー時のアニメーション効果 */
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-        }
-        /* ボタンホバー時のスタイル */
-        .custom-button:hover {
-            background-color: #9B1E3C;    /* 背景を臙脂色に */
-            color: #FFFFFF;               /* 文字を白に */
-        }
+    /* ---------------------------------- */
+    /* --- ヘッダーとフッターのスタイル --- */
+    /* ---------------------------------- */
+    header {
+        background-color: #9B1E3C !important; /* ヘッダーの背景を臙脂色に設定 */
+        color: #FFFFFF !important;           /* ヘッダー内の文字色を白に */
+    }
+
+    footer {
+        background-color: #007B9A !important; /* フッターの背景を紺碧色に設定 */
+        color: #FFFFFF !important;           /* フッター内の文字色を白に */
+    }
+
+    /* ヘッダー・フッター内のリンク文字色も強制的に白に */
+    header a,
+    footer a {
+        color: #FFFFFF !important;
+    }
+
+    /* ---------------------------------- */
+    /* --- ボタンのスタイル修正 --- */
+    /* ---------------------------------- */
+    /* 汎用的なボタン（aタグやbuttonタグ）のスタイルを上書き */
+    a[class*="button"],
+    a[class*="btn"],
+    button,
+    .hero-cta { /* ヒーローセクションのボタンも直接指定 */
+        border: 2px solid #9B1E3C !important;    /* 枠線を臙脂色に */
+        color: #9B1E3C !important;               /* 文字色を臙脂色に */
+        background-color: transparent !important; /* 背景を透明に */
+        transition: all 0.3s ease;
+        padding: 0.75rem 1.5rem !important;
+        border-radius: 0.5rem !important;
+        font-weight: 600 !important;
+    }
+
+    /* ボタンホバー時のスタイル */
+    a[class*="button"]:hover,
+    a[class*="btn"]:hover,
+    button:hover,
+    .hero-cta:hover {
+        background-color: #9B1E3C !important;    /* 背景を臙脂色に */
+        color: #FFFFFF !important;               /* 文字を白に */
+    }
+
+    /* ---------------------------------- */
+    /* --- ヒーローセクションの背景アニメーション --- */
+    /* ---------------------------------- */
+    .hero-section-custom-bg {
+        background-image: url('IMG_1785.jpg');
+        background-size: cover;
+        background-repeat: no-repeat;
+        animation: scrollBackground 30s linear infinite alternate;
+    }
+
+    @keyframes scrollBackground {
+        from { background-position: center top; }
+        to {   background-position: center bottom; }
+    }
     </style>
 </head>
 
