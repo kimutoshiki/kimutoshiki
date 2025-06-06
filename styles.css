@@ -1,235 +1,110 @@
-/* styles.css */
-
-/* ---------------------------------------
-   ベースリセット
---------------------------------------- */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* Tailwind CSSの基本設定とカスタムフォント */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
 body {
-  font-family: "ヒラギノ角ゴ ProN","Hiragino Kaku Gothic ProN",Meiryo,Arial, sans-serif;
-  line-height: 1.6;
-  color: #000000;
-  background-color: #ffffff;
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6; /* 既存CSSから反映 */
 }
 
-/* ---------------------------------------
-   ヘッダー
---------------------------------------- */
-header {
-  background-color: #b94047; /* 早稲田大学の臙脂色 */
-  color: #ffffff;
-  padding: 20px 0;
+/* カスタム配色 */
+:root {
+    --custom-bg: #ffffff; /* 背景: 白 */
+    --custom-text: #000000; /* 文字: 黒 */
+    --custom-text-secondary: #333333; /* サブテキスト: 濃い灰色 */
+    --custom-link: #0066cc; /* リンク色: 青 */
+    
+    --hero-bg: #111111; /* ヒーローセクション背景: 黒系 */
+    --hero-text: #ffffff; /* ヒーローセクション文字: 白 */
+    
+    --header-bg-color: #9b1e2f; /* ヘッダー: 臙脂色 (純色 #b94047 に近い濃い赤) */
+    --header-bg: rgba(155, 30, 47, 0.85); /* ヘッダー: 臙脂色 (半透明) - 既存CSSの #b94047 に近い値 */
+    --mobile-nav-bg: rgba(155, 30, 47, 0.95); /* モバイルナビゲーション: 濃い臙脂色 */
+
+    --footer-bg: #004B8C; /* フッター: 紺碧色 */
+    --footer-text: #ffffff; /* フッター文字: 白 (ユーザー指定) */
+    
+    --border-color: #d2d2d7; /* 境界線色 */
+    --section-border-color: #dddddd; /* 既存CSSのセクション境界線色 */
 }
 
-.header-inner {
-  width: 90%;
-  max-width: 960px;
-  margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+/* スムーズスクロール */
+html {
+    scroll-behavior: smooth;
 }
 
-.site-title {
-  font-size: 1.8em;
+/* ヘッダーのスタイル */
+.custom-header {
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
-.global-nav ul {
-  list-style: none;
+/* ヒーローセクションの背景 */
+.hero-section-custom-bg {
+    background-color: var(--hero-bg);
 }
 
-.global-nav ul li {
-  display: inline-block;
-  margin-left: 16px;
+.hero-section-custom-bg h2 {
+     text-shadow: 0px 1px 3px rgba(0,0,0,0.3);
+}
+ .hero-section-custom-bg p {
+     text-shadow: 0px 1px 2px rgba(0,0,0,0.2);
 }
 
-.global-nav ul li a {
-  color: #ffffff;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 1em;
+/* プロフィール写真のスタイル */
+.profile-photo-custom {
+    border: 4px solid white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
-.global-nav ul li a:hover {
-  text-decoration: underline;
+/* セクションタイトルのスタイル */
+.section-header h2 { /* 既存CSSのスタイルを適用 */
+    font-size: 1.6em; /* 既存CSSから。Tailwindのクラスも併用するため注意 */
+    border-left: 6px solid var(--header-bg-color); /* ヘッダーの臙脂色 */
+    padding-left: 10px; /* Tailwind: pl-2.5 */
+    margin-bottom: 16px; /* 既存CSSから。Tailwind: mb-4 */
+    color: var(--header-bg-color) !important; /* ヘッダーの臙脂色, !importantでTailwindのクラスより優先 */
+    font-weight: bold; /* 既存の太さを維持しつつ、文字の太さを強調 */
 }
 
-/* ---------------------------------------
-   セクション共通
---------------------------------------- */
-.section {
-  width: 90%;
-  max-width: 960px;
-  margin: 60px auto;
-  padding-bottom: 40px;
-  border-bottom: 1px solid #ddd;
+/* お知らせアイテムの境界線 */
+.news-item-custom:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
 }
 
-.section:last-of-type {
-  border-bottom: none;
+/* リンクのスタイル */
+a {
+    transition: opacity 0.2s ease-in-out;
 }
 
-.section-header h2 {
-  font-size: 1.6em;
-  border-left: 6px solid #b94047;
-  padding-left: 10px;
-  margin-bottom: 16px;
-  color: #b94047;
+/* ハンバーガーメニューアイコンのスタイル */
+.nav-toggle__icon span,
+.nav-toggle__icon span::before,
+.nav-toggle__icon span::after {
+    background-color: var(--hero-text); 
 }
 
-/* ---------------------------------------
-   ホームセクション
---------------------------------------- */
-.home-section .home-inner {
-  text-align: center;
+.nav-toggle {
+    z-index: 1001; 
 }
 
-.home-section h2 {
-  font-size: 2em;
-  color: #b94047;
-  margin-bottom: 12px;
+/* モバイルナビゲーションの背景 */
+.mobile-nav-custom {
+    background-color: var(--mobile-nav-bg); 
 }
 
-.home-section p {
-  font-size: 1em;
-  margin-bottom: 8px;
+/* 既存CSSからセクション共通の罫線 */
+.styled-section-border {
+    border-bottom: 1px solid var(--section-border-color);
+    padding-bottom: 40px; /* 既存CSSから */
+    margin-bottom: 0; /* py-16/24で上下のmargin/paddingを制御するため、重複を避ける */
 }
-
-/* ---------------------------------------
-   プロフィールセクション
---------------------------------------- */
-.profile-inner dl {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 8px 16px;
-  font-size: 1em;
+/* 最後のセクションは罫線なし */
+main > section:last-of-type.styled-section-border {
+    border-bottom: none;
+    padding-bottom: 0; /* 通常のpy-16/24に任せる */
 }
-
-.profile-inner dt {
-  font-weight: bold;
-  color: #b94047;
-}
-
-.profile-inner dd {
-  margin-bottom: 8px;
-}
-
-/* ---------------------------------------
-   研究・活動セクション
---------------------------------------- */
-.research-inner article {
-  margin-bottom: 24px;
-}
-
-.research-inner h3 {
-  font-size: 1.2em;
-  color: #b94047;
-  margin-bottom: 8px;
-}
-
-.research-inner p,
-.research-inner ul {
-  margin-left: 16px;
-  font-size: 1em;
-}
-
-.research-inner ul li {
-  margin-bottom: 6px;
-}
-
-/* ---------------------------------------
-   お知らせセクション
---------------------------------------- */
-.news-inner ul {
-  list-style: none;
-}
-
-.news-inner ul li {
-  display: flex;
-  align-items: baseline;
-  margin-bottom: 8px;
-}
-
-.news-inner time {
-  display: inline-block;
-  width: 100px;
-  color: #b94047;
-  font-size: 0.9em;
-}
-
-.news-inner span {
-  margin-left: 8px;
-  font-size: 1em;
-}
-
-/* ---------------------------------------
-   お問い合わせセクション
---------------------------------------- */
-.contact-inner p {
-  margin-bottom: 12px;
-  font-size: 1em;
-}
-
-.contact-inner .email a {
-  color: #000000;
-  text-decoration: none;
-}
-
-.contact-inner .email a:hover {
-  text-decoration: underline;
-}
-
-/* ---------------------------------------
-   フッター
---------------------------------------- */
-footer {
-  background-color: #007bbb;
-  padding: 20px 0;
-}
-
-.footer-inner {
-  width: 90%;
-  max-width: 960px;
-  margin: 0 auto;
-  text-align: center;
-  font-size: 0.9em;
-  color: #ffffff;
-}
-
-.footer-inner a {
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.footer-inner a:hover {
-  text-decoration: underline;
-}
-
-/* ---------------------------------------
-   レスポンシブ対応
---------------------------------------- */
-@media (max-width: 768px) {
-  .header-inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .global-nav ul li {
-    display: block;
-    margin: 8px 0 0 0;
-  }
-
-  .section {
-    margin: 40px auto;
-    padding-bottom: 24px;
-  }
-
-  .section-header h2 {
-    font-size: 1.4em;
-  }
+main > section:last-of-type { /* 最後のセクションのpadding-bottomを調整 */
+     padding-bottom: 40px; /* 必要に応じて調整 */
 }
