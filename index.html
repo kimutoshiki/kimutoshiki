@@ -4,18 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>木村 紀喜 (Toshiki Kimura) - Official Site</title>
-
-    <meta name="description" content="考える力を育む教育を目指す、木村紀喜のオフィシャルサイトです。プロフィール、研究・活動内容などを掲載しています。" />
     
+    <meta name="description" content="考える力を育む教育を目指す、木村紀喜のオフィシャルサイトです。プロフィール、研究・活動内容などを掲載しています。" />
     <meta property="og:title" content="木村 紀喜 (Toshiki Kimura) - Official Site" />
     <meta property="og:description" content="考える力を育む教育を目指す、木村紀喜のオフィシャルサイトです。" />
     <meta property="og:type" content="website" />
     <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
-    <meta property="og:url" content="https://kimutoshiki.github.io/kimutoshiki/" /> <meta property="og:image" content="https://kimutoshiki.github.io/kimutoshiki/IMG_1785.jpg" /> <meta name="twitter:card" content="summary_large_image" /> <link rel="icon" href="favicon.ico" sizes="any" />
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" /> <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
+    <meta property="og:url" content="https://kimutoshiki.github.io/kimutoshiki/" />
+    <meta property="og:image" content="https://kimutoshiki.github.io/kimutoshiki/slide1.jpg" /> <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script>
         tailwind.config = {
             theme: {
@@ -30,238 +30,142 @@
     </script>
     
     <style>
-        /* ここに上記のCSSコードをすべて貼り付けます */
+        /* 基本スタイルは維持 */
         html { scroll-behavior: smooth; }
-        body { background-color: #FFFFFF !important; color: #333333 !important; }
+        body { background-color: #000; color: #FFFFFF; } /* 背景を黒に */
         header, footer { background-color: #9B1E3C !important; color: #FFFFFF !important; }
         header a, footer a { color: #FFFFFF !important; }
-        .site-header { background-color: rgba(155, 30, 60, 0.9) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .site-header { background-color: rgba(0, 0, 0, 0.5) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
         .nav-link { position: relative; padding-bottom: 4px; }
         .nav-link::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background-color: #FFFFFF; transform: scaleX(0); transform-origin: center; transition: transform 0.3s ease; }
         .nav-link:hover::after { transform: scaleX(1); }
-        .hero-section-custom-bg { background-image: url('IMG_1785.jpg'); background-size: cover; background-repeat: no-repeat; animation: scrollBackground 30s linear infinite alternate; }
-        @keyframes scrollBackground { from { background-position: center top; } to { background-position: center bottom; } }
-        .cta-button { border: 2px solid #9B1E3C !important; color: #9B1E3C !important; background-color: transparent !important; transition: all 0.3s ease; }
-        .cta-button:hover { background-color: #9B1E3C !important; color: #FFFFFF !important; }
-        @layer components {
-          .profile-list { @apply space-y-6; }
-          .profile-list dt { @apply font-bold text-xl text-enji mb-1; }
-          .profile-list dd { @apply text-gray-700 text-lg leading-relaxed; }
-          .news-list-styled { @apply space-y-6; }
-          .news-list-styled li { @apply flex flex-col sm:flex-row items-start pb-6 border-b border-gray-200 last:border-b-0; }
-          .news-list-styled time { @apply font-semibold text-enji mr-6 mb-2 sm:mb-0 whitespace-nowrap w-32; }
-          .news-list-styled h4 { @apply text-lg font-semibold text-gray-800 mb-1; }
-          .news-list-styled p { @apply text-base text-gray-600; }
+
+        /* === スライドショーのための新しいCSS === */
+        body, html {
+            overflow: hidden; /* スクロールバーを非表示に */
+            height: 100%;
         }
+
+        #slideshow {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -1; /* ヘッダーより後ろに配置 */
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center center;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out; /* フェード効果の時間 */
+            animation: kenburns 20s infinite; /* ズーム効果のアニメーション */
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+        
+        /* ズームイン・アウトするアニメーション（ケンバーンズ効果） */
+        @keyframes kenburns {
+            0% { transform: scale(1.0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1.0); }
+        }
+
+        /* 中央のコンテンツ */
+        .center-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
     </style>
 </head>
 
 <body class="antialiased">
 
-    <header class="site-header sticky top-0 z-50 w-full shadow-lg">
+    <div id="slideshow">
+        <div class="slide active" style="background-image: url('/kimutoshiki/slide1.jpg');"></div>
+        <div class="slide" style="background-image: url('/kimutoshiki/slide2.jpg');"></div>
+        <div class="slide" style="background-image: url('/kimutoshiki/slide3.jpg');"></div>
+        <div class="slide" style="background-image: url('/kimutoshiki/slide4.jpg');"></div>
+        <div class="slide" style="background-image: url('/kimutoshiki/slide5.jpg');"></div>
+        <div class="slide" style="background-image: url('/kimutoshiki/slide6.jpg');"></div>
+        <div class="slide" style="background-image: url('/kimutoshiki/slide7.jpg');"></div>
+    </div>
+
+    <header class="site-header fixed top-0 z-50 w-full">
         <div class="container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-20">
             <h1 class="text-xl lg:text-2xl font-bold tracking-tight">
-                <a href="#home">木村 紀喜</a>
+                <a href="index.html">木村 紀喜</a>
             </h1>
             <button id="navToggle" class="nav-toggle md:hidden">
                 <span class="sr-only">メニューを開閉</span>
                 <span class="nav-toggle__icon block relative w-7 h-6">
-                    <span class="absolute block w-full h-[3px] bg-current top-0 transform transition-all duration-300"></span>
-                    <span class="absolute block w-full h-[3px] bg-current top-1/2 -translate-y-1/2 transform transition-all duration-300"></span>
-                    <span class="absolute block w-full h-[3px] bg-current bottom-0 transform transition-all duration-300"></span>
+                    <span class="absolute block w-full h-[3px] bg-current top-0"></span>
+                    <span class="absolute block w-full h-[3px] bg-current top-1/2 -translate-y-1/2"></span>
+                    <span class="absolute block w-full h-[3px] bg-current bottom-0"></span>
                 </span>
             </button>
             <nav class="global-nav hidden md:block">
                 <ul class="flex items-center space-x-5 lg:space-x-8">
-                    <li><a href="#home" class="nav-link text-sm font-medium">ホーム</a></li>
-                    <li><a href="#profile" class="nav-link text-sm font-medium">プロフィール</a></li>
-                    <li><a href="#research" class="nav-link text-sm font-medium">研究・活動</a></li>
-                    <li><a href="#news" class="nav-link text-sm font-medium">お知らせ</a></li>
-                    <li><a href="#contact" class="nav-link text-sm font-medium">お問い合わせ</a></li>
+                    <li><a href="index.html" class="nav-link text-sm font-medium">ホーム</a></li>
+                    <li><a href="profile.html" class="nav-link text-sm font-medium">プロフィール</a></li>
+                    <li><a href="research.html" class="nav-link text-sm font-medium">研究・活動</a></li>
+                    <li><a href="news.html" class="nav-link text-sm font-medium">お知らせ</a></li>
+                    <li><a href="contact.html" class="nav-link text-sm font-medium">お問い合わせ</a></li>
                 </ul>
             </nav>
         </div>
-        <nav id="mobileNav" class="global-nav-mobile bg-enji md:hidden absolute top-full left-0 w-full transform scale-y-0 origin-top opacity-0 transition-all duration-300 ease-in-out">
+         <nav id="mobileNav" class="global-nav-mobile bg-black/80 md:hidden absolute top-full left-0 w-full transform scale-y-0 origin-top opacity-0 transition-all duration-300 ease-in-out">
             <ul class="flex flex-col items-center py-6 space-y-4">
-                <li><a href="#home" class="text-xl font-medium py-2">ホーム</a></li>
-                <li><a href="#profile" class="text-xl font-medium py-2">プロフィール</a></li>
-                <li><a href="#research" class="text-xl font-medium py-2">研究・活動</a></li>
-                <li><a href="#news" class="text-xl font-medium py-2">お知らせ</a></li>
-                <li><a href="#contact" class="text-xl font-medium py-2">お問い合わせ</a></li>
+                 <li><a href="index.html" class="text-xl font-medium py-2">ホーム</a></li>
+                 <li><a href="profile.html" class="text-xl font-medium py-2">プロフィール</a></li>
+                 <li><a href="research.html" class="text-xl font-medium py-2">研究・活動</a></li>
+                 <li><a href="news.html" class="text-xl font-medium py-2">お知らせ</a></li>
+                 <li><a href="contact.html" class="text-xl font-medium py-2">お問い合わせ</a></li>
             </ul>
         </nav>
     </header>
 
-    <main>
-        <section id="home" class="hero-section-custom-bg min-h-screen flex flex-col items-center justify-center text-center p-6 relative">
-            <div class="absolute inset-0 bg-black opacity-30"></div>
-            <div class="relative z-10 max-w-4xl">
-                <h2 id="heroTitle" class="text-white text-5xl sm:text-6xl md:text-7xl font-extrabold mb-6 opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.7); transition-delay: 0.2s;">
-                    考える力を育む教育
-                </h2>
-                <p id="heroSubtitle" class="text-xl sm:text-2xl md:text-3xl mb-12 text-gray-200 font-light opacity-0 transform translate-y-10 transition-all duration-1000 ease-out" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.7); transition-delay: 0.5s;">
-                    木村 紀喜 / Toshiki Kimura
-                </p>
-                <a id="heroCta" href="#profile" class="cta-button bg-white font-semibold py-3 px-8 rounded-lg text-lg opacity-0 translate-y-10 transition-all duration-300 transform hover:scale-105 shadow-lg" style="transition-delay: 0.8s;">
-                    About me
-                </a>
-            </div>
-        </section>
-
-        <section id="profile" class="py-24 md:py-32 bg-gray-50">
-            <div class="container mx-auto px-6 lg:px-8">
-                <header class="text-center mb-16 md:mb-20">
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-800">PROFILE</h2>
-                </header>
-                <div class="grid md:grid-cols-12 items-center gap-12 md:gap-16 max-w-6xl mx-auto">
-                    <figure class="md:col-span-5 flex justify-center">
-                        <img src="/kimutoshiki/profile.png" alt="プロフィール写真" class="w-64 h-64 sm:w-80 sm:h-80 rounded-full object-cover shadow-2xl transform transition-all duration-500 hover:scale-105">
-                    </figure>
-                    <div class="md:col-span-7 text-center md:text-left">
-                        <dl class="profile-list">
-                            <div>
-                                <dt>名前</dt>
-                                <dd>木村 紀喜（きむら としき）</dd>
-                            </div>
-                            <div>
-                                <dt>出身</dt>
-                                <dd>佐賀県唐津市</dd>
-                            </div>
-                            <div>
-                                <dt>学歴</dt>
-                                <dd>
-                                    唐津市立第一中学校<br>
-                                    佐賀県立唐津西高等学校<br>
-                                    佐賀大学教育学部<br>
-                                    早稲田大学大学院教育学研究科高度教職実践専攻 修了（予定）
-                                </dd>
-                            </div>
-                            <div>
-                                <dt>職歴</dt>
-                                <dd>佐賀県公立小学校教諭（予定）</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="research" class="py-24 md:py-32 bg-white">
-            <div class="container mx-auto px-6 lg:px-8">
-                <header class="text-center mb-16 md:mb-20">
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-800">RESEARCH & ACTIVITY</h2>
-                </header>
-                <div class="grid md:grid-cols-2 gap-10 max-w-6xl mx-auto">
-                    <article class="bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-2">
-                        <h3 class="text-2xl font-bold mb-4 text-enji">研究内容</h3>
-                        <p class="text-gray-600 leading-relaxed">構想中</p>
-                    </article>
-                    <article class="bg-gray-50 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-2">
-                        <h3 class="text-2xl font-bold mb-4 text-enji">主な活動</h3>
-                        <ul class="space-y-3 text-gray-600 list-disc list-inside">
-                            <li>教育ボランティア（唐津市立小学校）</li>
-                            <li>教育実習（佐賀市立小学校、唐津市立中学校）</li>
-                            <li>放課後等学習支援員（唐津市立中学校）</li>
-                            <li>学校臨床実習（新宿区立小学校）</li>
-                            <li>その他，教育関連のワークショップや研究発表会への参加</li>
-                        </ul>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <section id="news" class="py-24 md:py-32 bg-gray-50">
-            <div class="container mx-auto px-6 lg:px-8">
-                <header class="text-center mb-16 md:mb-20">
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-800">NEWS</h2>
-                </header>
-                <div class="max-w-3xl mx-auto bg-white p-8 md:p-12 rounded-xl shadow-xl">
-                    <ul class="news-list-styled">
-                        <li>
-                            <time datetime="2025-06-03">2025年6月3日</time>
-                            <div>
-                                <h4>ホームページ開設</h4>
-                                <p>よろしくお願いします。</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <section id="contact" class="py-24 md:py-32 bg-white">
-            <div class="container mx-auto px-6 lg:px-8">
-                <header class="text-center mb-12">
-                    <h2 class="text-4xl md:text-5xl font-bold text-gray-800">CONTACT</h2>
-                </header>
-                <div class="text-center max-w-2xl mx-auto">
-                    <p class="text-lg text-gray-600 mb-8 leading-relaxed">
-                        お気軽にご連絡ください。
-                    </p>
-                    <a href="mailto:kimu.toshiki@gmail.com" class="inline-block bg-enji text-white font-semibold py-4 px-10 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 hover:bg-opacity-90 shadow-lg">
-                        kimu.toshiki@gmail.com
-                    </a>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="site-footer py-16">
-        <div class="container mx-auto px-6 lg:px-8 text-center">
-            <div class="mb-8">
-                <a href="#home" class="text-2xl font-bold hover:opacity-80 transition-opacity">木村 紀喜</a>
-            </div>
-            <nav class="mb-8">
-                <ul class="flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm">
-                    <li><a href="#profile" class="hover:underline">プロフィール</a></li>
-                    <li><a href="#research" class="hover:underline">研究・活動</a></li>
-                    <li><a href="#news" class="hover:underline">お知らせ</a></li>
-                    <li><a href="#contact" class="hover:underline">お問い合わせ</a></li>
-                </ul>
-            </nav>
-            <p class="text-sm opacity-80 mb-2">&copy; 2025 木村 紀喜 (Toshiki Kimura). All Rights Reserved.</p>
-            <p class="text-sm opacity-80">
-                <a href="https://github.com/kimutoshiki/kimutoshiki" target="_blank" rel="noopener" class="hover:underline">GitHub リポジトリ</a>
+    <main class="center-content">
+        <div class="relative z-10">
+            <h2 id="heroTitle" class="text-white text-5xl sm:text-6xl md:text-7xl font-extrabold" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.7);">
+                木村 紀喜
+            </h2>
+            <p id="heroSubtitle" class="text-xl sm:text-2xl mt-4 text-gray-200 font-light" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.7);">
+                Toshiki Kimura
             </p>
         </div>
-    </footer>
+    </main>
 
     <script>
-        // モバイルナビゲーションのトグル機能
+        // --- スライドショー機能 ---
+        const slides = document.querySelectorAll('#slideshow .slide');
+        let currentSlide = 0;
+        const slideInterval = setInterval(nextSlide, 5000); // 5秒ごとに切り替え
+
+        function nextSlide() {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+
+        // --- モバイルナビゲーション機能 ---
         const navToggle = document.getElementById('navToggle');
         const mobileNav = document.getElementById('mobileNav');
-        const navToggleIconSpans = navToggle.querySelectorAll('.nav-toggle__icon span');
-
         navToggle.addEventListener('click', () => {
-            const isOpen = mobileNav.classList.contains('opacity-100');
-            if (isOpen) {
-                mobileNav.classList.remove('opacity-100', 'scale-y-100');
-                navToggleIconSpans[0].classList.remove('rotate-45', 'translate-y-[10px]');
-                navToggleIconSpans[1].classList.remove('opacity-0');
-                navToggleIconSpans[2].classList.remove('-rotate-45', '-translate-y-[10px]');
-            } else {
-                mobileNav.classList.add('opacity-100', 'scale-y-100');
-                navToggleIconSpans[0].classList.add('rotate-45', 'translate-y-[10px]');
-                navToggleIconSpans[1].classList.add('opacity-0');
-                navToggleIconSpans[2].classList.add('-rotate-45', '-translate-y-[10px]');
-            }
-        });
-
-        // モバイルナビのリンククリックでメニューを閉じる
-        mobileNav.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileNav.classList.remove('opacity-100', 'scale-y-100');
-                navToggleIconSpans[0].classList.remove('rotate-45', 'translate-y-[10px]');
-                navToggleIconSpans[1].classList.remove('opacity-0');
-                navToggleIconSpans[2].classList.remove('-rotate-45', '-translate-y-[10px]');
-            });
-        });
-
-        // ヒーローセクションの表示アニメーション
-        window.addEventListener('load', () => {
-            document.getElementById('heroTitle')?.classList.remove('opacity-0', 'translate-y-10');
-            document.getElementById('heroSubtitle')?.classList.remove('opacity-0', 'translate-y-10');
-            document.getElementById('heroCta')?.classList.remove('opacity-0', 'translate-y-10');
+            mobileNav.classList.toggle('scale-y-0');
+            mobileNav.classList.toggle('opacity-0');
+            mobileNav.classList.toggle('scale-y-100');
+            mobileNav.classList.toggle('opacity-100');
         });
     </script>
 
