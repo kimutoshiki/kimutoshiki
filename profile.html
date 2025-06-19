@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>プロフィール | 木村 紀喜 (Toshiki Kimura) - Official Site</title>
+    
+    <meta name="description" content="木村紀喜のプロフィールページです。" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { 'enji': '#9B1E3C', 'konpeki': '#007B9A' }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* トップページから流用する基本スタイル */
+        html { scroll-behavior: smooth; }
+        body { background-color: #FFFFFF !important; color: #333333 !important; }
+        header { background-color: #9B1E3C !important; color: #FFFFFF !important; }
+        header a { color: #FFFFFF !important; }
+        .site-header { background-color: rgba(155, 30, 60, 0.9) !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .nav-link { position: relative; padding-bottom: 4px; }
+        .nav-link::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background-color: #FFFFFF; transform: scaleX(0); transform-origin: center; transition: transform 0.3s ease; }
+        .nav-link:hover::after { transform: scaleX(1); }
+
+        /* サブページ用のレイアウト調整 */
+        .page-header {
+            padding-top: 12rem; /* ヘッダーの高さ分、コンテンツを下にずらす */
+            padding-bottom: 5rem;
+            background-color: #f7fafc; /* 背景色を少しグレーに */
+        }
+        .page-header h1 {
+            color: #9B1E3C; /* 臙脂色 */
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+    
+    <header class="site-header fixed top-0 z-50 w-full shadow-lg">
+         <div class="container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-20">
+            <h1 class="text-xl lg:text-2xl font-bold tracking-tight">
+                <a href="index.html">木村 紀喜</a>
+            </h1>
+            <button id="navToggle" class="nav-toggle md:hidden">
+                <span class="sr-only">メニューを開閉</span>
+                <span class="nav-toggle__icon block relative w-7 h-6">
+                    <span class="absolute block w-full h-[3px] bg-current top-0"></span>
+                    <span class="absolute block w-full h-[3px] bg-current top-1/2 -translate-y-1/2"></span>
+                    <span class="absolute block w-full h-[3px] bg-current bottom-0"></span>
+                </span>
+            </button>
+            <nav class="global-nav hidden md:block">
+                <ul class="flex items-center space-x-5 lg:space-x-8">
+                    <li><a href="index.html" class="nav-link text-sm font-medium">ホーム</a></li>
+                    <li><a href="profile.html" class="nav-link text-sm font-medium">プロフィール</a></li>
+                    <li><a href="research.html" class="nav-link text-sm font-medium">研究・活動</a></li>
+                    <li><a href="news.html" class="nav-link text-sm font-medium">お知らせ</a></li>
+                    <li><a href="contact.html" class="nav-link text-sm font-medium">お問い合わせ</a></li>
+                </ul>
+            </nav>
+        </div>
+         <nav id="mobileNav" class="global-nav-mobile bg-enji md:hidden absolute top-full left-0 w-full transform scale-y-0 origin-top opacity-0 transition-all duration-300 ease-in-out">
+            <ul class="flex flex-col items-center py-6 space-y-4">
+                 <li><a href="index.html" class="text-xl font-medium py-2">ホーム</a></li>
+                 <li><a href="profile.html" class="text-xl font-medium py-2">プロフィール</a></li>
+                 <li><a href="research.html" class="text-xl font-medium py-2">研究・活動</a></li>
+                 <li><a href="news.html" class="text-xl font-medium py-2">お知らせ</a></li>
+                 <li><a href="contact.html" class="text-xl font-medium py-2">お問い合わせ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="profile" class="page-header">
+            <div class="container mx-auto px-6 lg:px-8 text-center">
+                <h1 class="text-5xl md:text-6xl font-bold">PROFILE</h1>
+            </div>
+        </section>
+
+        <section class="py-20 md:py-28">
+             <div class="container mx-auto px-6 lg:px-8">
+                <div class="grid md:grid-cols-12 items-center gap-12 md:gap-16 max-w-6xl mx-auto">
+                    <figure class="md:col-span-5 flex justify-center">
+                        <img src="/kimutoshiki/profile.png" alt="プロフィール写真" class="w-64 h-64 sm:w-80 sm:h-80 rounded-full object-cover shadow-2xl">
+                    </figure>
+                    <div class="md:col-span-7 text-center md:text-left">
+                        <dl class="space-y-6">
+                            <div>
+                                <dt class="text-2xl font-bold text-enji mb-2">名前</dt>
+                                <dd class="text-lg text-gray-700">木村 紀喜（きむら としき）</dd>
+                            </div>
+                            <div>
+                                <dt class="text-2xl font-bold text-enji mb-2">出身</dt>
+                                <dd class="text-lg text-gray-700">佐賀県唐津市</dd>
+                            </div>
+                            <div>
+                                <dt class="text-2xl font-bold text-enji mb-2">学歴</dt>
+                                <dd class="text-lg text-gray-700 leading-relaxed">
+                                    唐津市立第一中学校<br>
+                                    佐賀県立唐津西高等学校<br>
+                                    佐賀大学教育学部<br>
+                                    早稲田大学大学院教育学研究科高度教職実践専攻 修了（予定）
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-2xl font-bold text-enji mb-2">職歴</dt>
+                                <dd class="text-lg text-gray-700">佐賀県公立小学校教諭（予定）</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer py-16 bg-enji text-white">
+        <div class="container mx-auto px-6 lg:px-8 text-center">
+           <p class="text-sm opacity-80">&copy; 2025 木村 紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const navToggle = document.getElementById('navToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        navToggle.addEventListener('click', () => {
+            mobileNav.classList.toggle('scale-y-0');
+            mobileNav.classList.toggle('opacity-0');
+            mobileNav.classList.toggle('scale-y-100');
+            mobileNav.classList.toggle('opacity-100');
+        });
+    </script>
+</body>
+</html>
