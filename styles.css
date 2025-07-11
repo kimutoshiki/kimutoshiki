@@ -1,31 +1,30 @@
-/* スムーズスクロールを有効化 */
+/* 基本スタイル */
 html {
     scroll-behavior: smooth;
 }
 
-/* ---------------------------------- */
-/* --- 基本スタイル（配色は維持） --- */
-/* ---------------------------------- */
 body {
-    background-color: #FFFFFF !important;
-    color: #333333 !important; /* 基本の文字色を少し濃いグレーに */
-}
-header, footer {
-    background-color: #9B1E3C !important; /* 臙脂色 */
-    color: #FFFFFF !important;
-}
-header a, footer a {
-    color: #FFFFFF !important;
+    background-color: #000;
+    color: #FFFFFF;
 }
 
-/* ---------------------------------- */
-/* --- レイアウト参考のスタイル修正 --- */
-/* ---------------------------------- */
-/* ヘッダー: スクロール時に追従し、少し透明感を出す */
+/* ページ全体をビューポートの高さにし、スクロールを不可にする */
+body,
+html {
+    overflow: hidden;
+    height: 100%;
+}
+
+/* ヘッダー */
 .site-header {
-    background-color: rgba(155, 30, 60, 0.9) !important;
+    background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    color: #FFFFFF;
+}
+
+.site-header a {
+    color: #FFFFFF;
 }
 
 /* ナビゲーションリンクのホバーエフェクト */
@@ -33,6 +32,7 @@ header a, footer a {
     position: relative;
     padding-bottom: 4px;
 }
+
 .nav-link::after {
     content: '';
     position: absolute;
@@ -45,63 +45,54 @@ header a, footer a {
     transform-origin: center;
     transition: transform 0.3s ease;
 }
+
 .nav-link:hover::after {
     transform: scaleX(1);
 }
 
-/* ヒーローセクションの背景アニメーション */
-.hero-section-custom-bg {
-    background-image: url('IMG_1785.jpg');
+/* スライドショー */
+#slideshow {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+.slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     background-size: cover;
-    background-repeat: no-repeat;
-    animation: scrollBackground 30s linear infinite alternate;
-}
-@keyframes scrollBackground {
-    from { background-position: center top; }
-    to { background-position: center bottom; }
+    background-position: center center;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    animation: kenburns 20s infinite;
 }
 
-/* ボタンのスタイル */
-.cta-button {
-    border: 2px solid #9B1E3C !important;
-    color: #9B1E3C !important;
-    background-color: transparent !important;
-    transition: all 0.3s ease;
-}
-.cta-button:hover {
-    background-color: #9B1E3C !important;
-    color: #FFFFFF !important;
+.slide.active {
+    opacity: 1;
 }
 
-/* ==================================================
-   ユーティリティクラスのコンポーネント化
-   ================================================== */
-@layer components {
-  /* --- プロフィールセクションのスタイル --- */
-  .profile-list {
-    @apply space-y-6;
-  }
-  .profile-list dt {
-    @apply font-bold text-xl text-enji mb-1;
-  }
-  .profile-list dd {
-    @apply text-gray-700 text-lg leading-relaxed;
-  }
+/* ケンバーンズ効果（ズームイン・アウト）のアニメーション */
+@keyframes kenburns {
+    0% {
+        transform: scale(1.0);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1.0);
+    }
+}
 
-  /* --- お知らせセクションのスタイル --- */
-  .news-list-styled {
-    @apply space-y-6;
-  }
-  .news-list-styled li {
-    @apply flex flex-col sm:flex-row items-start pb-6 border-b border-gray-200 last:border-b-0;
-  }
-  .news-list-styled time {
-    @apply font-semibold text-enji mr-6 mb-2 sm:mb-0 whitespace-nowrap w-32;
-  }
-  .news-list-styled h4 {
-    @apply text-lg font-semibold text-gray-800 mb-1;
-  }
-  .news-list-styled p {
-    @apply text-base text-gray-600;
-  }
+/* 中央のコンテンツエリア */
+.center-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
 }
