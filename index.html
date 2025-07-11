@@ -31,19 +31,101 @@
         }
     </script>
     
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 基本スタイル */
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            background-color: #000;
+            color: #FFFFFF;
+            font-family: sans-serif; /* 基本フォントを指定 */
+        }
+        /* ページ全体をビューポートの高さにし、スクロールを不可にする */
+        body,
+        html {
+            overflow: hidden;
+            height: 100%;
+        }
+        /* ヘッダー */
+        .site-header {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #FFFFFF;
+        }
+        .site-header a {
+            color: #FFFFFF;
+        }
+        /* ナビゲーションリンクのホバーエフェクト */
+        .nav-link {
+            position: relative;
+            padding-bottom: 4px;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #FFFFFF;
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+        .nav-link:hover::after {
+            transform: scaleX(1);
+        }
+        /* スライドショー */
+        #slideshow {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center center;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            animation: kenburns 20s infinite;
+        }
+        .slide.active {
+            opacity: 1;
+        }
+        /* ケンバーンズ効果（ズームイン・アウト）のアニメーション */
+        @keyframes kenburns {
+            0% { transform: scale(1.0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1.0); }
+        }
+        /* 中央のコンテンツエリア */
+        .center-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body class="antialiased">
 
     <div id="slideshow">
-        <div class="slide active" style="background-image: url('/kimutoshiki/slide1.jpg');"></div>
-        <div class="slide" style="background-image: url('/kimutoshiki/slide2.jpg');"></div>
-        <div class="slide" style="background-image: url('/kimutoshiki/slide3.jpg');"></div>
-        <div class="slide" style="background-image: url('/kimutoshiki/slide4.jpg');"></div>
-        <div class="slide" style="background-image: url('/kimutoshiki/slide5.jpg');"></div>
-        <div class="slide" style="background-image: url('/kimutoshiki/slide6.jpg');"></div>
-        <div class="slide" style="background-image: url('/kimutoshiki/slide7.jpg');"></div>
+        <div class="slide active" style="background-image: url('slide1.jpg');"></div>
+        <div class="slide" style="background-image: url('slide2.jpg');"></div>
+        <div class="slide" style="background-image: url('slide3.jpg');"></div>
+        <div class="slide" style="background-image: url('slide4.jpg');"></div>
+        <div class="slide" style="background-image: url('slide5.jpg');"></div>
+        <div class="slide" style="background-image: url('slide6.jpg');"></div>
+        <div class="slide" style="background-image: url('slide7.jpg');"></div>
     </div>
 
     <header class="site-header fixed top-0 z-50 w-full">
@@ -54,9 +136,9 @@
             <button id="navToggle" class="nav-toggle md:hidden" aria-controls="mobileNav" aria-expanded="false">
                 <span class="sr-only">メニューを開閉</span>
                 <span class="nav-toggle__icon block relative w-7 h-6">
-                    <span class="absolute block w-full h-[3px] bg-current top-0"></span>
-                    <span class="absolute block w-full h-[3px] bg-current top-1/2 -translate-y-1/2"></span>
-                    <span class="absolute block w-full h-[3px] bg-current bottom-0"></span>
+                    <span class="absolute block w-full h-[3px] bg-current top-0 transition-transform duration-300"></span>
+                    <span class="absolute block w-full h-[3px] bg-current top-1/2 -translate-y-1/2 transition-opacity duration-300"></span>
+                    <span class="absolute block w-full h-[3px] bg-current bottom-0 transition-transform duration-300"></span>
                 </span>
             </button>
             <nav class="global-nav hidden md:block">
@@ -91,7 +173,58 @@
         </div>
     </main>
 
-    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- スライドショー機能 ---
+            const slides = document.querySelectorAll('#slideshow .slide');
+            let currentSlide = 0;
+            
+            if (slides.length > 1) { // スライドが2枚以上ある場合のみ実行
+                setInterval(nextSlide, 5000); // 5秒ごとに切り替え
+            }
+
+            function nextSlide() {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }
+
+            // --- モバイルナビゲーション機能 ---
+            const navToggle = document.getElementById('navToggle');
+            const mobileNav = document.getElementById('mobileNav');
+            const navIcon = navToggle.querySelector('.nav-toggle__icon');
+
+            if (navToggle && mobileNav) {
+                navToggle.addEventListener('click', () => {
+                    // ARIA属性を切り替えて、現在の状態（開いているか閉じているか）を取得
+                    const isOpened = navToggle.getAttribute('aria-expanded') === 'true';
+                    navToggle.setAttribute('aria-expanded', !isOpened);
+
+                    // Tailwindのクラスを切り替えてメニューの表示・非表示をアニメーション
+                    mobileNav.classList.toggle('scale-y-100');
+                    mobileNav.classList.toggle('opacity-100');
+                    mobileNav.classList.toggle('scale-y-0');
+                    mobileNav.classList.toggle('opacity-0');
+                    
+                    // ハンバーガーアイコンを「×」印にアニメーション
+                    navIcon.classList.toggle('opened');
+                });
+            }
+        });
+    </script>
+    
+    <style>
+        .nav-toggle__icon.opened span:nth-child(1) {
+            transform: translateY(9px) rotate(45deg);
+        }
+        .nav-toggle__icon.opened span:nth-child(2) {
+            opacity: 0;
+        }
+        .nav-toggle__icon.opened span:nth-child(3) {
+            transform: translateY(-9px) rotate(-45deg);
+        }
+    </style>
 
 </body>
 </html>
