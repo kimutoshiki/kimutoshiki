@@ -146,3 +146,101 @@ body {
     background-color: #7f1d34;
     transform: scale(1.05);
 }
+
+/* --- トップページ (index.html) 専用スタイル --- */
+
+/* トップページではスクロールを可能に */
+body.home {
+    overflow-y: auto;
+}
+
+/* トップページのヘッダーは透明に */
+body.home .site-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+body.home .site-header a,
+body.home .nav-toggle__icon span {
+    color: #FFFFFF;
+}
+body.home .nav-link::after {
+    background-color: #FFFFFF;
+}
+body.home .nav-link.current,
+body.home .nav-link:hover {
+    color: #FFFFFF;
+}
+
+/* 背景スライドショー */
+#slideshow {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    z-index: -2;
+}
+.slide {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center center;
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    animation: kenburns 20s infinite;
+}
+.slide.active {
+    opacity: 1;
+}
+@keyframes kenburns {
+    0% { transform: scale(1.0); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1.0); }
+}
+
+/* スライドショーの上に重ねる半透明の黒 */
+.slideshow-overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+}
+
+/* スクロールダウンの矢印 */
+.scroll-down {
+    width: 28px;
+    height: 48px;
+    border: 2px solid white;
+    border-radius: 14px;
+}
+.scroll-down::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    width: 4px;
+    height: 8px;
+    margin-left: -2px;
+    background: white;
+    border-radius: 2px;
+    animation: scroll-animation 2s infinite;
+}
+.scroll-down-text {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: white;
+    opacity: 0.8;
+}
+@keyframes scroll-animation {
+    0% { opacity: 1; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(10px); }
+    100% { opacity: 0; transform: translateY(10px); }
+}
