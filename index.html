@@ -19,131 +19,33 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'enji': '#9B1E3C',
-                        'konpeki': '#007B9A'
-                    }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { 'enji': '#9B1E3C', 'konpeki': '#007B9A' } } } }
     </script>
     
-    <style>
-        /* 基本スタイル */
-        html {
-            scroll-behavior: smooth;
-        }
-        body {
-            background-color: #000;
-            color: #FFFFFF;
-            font-family: sans-serif; /* 基本フォントを指定 */
-        }
-        /* ページ全体をビューポートの高さにし、スクロールを不可にする */
-        body,
-        html {
-            overflow: hidden;
-            height: 100%;
-        }
-        /* ヘッダー */
-        .site-header {
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            color: #FFFFFF;
-        }
-        .site-header a {
-            color: #FFFFFF;
-        }
-        /* ナビゲーションリンクのホバーエフェクト */
-        .nav-link {
-            position: relative;
-            padding-bottom: 4px;
-        }
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: #FFFFFF;
-            transform: scaleX(0);
-            transform-origin: center;
-            transition: transform 0.3s ease;
-        }
-        .nav-link:hover::after {
-            transform: scaleX(1);
-        }
-        /* スライドショー */
-        #slideshow {
-            position: fixed;
-            width: 100vw;
-            height: 100vh;
-            top: 0;
-            left: 0;
-            z-index: -1;
-        }
-        .slide {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center center;
-            opacity: 0;
-            transition: opacity 1.5s ease-in-out;
-            animation: kenburns 20s infinite;
-        }
-        .slide.active {
-            opacity: 1;
-        }
-        /* ケンバーンズ効果（ズームイン・アウト）のアニメーション */
-        @keyframes kenburns {
-            0% { transform: scale(1.0); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1.0); }
-        }
-        /* 中央のコンテンツエリア */
-        .center-content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="antialiased">
+<body class="home antialiased">
 
     <div id="slideshow">
         <div class="slide active" style="background-image: url('slide1.jpg');"></div>
         <div class="slide" style="background-image: url('slide2.jpg');"></div>
         <div class="slide" style="background-image: url('slide3.jpg');"></div>
-        <div class="slide" style="background-image: url('slide4.jpg');"></div>
-        <div class="slide" style="background-image: url('slide5.jpg');"></div>
-        <div class="slide" style="background-image: url('slide6.jpg');"></div>
-        <div class="slide" style="background-image: url('slide7.jpg');"></div>
     </div>
-
-    <header class="site-header fixed top-0 z-50 w-full">
+    <div class="slideshow-overlay"></div> <header class="site-header fixed top-0 z-50 w-full">
         <div class="container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-20">
-            <h1 class="text-xl lg:text-2xl font-bold tracking-tight">
-                <a href="index.html">木村 紀喜</a>
-            </h1>
+            <h1 class="text-xl lg:text-2xl font-bold tracking-tight"><a href="index.html">木村 紀喜</a></h1>
             <button id="navToggle" class="nav-toggle md:hidden" aria-controls="mobileNav" aria-expanded="false">
                 <span class="sr-only">メニューを開閉</span>
                 <span class="nav-toggle__icon block relative w-7 h-6">
-                    <span class="absolute block w-full h-[3px] bg-current top-0 transition-transform duration-300"></span>
-                    <span class="absolute block w-full h-[3px] bg-current top-1/2 -translate-y-1/2 transition-opacity duration-300"></span>
-                    <span class="absolute block w-full h-[3px] bg-current bottom-0 transition-transform duration-300"></span>
+                    <span class="absolute block w-full h-[3px] top-0"></span>
+                    <span class="absolute block w-full h-[3px] top-1/2 -translate-y-1/2"></span>
+                    <span class="absolute block w-full h-[3px] bottom-0"></span>
                 </span>
             </button>
             <nav class="global-nav hidden md:block">
                 <ul class="flex items-center space-x-5 lg:space-x-8">
-                    <li><a href="index.html" class="nav-link text-sm font-medium">ホーム</a></li>
+                    <li><a href="index.html" class="nav-link text-sm font-medium current">ホーム</a></li>
                     <li><a href="profile.html" class="nav-link text-sm font-medium">プロフィール</a></li>
                     <li><a href="research.html" class="nav-link text-sm font-medium">研究・活動</a></li>
                     <li><a href="news.html" class="nav-link text-sm font-medium">お知らせ</a></li>
@@ -151,7 +53,7 @@
                 </ul>
             </nav>
         </div>
-         <nav id="mobileNav" class="global-nav-mobile bg-black/80 md:hidden absolute top-full left-0 w-full transform scale-y-0 origin-top opacity-0 transition-all duration-300 ease-in-out">
+        <nav id="mobileNav" class="global-nav-mobile bg-gray-800/95 text-white md:hidden absolute top-full left-0 w-full transform scale-y-0 origin-top opacity-0 transition-all duration-300 ease-in-out">
             <ul class="flex flex-col items-center py-6 space-y-4">
                  <li><a href="index.html" class="text-xl font-medium py-2">ホーム</a></li>
                  <li><a href="profile.html" class="text-xl font-medium py-2">プロフィール</a></li>
@@ -162,69 +64,58 @@
         </nav>
     </header>
 
-    <main class="center-content">
-        <div class="relative z-10">
-            <h2 id="heroTitle" class="text-white text-5xl sm:text-6xl md:text-7xl font-extrabold" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.7);">
-                木村 紀喜
-            </h2>
-            <p id="heroSubtitle" class="text-xl sm:text-2xl mt-4 text-gray-200 font-light" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.7);">
-                Toshiki Kimura
-            </p>
-        </div>
+    <main>
+        <section id="hero" class="h-screen flex items-center justify-center text-center text-white relative">
+            <div class="z-10">
+                <h2 class="text-5xl sm:text-6xl md:text-7xl font-extrabold" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.7);">
+                    木村 紀喜
+                </h2>
+                <p class="text-xl sm:text-2xl mt-4 font-light" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.7);">
+                    Toshiki Kimura
+                </p>
+            </div>
+            <a href="#summary" class="scroll-down absolute bottom-8">
+                <span class="scroll-down-text">Scroll</span>
+            </a>
+        </section>
+
+        <section id="summary" class="bg-white py-20 sm:py-28">
+            <div class="container mx-auto px-6 lg:px-8 text-center max-w-4xl">
+                <h3 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">考える力を育む教育</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    変化の激しい時代を生き抜くために不可欠な、自ら問いを立て、情報を吟味し、最適解を導き出す力。
+                    このサイトでは、そうした「考える力」を育むための研究や日々の活動について発信しています。
+                </p>
+            </div>
+        </section>
+
+        <section id="preview" class="py-20 sm:py-28">
+            <div class="container mx-auto px-6 lg:px-8 grid md:grid-cols-2 gap-10 max-w-5xl">
+                <div class="preview-card bg-white p-8 rounded-lg shadow-lg">
+                    <h4 class="text-2xl font-bold mb-4 text-enji">LATEST NEWS</h4>
+                    <ul class="space-y-4">
+                        <li class="border-b border-gray-200 pb-4">
+                            <time class="text-sm text-gray-500 block mb-1">2025年7月11日</time>
+                            <a href="news.html" class="hover:text-enji">公式サイトリニューアル</a>
+                        </li>
+                    </ul>
+                    <a href="news.html" class="inline-block mt-6 font-bold text-enji hover:underline">すべてのお知らせを見る →</a>
+                </div>
+                <div class="preview-card bg-white p-8 rounded-lg shadow-lg">
+                    <h4 class="text-2xl font-bold mb-4 text-enji">PROFILE</h4>
+                    <p class="text-gray-600 mb-6">佐賀県出身。早稲田大学大学院にて教育学研究科高度教職実践専攻を修了。小学校社会科における意思決定能力の育成をテーマに研究しています。</p>
+                    <a href="profile.html" class="inline-block font-bold text-enji hover:underline">詳しいプロフィールを見る →</a>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
+    <footer class="site-footer py-12">
+        <div class="container mx-auto px-6 lg:px-8 text-center">
+           <p>&copy; 2025 木村 紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+        </div>
+    </footer>
 
-            // --- スライドショー機能 ---
-            const slides = document.querySelectorAll('#slideshow .slide');
-            let currentSlide = 0;
-            
-            if (slides.length > 1) { // スライドが2枚以上ある場合のみ実行
-                setInterval(nextSlide, 5000); // 5秒ごとに切り替え
-            }
-
-            function nextSlide() {
-                slides[currentSlide].classList.remove('active');
-                currentSlide = (currentSlide + 1) % slides.length;
-                slides[currentSlide].classList.add('active');
-            }
-
-            // --- モバイルナビゲーション機能 ---
-            const navToggle = document.getElementById('navToggle');
-            const mobileNav = document.getElementById('mobileNav');
-            const navIcon = navToggle.querySelector('.nav-toggle__icon');
-
-            if (navToggle && mobileNav) {
-                navToggle.addEventListener('click', () => {
-                    // ARIA属性を切り替えて、現在の状態（開いているか閉じているか）を取得
-                    const isOpened = navToggle.getAttribute('aria-expanded') === 'true';
-                    navToggle.setAttribute('aria-expanded', !isOpened);
-
-                    // Tailwindのクラスを切り替えてメニューの表示・非表示をアニメーション
-                    mobileNav.classList.toggle('scale-y-100');
-                    mobileNav.classList.toggle('opacity-100');
-                    mobileNav.classList.toggle('scale-y-0');
-                    mobileNav.classList.toggle('opacity-0');
-                    
-                    // ハンバーガーアイコンを「×」印にアニメーション
-                    navIcon.classList.toggle('opened');
-                });
-            }
-        });
-    </script>
-    
-    <style>
-        .nav-toggle__icon.opened span:nth-child(1) {
-            transform: translateY(9px) rotate(45deg);
-        }
-        .nav-toggle__icon.opened span:nth-child(2) {
-            opacity: 0;
-        }
-        .nav-toggle__icon.opened span:nth-child(3) {
-            transform: translateY(-9px) rotate(-45deg);
-        }
-    </style>
-
+    <script src="main.js"></script>
 </body>
 </html>
