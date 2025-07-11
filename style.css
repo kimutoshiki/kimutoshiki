@@ -1,0 +1,148 @@
+/* --- 共通スタイル --- */
+/* 基本設定 */
+html {
+    scroll-behavior: smooth;
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+}
+
+body {
+    background-color: #f9fafb; /* 全体の背景を少しだけグレーに */
+    color: #374151; /* テキストカラー */
+    line-height: 1.75;
+}
+
+/* ヘッダー */
+.site-header {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e5e7eb;
+    color: #374151; /* ヘッダーの文字色を濃いグレーに */
+}
+.site-header a {
+    color: #374151;
+}
+
+/* ナビゲーション */
+.nav-link {
+    position: relative;
+    padding-bottom: 4px;
+    transition: color 0.3s ease;
+}
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #9B1E3C; /* テーマカラーの臙脂色 */
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.3s ease;
+}
+.nav-link:hover {
+    color: #9B1E3C;
+}
+.nav-link:hover::after {
+    transform: scaleX(1);
+}
+/* 現在表示しているページのリンクを目立たせる */
+.nav-link.current {
+    color: #9B1E3C;
+    font-weight: 600;
+}
+
+/* ハンバーガーメニューのアイコンアニメーション */
+.nav-toggle__icon span {
+    background-color: #374151;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.nav-toggle__icon.opened span:nth-child(1) {
+    transform: translateY(9px) rotate(45deg);
+}
+.nav-toggle__icon.opened span:nth-child(2) {
+    opacity: 0;
+}
+.nav-toggle__icon.opened span:nth-child(3) {
+    transform: translateY(-9px) rotate(-45deg);
+}
+
+/* モバイル用ナビゲーション */
+#mobileNav a:hover {
+    color: #e2e8f0;
+}
+
+
+/* フッター */
+.site-footer {
+    background-color: #1f2937; /* フッターの背景を濃いグレーに */
+    color: #d1d5db;
+}
+.site-footer p {
+    color: #9ca3af;
+}
+
+/* --- サブページ共通レイアウト --- */
+/* ページ上部のタイトル表示エリア */
+.page-header {
+    padding-top: 10rem;
+    padding-bottom: 4rem;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+}
+.page-header h1 {
+    color: #9B1E3C; /* 臙脂色 */
+    font-weight: 800;
+    letter-spacing: 0.05em;
+}
+
+/* メインコンテンツエリア */
+.content-section {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+}
+
+/* --- 各ページ固有のスタイル --- */
+/* プロフィールページ */
+.profile-image {
+    border: 8px solid white;
+}
+.profile-dl dt {
+    font-size: 1.125rem;
+    color: #9B1E3C;
+}
+
+/* お知らせページ */
+.news-list time {
+    color: #9B1E3C;
+}
+.news-list h4 {
+    color: #1f2937;
+}
+
+/* 研究・活動ページ */
+.card {
+    background-color: #ffffff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+.card h3 {
+    color: #9B1E3C;
+}
+.card ul {
+    list-style-position: inside;
+}
+
+/* お問い合わせページ */
+.contact-button {
+    background-color: #9B1E3C;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+.contact-button:hover {
+    background-color: #7f1d34;
+    transform: scale(1.05);
+}
