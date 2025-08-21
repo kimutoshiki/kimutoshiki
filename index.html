@@ -3,116 +3,489 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>木村紀喜 (Toshiki Kimura) - Personal Site</title>
+    <title>木村紀喜 | Toshiki Kimura</title>
     
-    <meta name="description" content="木村紀喜の個人サイトです。プロフィール、研究・活動内容などを掲載しています。" />
-    <meta property="og:title" content="木村紀喜 (Toshiki Kimura) - Personal Site" />
-    <meta property="og:description" content="木村紀喜の個人サイトです。" />
+    <meta name="description" content="木村紀喜 - 教育の未来を探求する研究者・実践者" />
+    <meta property="og:title" content="木村紀喜 | Toshiki Kimura" />
+    <meta property="og:description" content="教育の未来を探求する研究者・実践者" />
     <meta property="og:type" content="website" />
     <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
     <meta property="og:url" content="https://kimutoshiki.github.io/kimutoshiki/" />
-    <meta property="og:image" content="https://kimutoshiki.github.io/kimutoshiki/slide1.jpg" />
+    <meta property="og:image" content="https://kimutoshiki.github.io/kimutoshiki/og-image.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
     
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { theme: { extend: { colors: { 'enji': '#9B1E3C', 'konpeki': '#007B9A' } } } }
-    </script>
-    
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #1a1a1a;
+            --accent: #8B1538;  /* 早稲田エンジ */
+            --accent-light: #A91F45;
+            --accent-dark: #6B0F2A;
+            --light: #faf8f6;
+            --border: #e0e0e0;
+            --text-secondary: #666;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", Arial, "メイリオ", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: var(--primary);
+            background: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* ヘッダー */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            color: var(--primary);
+            transition: opacity 0.3s ease;
+        }
+        
+        .logo:hover {
+            opacity: 0.7;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 32px;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        nav a:hover::after,
+        nav a.current::after {
+            width: 100%;
+        }
+        
+        /* モバイルメニュー */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .menu-icon {
+            position: relative;
+            width: 24px;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+        }
+        
+        .menu-icon::before,
+        .menu-icon::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+        }
+        
+        .menu-icon::before {
+            top: -8px;
+        }
+        
+        .menu-icon::after {
+            top: 8px;
+        }
+        
+        /* ヒーローセクション */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: linear-gradient(135deg, #8B1538 0%, #6B0F2A 50%, #1a1a1a 100%);
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,165.3C384,171,480,149,576,128C672,107,768,85,864,90.7C960,96,1056,128,1152,133.3C1248,139,1344,117,1392,106.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat;
+            background-size: cover;
+            animation: wave 20s linear infinite;
+            opacity: 0.3;
+        }
+        
+        @keyframes wave {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(-50%) translateY(0); }
+        }
+        
+        .hero-content {
+            text-align: center;
+            color: white;
+            z-index: 1;
+            padding: 0 24px;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+            animation: fadeInUp 1s ease;
+        }
+        
+        .hero .subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            font-weight: 300;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.2s backwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+        
+        .scroll-indicator svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+            opacity: 0.7;
+        }
+        
+        /* メインコンテンツ */
+        .section {
+            padding: 80px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .intro {
+            text-align: center;
+            padding: 120px 24px;
+            background: var(--light);
+        }
+        
+        .intro h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+        
+        .intro p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+        
+        /* カードグリッド */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            padding: 80px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        }
+        
+        .card:hover::before {
+            transform: translateX(0);
+        }
+        
+        .card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+        
+        .card-meta {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        
+        .card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+        
+        .card-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: gap 0.3s ease;
+        }
+        
+        .card-link:hover {
+            gap: 8px;
+        }
+        
+        /* フッター */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 60px 24px;
+            text-align: center;
+        }
+        
+        footer p {
+            font-size: 14px;
+            line-height: 1.8;
+            opacity: 0.8;
+        }
+        
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            
+            nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: white;
+                border-bottom: 1px solid var(--border);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s ease;
+                pointer-events: none;
+            }
+            
+            nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                padding: 24px;
+                gap: 24px;
+            }
+            
+            .cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-
-<body class="home antialiased">
-
-    <div id="slideshow">
-        <div class="slide active" style="background-image: url('slide1.jpg');"></div>
-        <div class="slide" style="background-image: url('slide2.jpg');"></div>
-        <div class="slide" style="background-image: url('slide3.jpg');"></div>
-    </div>
-    <div class="slideshow-overlay"></div> <header class="site-header fixed top-0 z-50 w-full">
-        <div class="container mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-20">
-            <h1 class="text-xl lg:text-2xl font-bold tracking-tight"><a href="index.html">木村紀喜 (Toshiki Kimura) - Official Site</a></h1>
-            <button id="navToggle" class="nav-toggle md:hidden" aria-controls="mobileNav" aria-expanded="false">
-                <span class="sr-only">メニューを開閉</span>
-                <span class="nav-toggle__icon block relative w-7 h-6">
-                    <span class="absolute block w-full h-[3px] top-0"></span>
-                    <span class="absolute block w-full h-[3px] top-1/2 -translate-y-1/2"></span>
-                    <span class="absolute block w-full h-[3px] bottom-0"></span>
-                </span>
+<body>
+    <header>
+        <div class="header-inner">
+            <a href="index.html" class="logo">木村紀喜</a>
+            <button class="menu-toggle" id="menuToggle">
+                <span class="menu-icon"></span>
             </button>
-            <nav class="global-nav hidden md:block">
-                <ul class="flex items-center space-x-5 lg:space-x-8">
-                    <li><a href="index.html" class="nav-link text-sm font-medium current">ホーム</a></li>
-                    <li><a href="profile.html" class="nav-link text-sm font-medium">プロフィール</a></li>
-                    <li><a href="research.html" class="nav-link text-sm font-medium">研究・活動</a></li>
-                    <li><a href="news.html" class="nav-link text-sm font-medium">お知らせ</a></li>
-                    <li><a href="contact.html" class="nav-link text-sm font-medium">お問い合わせ</a></li>
+            <nav id="navigation">
+                <ul>
+                    <li><a href="index.html" class="current">ホーム</a></li>
+                    <li><a href="profile.html">プロフィール</a></li>
+                    <li><a href="research.html">研究・活動</a></li>
+                    <li><a href="news.html">お知らせ</a></li>
+                    <li><a href="contact.html">お問い合わせ</a></li>
                 </ul>
             </nav>
         </div>
-        <nav id="mobileNav" class="global-nav-mobile bg-gray-800/95 text-white md:hidden absolute top-full left-0 w-full transform scale-y-0 origin-top opacity-0 transition-all duration-300 ease-in-out">
-            <ul class="flex flex-col items-center py-6 space-y-4">
-                 <li><a href="index.html" class="text-xl font-medium py-2">ホーム</a></li>
-                 <li><a href="profile.html" class="text-xl font-medium py-2">プロフィール</a></li>
-                 <li><a href="research.html" class="text-xl font-medium py-2">研究・活動</a></li>
-                 <li><a href="news.html" class="text-xl font-medium py-2">お知らせ</a></li>
-                 <li><a href="contact.html" class="text-xl font-medium py-2">お問い合わせ</a></li>
-            </ul>
-        </nav>
     </header>
 
-    <main>
-        <section id="hero" class="h-screen flex items-center justify-center text-center text-white relative">
-            <div class="z-10">
-                <h2 class="text-5xl sm:text-6xl md:text-7xl font-extrabold" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.7);">
-                    
-                </h2>
-            </div>
-            <a href="#summary" class="scroll-down absolute bottom-8">
-                <span class="scroll-down-text">Scroll</span>
-            </a>
-        </section>
-
-        <section id="summary" class="bg-white py-20 sm:py-28">
-            <div class="container mx-auto px-6 lg:px-8 text-center max-w-4xl">
-                <h3 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">学校教育の未来を考える</h3>
-                <p class="text-gray-600 leading-relaxed">
-                    研究や日々の活動について発信しています。
-                </p>
-            </div>
-        </section>
-
-        <section id="preview" class="py-20 sm:py-28">
-            <div class="container mx-auto px-6 lg:px-8 grid md:grid-cols-2 gap-10 max-w-5xl">
-                <div class="preview-card bg-white p-8 rounded-lg shadow-lg">
-                    <h4 class="text-2xl font-bold mb-4 text-enji">LATEST NEWS</h4>
-                    <ul class="space-y-4">
-                        <li class="border-b border-gray-200 pb-4">
-                            <time class="text-sm text-gray-500 block mb-1">2025年7月29日</time>
-                            <a href="news.html" class="hover:text-enji">文部科学省「生成AIの利用に関する夏季公開学習会」</a>
-                        </li>
-                    </ul>
-                    <a href="news.html" class="inline-block mt-6 font-bold text-enji hover:underline">すべてのお知らせを見る →</a>
-                </div>
-                <div class="preview-card bg-white p-8 rounded-lg shadow-lg">
-                    <h4 class="text-2xl font-bold mb-4 text-enji">PROFILE</h4>
-                    <p class="text-gray-600 mb-6">佐賀県唐津市出身。佐賀大学教育学部卒業後，早稲田大学教職大学院で学んでいます。</p>
-                    <a href="profile.html" class="inline-block font-bold text-enji hover:underline">詳しいプロフィールを見る →</a>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="site-footer py-12">
-        <div class="container mx-auto px-6 lg:px-8 text-center">
-           <p>&copy; 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
-           当サイトは個人が運営しており，所属自治体・学校の公式見解ではありません。</p>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>木村紀喜</h1>
+            <p class="subtitle">早稲田大学教職大学院<br>教育の未来を探求する</p>
         </div>
+        <div class="scroll-indicator">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2L8 6h3v12h2V6h3l-4-4z"/>
+            </svg>
+        </div>
+    </section>
+
+    <section class="intro">
+        <h2>学校教育の未来を考える</h2>
+        <p>研究と実践を通じて、これからの教育のあり方を探求し、日々の活動について発信しています。</p>
+    </section>
+
+    <section class="cards">
+        <article class="card">
+            <h3>最新のお知らせ</h3>
+            <p class="card-meta">2025年7月29日</p>
+            <p>文部科学省「生成AIの利用に関する夏季公開学習会」に参加予定です。教育現場における生成AI活用の可能性について議論します。</p>
+            <a href="news.html" class="card-link">
+                すべてのお知らせを見る →
+            </a>
+        </article>
+
+        <article class="card">
+            <h3>プロフィール</h3>
+            <p>佐賀県唐津市出身。佐賀大学教育学部卒業後、早稲田大学教職大学院で学んでいます。教育の理論と実践の融合を目指し、研究活動を行っています。</p>
+            <a href="profile.html" class="card-link">
+                詳しいプロフィールを見る →
+            </a>
+        </article>
+
+        <article class="card">
+            <h3>研究・活動</h3>
+            <p>ICT教育、協働学習、教員養成など、現代の教育課題に対する実践的な研究を進めています。学校現場との連携を重視した活動を展開しています。</p>
+            <a href="research.html" class="card-link">
+                研究内容を詳しく見る →
+            </a>
+        </article>
+    </section>
+
+    <footer>
+        <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
+        当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
     </footer>
 
-    <script src="main.js"></script>
+    <script>
+        // メニュートグル
+        const menuToggle = document.getElementById('menuToggle');
+        const navigation = document.getElementById('navigation');
+        
+        menuToggle.addEventListener('click', () => {
+            navigation.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        });
+        
+        // スクロール時のヘッダー処理
+        let lastScroll = 0;
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            const header = document.querySelector('header');
+            
+            if (currentScroll > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = 'none';
+            }
+            
+            lastScroll = currentScroll;
+        });
+        
+        // スムーズスクロール
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
