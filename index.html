@@ -26,7 +26,7 @@
         
         :root {
             --primary: #1a1a1a;
-            --accent: #8B1538;  /* 早稲田エンジ */
+            --accent: #8B1538;
             --accent-light: #A91F45;
             --accent-dark: #6B0F2A;
             --light: #faf8f6;
@@ -52,6 +52,11 @@
             z-index: 1000;
             border-bottom: 1px solid var(--border);
             transition: all 0.3s ease;
+        }
+        
+        header.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
         }
         
         .header-inner {
@@ -146,38 +151,88 @@
             top: 8px;
         }
         
-        /* ヒーローセクション */
+        .menu-toggle.active .menu-icon {
+            background: transparent;
+        }
+        
+        .menu-toggle.active .menu-icon::before {
+            top: 0;
+            transform: rotate(45deg);
+        }
+        
+        .menu-toggle.active .menu-icon::after {
+            top: 0;
+            transform: rotate(-45deg);
+        }
+        
+        /* ヒーローセクション with スライドショー */
         .hero {
             height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             position: relative;
-            background: linear-gradient(135deg, #8B1538 0%, #6B0F2A 50%, #1a1a1a 100%);
             overflow: hidden;
         }
         
-        .hero::before {
-            content: '';
+        .slideshow {
             position: absolute;
-            width: 200%;
-            height: 200%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,165.3C384,171,480,149,576,128C672,107,768,85,864,90.7C960,96,1056,128,1152,133.3C1248,139,1344,117,1392,106.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat;
-            background-size: cover;
-            animation: wave 20s linear infinite;
-            opacity: 0.3;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
         }
         
-        @keyframes wave {
-            0% { transform: translateX(0) translateY(0); }
-            100% { transform: translateX(-50%) translateY(0); }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+        }
+        
+        .slide.active {
+            opacity: 1;
+        }
+        
+        .slide:nth-child(1) {
+            background-image: url('slide1.jpg');
+        }
+        
+        .slide:nth-child(2) {
+            background-image: url('slide2.jpg');
+        }
+        
+        .slide:nth-child(3) {
+            background-image: url('slide3.jpg');
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(139, 21, 56, 0.85) 0%, 
+                rgba(107, 15, 42, 0.85) 50%, 
+                rgba(26, 26, 26, 0.85) 100%);
+            z-index: 1;
         }
         
         .hero-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             text-align: center;
             color: white;
-            z-index: 1;
+            z-index: 2;
             padding: 0 24px;
+            width: 100%;
+            max-width: 800px;
         }
         
         .hero h1 {
@@ -186,13 +241,15 @@
             letter-spacing: -2px;
             margin-bottom: 24px;
             animation: fadeInUp 1s ease;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
         }
         
         .hero .subtitle {
             font-size: clamp(1rem, 3vw, 1.5rem);
             font-weight: 300;
-            opacity: 0.9;
+            opacity: 0.95;
             animation: fadeInUp 1s ease 0.2s backwards;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
         }
         
         @keyframes fadeInUp {
@@ -206,12 +263,37 @@
             }
         }
         
+        .slide-indicators {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 3;
+        }
+        
+        .indicator {
+            width: 40px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .indicator.active {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scaleX(1.5);
+        }
+        
         .scroll-indicator {
             position: absolute;
-            bottom: 32px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             animation: bounce 2s infinite;
+            z-index: 3;
         }
         
         @keyframes bounce {
@@ -227,17 +309,22 @@
             opacity: 0.7;
         }
         
-        /* メインコンテンツ */
-        .section {
-            padding: 80px 24px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
+        /* イントロセクション */
         .intro {
             text-align: center;
             padding: 120px 24px;
             background: var(--light);
+            position: relative;
+        }
+        
+        .intro::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, var(--light));
         }
         
         .intro h2 {
@@ -245,6 +332,7 @@
             font-weight: 700;
             margin-bottom: 16px;
             letter-spacing: -1px;
+            color: var(--primary);
         }
         
         .intro p {
@@ -301,12 +389,15 @@
             font-weight: 600;
             margin-bottom: 16px;
             letter-spacing: -0.5px;
+            color: var(--primary);
         }
         
         .card-meta {
-            color: var(--text-secondary);
-            font-size: 14px;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 600;
             margin-bottom: 12px;
+            letter-spacing: 0.5px;
         }
         
         .card p {
@@ -378,6 +469,10 @@
             .cards {
                 grid-template-columns: 1fr;
             }
+            
+            .slide-indicators {
+                bottom: 80px;
+            }
         }
     </style>
 </head>
@@ -393,7 +488,7 @@
                     <li><a href="index.html" class="current">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
                     <li><a href="research.html">研究・活動</a></li>
-                    <li><a href="news.html">お知らせ</a></li>
+                    <li><a href="blog.html">ブログ</a></li>
                     <li><a href="contact.html">お問い合わせ</a></li>
                 </ul>
             </nav>
@@ -401,29 +496,40 @@
     </header>
 
     <section class="hero">
+        <div class="slideshow">
+            <div class="slide active"></div>
+            <div class="slide"></div>
+            <div class="slide"></div>
+        </div>
+        <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1>木村紀喜</h1>
             <p class="subtitle">早稲田大学教職大学院<br>教育の未来を探求する</p>
         </div>
+        <div class="slide-indicators">
+            <button class="indicator active" data-slide="0"></button>
+            <button class="indicator" data-slide="1"></button>
+            <button class="indicator" data-slide="2"></button>
+        </div>
         <div class="scroll-indicator">
             <svg viewBox="0 0 24 24">
-                <path d="M12 2L8 6h3v12h2V6h3l-4-4z"/>
+                <path d="M7 10l5 5 5-5z"/>
             </svg>
         </div>
     </section>
 
     <section class="intro">
         <h2>学校教育の未来を考える</h2>
-        <p>研究と実践を通じて、これからの教育のあり方を探求し、日々の活動について発信しています。</p>
+        <p>研究と実践を通じて、これからの教育のあり方を探求し、<br>日々の活動について発信しています。</p>
     </section>
 
     <section class="cards">
         <article class="card">
-            <h3>最新のお知らせ</h3>
-            <p class="card-meta">2025年7月29日</p>
-            <p>文部科学省「生成AIの利用に関する夏季公開学習会」に参加予定です。教育現場における生成AI活用の可能性について議論します。</p>
-            <a href="news.html" class="card-link">
-                すべてのお知らせを見る →
+            <h3>最新のブログ</h3>
+            <p class="card-meta">2025.07.29 更新</p>
+            <p>文部科学省「生成AIの利用に関する夏季公開学習会」への参加をはじめ、教育現場での実践や研究について、日々感じたことを綴っています。</p>
+            <a href="blog.html" class="card-link">
+                ブログを読む →
             </a>
         </article>
 
@@ -460,20 +566,47 @@
         });
         
         // スクロール時のヘッダー処理
-        let lastScroll = 0;
         window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
             const header = document.querySelector('header');
-            
-            if (currentScroll > 100) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
-                header.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+            if (window.pageYOffset > 100) {
+                header.classList.add('scrolled');
             } else {
-                header.style.background = 'rgba(255, 255, 255, 0.95)';
-                header.style.boxShadow = 'none';
+                header.classList.remove('scrolled');
             }
+        });
+        
+        // スライドショー機能
+        const slides = document.querySelectorAll('.slide');
+        const indicators = document.querySelectorAll('.indicator');
+        let currentSlide = 0;
+        
+        function showSlide(index) {
+            // すべてのスライドとインジケーターを非アクティブに
+            slides.forEach(slide => slide.classList.remove('active'));
+            indicators.forEach(indicator => indicator.classList.remove('active'));
             
-            lastScroll = currentScroll;
+            // 指定されたスライドとインジケーターをアクティブに
+            slides[index].classList.add('active');
+            indicators[index].classList.add('active');
+            currentSlide = index;
+        }
+        
+        // 自動スライド切り替え
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }
+        
+        // 5秒ごとに自動切り替え
+        let slideInterval = setInterval(nextSlide, 5000);
+        
+        // インジケーターのクリックイベント
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', () => {
+                clearInterval(slideInterval);
+                showSlide(index);
+                slideInterval = setInterval(nextSlide, 5000);
+            });
         });
         
         // スムーズスクロール
@@ -485,6 +618,11 @@
                     target.scrollIntoView({ behavior: 'smooth' });
                 }
             });
+        });
+        
+        // スクロールインジケーターのクリック
+        document.querySelector('.scroll-indicator').addEventListener('click', () => {
+            document.querySelector('.intro').scrollIntoView({ behavior: 'smooth' });
         });
     </script>
 </body>
