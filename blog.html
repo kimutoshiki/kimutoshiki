@@ -282,21 +282,34 @@
             transition: all 0.3s ease;
             flex-shrink: 0;
             margin-left: 24px;
+            position: relative;
         }
         
-        .toggle-icon svg {
+        /* プラスアイコンの改善 */
+        .toggle-icon::before,
+        .toggle-icon::after {
+            content: '';
+            position: absolute;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-icon::before {
             width: 16px;
+            height: 2px;
+        }
+        
+        .toggle-icon::after {
+            width: 2px;
             height: 16px;
-            fill: white;
-            transition: transform 0.3s ease;
         }
         
         .blog-header.active .toggle-icon {
             background: var(--accent-dark);
         }
         
-        .blog-header.active .toggle-icon svg {
-            transform: rotate(45deg);
+        .blog-header.active .toggle-icon::after {
+            transform: rotate(90deg);
         }
         
         .blog-content {
@@ -381,6 +394,14 @@
                 margin-left: 16px;
             }
             
+            .toggle-icon::before {
+                width: 14px;
+            }
+            
+            .toggle-icon::after {
+                height: 14px;
+            }
+            
             .blog-content-inner {
                 padding: 24px 20px;
             }
@@ -425,11 +446,7 @@
                         <div class="blog-date">2025.07.29</div>
                         <h3 class="blog-title">文部科学省「生成AIの利用に関する夏季公開学習会」</h3>
                     </div>
-                    <div class="toggle-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                    </div>
+                    <div class="toggle-icon"></div>
                 </div>
                 <div class="blog-content">
                     <div class="blog-content-inner">
@@ -446,11 +463,7 @@
                         <div class="blog-date">2025.07.15</div>
                         <h3 class="blog-title">生成AIパスポート試験に合格して</h3>
                     </div>
-                    <div class="toggle-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                    </div>
+                    <div class="toggle-icon"></div>
                 </div>
                 <div class="blog-content">
                     <div class="blog-content-inner">
@@ -467,11 +480,7 @@
                         <div class="blog-date">2025.07.07</div>
                         <h3 class="blog-title">教育情報化コーディネータ3級合格と学校現場の構造的課題</h3>
                     </div>
-                    <div class="toggle-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                    </div>
+                    <div class="toggle-icon"></div>
                 </div>
                 <div class="blog-content">
                     <div class="blog-content-inner">
@@ -491,11 +500,7 @@
                         <div class="blog-date">2025.07.05</div>
                         <h3 class="blog-title">千葉大学教育学部附属小学校での学び</h3>
                     </div>
-                    <div class="toggle-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                    </div>
+                    <div class="toggle-icon"></div>
                 </div>
                 <div class="blog-content">
                     <div class="blog-content-inner">
@@ -512,11 +517,7 @@
                         <div class="blog-date">2025.06.15</div>
                         <h3 class="blog-title">筑波大学附属小学校参観と教育格差への思い</h3>
                     </div>
-                    <div class="toggle-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                    </div>
+                    <div class="toggle-icon"></div>
                 </div>
                 <div class="blog-content">
                     <div class="blog-content-inner">
@@ -534,11 +535,7 @@
                         <div class="blog-date">2025.06.03</div>
                         <h3 class="blog-title">ホームページ開設にあたって</h3>
                     </div>
-                    <div class="toggle-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14"/>
-                        </svg>
-                    </div>
+                    <div class="toggle-icon"></div>
                 </div>
                 <div class="blog-content">
                     <div class="blog-content-inner">
@@ -572,8 +569,7 @@
                 const content = header.nextElementSibling;
                 const isActive = header.classList.contains('active');
                 
-                // 他の開いているアイテムを閉じる（1つだけ開く仕様の場合）
-                // コメントアウトすることで複数同時に開くことも可能
+                // 他の開いているアイテムを閉じる（1つだけ開く仕様）
                 document.querySelectorAll('.blog-header.active').forEach(activeHeader => {
                     if (activeHeader !== header) {
                         activeHeader.classList.remove('active');
@@ -596,3 +592,6 @@
                 header.style.boxShadow = 'none';
             }
         });
+    </script>
+</body>
+</html>
