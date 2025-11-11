@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&display=swap');
+
 /* --- 共通スタイル --- */
 /* カスタムプロパティ（CSS変数） */
 :root {
@@ -23,12 +25,12 @@
     --gray-300: #D1D5DB;
     --gray-400: #9CA3AF;
     --gray-500: #6B7280;
-    --gray-600: #4B5563;
+    --gray-600: #4B5563; /* ★編集: コントラスト改善 */
     --gray-700: #374151;
     --gray-800: #1F2937;
     --gray-900: #111827;
     --primary-text: #1A1A1A;
-    --secondary-text: #666666;
+    --secondary-text: #4B5563; /* ★編集: #666から変更 */
     
     /* ボーダー */
     --border-light: #E0E0E0;
@@ -48,7 +50,8 @@
 
 html {
     scroll-behavior: smooth;
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", Arial, "メイリオ", Meiryo, sans-serif;
+    /* ★編集: Noto Sans JP を最上位に追加 */
+    font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", Arial, "メイリオ", Meiryo, sans-serif;
 }
 
 body {
@@ -279,7 +282,7 @@ nav a.current::after {
 }
 
 .blog-date {
-    font-size: 13px;
+    font-size: 14px; /* ★編集: 13pxから変更 */
     color: var(--main-enji);
     font-weight: 600;
     margin-bottom: 8px;
@@ -287,7 +290,7 @@ nav a.current::after {
 }
 
 .blog-title {
-    font-size: 18px;
+    font-size: 20px; /* ★編集: 18pxから変更 */
     font-weight: 600;
     color: var(--primary-text);
     line-height: 1.5;
@@ -350,7 +353,7 @@ nav a.current::after {
     padding: 32px;
     color: var(--secondary-text);
     line-height: 1.9;
-    font-size: 15px;
+    font-size: 16px; /* ★編集: 15pxから変更 */
 }
 
 .blog-content-inner p {
@@ -359,7 +362,7 @@ nav a.current::after {
 
 /* フッター */
 footer, .site-footer {
-    background: var(--primary-text);
+    background: var(--main-enji); /* ★編集: ブランディング統一 */
     color: white;
     padding: 60px 24px;
     text-align: center;
@@ -367,7 +370,7 @@ footer, .site-footer {
 }
 
 footer p, .site-footer p {
-    font-size: 14px;
+    font-size: 15px; /* ★編集: 14pxから変更 */
     line-height: 1.8;
     opacity: 0.8;
 }
@@ -395,7 +398,7 @@ h2::before {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: var(--gradient-accent);
+    background: var(--gradient-main); /* ★編集: 臙脂色に統一 */
     border-radius: 2px;
 }
 
@@ -410,17 +413,18 @@ h3 {
 /* カード（研究・活動ページ等） */
 .card {
     background: white;
-    border: 2px solid var(--gray-200);
-    border-radius: 12px;
-    padding: 2rem;
+    border: 1px solid var(--border-light); /* ★編集: 2pxから変更 */
+    border-radius: 8px; /* ★編集: 12pxから変更 */
+    padding: 1.5rem; /* ★編集: 2remから変更 */
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* ★編集: 影を追加 */
 }
 
 .card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px); /* ★編集: -8pxから変更 */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08); /* ★編集: 影を調整 */
     border-color: var(--main-enji);
 }
 
