@@ -209,18 +209,7 @@
             background-image: url('uesugi1944.jpg');
         }
         
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, 
-                rgba(139, 21, 56, 0.85) 0%, 
-                rgba(107, 15, 42, 0.85) 50%, 
-                rgba(26, 26, 26, 0.85) 100%);
-            z-index: 1;
-        }
+        /* .hero-overlay は削除しました */
         
         .hero-content {
             position: absolute;
@@ -228,7 +217,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            color: white;
+            color: white; /* テキストカラーは保持 */
             z-index: 2;
             padding: 0 24px;
             width: 100%;
@@ -241,7 +230,7 @@
             letter-spacing: -2px;
             margin-bottom: 24px;
             animation: fadeInUp 1s ease;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3); /* テキストシャドウは保持 */
         }
         
         .hero .subtitle {
@@ -249,7 +238,7 @@
             font-weight: 300;
             opacity: 0.95;
             animation: fadeInUp 1s ease 0.2s backwards;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3); /* テキストシャドウは保持 */
         }
         
         @keyframes fadeInUp {
@@ -501,7 +490,6 @@
             <div class="slide"></div>
             <div class="slide"></div>
         </div>
-        <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1>木村紀喜</h1>
             <p class="subtitle">教育の未来を探求する</p>
