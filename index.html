@@ -185,21 +185,19 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-size: contain; /* 画像が全体に収まるように */
-            background-repeat: no-repeat; /* 繰り返しなし */
-            background-position: center; /* 中央配置 */
+            background-size: cover; /* ★変更点1: cover に戻し、余白を無くす */
+            background-repeat: no-repeat;
+            background-position: center;
             opacity: 0;
-            transform: scale(1.1) rotate(0deg); /* アニメーション初期値 */
+            transform: scale(1.1) rotate(0deg);
             transition: opacity 2s ease-in-out, transform 2s ease-in-out;
-            background-color: #000; /* 画像の余白部分の背景色 */
+            /* background-color: #000; は不要になりました */
         }
         
         .slide.active {
             opacity: 1;
-            transform: scale(1) rotate(0deg); /* アクティブ時のアニメーション終了値 */
+            transform: scale(1) rotate(0deg);
         }
-
-        /* 各スライドの背景画像 */
 
         .slide:nth-child(1) { background-image: url('wasedaookuma.jpg'); }
         .slide:nth-child(2) { background-image: url('karatsucastle.jpg'); }
@@ -377,7 +375,7 @@
         }
         
         .card h3 {
-            font-size: 20px;
+            font-size: 22px; /* ★変更点2: 20px -> 22px へ */
             font-weight: 600;
             margin-bottom: 16px;
             letter-spacing: -0.5px;
@@ -386,7 +384,7 @@
         
         .card-meta {
             color: var(--accent);
-            font-size: 13px;
+            font-size: 14px; /* ★変更点2: 13px -> 14px へ */
             font-weight: 600;
             margin-bottom: 12px;
             letter-spacing: 0.5px;
@@ -396,13 +394,14 @@
             color: var(--text-secondary);
             line-height: 1.7;
             margin-bottom: 24px;
+            font-size: 16px; /* ★変更点2: 基準の16pxを明記 */
         }
         
         .card-link {
             color: var(--accent);
             text-decoration: none;
-            font-weight: 500;
-            font-size: 14px;
+            font-weight: 600; /* ★変更点2: 500 -> 600 へ */
+            font-size: 16px; /* ★変更点2: 14px -> 16px へ */
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -583,7 +582,7 @@
             showSlide(currentSlide);
         }
         
-        let slideInterval = setInterval(nextSlide, 6000); // 6秒ごとに自動切り替え
+        let slideInterval = setInterval(nextSlide, 6000);
         
         indicators.forEach((indicator, index) => {
             indicator.addEventListener('click', () => {
