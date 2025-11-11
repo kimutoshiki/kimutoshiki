@@ -29,16 +29,16 @@
             --accent: #8B1538;
             --accent-light: #A91F45;
             --accent-dark: #6B0F2A;
-            --light: #faf8f6;
+            --light: #faf8f6; /* ★変更点1: 眩しくない白 */
             --border: #e0e0e0;
-            --text-secondary: #444; /* コントラスト向上 */
+            --text-secondary: #333; /* ★変更点2: コントラストUP */
         }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", Arial, "メイリオ", Meiryo, sans-serif;
             line-height: 1.6;
             color: var(--primary);
-            background: #fff;
+            background: var(--light); /* ★変更点1: body背景に適用 */
             overflow-x: hidden;
         }
         
@@ -46,6 +46,7 @@
             position: fixed;
             top: 0;
             width: 100%;
+            /* ★変更点1: ヘッダーは白背景(0.95)を維持し、コンテンツとの分離を明確化 */
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             z-index: 1000;
@@ -189,13 +190,13 @@
             background-repeat: no-repeat;
             background-position: center;
             opacity: 0;
-            transform: scale(1.1); /* 初期は少し拡大 */
-            transition: opacity 2s ease-in-out, transform 8s ease-out; /* ズームアウトアニメーション時間延長 */
+            transform: scale(1.15); /* ★変更点4: ズームの初期値 */
+            transition: opacity 2s ease-in-out, transform 7s ease-out; /* ★変更点4: 7秒かける */
         }
         
         .slide.active {
             opacity: 1;
-            transform: scale(1); /* アクティブ時にゆっくりとズームアウト */
+            transform: scale(1); /* ★変更点4: ズームアウト完了 */
         }
 
         .slide:nth-child(1) { background-image: url('wasedaookuma.jpg'); }
@@ -209,7 +210,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5); /* オーバーレイを少し濃くしてコントラストUP */
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1;
         }
         
@@ -232,15 +233,15 @@
             letter-spacing: -2px;
             margin-bottom: 24px;
             animation: fadeInUp 1s ease;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.5); /* 影を濃くしてコントラストUP */
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
         }
         
         .hero .subtitle {
             font-size: clamp(1rem, 3vw, 1.5rem);
             font-weight: 300;
-            opacity: 0.98; /* 不透明度を上げる */
+            opacity: 0.98;
             animation: fadeInUp 1s ease 0.2s backwards;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.5); /* 影を濃くしてコントラストUP */
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
         }
         
         @keyframes fadeInUp {
@@ -260,22 +261,24 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 12px;
+            gap: 16px; /* ★変更点5: ドットの間隔 */
             z-index: 3;
         }
         
         .indicator {
-            width: 40px;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.4); /* 背景を少し濃く */
+            width: 12px; /* ★変更点5: ドットのサイズ */
+            height: 12px; /* ★変更点5: ドットのサイズ */
+            background: rgba(255, 255, 255, 0.4);
             border: none;
             cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 50%; /* ★変更点5: 円形にする */
+            transition: all 0.4s ease;
+            transform: scale(0.9); /* ★変更点5: 非アクティブ時のサイズ */
         }
         
         .indicator.active {
-            background: rgba(255, 255, 255, 1); /* アクティブ時をより目立たせる */
-            transform: scaleX(1.5);
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1); /* ★変更点5: アクティブ時のサイズ */
         }
         
         .scroll-indicator {
@@ -297,13 +300,13 @@
             width: 24px;
             height: 24px;
             fill: white;
-            opacity: 0.8; /* 不透明度を上げる */
+            opacity: 0.8;
         }
         
         .intro {
             text-align: center;
             padding: 120px 24px;
-            background: var(--light);
+            background: var(--light); /* ★変更点1: 背景色を適用 */
             position: relative;
         }
         
@@ -318,16 +321,16 @@
         }
         
         .intro h2 {
-            font-size: clamp(2rem, 4vw, 2.8rem); /* さらに拡大 */
+            font-size: clamp(2.2rem, 4vw, 3rem); /* ★変更点3: サイズUP */
             font-weight: 700;
-            margin-bottom: 20px; /* 余白を増やす */
+            margin-bottom: 20px;
             letter-spacing: -1px;
             color: var(--primary);
         }
         
         .intro p {
-            font-size: 19px; /* さらに拡大 */
-            color: var(--text-secondary);
+            font-size: 20px; /* ★変更点3: サイズUP */
+            color: var(--text-secondary); /* ★変更点2: コントラストUP */
             max-width: 600px;
             margin: 0 auto;
             line-height: 1.8;
@@ -340,10 +343,11 @@
             padding: 80px 24px;
             max-width: 1200px;
             margin: 0 auto;
+            background: var(--light); /* ★変更点1: 背景色を適用 */
         }
         
         .card {
-            background: white;
+            background: #ffffff; /* ★変更点1: カードは白のまま（背景との差を出す） */
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 40px;
@@ -374,41 +378,41 @@
         }
         
         .card h3 {
-            font-size: 24px; /* さらに拡大 */
-            font-weight: 700; /* 太字化 */
+            font-size: 26px; /* ★変更点3: サイズUP */
+            font-weight: 700;
             margin-bottom: 16px;
             letter-spacing: -0.5px;
             color: var(--primary);
         }
         
         .card-meta {
-            color: var(--accent-dark); /* より濃い色でコントラスト向上 */
-            font-size: 15px; /* さらに拡大 */
+            color: var(--accent-dark);
+            font-size: 16px; /* ★変更点3: サイズUP */
             font-weight: 600;
             margin-bottom: 12px;
             letter-spacing: 0.5px;
         }
         
         .card p {
-            color: var(--text-secondary);
+            color: var(--text-secondary); /* ★変更点2: コントラストUP */
             line-height: 1.7;
             margin-bottom: 24px;
-            font-size: 17px; /* さらに拡大 */
+            font-size: 18px; /* ★変更点3: サイズUP */
         }
         
         .card-link {
             color: var(--accent);
             text-decoration: none;
-            font-weight: 700; /* さらに太字化 */
-            font-size: 17px; /* さらに拡大 */
+            font-weight: 700;
+            font-size: 18px; /* ★変更点3: サイズUP */
             display: inline-flex;
             align-items: center;
-            gap: 6px; /* 矢印との間隔も調整 */
+            gap: 6px;
             transition: gap 0.3s ease;
         }
         
         .card-link:hover {
-            gap: 10px; /* ホバー時の間隔も調整 */
+            gap: 10px;
         }
         
         footer {
@@ -419,9 +423,9 @@
         }
         
         footer p {
-            font-size: 15px; /* さらに拡大 */
+            font-size: 16px; /* ★変更点3: サイズUP */
             line-height: 1.8;
-            opacity: 0.9; /* 不透明度を上げる */
+            opacity: 0.9;
         }
         
         @media (max-width: 768px) {
@@ -465,6 +469,16 @@
             .intro {
                 padding: 80px 24px;
             }
+
+            .intro p {
+                font-size: 18px; /* モバイルでは少し抑える */
+            }
+            .card p {
+                font-size: 17px; /* モバイルでは少し抑える */
+            }
+            .card-link {
+                font-size: 17px; /* モバイルでは少し抑える */
+            }
         }
     </style>
 </head>
@@ -489,7 +503,7 @@
 
     <section class="hero">
         <div class="slideshow">
-            <div class="slide active"></div>
+            <div class="slide"></div>
             <div class="slide"></div>
             <div class="slide"></div>
             <div class="slide"></div>
@@ -500,7 +514,7 @@
             <p class="subtitle">教育の未来を探求する</p>
         </div>
         <div class="slide-indicators">
-            <button class="indicator active" data-slide="0"></button>
+            <button class="indicator" data-slide="0"></button>
             <button class="indicator" data-slide="1"></button>
             <button class="indicator" data-slide="2"></button>
             <button class="indicator" data-slide="3"></button>
@@ -572,9 +586,8 @@
         let currentSlide = 0;
         
         function showSlide(index) {
-            slides.forEach(slide => {
+            slides.forEach((slide, i) => {
                 slide.classList.remove('active');
-                slide.style.transform = 'scale(1.1)'; /* アニメーションリセット */
             });
             indicators.forEach(indicator => indicator.classList.remove('active'));
             
@@ -588,13 +601,13 @@
             showSlide(currentSlide);
         }
         
-        let slideInterval = setInterval(nextSlide, 6000); // 6秒ごとに自動切り替え
+        let slideInterval = setInterval(nextSlide, 7000); // ★変更点4: 7秒ごとに変更
         
         indicators.forEach((indicator, index) => {
             indicator.addEventListener('click', () => {
                 clearInterval(slideInterval);
                 showSlide(index);
-                slideInterval = setInterval(nextSlide, 6000);
+                slideInterval = setInterval(nextSlide, 7000);
             });
         });
         
@@ -602,7 +615,7 @@
             document.querySelector('.intro').scrollIntoView({ behavior: 'smooth' });
         });
 
-        // 初回ロード時にもズームアウトアニメーションを適用
+        // 初回ロード時にスライド0を表示
         showSlide(0);
     </script>
 </body>
