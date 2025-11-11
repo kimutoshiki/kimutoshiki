@@ -13,483 +13,11 @@
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary: #1a1a1a;
-            --accent: #8B1538;
-            --accent-light: #A91F45;
-            --accent-dark: #6B0F2A;
-            --light: #faf8f6;
-            --border: #e0e0e0;
-            --text-secondary: #666;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", Arial, "メイリオ", Meiryo, sans-serif;
-            line-height: 1.6;
-            color: var(--primary);
-            background: var(--light);
-            overflow-x: hidden;
-        }
-        
-        /* ヘッダー */
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            border-bottom: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-        
-        .header-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .logo {
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            text-decoration: none;
-            color: var(--primary);
-            transition: opacity 0.3s ease;
-        }
-        
-        .logo:hover {
-            opacity: 0.7;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 32px;
-        }
-        
-        nav a {
-            text-decoration: none;
-            color: var(--primary);
-            font-size: 14px;
-            font-weight: 500;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-        
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--accent);
-            transition: width 0.3s ease;
-        }
-        
-        nav a:hover::after,
-        nav a.current::after {
-            width: 100%;
-        }
-        
-        /* モバイルメニュー */
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            position: relative;
-            width: 40px;
-            height: 40px;
-        }
-        
-        .menu-icon {
-            position: relative;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon::before,
-        .menu-icon::after {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon::before {
-            top: -8px;
-        }
-        
-        .menu-icon::after {
-            top: 8px;
-        }
-        
-        /* ページヘッダー */
-        .page-header {
-            margin-top: 64px;
-            padding: 100px 24px 60px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .page-header::before {
-            content: '';
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
-            animation: float 25s ease-in-out infinite;
-        }
-        
-        .page-header::after {
-            content: '';
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            background: radial-gradient(circle at 70% 50%, rgba(255,255,255,0.08) 0%, transparent 50%);
-            animation: float 25s ease-in-out infinite reverse;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(-5%, -5%) rotate(0deg); }
-            50% { transform: translate(5%, 5%) rotate(180deg); }
-        }
-        
-        .page-header h1 {
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 700;
-            color: white;
-            letter-spacing: 2px;
-            position: relative;
-            z-index: 1;
-            animation: fadeInUp 0.8s ease;
-        }
-        
-        .page-header p {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.9);
-            margin-top: 12px;
-            position: relative;
-            z-index: 1;
-            animation: fadeInUp 0.8s ease 0.1s backwards;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* メインコンテンツ */
-        .content-container {
-            max-width: 1200px;
-            margin: -40px auto 80px;
-            padding: 0 24px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        /* 研究テーマセクション */
-        .research-themes {
-            background: white;
-            border-radius: 20px;
-            padding: 60px;
-            margin-bottom: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-        }
-        
-        .section-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 40px;
-            text-align: center;
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-light));
-            border-radius: 2px;
-        }
-        
-        .theme-grid {
-            display: grid;
-            gap: 24px;
-            margin-top: 48px;
-        }
-        
-        .theme-card {
-            background: var(--light);
-            border-left: 4px solid var(--accent);
-            border-radius: 12px;
-            padding: 24px 32px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .theme-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(139, 21, 56, 0.05), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .theme-card:hover {
-            transform: translateX(8px);
-            box-shadow: 0 4px 20px rgba(139, 21, 56, 0.15);
-        }
-        
-        .theme-card:hover::before {
-            left: 100%;
-        }
-        
-        .theme-number {
-            display: inline-block;
-            width: 32px;
-            height: 32px;
-            background: var(--accent);
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 32px;
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-        
-        .theme-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--primary);
-            line-height: 1.6;
-        }
-        
-        .theme-description {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            line-height: 1.7;
-        }
-        
-        /* 活動セクション */
-        .activities-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 32px;
-        }
-        
-        .activity-card {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 6px 30px rgba(0,0,0,0.06);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .activity-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-light));
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.3s ease;
-        }
-        
-        .activity-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-        }
-        
-        .activity-card:hover::before {
-            transform: scaleX(1);
-        }
-        
-        .activity-icon {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-light));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-        
-        .activity-icon svg {
-            width: 28px;
-            height: 28px;
-            fill: white;
-        }
-        
-        .activity-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 16px;
-        }
-        
-        .activity-list {
-            list-style: none;
-        }
-        
-        .activity-list li {
-            position: relative;
-            padding-left: 24px;
-            margin-bottom: 12px;
-            color: var(--text-secondary);
-            font-size: 15px;
-            line-height: 1.7;
-        }
-        
-        .activity-list li::before {
-            content: '▸';
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: 600;
-        }
-        
-        /* スキルタグ */
-        .skills-section {
-            background: white;
-            border-radius: 20px;
-            padding: 48px;
-            margin-top: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        
-        .skills-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 32px;
-        }
-        
-        .skill-tag {
-            background: var(--light);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 10px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            transition: all 0.3s ease;
-        }
-        
-        .skill-tag:hover {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-        
-        /* フッター */
-        footer {
-            background: var(--primary);
-            color: white;
-            padding: 60px 24px;
-            text-align: center;
-            margin-top: 100px;
-        }
-        
-        footer p {
-            font-size: 14px;
-            line-height: 1.8;
-            opacity: 0.8;
-        }
-        
-        /* レスポンシブ */
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: block;
-            }
-            
-            nav {
-                position: fixed;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: white;
-                border-bottom: 1px solid var(--border);
-                transform: translateY(-100%);
-                opacity: 0;
-                transition: all 0.3s ease;
-                pointer-events: none;
-            }
-            
-            nav.active {
-                transform: translateY(0);
-                opacity: 1;
-                pointer-events: auto;
-            }
-            
-            nav ul {
-                flex-direction: column;
-                padding: 24px;
-                gap: 24px;
-            }
-            
-            .research-themes,
-            .activity-card,
-            .skills-section {
-                padding: 32px 24px;
-            }
-            
-            .activities-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
@@ -507,112 +35,114 @@
         </div>
     </header>
 
-    <div class="page-header">
-        <h1>RESEARCH & ACTIVITY</h1>
-        <p>教育の未来を切り拓く研究と実践</p>
-    </div>
-
-    <div class="content-container">
-        <section class="research-themes">
-            <h2 class="section-title">研究テーマ</h2>
-            <div class="theme-grid">
-                <div class="theme-card">
-                    <span class="theme-number">1</span>
-                    <h3 class="theme-title">小学校社会科における「議論する力」を育成する授業開発</h3>
-                    <p class="theme-description">対話的な学びを通じて、子どもたちの批判的思考力と議論スキルを育成する授業方法を研究しています。</p>
-                </div>
-                <div class="theme-card">
-                    <span class="theme-number">2</span>
-                    <h3 class="theme-title">Claude.aiを活用したアクセシブルな教育活動の実施・支援</h3>
-                    <p class="theme-description">最新のAI技術を教育現場に適用し、すべての子どもが学びやすい環境づくりを目指しています。</p>
-                </div>
-                <div class="theme-card">
-                    <span class="theme-number">3</span>
-                    <h3 class="theme-title">小学校社会科における科学的探究的な学びの支援</h3>
-                    <p class="theme-description">データと根拠に基づいた思考を社会科教育に取り入れ、探究心を育む学習方法を開発しています。</p>
-                </div>
-                <div class="theme-card">
-                    <span class="theme-number">4</span>
-                    <h3 class="theme-title">学力向上におけるICTの利活用に関する考察</h3>
-                    <p class="theme-description">効果的なICT活用により、個別最適化された学習と協働的な学びの実現を研究しています。</p>
-                </div>
-                <div class="theme-card">
-                    <span class="theme-number">5</span>
-                    <h3 class="theme-title">反ICT教育に関する批判的考察</h3>
-                    <p class="theme-description">ICT導入への懸念や批判を真摯に検討し、バランスの取れた教育環境の構築を探求しています。</p>
-                </div>
-                <div class="theme-card">
-                    <span class="theme-number">6</span>
-                    <h3 class="theme-title">学校教育におけるAI活用の意義と是非の判断に関する考察</h3>
-                    <p class="theme-description">AI技術の教育的価値と倫理的課題を多角的に分析し、適切な活用指針を研究しています。</p>
-                </div>
-            </div>
-        </section>
-
-        <div class="activities-grid">
-            <article class="activity-card">
-                <div class="activity-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    </svg>
-                </div>
-                <h3 class="activity-title">教育実践</h3>
-                <ul class="activity-list">
-                    <li>教育ボランティア（唐津市立小学校）</li>
-                    <li>教育実習（佐賀市立小学校）</li>
-                    <li>教育実習（唐津市立中学校）</li>
-                    <li>学校臨床実習（新宿区立小学校）</li>
-                </ul>
-            </article>
-
-            <article class="activity-card">
-                <div class="activity-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-                    </svg>
-                </div>
-                <h3 class="activity-title">学習支援</h3>
-                <ul class="activity-list">
-                    <li>放課後等学習支援員（唐津市立中学校）</li>
-                    <li>個別学習指導の実践</li>
-                    <li>学習困難児童への支援活動</li>
-                </ul>
-            </article>
-
-            <article class="activity-card">
-                <div class="activity-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                </div>
-                <h3 class="activity-title">研究発表・参加</h3>
-                <ul class="activity-list">
-                    <li>教育関連ワークショップへの参加</li>
-                    <li>研究発表会での実践報告</li>
-                    <li>教育学会での情報収集</li>
-                    <li>先進校視察と実践研究</li>
-                </ul>
-            </article>
+    <main>
+        <div class="page-header">
+            <h1>RESEARCH & ACTIVITY</h1>
+            <p>教育の未来を切り拓く研究と実践</p>
         </div>
 
-        <section class="skills-section">
-            <h2 class="section-title">専門分野・スキル</h2>
-            <div class="skills-grid">
-                <span class="skill-tag">ICT教育</span>
-                <span class="skill-tag">AI活用教育</span>
-                <span class="skill-tag">社会科教育</span>
-                <span class="skill-tag">協働学習</span>
-                <span class="skill-tag">授業設計</span>
-                <span class="skill-tag">教材開発</span>
-                <span class="skill-tag">学習評価</span>
-                <span class="skill-tag">探究学習</span>
-                <span class="skill-tag">生成AI</span>
-                <span class="skill-tag">教育DX</span>
-            </div>
-        </section>
-    </div>
+        <div class="content-container">
+            <section class="research-themes">
+                <h2 class="section-title">研究テーマ</h2>
+                <div class="theme-grid">
+                    <div class="theme-card">
+                        <span class="theme-number">1</span>
+                        <h3 class="theme-title">小学校社会科における「議論する力」を育成する授業開発</h3>
+                        <p class="theme-description">対話的な学びを通じて、子どもたちの批判的思考力と議論スキルを育成する授業方法を研究しています。</p>
+                    </div>
+                    <div class="theme-card">
+                        <span class="theme-number">2</span>
+                        <h3 class="theme-title">Claude.aiを活用したアクセシブルな教育活動の実施・支援</h3>
+                        <p class="theme-description">最新のAI技術を教育現場に適用し、すべての子どもが学びやすい環境づくりを目指しています。</p>
+                    </div>
+                    <div class="theme-card">
+                        <span class="theme-number">3</span>
+                        <h3 class="theme-title">小学校社会科における科学的探究的な学びの支援</h3>
+                        <p class="theme-description">データと根拠に基づいた思考を社会科教育に取り入れ、探究心を育む学習方法を開発しています。</p>
+                    </div>
+                    <div class="theme-card">
+                        <span class="theme-number">4</span>
+                        <h3 class="theme-title">学力向上におけるICTの利活用に関する考察</h3>
+                        <p class="theme-description">効果的なICT活用により、個別最適化された学習と協働的な学びの実現を研究しています。</p>
+                    </div>
+                    <div class="theme-card">
+                        <span class="theme-number">5</span>
+                        <h3 class="theme-title">反ICT教育に関する批判的考察</h3>
+                        <p class="theme-description">ICT導入への懸念や批判を真摯に検討し、バランスの取れた教育環境の構築を探求しています。</p>
+                    </div>
+                    <div class="theme-card">
+                        <span class="theme-number">6</span>
+                        <h3 class="theme-title">学校教育におけるAI活用の意義と是非の判断に関する考察</h3>
+                        <p class="theme-description">AI技術の教育的価値と倫理的課題を多角的に分析し、適切な活用指針を研究しています。</p>
+                    </div>
+                </div>
+            </section>
 
-    <footer>
+            <div class="activities-grid">
+                <article class="activity-card">
+                    <div class="activity-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <h3 class="activity-title">教育実践</h3>
+                    <ul class="activity-list">
+                        <li>教育ボランティア（唐津市立小学校）</li>
+                        <li>教育実習（佐賀市立小学校）</li>
+                        <li>教育実習（唐津市立中学校）</li>
+                        <li>学校臨床実習（新宿区立小学校）</li>
+                    </ul>
+                </article>
+
+                <article class="activity-card">
+                    <div class="activity-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                        </svg>
+                    </div>
+                    <h3 class="activity-title">学習支援</h3>
+                    <ul class="activity-list">
+                        <li>放課後等学習支援員（唐津市立中学校）</li>
+                        <li>個別学習指導の実践</li>
+                        <li>学習困難児童への支援活動</li>
+                    </ul>
+                </article>
+
+                <article class="activity-card">
+                    <div class="activity-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <h3 class="activity-title">研究発表・参加</h3>
+                    <ul class="activity-list">
+                        <li>教育関連ワークショップへの参加</li>
+                        <li>研究発表会での実践報告</li>
+                        <li>教育学会での情報収集</li>
+                        <li>先進校視察と実践研究</li>
+                    </ul>
+                </article>
+            </div>
+
+            <section class="skills-section">
+                <h2 class="section-title">専門分野・スキル</h2>
+                <div class="skills-grid">
+                    <span class="skill-tag">ICT教育</span>
+                    <span class="skill-tag">AI活用教育</span>
+                    <span class="skill-tag">社会科教育</span>
+                    <span class="skill-tag">協働学習</span>
+                    <span class="skill-tag">授業設計</span>
+                    <span class="skill-tag">教材開発</span>
+                    <span class="skill-tag">学習評価</span>
+                    <span class="skill-tag">探究学習</span>
+                    <span class="skill-tag">生成AI</span>
+                    <span class="skill-tag">教育DX</span>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
         <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
         当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
     </footer>
@@ -622,17 +152,20 @@
         const menuToggle = document.getElementById('menuToggle');
         const navigation = document.getElementById('navigation');
         
-        menuToggle.addEventListener('click', () => {
-            navigation.classList.toggle('active');
-        });
+        if (menuToggle && navigation) {
+            menuToggle.addEventListener('click', () => {
+                navigation.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+        }
         
         // スクロール時のヘッダー処理
         window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
+            const header = document.querySelector('.site-header');
             if (window.pageYOffset > 100) {
-                header.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+                header.classList.add('scrolled');
             } else {
-                header.style.boxShadow = 'none';
+                header.classList.remove('scrolled');
             }
         });
         
@@ -647,6 +180,7 @@
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'translateY(0)';
+                    observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
