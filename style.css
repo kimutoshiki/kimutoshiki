@@ -147,6 +147,13 @@ nav a.current::after {
     transform: scale(1);
 }
 
+/* ★★★ ここが修正点です ★★★ */
+.slide:nth-child(1) { background-image: url('wasedaookuma.jpg'); }
+.slide:nth-child(2) { background-image: url('karatsucastle.jpg'); }
+.slide:nth-child(3) { background-image: url('uesugi1944.jpg'); }
+.slide:nth-child(4) { background-image: url('kyukeisha.jpg'); }
+/* ★★★ 修正ここまで ★★★ */
+
 .hero-overlay {
     position: absolute;
     top: 0; left: 0;
