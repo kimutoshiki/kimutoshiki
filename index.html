@@ -38,10 +38,10 @@
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", Arial, "メイリオ", Meiryo, sans-serif;
             line-height: 1.6;
             color: var(--primary);
-            background: var(--light);
+            background: #fff;
             overflow-x: hidden;
         }
-
+        
         header {
             position: fixed;
             top: 0;
@@ -163,58 +163,56 @@
             transform: rotate(-45deg);
         }
 
-        main {
-            padding-top: 64px;
-        }
-
-        .hero-mosaic {
+        .hero {
+            height: 100vh;
             position: relative;
-            height: 60vh;
-            min-height: 400px;
-            max-height: 700px;
-            background: #000;
             overflow: hidden;
+            background: #000;
         }
         
-        .mosaic-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 1fr);
+        .slideshow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
-            gap: 2px;
-        }
-
-        .mosaic-panel {
-            background-size: cover;
-            background-position: center;
-            transition: all 0.3s ease;
+            z-index: 0;
         }
         
-        .mosaic-panel:hover {
-            transform: scale(1.05);
-            z-index: 2;
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: contain; /* 画像が全体に収まるように */
+            background-repeat: no-repeat; /* 繰り返しなし */
+            background-position: center; /* 中央配置 */
+            opacity: 0;
+            transform: scale(1.1) rotate(0deg); /* アニメーション初期値 */
+            transition: opacity 2s ease-in-out, transform 2s ease-in-out;
+            background-color: #000; /* 画像の余白部分の背景色 */
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) rotate(0deg); /* アクティブ時のアニメーション終了値 */
         }
 
-        #panel-1 {
-            grid-column: 1 / 3;
-            grid-row: 1 / 2;
-            background-image: url('wasedaookuma.jpg');
-        }
-        #panel-2 {
-            grid-column: 3 / 4;
-            grid-row: 1 / 3;
-            background-image: url('kyukeisha.jpg');
-        }
-        #panel-3 {
-            grid-column: 1 / 2;
-            grid-row: 2 / 3;
-            background-image: url('karatsucastle.jpg');
-        }
-        #panel-4 {
-            grid-column: 2 / 3;
-            grid-row: 2 / 3;
-            background-image: url('uesugi1944.jpg');
-            background-position: center 30%;
+        /* 各スライドの背景画像 */
+        .slide:nth-child(1) { background-image: url('kyukeisha.jpg'); }
+        .slide:nth-child(2) { background-image: url('wasedaookuma.jpg'); }
+        .slide:nth-child(3) { background-image: url('karatsucastle.jpg'); }
+        .slide:nth-child(4) { background-image: url('uesugi1944.jpg'); }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
         }
         
         .hero-content {
@@ -222,113 +220,198 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 3;
             text-align: center;
             color: white;
-            padding: 24px;
+            z-index: 2;
+            padding: 0 24px;
+            width: 100%;
+            max-width: 800px;
         }
-
-        .hero-content h1 {
+        
+        .hero h1 {
             font-size: clamp(2.5rem, 8vw, 4.5rem);
             font-weight: 700;
             letter-spacing: -2px;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-            margin: 0;
+            margin-bottom: 24px;
+            animation: fadeInUp 1s ease;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
         }
-
-        .hero-content .subtitle {
-            font-size: clamp(1rem, 4vw, 1.5rem);
+        
+        .hero .subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
             font-weight: 300;
             opacity: 0.95;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
+            animation: fadeInUp 1s ease 0.2s backwards;
+            text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
         }
-
-        .intro-nav {
-            background: #fff;
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .slide-indicators {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 3;
+        }
+        
+        .indicator {
+            width: 40px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .indicator.active {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scaleX(1.5);
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+            z-index: 3;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+        
+        .scroll-indicator svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+            opacity: 0.7;
+        }
+        
+        .intro {
+            text-align: center;
+            padding: 120px 24px;
+            background: var(--light);
+            position: relative;
+        }
+        
+        .intro::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, var(--light));
+        }
+        
+        .intro h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+            color: var(--primary);
+        }
+        
+        .intro p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+        
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
             padding: 80px 24px;
             max-width: 1200px;
             margin: 0 auto;
         }
         
-        .intro-text {
-            text-align: center;
-            max-width: 700px;
-            margin: 0 auto 60px auto;
-        }
-        
-        .intro-text h2 {
-            font-size: clamp(1.8rem, 4vw, 2.5rem);
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin-bottom: 16px;
-        }
-        
-        .intro-text p {
-            font-size: 18px;
-            color: var(--text-secondary);
-            line-height: 1.8;
-        }
-        
-        .nav-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
-        }
-        
-        .nav-card {
-            display: block;
-            text-decoration: none;
+        .card {
             background: white;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 32px;
+            border-radius: 16px;
+            padding: 40px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
         
-        .nav-card::before {
+        .card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 4px;
-            background: var(--accent);
-            transform: scaleX(0);
-            transition: transform 0.4s ease;
-            transform-origin: left;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
         }
         
-        .nav-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
         }
         
-        .nav-card:hover::before {
-            transform: scaleX(1);
+        .card:hover::before {
+            transform: translateX(0);
         }
         
-        .nav-card h3 {
-            font-size: 22px;
+        .card h3 {
+            font-size: 20px;
             font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
             color: var(--primary);
-            margin-bottom: 12px;
         }
         
-        .nav-card p {
-            font-size: 15px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-            line-height: 1.7;
-        }
-        
-        .nav-card .card-link {
-            font-size: 15px;
-            font-weight: 500;
+        .card-meta {
             color: var(--accent);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
         }
-
+        
+        .card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+        
+        .card-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: gap 0.3s ease;
+        }
+        
+        .card-link:hover {
+            gap: 8px;
+        }
+        
         footer {
             background: var(--primary);
             color: white;
@@ -342,12 +425,6 @@
             opacity: 0.8;
         }
         
-        @media (max-width: 900px) {
-            .nav-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         @media (max-width: 768px) {
             .menu-toggle {
                 display: block;
@@ -377,22 +454,14 @@
                 padding: 24px;
                 gap: 24px;
             }
-
-            .intro-nav {
-                padding: 60px 24px;
+            
+            .cards {
+                grid-template-columns: 1fr;
             }
-
-            .hero-mosaic {
-                height: 50vh;
+            
+            .slide-indicators {
+                bottom: 80px;
             }
-            .mosaic-grid {
-                grid-template-columns: repeat(2, 1fr);
-                grid-template-rows: repeat(2, 1fr);
-            }
-            #panel-1 { grid-column: 1 / 2; grid-row: 1 / 2; }
-            #panel-2 { grid-column: 2 / 3; grid-row: 1 / 2; background-position: center; }
-            #panel-3 { grid-column: 1 / 2; grid-row: 2 / 3; }
-            #panel-4 { grid-column: 2 / 3; grid-row: 2 / 3; }
         }
     </style>
 </head>
@@ -415,49 +484,62 @@
         </div>
     </header>
 
-    <main>
+    <section class="hero">
+        <div class="slideshow">
+            <div class="slide active"></div>
+            <div class="slide"></div>
+            <div class="slide"></div>
+            <div class="slide"></div>
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>木村紀喜</h1>
+            <p class="subtitle">教育の未来を探求する</p>
+        </div>
+        <div class="slide-indicators">
+            <button class="indicator active" data-slide="0"></button>
+            <button class="indicator" data-slide="1"></button>
+            <button class="indicator" data-slide="2"></button>
+            <button class="indicator" data-slide="3"></button>
+        </div>
+        <div class="scroll-indicator">
+            <svg viewBox="0 0 24 24">
+                <path d="M7 10l5 5 5-5z"/>
+            </svg>
+        </div>
+    </section>
 
-        <section class="hero-mosaic">
-            <div class="mosaic-grid">
-                <div class="mosaic-panel" id="panel-1"></div>
-                <div class="mosaic-panel" id="panel-2"></div>
-                <div class="mosaic-panel" id="panel-3"></div>
-                <div class="mosaic-panel" id="panel-4"></div>
-            </div>
-            <div class="hero-content">
-                <h1>木村紀喜</h1>
-                <p class="subtitle">教育の未来を探求する</p>
-            </div>
-        </section>
+    <section class="intro">
+        <h2>学校教育の未来を考える</h2>
+        <p>研究と実践を通じて、これからの教育のあり方を探求し、<br>日々の活動について発信しています。</p>
+    </section>
 
-        <section class="intro-nav">
-            <div class="intro-text">
-                <h2>学校教育の未来を考える</h2>
-                <p>研究と実践を通じて、これからの教育のあり方を探求し、日々の活動について発信しています。</p>
-            </div>
-            
-            <div class="nav-grid">
-                <a href="profile.html" class="nav-card">
-                    <h3>プロフィール</h3>
-                    <p>佐賀県唐津市出身。早稲田大学教職大学院での学びや、これまでの経歴について紹介します。</p>
-                    <span class="card-link">詳しいプロフィールを見る →</span>
-                </a>
-                
-                <a href="research.html" class="nav-card">
-                    <h3>研究・活動</h3>
-                    <p>ICT教育、協働学習、教員養成など、現代の教育課題に対する実践的な研究と活動内容です。</p>
-                    <span class="card-link">研究内容を詳しく見る →</span>
-                </a>
-                
-                <a href="blog.html" class="nav-card">
-                    <h3>ブログ</h3>
-                    <p>教育現場での実践や研究、日々の思索について、感じたことを綴っています。</p>
-                    <span class="card-link">最新の投稿を読む →</span>
-                </a>
-            </div>
-        </section>
+    <section class="cards">
+        <article class="card">
+            <h3>最新のブログ</h3>
+            <p class="card-meta">2025.07.29 更新</p>
+            <p>文部科学省「生成AIの利用に関する夏季公開学習会」への参加をはじめ、教育現場での実践や研究について、日々感じたことを綴っています。</p>
+            <a href="blog.html" class="card-link">
+                ブログを読む →
+            </a>
+        </article>
 
-    </main>
+        <article class="card">
+            <h3>プロフィール</h3>
+            <p>佐賀県唐津市出身。佐賀大学教育学部卒業後、早稲田大学教職大学院で学んでいます。教育の理論と実践の融合を目指し、研究活動を行っています。</p>
+            <a href="profile.html" class="card-link">
+                詳しいプロフィールを見る →
+            </a>
+        </article>
+
+        <article class="card">
+            <h3>研究・活動</h3>
+            <p>ICT教育、協働学習、教員養成など、現代の教育課題に対する実践的な研究を進めています。学校現場との連携を重視した活動を展開しています。</p>
+            <a href="research.html" class="card-link">
+                研究内容を詳しく見る →
+            </a>
+        </article>
+    </section>
 
     <footer>
         <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
@@ -480,6 +562,38 @@
             } else {
                 header.classList.remove('scrolled');
             }
+        });
+        
+        const slides = document.querySelectorAll('.slide');
+        const indicators = document.querySelectorAll('.indicator');
+        let currentSlide = 0;
+        
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            indicators.forEach(indicator => indicator.classList.remove('active'));
+            
+            slides[index].classList.add('active');
+            indicators[index].classList.add('active');
+            currentSlide = index;
+        }
+        
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }
+        
+        let slideInterval = setInterval(nextSlide, 6000); // 6秒ごとに自動切り替え
+        
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', () => {
+                clearInterval(slideInterval);
+                showSlide(index);
+                slideInterval = setInterval(nextSlide, 6000);
+            });
+        });
+        
+        document.querySelector('.scroll-indicator').addEventListener('click', () => {
+            document.querySelector('.intro').scrollIntoView({ behavior: 'smooth' });
         });
     </script>
 </body>
