@@ -13,511 +13,11 @@
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary: #1a1a1a;
-            --accent: #8B1538;
-            --accent-light: #A91F45;
-            --accent-dark: #6B0F2A;
-            --light: #faf8f6;
-            --border: #e0e0e0;
-            --text-secondary: #666;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", Arial, "メイリオ", Meiryo, sans-serif;
-            line-height: 1.6;
-            color: var(--primary);
-            background: var(--light);
-            overflow-x: hidden;
-        }
-        
-        /* ヘッダー */
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            border-bottom: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-        
-        .header-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .logo {
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            text-decoration: none;
-            color: var(--primary);
-            transition: opacity 0.3s ease;
-        }
-        
-        .logo:hover {
-            opacity: 0.7;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 32px;
-        }
-        
-        nav a {
-            text-decoration: none;
-            color: var(--primary);
-            font-size: 14px;
-            font-weight: 500;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-        
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--accent);
-            transition: width 0.3s ease;
-        }
-        
-        nav a:hover::after,
-        nav a.current::after {
-            width: 100%;
-        }
-        
-        /* モバイルメニュー */
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            position: relative;
-            width: 40px;
-            height: 40px;
-        }
-        
-        .menu-icon {
-            position: relative;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon::before,
-        .menu-icon::after {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon::before {
-            top: -8px;
-        }
-        
-        .menu-icon::after {
-            top: 8px;
-        }
-        
-        /* プロフィールヒーロー */
-        .profile-hero {
-            margin-top: 64px;
-            padding: 120px 24px 80px;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .profile-hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: float 20s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-        
-        .profile-hero-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 60px;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .profile-image-container {
-            display: flex;
-            justify-content: center;
-        }
-        
-        .profile-image-wrapper {
-            position: relative;
-            width: 280px;
-            height: 280px;
-        }
-        
-        .profile-image {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 6px solid white;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        .profile-image-decoration {
-            position: absolute;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 50%;
-            animation: rotate-slow 30s linear infinite;
-        }
-        
-        @keyframes rotate-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .profile-intro {
-            color: white;
-        }
-        
-        .profile-intro h1 {
-            font-size: clamp(2.5rem, 5vw, 3.5rem);
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin-bottom: 8px;
-            animation: fadeInUp 0.8s ease;
-        }
-        
-        .profile-intro .subtitle {
-            font-size: 20px;
-            opacity: 0.95;
-            margin-bottom: 24px;
-            animation: fadeInUp 0.8s ease 0.1s backwards;
-        }
-        
-        .profile-intro .description {
-            font-size: 16px;
-            line-height: 1.8;
-            opacity: 0.9;
-            animation: fadeInUp 0.8s ease 0.2s backwards;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* プロフィール詳細 */
-        .profile-details {
-            padding: 80px 24px;
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-        
-        .detail-section {
-            background: white;
-            border-radius: 16px;
-            padding: 48px;
-            margin-bottom: 32px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .detail-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--accent) 0%, var(--accent-light) 100%);
-        }
-        
-        .detail-section h2 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 24px;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .section-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--accent);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .section-icon svg {
-            width: 18px;
-            height: 18px;
-            fill: white;
-        }
-        
-        .detail-grid {
-            display: grid;
-            gap: 24px;
-        }
-        
-        .detail-item {
-            display: grid;
-            grid-template-columns: 140px 1fr;
-            gap: 24px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .detail-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        
-        .detail-label {
-            font-weight: 600;
-            color: var(--accent);
-            font-size: 14px;
-            letter-spacing: 0.5px;
-        }
-        
-        .detail-value {
-            color: var(--text-secondary);
-            line-height: 1.8;
-        }
-        
-        .detail-value strong {
-            color: var(--primary);
-            font-weight: 600;
-        }
-        
-        /* タイムライン */
-        .timeline {
-            position: relative;
-            padding-left: 40px;
-        }
-        
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 8px;
-            top: 8px;
-            bottom: 8px;
-            width: 2px;
-            background: var(--border);
-        }
-        
-        .timeline-item {
-            position: relative;
-            margin-bottom: 24px;
-        }
-        
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -36px;
-            top: 6px;
-            width: 12px;
-            height: 12px;
-            background: var(--accent);
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .timeline-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .timeline-year {
-            font-size: 13px;
-            color: var(--accent);
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .timeline-content {
-            color: var(--text-secondary);
-        }
-        
-        /* 資格バッジ */
-        .license-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-        }
-        
-        .license-badge {
-            background: var(--light);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.3s ease;
-        }
-        
-        .license-badge:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 21, 56, 0.1);
-            border-color: var(--accent-light);
-        }
-        
-        .license-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--accent);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .license-icon svg {
-            width: 20px;
-            height: 20px;
-            fill: white;
-        }
-        
-        .license-text {
-            flex: 1;
-        }
-        
-        .license-name {
-            font-weight: 600;
-            color: var(--primary);
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-        
-        .license-status {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        
-        /* フッター */
-        footer {
-            background: var(--primary);
-            color: white;
-            padding: 60px 24px;
-            text-align: center;
-        }
-        
-        footer p {
-            font-size: 14px;
-            line-height: 1.8;
-            opacity: 0.8;
-        }
-        
-        /* レスポンシブ */
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: block;
-            }
-            
-            nav {
-                position: fixed;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: white;
-                border-bottom: 1px solid var(--border);
-                transform: translateY(-100%);
-                opacity: 0;
-                transition: all 0.3s ease;
-                pointer-events: none;
-            }
-            
-            nav.active {
-                transform: translateY(0);
-                opacity: 1;
-                pointer-events: auto;
-            }
-            
-            nav ul {
-                flex-direction: column;
-                padding: 24px;
-                gap: 24px;
-            }
-            
-            .profile-hero-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            
-            .profile-image-wrapper {
-                width: 200px;
-                height: 200px;
-            }
-            
-            .detail-section {
-                padding: 32px 24px;
-            }
-            
-            .detail-item {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .license-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
@@ -535,188 +35,190 @@
         </div>
     </header>
 
-    <section class="profile-hero">
-        <div class="profile-hero-content">
-            <div class="profile-image-container">
-                <div class="profile-image-wrapper">
-                    <div class="profile-image-decoration"></div>
-                    <img src="profile.png" alt="木村紀喜" class="profile-image">
+    <main>
+        <section class="profile-hero">
+            <div class="profile-hero-content">
+                <div class="profile-image-container">
+                    <div class="profile-image-wrapper">
+                        <div class="profile-image-decoration"></div>
+                        <img src="profile.png" alt="木村紀喜" class="profile-image">
+                    </div>
+                </div>
+                <div class="profile-intro">
+                    <h1>木村紀喜</h1>
+                    <p class="subtitle">Toshiki Kimura</p>
+                    <p class="description">
+                    </p>
                 </div>
             </div>
-            <div class="profile-intro">
-                <h1>木村紀喜</h1>
-                <p class="subtitle">Toshiki Kimura</p>
-                <p class="description">
-                </p>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <div class="profile-details">
-        <div class="detail-section">
-            <h2>
-                <span class="section-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                    </svg>
-                </span>
-                基本情報
-            </h2>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <span class="detail-label">氏名</span>
-                    <span class="detail-value"><strong>木村 紀喜</strong>（きむら としき）</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">出身地</span>
-                    <span class="detail-value">佐賀県唐津市</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">所属</span>
-                    <span class="detail-value">早稲田大学大学院教育学研究科<br>高度教職実践専攻</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">研究分野</span>
-                    <span class="detail-value">ICT教育、教育工学、学校改革、協働学習</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <h2>
-                <span class="section-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
-                    </svg>
-                </span>
-                学歴
-            </h2>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-year">2025年4月 - 現在</div>
-                    <div class="timeline-content">早稲田大学大学院教育学研究科 高度教職実践専攻</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2021年4月 - 2025年3月</div>
-                    <div class="timeline-content">佐賀大学教育学部 卒業</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2018年4月 - 2021年3月</div>
-                    <div class="timeline-content">佐賀県立唐津西高等学校 卒業</div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2015年4月 - 2018年3月</div>
-                    <div class="timeline-content">唐津市立第一中学校 卒業</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <h2>
-                <span class="section-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-                    </svg>
-                </span>
-                取得免許・資格
-            </h2>
-            <div class="license-grid">
-                <div class="license-badge">
-                    <div class="license-icon">
+        <div class="profile-details">
+            <div class="detail-section">
+                <h2>
+                    <span class="section-icon">
                         <svg viewBox="0 0 24 24">
-                            <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                         </svg>
-                    </div>
-                    <div class="license-text">
-                        <div class="license-name">小学校教諭第一種免許状</div>
-                        <div class="license-status">取得済</div>
-                    </div>
-                </div>
-                <div class="license-badge">
-                    <div class="license-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-                        </svg>
-                    </div>
-                    <div class="license-text">
-                        <div class="license-name">中学校教諭免許状（社会）</div>
-                        <div class="license-status">第二種取得済・第一種取得中</div>
-                    </div>
-                </div>
-                <div class="license-badge">
-                    <div class="license-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-                        </svg>
-                    </div>
-                    <div class="license-text">
-                        <div class="license-name">高等学校教諭第一種免許状（地理歴史）</div>
-                        <div class="license-status">取得済</div>
-                    </div>
-                </div>
-                <div class="license-badge">
-                    <div class="license-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-                        </svg>
-                    </div>
-                    <div class="license-text">
-                        <div class="license-name">高等学校教諭第一種免許状（公民）</div>
-                        <div class="license-status">取得中</div>
-                    </div>
-                </div>
-                <div class="license-badge">
-                    <div class="license-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-                        </svg>
-                    </div>
-                    <div class="license-text">
-                        <div class="license-name">教育情報化コーディネータ3級</div>
-                        <div class="license-status">2025年取得</div>
-                    </div>
-                </div>
-                <div class="license-badge">
-                    <div class="license-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-                        </svg>
-                    </div>
-                    <div class="license-text">
-                        <div class="license-name">生成AIパスポート</div>
-                        <div class="license-status">2025年取得</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <h2>
-                <span class="section-icon">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/>
-                    </svg>
-                </span>
-                将来の展望
-            </h2>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <span class="detail-label">職歴（予定）</span>
-                    <span class="detail-value">2027年4月より公立小学校教諭として勤務予定</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">目標</span>
-                    <span class="detail-value">
-                        ICT教育の推進者として、学校現場の改革に貢献していきます。<br>
-                        教職大学院で得た知見を佐賀県の教育現場に還元し、<br>
-                        地域の教育水準向上に努めたいと考えています。
                     </span>
+                    基本情報
+                </h2>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">氏名</span>
+                        <span class="detail-value"><strong>木村 紀喜</strong>（きむら としき）</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">出身地</span>
+                        <span class="detail-value">佐賀県唐津市</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">所属</span>
+                        <span class="detail-value">早稲田大学大学院教育学研究科<br>高度教職実践専攻</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">研究分野</span>
+                        <span class="detail-value">ICT教育、教育工学、学校改革、協働学習</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h2>
+                    <span class="section-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                        </svg>
+                    </span>
+                    学歴
+                </h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-year">2025年4月 - 現在</div>
+                        <div class="timeline-content">早稲田大学大学院教育学研究科 高度教職実践専攻</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2021年4月 - 2025年3月</div>
+                        <div class="timeline-content">佐賀大学教育学部 卒業</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2018年4月 - 2021年3月</div>
+                        <div class="timeline-content">佐賀県立唐津西高等学校 卒業</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-year">2015年4月 - 2018年3月</div>
+                        <div class="timeline-content">唐津市立第一中学校 卒業</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h2>
+                    <span class="section-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                        </svg>
+                    </span>
+                    取得免許・資格
+                </h2>
+                <div class="license-grid">
+                    <div class="license-badge">
+                        <div class="license-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                            </svg>
+                        </div>
+                        <div class="license-text">
+                            <div class="license-name">小学校教諭第一種免許状</div>
+                            <div class="license-status">取得済</div>
+                        </div>
+                    </div>
+                    <div class="license-badge">
+                        <div class="license-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                            </svg>
+                        </div>
+                        <div class="license-text">
+                            <div class="license-name">中学校教諭免許状（社会）</div>
+                            <div class="license-status">第二種取得済・第一種取得中</div>
+                        </div>
+                    </div>
+                    <div class="license-badge">
+                        <div class="license-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                            </svg>
+                        </div>
+                        <div class="license-text">
+                            <div class="license-name">高等学校教諭第一種免許状（地理歴史）</div>
+                            <div class="license-status">取得済</div>
+                        </div>
+                    </div>
+                    <div class="license-badge">
+                        <div class="license-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                            </svg>
+                        </div>
+                        <div class="license-text">
+                            <div class="license-name">高等学校教諭第一種免許状（公民）</div>
+                            <div class="license-status">取得中</div>
+                        </div>
+                    </div>
+                    <div class="license-badge">
+                        <div class="license-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                            </svg>
+                        </div>
+                        <div class="license-text">
+                            <div class="license-name">教育情報化コーディネータ3級</div>
+                            <div class="license-status">2025年取得</div>
+                        </div>
+                    </div>
+                    <div class="license-badge">
+                        <div class="license-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                            </svg>
+                        </div>
+                        <div class="license-text">
+                            <div class="license-name">生成AIパスポート</div>
+                            <div class="license-status">2025年取得</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h2>
+                    <span class="section-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/>
+                        </svg>
+                    </span>
+                    将来の展望
+                </h2>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">職歴（予定）</span>
+                        <span class="detail-value">2027年4月より公立小学校教諭として勤務予定</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">目標</span>
+                        <span class="detail-value">
+                            ICT教育の推進者として、学校現場の改革に貢献していきます。<br>
+                            教職大学院で得た知見を佐賀県の教育現場に還元し、<br>
+                            地域の教育水準向上に努めたいと考えています。
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <footer>
+    <footer class="site-footer">
         <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
         当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
     </footer>
@@ -726,17 +228,20 @@
         const menuToggle = document.getElementById('menuToggle');
         const navigation = document.getElementById('navigation');
         
-        menuToggle.addEventListener('click', () => {
-            navigation.classList.toggle('active');
-        });
+        if (menuToggle && navigation) {
+            menuToggle.addEventListener('click', () => {
+                navigation.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+        }
         
         // スクロール時のヘッダー処理
         window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
+            const header = document.querySelector('.site-header');
             if (window.pageYOffset > 100) {
-                header.style.boxShadow = '0 2px 20px rgba(0,0,0,0.1)';
+                header.classList.add('scrolled');
             } else {
-                header.style.boxShadow = 'none';
+                header.classList.remove('scrolled');
             }
         });
         
@@ -751,6 +256,7 @@
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'translateY(0)';
+                    observer.unobserve(entry.target);
                 }
             });
         }, observerOptions);
