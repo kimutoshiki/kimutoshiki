@@ -17,473 +17,11 @@
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary: #1a1a1a;
-            --accent: #8B1538;
-            --accent-light: #A91F45;
-            --accent-dark: #6B0F2A;
-            --light: #faf8f6; /* ★変更点1: 眩しくない白 */
-            --border: #e0e0e0;
-            --text-secondary: #333; /* ★変更点2: コントラストUP */
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", YuGothic, "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", Arial, "メイリオ", Meiryo, sans-serif;
-            line-height: 1.6;
-            color: var(--primary);
-            background: var(--light); /* ★変更点1: body背景に適用 */
-            overflow-x: hidden;
-        }
-        
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            /* ★変更点1: ヘッダーは白背景(0.95)を維持し、コンテンツとの分離を明確化 */
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            border-bottom: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-        
-        header.scrolled {
-            background: rgba(255, 255, 255, 0.98);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-        }
-        
-        .header-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .logo {
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            text-decoration: none;
-            color: var(--primary);
-            transition: opacity 0.3s ease;
-        }
-        
-        .logo:hover {
-            opacity: 0.7;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 32px;
-        }
-        
-        nav a {
-            text-decoration: none;
-            color: var(--primary);
-            font-size: 14px;
-            font-weight: 500;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-        
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--accent);
-            transition: width 0.3s ease;
-        }
-        
-        nav a:hover::after,
-        nav a.current::after {
-            width: 100%;
-        }
-        
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            position: relative;
-            width: 40px;
-            height: 40px;
-        }
-        
-        .menu-icon {
-            position: relative;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon::before,
-        .menu-icon::after {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon::before {
-            top: -8px;
-        }
-        
-        .menu-icon::after {
-            top: 8px;
-        }
-        
-        .menu-toggle.active .menu-icon {
-            background: transparent;
-        }
-        
-        .menu-toggle.active .menu-icon::before {
-            top: 0;
-            transform: rotate(45deg);
-        }
-        
-        .menu-toggle.active .menu-icon::after {
-            top: 0;
-            transform: rotate(-45deg);
-        }
-
-        .hero {
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-            background: #000;
-        }
-        
-        .slideshow {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-        
-        .slide {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center;
-            opacity: 0;
-            transform: scale(1.15); /* ★変更点4: ズームの初期値 */
-            transition: opacity 2s ease-in-out, transform 7s ease-out; /* ★変更点4: 7秒かける */
-        }
-        
-        .slide.active {
-            opacity: 1;
-            transform: scale(1); /* ★変更点4: ズームアウト完了 */
-        }
-
-        .slide:nth-child(1) { background-image: url('wasedaookuma.jpg'); }
-        .slide:nth-child(2) { background-image: url('karatsucastle.jpg'); }
-        .slide:nth-child(3) { background-image: url('uesugi1944.jpg'); }
-        .slide:nth-child(4) { background-image: url('kyukeisha.jpg'); }
-        
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1;
-        }
-        
-        .hero-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
-            z-index: 2;
-            padding: 0 24px;
-            width: 100%;
-            max-width: 800px;
-        }
-        
-        .hero h1 {
-            font-size: clamp(2.5rem, 8vw, 4.5rem);
-            font-weight: 700;
-            letter-spacing: -2px;
-            margin-bottom: 24px;
-            animation: fadeInUp 1s ease;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-        }
-        
-        .hero .subtitle {
-            font-size: clamp(1rem, 3vw, 1.5rem);
-            font-weight: 300;
-            opacity: 0.98;
-            animation: fadeInUp 1s ease 0.2s backwards;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .slide-indicators {
-            position: absolute;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 16px; /* ★変更点5: ドットの間隔 */
-            z-index: 3;
-        }
-        
-        .indicator {
-            width: 12px; /* ★変更点5: ドットのサイズ */
-            height: 12px; /* ★変更点5: ドットのサイズ */
-            background: rgba(255, 255, 255, 0.4);
-            border: none;
-            cursor: pointer;
-            border-radius: 50%; /* ★変更点5: 円形にする */
-            transition: all 0.4s ease;
-            transform: scale(0.9); /* ★変更点5: 非アクティブ時のサイズ */
-        }
-        
-        .indicator.active {
-            background: rgba(255, 255, 255, 1);
-            transform: scale(1.1); /* ★変更点5: アクティブ時のサイズ */
-        }
-        
-        .scroll-indicator {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: bounce 2s infinite;
-            z-index: 3;
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-            40% { transform: translateX(-50%) translateY(-10px); }
-            60% { transform: translateX(-50%) translateY(-5px); }
-        }
-        
-        .scroll-indicator svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
-            opacity: 0.8;
-        }
-        
-        .intro {
-            text-align: center;
-            padding: 120px 24px;
-            background: var(--light); /* ★変更点1: 背景色を適用 */
-            position: relative;
-        }
-        
-        .intro::before {
-            content: '';
-            position: absolute;
-            top: -50px;
-            left: 0;
-            right: 0;
-            height: 100px;
-            background: linear-gradient(to bottom, transparent, var(--light));
-        }
-        
-        .intro h2 {
-            font-size: clamp(2.2rem, 4vw, 3rem); /* ★変更点3: サイズUP */
-            font-weight: 700;
-            margin-bottom: 20px;
-            letter-spacing: -1px;
-            color: var(--primary);
-        }
-        
-        .intro p {
-            font-size: 20px; /* ★変更点3: サイズUP */
-            color: var(--text-secondary); /* ★変更点2: コントラストUP */
-            max-width: 600px;
-            margin: 0 auto;
-            line-height: 1.8;
-        }
-        
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 32px;
-            padding: 80px 24px;
-            max-width: 1200px;
-            margin: 0 auto;
-            background: var(--light); /* ★変更点1: 背景色を適用 */
-        }
-        
-        .card {
-            background: #ffffff; /* ★変更点1: カードは白のまま（背景との差を出す） */
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 40px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-light));
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
-        }
-        
-        .card:hover::before {
-            transform: translateX(0);
-        }
-        
-        .card h3 {
-            font-size: 26px; /* ★変更点3: サイズUP */
-            font-weight: 700;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
-            color: var(--primary);
-        }
-        
-        .card-meta {
-            color: var(--accent-dark);
-            font-size: 16px; /* ★変更点3: サイズUP */
-            font-weight: 600;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
-        }
-        
-        .card p {
-            color: var(--text-secondary); /* ★変更点2: コントラストUP */
-            line-height: 1.7;
-            margin-bottom: 24px;
-            font-size: 18px; /* ★変更点3: サイズUP */
-        }
-        
-        .card-link {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 18px; /* ★変更点3: サイズUP */
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: gap 0.3s ease;
-        }
-        
-        .card-link:hover {
-            gap: 10px;
-        }
-        
-        footer {
-            background: var(--primary);
-            color: white;
-            padding: 60px 24px;
-            text-align: center;
-        }
-        
-        footer p {
-            font-size: 16px; /* ★変更点3: サイズUP */
-            line-height: 1.8;
-            opacity: 0.9;
-        }
-        
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: block;
-            }
-            
-            nav {
-                position: fixed;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: white;
-                border-bottom: 1px solid var(--border);
-                transform: translateY(-100%);
-                opacity: 0;
-                transition: all 0.3s ease;
-                pointer-events: none;
-            }
-            
-            nav.active {
-                transform: translateY(0);
-                opacity: 1;
-                pointer-events: auto;
-            }
-            
-            nav ul {
-                flex-direction: column;
-                padding: 24px;
-                gap: 24px;
-            }
-            
-            .cards {
-                grid-template-columns: 1fr;
-            }
-            
-            .slide-indicators {
-                bottom: 80px;
-            }
-            
-            .intro {
-                padding: 80px 24px;
-            }
-
-            .intro p {
-                font-size: 18px; /* モバイルでは少し抑える */
-            }
-            .card p {
-                font-size: 17px; /* モバイルでは少し抑える */
-            }
-            .card-link {
-                font-size: 17px; /* モバイルでは少し抑える */
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
@@ -501,64 +39,66 @@
         </div>
     </header>
 
-    <section class="hero">
-        <div class="slideshow">
-            <div class="slide"></div>
-            <div class="slide"></div>
-            <div class="slide"></div>
-            <div class="slide"></div>
-        </div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>木村紀喜</h1>
-            <p class="subtitle">教育の未来を探求する</p>
-        </div>
-        <div class="slide-indicators">
-            <button class="indicator" data-slide="0"></button>
-            <button class="indicator" data-slide="1"></button>
-            <button class="indicator" data-slide="2"></button>
-            <button class="indicator" data-slide="3"></button>
-        </div>
-        <div class="scroll-indicator">
-            <svg viewBox="0 0 24 24">
-                <path d="M7 10l5 5 5-5z"/>
-            </svg>
-        </div>
-    </section>
+    <main>
+        <section class="hero">
+            <div class="slideshow">
+                <div class="slide"></div>
+                <div class="slide"></div>
+                <div class="slide"></div>
+                <div class="slide"></div>
+            </div>
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1>木村紀喜</h1>
+                <p class="subtitle">教育の未来を探求する</p>
+            </div>
+            <div class="slide-indicators">
+                <button class="indicator" data-slide="0"></button>
+                <button class="indicator" data-slide="1"></button>
+                <button class="indicator" data-slide="2"></button>
+                <button class="indicator" data-slide="3"></button>
+            </div>
+            <div class="scroll-indicator">
+                <svg viewBox="0 0 24 24">
+                    <path d="M7 10l5 5 5-5z"/>
+                </svg>
+            </div>
+        </section>
 
-    <section class="intro">
-        <h2>学校教育の未来を考える</h2>
-        <p>研究と実践を通じて、これからの教育のあり方を探求し、<br>日々の活動について発信しています。</p>
-    </section>
+        <section class="intro">
+            <h2>学校教育の未来を考える</h2>
+            <p>研究と実践を通じて、これからの教育のあり方を探求し、<br>日々の活動について発信しています。</p>
+        </section>
 
-    <section class="cards">
-        <article class="card">
-            <h3>最新のブログ</h3>
-            <p class="card-meta">2025.07.29 更新</p>
-            <p>文部科学省「生成AIの利用に関する夏季公開学習会」への参加をはじめ、教育現場での実践や研究について、日々感じたことを綴っています。</p>
-            <a href="blog.html" class="card-link">
-                ブログを読む →
-            </a>
-        </article>
+        <section class="home-cards">
+            <article class="home-card">
+                <h3>最新のブログ</h3>
+                <p class="home-card-meta">2025.07.29 更新</p>
+                <p>文部科学省「生成AIの利用に関する夏季公開学習会」への参加をはじめ、教育現場での実践や研究について、日々感じたことを綴っています。</p>
+                <a href="blog.html" class="home-card-link">
+                    ブログを読む →
+                </a>
+            </article>
 
-        <article class="card">
-            <h3>プロフィール</h3>
-            <p>佐賀県唐津市出身。佐賀大学教育学部卒業後、早稲田大学教職大学院で学んでいます。教育の理論と実践の融合を目指し、研究活動を行っています。</p>
-            <a href="profile.html" class="card-link">
-                詳しいプロフィールを見る →
-            </a>
-        </article>
+            <article class="home-card">
+                <h3>プロフィール</h3>
+                <p>佐賀県唐津市出身。佐賀大学教育学部卒業後、早稲田大学教職大学院で学んでいます。教育の理論と実践の融合を目指し、研究活動を行っています。</p>
+                <a href="profile.html" class="home-card-link">
+                    詳しいプロフィールを見る →
+                </a>
+            </article>
 
-        <article class="card">
-            <h3>研究・活動</h3>
-            <p>ICT教育、協働学習、教員養成など、現代の教育課題に対する実践的な研究を進めています。学校現場との連携を重視した活動を展開しています。</p>
-            <a href="research.html" class="card-link">
-                研究内容を詳しく見る →
-            </a>
-        </article>
-    </section>
+            <article class="home-card">
+                <h3>研究・活動</h3>
+                <p>ICT教育、協働学習、教員養成など、現代の教育課題に対する実践的な研究を進めています。学校現場との連携を重視した活動を展開しています。</p>
+                <a href="research.html" class="home-card-link">
+                    研究内容を詳しく見る →
+                </a>
+            </article>
+        </section>
+    </main>
 
-    <footer>
+    <footer class="site-footer">
         <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
         当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
     </footer>
@@ -567,13 +107,15 @@
         const menuToggle = document.getElementById('menuToggle');
         const navigation = document.getElementById('navigation');
         
-        menuToggle.addEventListener('click', () => {
-            navigation.classList.toggle('active');
-            menuToggle.classList.toggle('active');
-        });
+        if (menuToggle && navigation) {
+            menuToggle.addEventListener('click', () => {
+                navigation.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
+        }
         
         window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
+            const header = document.querySelector('.site-header');
             if (window.pageYOffset > 100) {
                 header.classList.add('scrolled');
             } else {
@@ -581,12 +123,13 @@
             }
         });
         
+        // --- スライドショー ---
         const slides = document.querySelectorAll('.slide');
         const indicators = document.querySelectorAll('.indicator');
         let currentSlide = 0;
         
         function showSlide(index) {
-            slides.forEach((slide, i) => {
+            slides.forEach((slide) => {
                 slide.classList.remove('active');
             });
             indicators.forEach(indicator => indicator.classList.remove('active'));
@@ -601,7 +144,7 @@
             showSlide(currentSlide);
         }
         
-        let slideInterval = setInterval(nextSlide, 7000); // ★変更点4: 7秒ごとに変更
+        let slideInterval = setInterval(nextSlide, 7000);
         
         indicators.forEach((indicator, index) => {
             indicator.addEventListener('click', () => {
@@ -611,12 +154,17 @@
             });
         });
         
-        document.querySelector('.scroll-indicator').addEventListener('click', () => {
-            document.querySelector('.intro').scrollIntoView({ behavior: 'smooth' });
-        });
+        const scrollIndicator = document.querySelector('.scroll-indicator');
+        if(scrollIndicator) {
+            scrollIndicator.addEventListener('click', () => {
+                document.querySelector('.intro').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
 
         // 初回ロード時にスライド0を表示
-        showSlide(0);
+        if(slides.length > 0) {
+            showSlide(0);
+        }
     </script>
 </body>
 </html>
