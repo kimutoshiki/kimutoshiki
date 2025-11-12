@@ -1279,3 +1279,59 @@ button:focus {
     border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--enji-dark); }
+
+/* --- 12. モバイルメニューアイコン --- */
+/* (このセクションを style.css の末尾に追加) */
+
+.menu-toggle {
+    display: none; /* デスクトップでは非表示 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    z-index: 1100; /* ナビゲーションメニューより手前に */
+}
+
+.menu-icon {
+    position: relative;
+    width: 24px;
+    height: 2px;
+    background: var(--primary-text); /* 中央の線 */
+    transition: all 0.3s ease;
+}
+
+.menu-icon::before,
+.menu-icon::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background: var(--primary-text); /* 上下の線 */
+    transition: all 0.3s ease;
+}
+
+.menu-icon::before {
+    top: -8px; /* 上の線 */
+}
+
+.menu-icon::after {
+    top: 8px; /* 下の線 */
+}
+
+/* --- クリック時のアニメーション (X印) --- */
+.menu-toggle.active .menu-icon {
+    background: transparent; /* 真ん中の線を透明に */
+}
+
+.menu-toggle.active .menu-icon::before {
+    top: 0;
+    transform: rotate(45deg); /* 上の線を回転 */
+}
+
+.menu-toggle.active .menu-icon::after {
+    top: 0;
+    transform: rotate(-45deg); /* 下の線を回転 */
+}
