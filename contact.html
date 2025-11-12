@@ -41,109 +41,6 @@
             flex-direction: column;
         }
         
-        /* ヘッダー */
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            border-bottom: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-        
-        .header-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .logo {
-            font-size: 18px;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            text-decoration: none;
-            color: var(--primary);
-            transition: opacity 0.3s ease;
-        }
-        
-        .logo:hover {
-            opacity: 0.7;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 32px;
-        }
-        
-        nav a {
-            text-decoration: none;
-            color: var(--primary);
-            font-size: 14px;
-            font-weight: 500;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-        
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--accent);
-            transition: width 0.3s ease;
-        }
-        
-        nav a:hover::after,
-        nav a.current::after {
-            width: 100%;
-        }
-        
-        /* モバイルメニュー */
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            position: relative;
-            width: 40px;
-            height: 40px;
-        }
-        
-        .menu-icon {
-            position: relative;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon::before,
-        .menu-icon::after {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 2px;
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon::before {
-            top: -8px;
-        }
-        
-        .menu-icon::after {
-            top: 8px;
-        }
         
         /* メイン */
         main {
@@ -456,7 +353,7 @@
     </style>
 </head>
 <body>
-    <header>
+    <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
