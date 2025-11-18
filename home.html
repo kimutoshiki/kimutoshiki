@@ -17,7 +17,8 @@
     <link rel="stylesheet" href="css/style.css">
     
 </head>
-<body class="home-page"> <header class="site-header">
+<body class="home-page">
+    <header class="site-header">
         <div class="header-inner">
             <a href="home.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
@@ -154,19 +155,34 @@
             const progressBar = document.getElementById('progressBar');
             const heroContainer = document.querySelector('.hero-pinned-container');
 
+            // ヒーローセクションのコンテナが存在しない場合は実行しない
+            if (!heroContainer) return;
+
             // アニメーションの総スクロール距離（この値が大きいほどゆっくり進む）
             const scrollDistance = heroContainer.offsetHeight - window.innerHeight;
-            // シーン1つあたりのスクロール量
-            const sceneScrollLength = scrollDistance / scenes.length;
+            
+            // シーンが1つもない場合は実行しない
+            if (scenes.length === 0) return;
+
+            // 最初のシーンをアクティブにしておく
+            scenes[0].classList.add('active');
 
             window.addEventListener('scroll', () => {
                 const scrollTop = window.scrollY;
                 
                 // ヒーローセクションのコンテナが画面上端に来るまでは何もしない
                 if (scrollTop < heroContainer.offsetTop) {
-                    scenes.forEach(s => s.classList.remove('active', 'exit'));
-                    scenes[0].classList.add('active'); // 最初のシーンをアクティブに
-                    progressBar.style.width = '0%';
+                    scenes.forEach((s, index) => {
+                        if (index === 0) {
+                            s.classList.add('active');
+                            s.classList.remove('exit');
+                        } else {
+                            s.classList.remove('active', 'exit');
+                        }
+                    });
+                    if (progressBar) {
+                        progressBar.style.width = '0%';
+                    }
                     return;
                 }
 
@@ -174,7 +190,9 @@
                 const progress = Math.max(0, Math.min(1, (scrollTop - heroContainer.offsetTop) / scrollDistance));
                 
                 // プログレスバーの更新
-                progressBar.style.width = `${progress * 100}%`;
+                if (progressBar) {
+                    progressBar.style.width = `${progress * 100}%`;
+                }
 
                 // 現在表示すべきシーンのインデックス
                 let currentSceneIndex = Math.min(scenes.length - 1, Math.floor(progress * scenes.length));
