@@ -122,111 +122,98 @@ nav a.current::after {
     border-bottom: 1px solid var(--border-light);
 }
 
-.hero-pinned-container {
-    height: 400vh;
+/* 新しいヒーローグリッド */
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 横に4分割 */
+    height: 100vh; /* 画面全体の高さ */
+    width: 100%;
+    overflow: hidden; /* ホバーエフェクトのため */
+}
+
+.hero-grid-item {
     position: relative;
-    background: #000;
-}
-
-.hero-canvas {
-    height: 100vh;
-    width: 100%;
-    position: sticky;
-    top: 0;
     overflow: hidden;
+    cursor: pointer;
 }
 
-.hero-scene {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hero-scene.active {
-    opacity: 1;
-    z-index: 2;
-}
-
-.hero-scene.exit {
-    opacity: 0;
-    z-index: 1;
-}
-
-.hero-image-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4));
-}
-
-.hero-image-container img {
+.hero-grid-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transform: scale(1.05); /* 初期状態で少しズーム */
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ホバーエフェクト: 画像をさらにズーム */
+.hero-grid-item:hover img {
     transform: scale(1.15);
-    transition: transform 8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.hero-scene.active .hero-image-container img {
-    transform: scale(1);
-}
-
-.hero-text-content {
-    position: relative;
-    z-index: 3;
-    color: var(--white);
-    text-align: center;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-}
-
-.hero-headline {
-    font-size: clamp(3rem, 10vw, 7rem);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    opacity: 0;
-    transform: translateY(30px);
-    transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
-}
-
-.hero-subtitle {
-    font-size: clamp(1.2rem, 4vw, 1.75rem);
-    font-weight: 500;
-    opacity: 0;
-    transform: translateY(30px);
-    transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
-}
-
-.hero-scene.active .hero-headline,
-.hero-scene.active .hero-subtitle {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.hero-progress-bar {
-    position: sticky;
-    top: calc(100vh - 5px);
-    height: 5px;
-    background: rgba(255, 255, 255, 0.2);
+.hero-grid-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    z-index: 100;
+    padding: 40px;
+    color: var(--white);
+    z-index: 2;
+    /* テキストが見やすいようにグラデーションを追加 */
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 60%);
+    
+    /* アニメーションの初期状態 */
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.hero-progress-bar-inner {
-    height: 100%;
-    width: 0%;
-    background: var(--main-enji);
-    transition: width 0.1s linear;
+/* ホバーエフェクト: テキストを表示 */
+.hero-grid-item:hover .hero-grid-content {
+    transform: translateY(0);
+    opacity: 1;
 }
 
+.hero-grid-content h2 {
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 700;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    margin-bottom: 8px;
+}
+
+.hero-grid-content p {
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    font-weight: 400;
+    opacity: 0.9;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* スマホ・タブレット表示: 2x2のグリッドに変更 */
+@media (max-width: 1024px) {
+    .hero-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2x2グリッド */
+        height: 100vh; /* 高さは維持 */
+    }
+}
+
+/* さらに小さいスマホ: 縦に並べる */
+@media (max-width: 600px) {
+    .hero-grid {
+        grid-template-columns: 1fr; /* 縦に1列 */
+        height: auto; /* 高さを自動に */
+    }
+    .hero-grid-item {
+        height: 60vh; /* 各アイテムの高さを指定 */
+    }
+    /* スマホではテキストを常時表示 */
+    .hero-grid-content {
+        transform: translateY(0);
+        opacity: 1;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent 70%);
+    }
+}
+
+
+/* ヒーローセクション以降のコンテンツ */
 .page-content {
     position: relative;
     z-index: 10;
@@ -338,8 +325,6 @@ nav a.current::after {
 }
 
 /* --- 5. デザイン統一 (カード類) --- */
-
-/* 統一カードスタイル */
 .home-card,
 .detail-section,
 .research-themes,
@@ -355,7 +340,6 @@ nav a.current::after {
     transition: var(--card-transition);
 }
 
-/* 統一ホバースタイル */
 .home-card:hover,
 .detail-section:hover,
 .research-themes:hover,
@@ -369,13 +353,12 @@ nav a.current::after {
     box-shadow: var(--card-box-shadow-hover);
 }
 
-/* 個別の微調整 */
 .home-card,
 .activity-card {
     padding: 40px;
 }
-.home-card::before { content: none; } /* home-card の上線アニメーション削除 */
-.activity-card::before { content: none; } /* activity-card の上線アニメーション削除 */
+.home-card::before { content: none; }
+.activity-card::before { content: none; }
 
 .detail-section,
 .research-themes,
@@ -383,13 +366,13 @@ nav a.current::after {
     padding: 48px;
     margin-bottom: 32px;
 }
-.detail-section::before { content: none; } /* detail-section の左線削除 */
+.detail-section::before { content: none; }
 
 .theme-card {
     padding: 24px 32px;
-    border-left: none; /* theme-card の左線削除 */
+    border-left: none;
 }
-.theme-card::before { content: none; } /* theme-card のホバーアニメーション削除 */
+.theme-card::before { content: none; }
 
 .blog-intro {
     padding: 40px;
@@ -413,7 +396,6 @@ nav a.current::after {
     }
 }
 
-/* カードの中身（既存スタイル） */
 .home-card h3 {
     font-size: 26px;
     font-weight: 700;
@@ -448,7 +430,7 @@ nav a.current::after {
     gap: 10px;
 }
 
-/* --- 5. profile.html 専用 (カード化で不要になったスタイルをリセット) --- */
+/* --- 5. profile.html 専用 --- */
 .profile-hero {
     margin-top: 64px;
     padding: 120px 24px 80px;
@@ -626,7 +608,7 @@ nav a.current::after {
 .license-status { font-size: 12px; color: var(--secondary-text); }
 
 
-/* --- 6. research.html 専用 (カード化で不要になったスタイルをリセット) --- */
+/* --- 6. research.html 専用 --- */
 .content-container {
     max-width: 1200px;
     margin: -40px auto 80px;
@@ -748,7 +730,7 @@ nav a.current::after {
     transform: translateY(-2px);
 }
 
-/* --- 7. blog.html 専用 (カード化で不要になったスタイルをリセット) --- */
+/* --- 7. blog.html 専用 --- */
 .blog-container {
     max-width: 900px;
     margin: 0 auto;
@@ -770,12 +752,7 @@ nav a.current::after {
     flex-direction: column;
     gap: 16px;
 }
-.blog-item {
-    overflow: hidden;
-}
 .blog-item:hover {
-    /* ホバーシャドウは統一スタイルで適用済み */
-    /* blog-item 自体の transform は不要（ヘッダーがクリック領域のため） */
     transform: none; 
 }
 .blog-header {
@@ -850,7 +827,7 @@ nav a.current::after {
 }
 .blog-content-inner p { text-align: justify; }
 
-/* --- 8. contact.html 専用 (カード化で不要になったスタイルをリセット) --- */
+/* --- 8. contact.html 専用 --- */
 .contact-hero {
     padding: 100px 24px 80px;
     background: var(--gradient-main);
@@ -984,7 +961,7 @@ nav a.current::after {
 }
 .contact-type {
     padding: 24px;
-    background: white;
+    background: var(--off-white);
     border: 1px solid var(--border-light);
     border-radius: 12px;
     transition: all 0.3s ease;
@@ -996,7 +973,7 @@ nav a.current::after {
 }
 .type-icon {
     width: 40px; height: 40px;
-    background: var(--off-white);
+    background: var(--white);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -1063,13 +1040,6 @@ footer p, .site-footer p {
         flex-direction: column;
         padding: 24px;
         gap: 24px;
-    }
-
-    .hero-headline {
-        font-size: 2.5rem;
-    }
-    .hero-subtitle {
-        font-size: 1.1rem;
     }
     
     .home-cards {
@@ -1160,28 +1130,34 @@ button:focus {
     background: var(--primary-text);
     transition: all 0.3s ease;
 }
+/* home.htmlの時だけヘッダーアイコンを白くする */
 .home-page .menu-icon {
     background: var(--white);
 }
 .home-page .logo {
     color: var(--white);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 .home-page nav a {
     color: var(--white);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 .home-page .menu-icon::before,
 .home-page .menu-icon::after {
     background: var(--white);
 }
 
+/* スクロールしたら黒に戻す */
 .home-page .site-header.scrolled .menu-icon {
     background: var(--primary-text);
 }
 .home-page .site-header.scrolled .logo {
     color: var(--primary-text);
+    text-shadow: none;
 }
 .home-page .site-header.scrolled nav a {
     color: var(--primary-text);
+    text-shadow: none;
 }
 .home-page .site-header.scrolled .menu-icon::before,
 .home-page .site-header.scrolled .menu-icon::after {
@@ -1210,6 +1186,7 @@ button:focus {
 .menu-toggle.active .menu-icon {
     background: transparent;
 }
+/* X印は常に黒 */
 .home-page .menu-toggle.active .menu-icon::before,
 .home-page .menu-toggle.active .menu-icon::after {
     background: var(--primary-text);
