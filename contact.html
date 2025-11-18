@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>お問い合わせ | 木村紀喜</title>
-    <link rel="stylesheet" href="css/style.css">
+    
     <meta name="description" content="木村紀喜へのお問い合わせ" />
     <meta property="og:title" content="お問い合わせ | 木村紀喜" />
     <meta property="og:description" content="研究・教育に関するご相談、お問い合わせはこちらから" />
@@ -13,17 +13,19 @@
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
+    <link rel="stylesheet" href="css/style.css">
+    
 </head>
 <body>
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="logo">木村紀喜</a>
+            <a href="home.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
                 <span class="menu-icon"></span>
             </button>
             <nav id="navigation">
                 <ul>
-                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="home.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
                     <li><a href="research.html">研究・活動</a></li>
                     <li><a href="blog.html">ブログ</a></li>
@@ -47,7 +49,7 @@
 
                 <div class="email-section">
                     <div class="email-label">Email:kimu.toshiki@gmail.com</div>
-                    <a href="mailto:example@email.com" class="email-button">
+                    <a href="mailto:kimu.toshiki@gmail.com" class="email-button">
                         <span class="email-icon">
                             <svg viewBox="0 0 24 24">
                                 <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -65,7 +67,7 @@
                             </svg>
                         </div>
                         <div class="type-title">研究に関するお問い合わせ</div>
-                        <div class="type-desc"></div>
+                        <div class="type-desc">研究内容や共同研究について</div>
                     </div>
 
                     <div class="contact-type">
@@ -75,7 +77,7 @@
                             </svg>
                         </div>
                         <div class="type-title">教育に関するお問い合わせ</div>
-                        <div class="type-desc"></div>
+                        <div class="type-desc">授業実践や教材開発について</div>
                     </div>
 
                     <div class="contact-type">
@@ -85,31 +87,10 @@
                             </svg>
                         </div>
                         <div class="type-title">その他ご依頼</div>
-                        <div class="type-desc"></div>
+                        <div class="type-desc">セミナーや研修会、執筆活動について/div>
                     </div>
                 </div>
 
-                <div class="social-section">
-                    <div class="social-title">その他の連絡方法</div>
-                    <div class="social-links">
-                        <a href="#" class="social-link" aria-label="Twitter">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
-                            </svg>
-                        </a>
-                        <a href="#" class="social-link" aria-label="LinkedIn">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/>
-                                <circle cx="4" cy="4" r="2"/>
-                            </svg>
-                        </a>
-                        <a href="#" class="social-link" aria-label="ResearchGate">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                                <path d="M13 7h-2v5H7v2h4v5h2v-5h4v-2h-4z"/>
-                            </svg>
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -121,16 +102,16 @@
     </footer>
 
     <script>
-        // メニュートグル
-        const menuToggle = document.getElementById('menuToggle');
-        const navigation = document.getElementById('navigation');
-        
+
+        const menuToggle = document.getElementById('menuToggle');
+        const navigation = document.getElementById('navigation');
+        
         if (menuToggle && navigation) {
-            menuToggle.addEventListener('click', () => {
-                navigation.classList.toggle('active');
-                menuToggle.classList.toggle('active'); /* この行を追加 */
-            });
+            menuToggle.addEventListener('click', () => {
+                navigation.classList.toggle('active');
+                menuToggle.classList.toggle('active');
+            });
         }
-    </script>
+    </script>
 </body>
 </html>
