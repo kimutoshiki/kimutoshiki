@@ -18,7 +18,6 @@
     --gradient-main: linear-gradient(135deg, var(--main-enji) 0%, var(--enji-dark) 100%);
     --gradient-accent: linear-gradient(135deg, var(--main-teal) 0%, var(--teal-dark) 100%);
     
-    /* 統一カードスタイル用の変数 */
     --card-bg: var(--white);
     --card-border-radius: 16px;
     --card-box-shadow: 0 6px 30px rgba(0,0,0,0.06);
@@ -48,6 +47,7 @@ body {
     position: fixed;
     top: 0;
     width: 100%;
+    /* 最初から背景白 */
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     z-index: 1000;
@@ -111,104 +111,81 @@ nav a.current::after {
 }
 
 /* --- 3. home.html (トップページ) 専用 --- */
-.home-page .site-header {
-    background: transparent;
-    border-bottom: none;
-    backdrop-filter: none;
-}
-.home-page .site-header.scrolled {
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-light);
-}
 
-/* 新しいヒーローグリッド */
-.hero-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 横に4分割 */
-    height: 100vh; /* 画面全体の高さ */
-    width: 100%;
-    overflow: hidden; /* ホバーエフェクトのため */
-}
-
-.hero-grid-item {
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.hero-grid-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transform: scale(1.05); /* 初期状態で少しズーム */
-    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-/* ホバーエフェクト: 画像をさらにズーム */
-.hero-grid-item:hover img {
-    transform: scale(1.15);
-}
-
-.hero-grid-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 40px;
-    color: var(--white);
-    z-index: 2;
-    /* テキストが見やすいようにグラデーションを追加 */
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 60%);
-    
-    /* アニメーションの初期状態 */
-    transform: translateY(20px);
-    opacity: 0;
-    transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* ホバーエフェクト: テキストを表示 */
-.hero-grid-item:hover .hero-grid-content {
-    transform: translateY(0);
-    opacity: 1;
-}
-
-.hero-grid-content h2 {
-    font-size: clamp(1.5rem, 3vw, 2.2rem);
-    font-weight: 700;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    margin-bottom: 8px;
-}
-
-.hero-grid-content p {
-    font-size: clamp(1rem, 2vw, 1.1rem);
-    font-weight: 400;
-    opacity: 0.9;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-}
-
-/* スマホ・タブレット表示: 2x2のグリッドに変更 */
-@media (max-width: 1024px) {
-    .hero-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2x2グリッド */
-        height: 100vh; /* 高さは維持 */
+/* フェードインアニメーション */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
     }
-}
-
-/* さらに小さいスマホ: 縦に並べる */
-@media (max-width: 600px) {
-    .hero-grid {
-        grid-template-columns: 1fr; /* 縦に1列 */
-        height: auto; /* 高さを自動に */
-    }
-    .hero-grid-item {
-        height: 60vh; /* 各アイテムの高さを指定 */
-    }
-    /* スマホではテキストを常時表示 */
-    .hero-grid-content {
-        transform: translateY(0);
+    to {
         opacity: 1;
-        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent 70%);
+        transform: translateY(0);
+    }
+}
+
+.hero-typographic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80vh; /* 画面の80%の高さ */
+    min-height: 500px;
+    width: 100%;
+    padding: 0 24px;
+    margin-top: 64px; /* ヘッダー分下げる */
+    background-color: var(--off-white);
+}
+
+.hero-text-content {
+    text-align: center;
+}
+
+.hero-text-content h1,
+.hero-text-content h2,
+.hero-text-content p {
+    /* アニメーションの準備 */
+    opacity: 0;
+    animation-name: fadeInUp;
+    animation-duration: 1.2s;
+    animation-fill-mode: forwards; /* アニメーション後もスタイルを維持 */
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-text-content h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    color: var(--primary-text);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    animation-delay: 0.2s; /* 1番目に表示 */
+}
+
+.hero-text-content h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 500;
+    color: var(--main-enji);
+    margin-bottom: 24px;
+    animation-delay: 0.5s; /* 2番目に表示 */
+}
+
+.hero-text-content p {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    color: var(--secondary-text);
+    line-height: 1.7;
+    animation-delay: 0.8s; /* 3番目に表示 */
+}
+
+.sp-only {
+    display: none;
+}
+@media (max-width: 600px) {
+    .sp-only {
+        display: block;
+    }
+    .hero-typographic {
+        height: 70vh;
+        min-height: 400px;
     }
 }
 
@@ -428,6 +405,26 @@ nav a.current::after {
 }
 .home-card-link:hover {
     gap: 10px;
+}
+
+/* スクロールフェードイン用 */
+.animated-section {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s cubic-bezier(0.22, 1, 0.36, 1), transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.animated-section.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.animated-section.is-visible .card-1 {
+    transition-delay: 0.1s;
+}
+.animated-section.is-visible .card-2 {
+    transition-delay: 0.2s;
+}
+.animated-section.is-visible .card-3 {
+    transition-delay: 0.3s;
 }
 
 /* --- 5. profile.html 専用 --- */
@@ -1130,40 +1127,6 @@ button:focus {
     background: var(--primary-text);
     transition: all 0.3s ease;
 }
-/* home.htmlの時だけヘッダーアイコンを白くする */
-.home-page .menu-icon {
-    background: var(--white);
-}
-.home-page .logo {
-    color: var(--white);
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-.home-page nav a {
-    color: var(--white);
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-.home-page .menu-icon::before,
-.home-page .menu-icon::after {
-    background: var(--white);
-}
-
-/* スクロールしたら黒に戻す */
-.home-page .site-header.scrolled .menu-icon {
-    background: var(--primary-text);
-}
-.home-page .site-header.scrolled .logo {
-    color: var(--primary-text);
-    text-shadow: none;
-}
-.home-page .site-header.scrolled nav a {
-    color: var(--primary-text);
-    text-shadow: none;
-}
-.home-page .site-header.scrolled .menu-icon::before,
-.home-page .site-header.scrolled .menu-icon::after {
-    background: var(--primary-text);
-}
-
 
 .menu-icon::before,
 .menu-icon::after {
@@ -1185,11 +1148,6 @@ button:focus {
 
 .menu-toggle.active .menu-icon {
     background: transparent;
-}
-/* X印は常に黒 */
-.home-page .menu-toggle.active .menu-icon::before,
-.home-page .menu-toggle.active .menu-icon::after {
-    background: var(--primary-text);
 }
 
 .menu-toggle.active .menu-icon::before {
