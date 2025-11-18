@@ -17,8 +17,7 @@
     <link rel="stylesheet" href="css/style.css">
     
 </head>
-<body class="home-page">
-    <header class="site-header">
+<body class="home-page"> <header class="site-header">
         <div class="header-inner">
             <a href="home.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
@@ -38,51 +37,33 @@
 
     <main>
         
-        <section class="hero-pinned-container">
-            
-            <div class="hero-progress-bar">
-                <div class="hero-progress-bar-inner" id="progressBar"></div>
+        <section class="hero-grid">
+            <div class="hero-grid-item scene-1">
+                <img src="images/wasedaookuma.jpg" alt="早稲田大学 大隈講堂">
+                <div class="hero-grid-content">
+                    <h2>首都圏での学び</h2>
+                    <p>大学院での学び</p>
+                </div>
             </div>
-
-            <div class="hero-canvas">
-                <div class="hero-scene" id="scene-1">
-                    <div class="hero-image-container">
-                        <img src="images/wasedaookuma.jpg" alt="早稲田大学 大隈講堂">
-                    </div>
-                    <div class="hero-text-content">
-                        <h2 class="hero-headline">首都圏での学び</h2>
-                        <p class="hero-subtitle">大学院での学び</p>
-                    </div>
+            <div class="hero-grid-item scene-2">
+                <img src="images/karatsucastle.jpg" alt="唐津城と早稲田佐賀">
+                <div class="hero-grid-content">
+                    <h2>佐賀県の教育のために</h2>
+                    <p>故郷、佐賀県唐津市への想い。</p>
                 </div>
-                
-                <div class="hero-scene" id="scene-2">
-                    <div class="hero-image-container">
-                        <img src="images/karatsucastle.jpg" alt="唐津城と早稲田佐賀">
-                    </div>
-                    <div class="hero-text-content">
-                        <h2 class="hero-headline">佐賀県の教育のために</h2>
-                        <p class="hero-subtitle">故郷、佐賀県唐津市への想い。</p>
-                    </div>
+            </div>
+            <div class="hero-grid-item scene-3">
+                <img src="images/kyukeisha.jpg" alt="久敬社塾 赤獅子">
+                <div class="hero-grid-content">
+                    <h2>伝統を受け継ぐ</h2>
+                    <p>受け継がれる地域の学びと文化。</p>
                 </div>
-
-                <div class="hero-scene" id="scene-3">
-                    <div class="hero-image-container">
-                        <img src="images/kyukeisha.jpg" alt="久敬社塾 赤獅子">
-                    </div>
-                    <div class="hero-text-content">
-                        <h2 class="hero-headline">伝統を受け継ぐ</h2>
-                        <p class="hero-subtitle">受け継がれる地域の学びと文化。</p>
-                    </div>
-                </div>
-
-                <div class="hero-scene" id="scene-4">
-                    <div class="hero-image-container">
-                        <img src="images/uesugi1944.jpg" alt="唐津くんち 上杉謙信の兜 1944年">
-                    </div>
-                    <div class="hero-text-content">
-                        <h2 class="hero-headline">歴史</h2>
-                        <p class="hero-subtitle">時を超え、今に繋がる情熱。</p>
-                    </div>
+            </div>
+            <div class="hero-grid-item scene-4">
+                <img src="images/uesugi1944.jpg" alt="唐津くんち 上杉謙信の兜 1944年">
+                <div class="hero-grid-content">
+                    <h2>歴史</h2>
+                    <p>時を超え、今に繋がる情熱。</p>
                 </div>
             </div>
         </section>
@@ -149,67 +130,9 @@
             }
         });
 
-        // --- ここから home.html 専用のアニメーションスクリプト ---
+        // --- home.html 専用のアニメーションスクリプト ---
         document.addEventListener('DOMContentLoaded', () => {
-            const scenes = document.querySelectorAll('.hero-scene');
-            const progressBar = document.getElementById('progressBar');
-            const heroContainer = document.querySelector('.hero-pinned-container');
-
-            // ヒーローセクションのコンテナが存在しない場合は実行しない
-            if (!heroContainer) return;
-
-            // アニメーションの総スクロール距離（この値が大きいほどゆっくり進む）
-            const scrollDistance = heroContainer.offsetHeight - window.innerHeight;
             
-            // シーンが1つもない場合は実行しない
-            if (scenes.length === 0) return;
-
-            // 最初のシーンをアクティブにしておく
-            scenes[0].classList.add('active');
-
-            window.addEventListener('scroll', () => {
-                const scrollTop = window.scrollY;
-                
-                // ヒーローセクションのコンテナが画面上端に来るまでは何もしない
-                if (scrollTop < heroContainer.offsetTop) {
-                    scenes.forEach((s, index) => {
-                        if (index === 0) {
-                            s.classList.add('active');
-                            s.classList.remove('exit');
-                        } else {
-                            s.classList.remove('active', 'exit');
-                        }
-                    });
-                    if (progressBar) {
-                        progressBar.style.width = '0%';
-                    }
-                    return;
-                }
-
-                // ヒーローセクション内でのスクロール進捗（0.0 〜 1.0）
-                const progress = Math.max(0, Math.min(1, (scrollTop - heroContainer.offsetTop) / scrollDistance));
-                
-                // プログレスバーの更新
-                if (progressBar) {
-                    progressBar.style.width = `${progress * 100}%`;
-                }
-
-                // 現在表示すべきシーンのインデックス
-                let currentSceneIndex = Math.min(scenes.length - 1, Math.floor(progress * scenes.length));
-                
-                scenes.forEach((scene, index) => {
-                    if (index === currentSceneIndex) {
-                        scene.classList.add('active');
-                        scene.classList.remove('exit');
-                    } else if (index < currentSceneIndex) {
-                        scene.classList.add('exit'); // 過ぎ去ったシーン
-                        scene.classList.remove('active');
-                    } else {
-                        scene.classList.remove('active', 'exit'); // これから来るシーン
-                    }
-                });
-            });
-
             // --- 下部コンテンツのフェードイン処理 ---
             const animatedSections = document.querySelectorAll('.animated-section');
             const observer = new IntersectionObserver((entries) => {
