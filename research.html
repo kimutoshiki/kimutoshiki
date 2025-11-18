@@ -19,13 +19,13 @@
 <body>
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="logo">木村紀喜</a>
+            <a href="home.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
                 <span class="menu-icon"></span>
             </button>
             <nav id="navigation">
                 <ul>
-                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="home.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
                     <li><a href="research.html" class="current">研究・活動</a></li>
                     <li><a href="blog.html">ブログ</a></li>
@@ -103,8 +103,8 @@
                     <h3 class="activity-title">学習支援</h3>
                     <ul class="activity-list">
                         <li>放課後等学習支援員（唐津市立中学校）</li>
-                        <li>個別学習指導の実践</li>
-                        <li>学習困難児童への支援活動</li>
+                        <li>個別指導塾教師（アルバイト）</li>
+                        <li>放課後等デイサービス（アルバイト）</li>
                     </ul>
                 </article>
 
@@ -117,7 +117,6 @@
                     <h3 class="activity-title">研究発表・参加</h3>
                     <ul class="activity-list">
                         <li>教育関連ワークショップへの参加</li>
-                        <li>研究発表会での実践報告</li>
                         <li>教育学会での情報収集</li>
                         <li>先進校視察と実践研究</li>
                     </ul>
@@ -125,7 +124,7 @@
             </div>
 
             <section class="skills-section">
-                <h2 class="section-title">専門分野・スキル</h2>
+                <h2 class="section-title">関心領域</h2>
                 <div class="skills-grid">
                     <span class="skill-tag">ICT教育</span>
                     <span class="skill-tag">AI活用教育</span>
@@ -159,7 +158,6 @@
             });
         }
         
-        // スクロール時のヘッダー処理
         window.addEventListener('scroll', () => {
             const header = document.querySelector('.site-header');
             if (window.pageYOffset > 100) {
@@ -169,7 +167,6 @@
             }
         });
         
-        // スクロールアニメーション
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
