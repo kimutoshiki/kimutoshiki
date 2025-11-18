@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="css/style.css">
     
 </head>
-<body class="home-page"> <header class="site-header">
+<body> <header class="site-header">
         <div class="header-inner">
             <a href="home.html" class="logo">木村紀喜</a>
             <button class="menu-toggle" id="menuToggle">
@@ -37,34 +37,11 @@
 
     <main>
         
-        <section class="hero-grid">
-            <div class="hero-grid-item scene-1">
-                <img src="images/wasedaookuma.jpg" alt="早稲田大学 大隈講堂">
-                <div class="hero-grid-content">
-                    <h2>首都圏での学び</h2>
-                    <p>大学院での学び</p>
-                </div>
-            </div>
-            <div class="hero-grid-item scene-2">
-                <img src="images/karatsucastle.jpg" alt="唐津城と早稲田佐賀">
-                <div class="hero-grid-content">
-                    <h2>佐賀県の教育のために</h2>
-                    <p>故郷、佐賀県唐津市への想い。</p>
-                </div>
-            </div>
-            <div class="hero-grid-item scene-3">
-                <img src="images/kyukeisha.jpg" alt="久敬社塾 赤獅子">
-                <div class="hero-grid-content">
-                    <h2>伝統を受け継ぐ</h2>
-                    <p>受け継がれる地域の学びと文化。</p>
-                </div>
-            </div>
-            <div class="hero-grid-item scene-4">
-                <img src="images/uesugi1944.jpg" alt="唐津くんち 上杉謙信の兜 1944年">
-                <div class="hero-grid-content">
-                    <h2>歴史</h2>
-                    <p>時を超え、今に繋がる情熱。</p>
-                </div>
+        <section class="hero-typographic">
+            <div class="hero-text-content">
+                <h1 class="hero-line-1">教育の未来を探求する。</h1>
+                <h2 class="hero-line-2">佐賀から、早稲田へ。</h2>
+                <p class="hero-line-3">理論と実践を融合し、<br class="sp-only">これからの学びをデザインする。</p>
             </div>
         </section>
 
@@ -123,7 +100,8 @@
         
         window.addEventListener('scroll', () => {
             const header = document.querySelector('.site-header');
-            if (window.pageYOffset > 100) {
+            // ヘッダーを常に「スクロール済み」の状態にする（背景白）
+            if (window.pageYOffset > 50) { // 少しスクロールしたら影をつける
                 header.classList.add('scrolled');
             } else {
                 header.classList.remove('scrolled');
