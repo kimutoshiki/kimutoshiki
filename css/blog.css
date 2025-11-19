@@ -3,7 +3,10 @@
 /* === ヒーローセクション === */
 .blog-hero {
     height: 60vh; min-height: 400px;
-    background-image: url('../images/kyukeisha.jpg'); /* 旧桂舎 */
+    /* 重要: 画像ファイル名の修正 (kyukeisya -> kyukeisha) */
+    background-image: url('../images/kyukeisha.jpg');
+    background-size: cover;
+    background-position: center;
 }
 
 /* === ブログコンテナ === */
