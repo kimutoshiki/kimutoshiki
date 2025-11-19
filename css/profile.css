@@ -3,7 +3,11 @@
 /* ヒーローセクション設定 */
 .profile-hero {
     height: 60vh; min-height: 400px;
-    background-image: url('../images/uesugi1944.jpg'); /* 上杉祭り */
+    background-image: url('../images/uesugi1944.jpg'); 
+    /* 追加: アニメーション設定 */
+    background-size: cover;
+    background-position: center top;
+    animation: bgPan 25s ease-in-out infinite alternate;
 }
 
 /* 詳細セクション枠組み */
