@@ -5,27 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>木村紀喜 | Toshiki Kimura</title>
     
-    <meta name="description" content="木村紀喜" />
+    <meta name="description" content="木村紀喜のポートフォリオサイト。早稲田大学教職大学院での研究、ICT教育、社会科教育の実践を発信します。" />
     <meta property="og:title" content="木村紀喜 | Toshiki Kimura" />
-    <meta property="og:description" content="早稲田大学教職大学院で学ぶ教育者のポートフォリオサイト" />
+    <meta property="og:description" content="教育の未来を探求するポートフォリオサイト" />
     <meta property="og:type" content="website" />
     
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
     <link rel="stylesheet" href="css/style.css">
-    
-    <style>
-        .animated-section {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-        .animated-section.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    </style>
 </head>
 <body>
     <header class="site-header">
@@ -47,47 +35,79 @@
     </header>
 
     <main>
-        <section class="hero-typographic hero-home">
+        <section class="hero-home">
             <div class="hero-overlay"></div>
-            <div class="hero-text-content">
-                <h1 class="hero-line-1">教育の未来を探求する。</h1>
-                <h2 class="hero-line-2">/</h2>
-                <p class="hero-line-3">理論と実践の往還</p>
+            <div class="hero-text-content animated-text">
+                <h1 class="hero-main-title">教育の未来を、<br class="sp-only">共に創る。</h1>
+                <p class="hero-subtitle">理論と実践の往還 / ICTと協働学習の探究</p>
             </div>
         </section>
 
         <div class="page-content">
-            <section class="intro animated-section">
-                <h2>ようこそ</h2>
-                <p>大学院での理論と実践を通じて、これからの教育の在り方を学び考えています。<br>
-                本ホームページでは、日々の活動について発信しています。</p>
+            
+            <section class="vision-section animated-section">
+                <div class="section-header">
+                    <h2 class="section-title-en">Vision</h2>
+                    <p class="section-title-jp">目指す教育の姿</p>
+                </div>
+                <div class="vision-content">
+                    <p class="vision-text">
+                        変化の激しい現代において、教育には「変わらない本質」と「変わりゆく革新」の両立が求められています。<br>
+                        子どもたち一人ひとりが自らの問いを持ち、他者と協働しながら最適解を導き出せる社会。<br>
+                        そんな未来を実現するために、ICT技術と対話的な学びを融合させた新しい授業実践を探究しています。
+                    </p>
+                </div>
             </section>
 
             <section class="home-cards animated-section">
-                <article class="home-card card-1">
+                <article class="home-card">
+                    <div class="card-icon">📝</div>
                     <h3>最新のブログ</h3>
                     <p class="home-card-meta">2025.07.29 更新</p>
-                    <p>文部科学省「生成AIの利用に関する夏季公開学習会」に参加しました...</p>
-                    <a href="blog.html" class="home-card-link">
-                        ブログを読む →
-                    </a>
+                    <p>文部科学省「生成AIの利用に関する夏季公開学習会」での学びと気づきについて執筆しました。</p>
+                    <a href="blog.html" class="home-card-link">ブログを読む →</a>
                 </article>
 
-                <article class="home-card card-2">
+                <article class="home-card">
+                    <div class="card-icon">🎓</div>
                     <h3>プロフィール</h3>
-                    <p>佐賀県唐津市出身。佐賀大学教育学部卒業後、早稲田大学教職大学院で学んでいます。教育の理論と実践の融合を目指し、研究活動を行っています。</p>
-                    <a href="profile.html" class="home-card-link">
-                        詳しいプロフィールを見る →
-                    </a>
+                    <p>佐賀県唐津市出身。早稲田大学教職大学院にて、高度な実践的指導力の習得を目指しています。</p>
+                    <a href="profile.html" class="home-card-link">詳細を見る →</a>
                 </article>
 
-                <article class="home-card card-3">
+                <article class="home-card">
+                    <div class="card-icon">🔬</div>
                     <h3>研究・活動</h3>
-                    <p>ICT教育、協働学習、教員養成など、現代の教育課題に対する実践的な研究を進めています。学校現場との連携を重視した活動を展開しています。</p>
-                    <a href="research.html" class="home-card-link">
-                        研究内容を詳しく見る →
-                    </a>
+                    <p>小学校社会科における議論形成や、生成AIを活用した授業デザインなど、研究テーマを一覧で紹介します。</p>
+                    <a href="research.html" class="home-card-link">研究内容を見る →</a>
                 </article>
+            </section>
+
+            <section class="news-section animated-section">
+                <div class="section-header">
+                    <h2 class="section-title-en">News</h2>
+                    <p class="section-title-jp">お知らせ</p>
+                </div>
+                <ul class="news-list">
+                    <li class="news-item">
+                        <span class="news-date">2025.07.15</span>
+                        <span class="news-cat">資格</span>
+                        <span class="news-title">生成AIパスポート試験に合格しました</span>
+                    </li>
+                    <li class="news-item">
+                        <span class="news-date">2025.07.05</span>
+                        <span class="news-cat">活動</span>
+                        <span class="news-title">千葉大学教育学部附属小学校の公開研究会に参加しました</span>
+                    </li>
+                    <li class="news-item">
+                        <span class="news-date">2025.06.03</span>
+                        <span class="news-cat">Web</span>
+                        <span class="news-title">公式ポートフォリオサイトを公開しました</span>
+                    </li>
+                </ul>
+                <div class="news-more">
+                    <a href="blog.html" class="button-outline">過去の記事一覧</a>
+                </div>
             </section>
         </div>
     </main>
@@ -101,24 +121,17 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const animatedSections = document.querySelectorAll('.animated-section');
-            
-            if (animatedSections.length > 0) {
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('is-visible');
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                }, {
-                    threshold: 0.1
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
                 });
+            }, { threshold: 0.15 });
 
-                animatedSections.forEach(section => {
-                    observer.observe(section);
-                });
-            }
+            document.querySelectorAll('.animated-section').forEach(section => {
+                observer.observe(section);
+            });
         });
     </script>
 </body>
