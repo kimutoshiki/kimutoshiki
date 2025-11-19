@@ -7,14 +7,13 @@
     
     <meta name="description" content="木村紀喜" />
     <meta property="og:title" content="木村紀喜 | Toshiki Kimura" />
-    <meta property="og:description" content="" />
+    <meta property="og:description" content="早稲田大学教職大学院で学ぶ教育者のポートフォリオサイト" />
     <meta property="og:type" content="website" />
-    <meta name="google-site-verification" content="tniJjOXTT2HH9pVTZQHiy-AYShQd0h0kpLzmTXNdai0" />
     
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     
     <style>
         .animated-section {
@@ -32,7 +31,7 @@
     <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
-            <button class="menu-toggle" id="menuToggle">
+            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
                 <span class="menu-icon"></span>
             </button>
             <nav id="navigation">
@@ -48,12 +47,12 @@
     </header>
 
     <main>
-        
-        <section class="hero-typographic">
+        <section class="hero-typographic hero-home">
+            <div class="hero-overlay"></div>
             <div class="hero-text-content">
                 <h1 class="hero-line-1">教育の未来を探求する。</h1>
                 <h2 class="hero-line-2">/</h2>
-                <p class="hero-line-3"><br class="sp-only"></p>
+                <p class="hero-line-3">理論と実践の往還</p>
             </div>
         </section>
 
@@ -68,7 +67,7 @@
                 <article class="home-card card-1">
                     <h3>最新のブログ</h3>
                     <p class="home-card-meta">2025.07.29 更新</p>
-                    <p></p>
+                    <p>文部科学省「生成AIの利用に関する夏季公開学習会」に参加しました...</p>
                     <a href="blog.html" class="home-card-link">
                         ブログを読む →
                     </a>
@@ -98,31 +97,9 @@
         当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
     </footer>
 
+    <script src="js/main.js" defer></script>
+    
     <script>
-        // --- 共通スクリプト（メニューとヘッダー） ---
-        const menuToggle = document.getElementById('menuToggle');
-        const navigation = document.getElementById('navigation');
-        
-        if (menuToggle && navigation) {
-            menuToggle.addEventListener('click', () => {
-                navigation.classList.toggle('active');
-                menuToggle.classList.toggle('active');
-            });
-        }
-        
-        // スクロール時のヘッダー制御
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('.site-header');
-            if (header) {
-                if (window.scrollY > 50) {
-                    header.classList.add('scrolled');
-                } else {
-                    header.classList.remove('scrolled');
-                }
-            }
-        });
-
-        // --- アニメーション制御 ---
         document.addEventListener('DOMContentLoaded', () => {
             const animatedSections = document.querySelectorAll('.animated-section');
             
