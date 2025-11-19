@@ -1,0 +1,50 @@
+/* トップページ専用スタイル */
+
+/* ヒーローセクション設定 */
+.hero-home {
+    height: 100vh; min-height: 600px;
+    background-image: url('../images/wasedaookuma.jpg'); /* 大隈講堂 */
+    background-attachment: fixed; /* パララックス */
+}
+
+/* Visionセクション */
+.vision-section { text-align: center; margin-bottom: 100px; }
+.vision-text { font-size: 1.1rem; line-height: 2.2; max-width: 800px; margin: 0 auto; }
+
+/* カードセクション (トップページの3枚カード) */
+.home-cards {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px;
+    margin-bottom: 100px;
+}
+.home-card {
+    background: #fff; padding: 40px; border-radius: 16px;
+    box-shadow: var(--card-shadow); transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(0,0,0,0.03); display: flex; flex-direction: column; text-align: center;
+}
+.home-card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0,0,0,0.12); }
+.card-icon { font-size: 3rem; margin-bottom: 20px; display: block; }
+.home-card h3 { font-size: 1.4rem; margin-bottom: 16px; color: var(--main-enji); }
+.home-card-meta { font-size: 0.85rem; color: #888; margin-bottom: 12px; }
+.home-card-link { display: inline-block; margin-top: auto; color: var(--main-enji); font-weight: 700; padding-top: 20px; }
+
+/* ニュースセクション */
+.news-section { max-width: 800px; margin: 0 auto; }
+.news-list { margin-bottom: 40px; border-top: 1px solid var(--border-light); }
+.news-item {
+    display: flex; align-items: center; gap: 24px; padding: 20px 0;
+    border-bottom: 1px solid var(--border-light);
+    text-align: left;
+}
+.news-date { font-family: "Outfit", sans-serif; color: #888; font-size: 0.9rem; min-width: 90px; }
+.news-cat {
+    font-size: 0.75rem; background: var(--main-enji); color: white;
+    padding: 4px 12px; border-radius: 4px; white-space: nowrap;
+}
+.news-title { flex: 1; font-weight: 500; }
+.news-more { text-align: center; margin-top: 32px; }
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+    .hero-home { height: 85vh; }
+    .news-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
