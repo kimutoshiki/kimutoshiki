@@ -4,7 +4,13 @@
 .hero-home {
     height: 100vh; min-height: 600px;
     background-image: url('../images/wasedaookuma.jpg'); /* 大隈講堂 */
-    background-attachment: fixed; /* パララックス */
+    /* 修正: fixedを削除し、アニメーションを追加 */
+    background-attachment: scroll; 
+    background-size: cover;
+    background-position: center top;
+    
+    /* 20秒かけて上下に往復移動（infinite alternate） */
+    animation: bgPan 20s ease-in-out infinite alternate;
 }
 
 /* Visionセクション */
