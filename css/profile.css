@@ -1,0 +1,64 @@
+/* プロフィールページ専用スタイル */
+
+/* ヒーローセクション設定 */
+.profile-hero {
+    height: 60vh; min-height: 400px;
+    background-image: url('../images/uesugi1944.jpg'); /* 上杉祭り */
+}
+
+/* 詳細セクション枠組み */
+.detail-section {
+    background: #fff; padding: 40px; border-radius: 16px; margin-bottom: 40px;
+    box-shadow: var(--card-shadow);
+}
+.section-heading {
+    display: flex; align-items: center; font-size: 1.5rem; color: var(--main-enji);
+    margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);
+}
+.section-icon {
+    display: inline-flex; width: 32px; height: 32px; margin-right: 12px;
+    align-items: center; justify-content: center; flex-shrink: 0;
+}
+/* SVGサイズの強制指定（崩れ防止） */
+.section-icon svg { width: 100%; height: 100%; fill: currentColor; }
+
+/* 基本情報グリッド */
+.detail-grid { display: grid; gap: 20px; }
+.detail-item {
+    display: grid; grid-template-columns: 140px 1fr; gap: 24px;
+    padding-bottom: 16px; border-bottom: 1px dashed #eee;
+}
+.detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+.detail-label { font-weight: 700; color: var(--secondary-text); }
+
+/* タイムライン (年表) */
+.timeline { border-left: 2px solid var(--border-light); padding-left: 24px; margin-left: 8px; }
+.timeline-item { margin-bottom: 24px; position: relative; }
+.timeline-item::before {
+    content: ''; position: absolute; left: -31px; top: 6px; width: 12px; height: 12px;
+    background: var(--main-enji); border: 3px solid #fff; border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--border-light);
+}
+.timeline-year { font-family: "Outfit", sans-serif; color: var(--main-enji); font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+
+/* 資格バッジ */
+.license-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.license-badge {
+    display: flex; align-items: center; gap: 16px; padding: 16px;
+    border: 1px solid var(--border-light); border-radius: 12px; background: #fcfcfc;
+}
+.license-icon {
+    width: 48px; height: 48px; background: var(--main-enji); color: white;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px; flex-shrink: 0;
+}
+.license-icon svg { width: 24px; height: 24px; fill: currentColor; }
+
+.license-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+.license-status { font-size: 0.8rem; color: var(--secondary-text); }
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+    .profile-hero { height: 50vh; min-height: 300px; }
+    .detail-item { grid-template-columns: 1fr; gap: 8px; }
+}
