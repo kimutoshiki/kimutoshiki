@@ -1,0 +1,177 @@
+/* 研究・活動ページ専用スタイル */
+
+/* === ヒーローセクション === */
+.research-hero {
+    height: 60vh; min-height: 400px;
+    background-image: url('../images/karatsucastle.jpg'); /* 背景画像: 唐津城 */
+    /* 他の背景候補: 
+       url('../images/wasedaookuma.jpg') 
+       url('../images/kyukeisha.jpg')
+    */
+}
+
+/* === 研究テーマ (Themes) === */
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 32px;
+    margin-bottom: 80px;
+}
+
+.theme-card {
+    background: #fff;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(0,0,0,0.03);
+    height: 100%; /* 高さを揃える */
+}
+
+.theme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+}
+
+/* 数字の装飾 */
+.theme-number {
+    position: absolute;
+    top: -15px;
+    right: -10px;
+    font-family: "Outfit", sans-serif;
+    font-size: 5rem;
+    font-weight: 800;
+    color: rgba(139, 21, 56, 0.06); /* メインカラーの薄い色 */
+    line-height: 1;
+    pointer-events: none;
+}
+
+.theme-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--primary-text);
+    position: relative;
+    padding-right: 20px; /* 数字と被らないように */
+}
+
+.theme-description {
+    font-size: 0.95rem;
+    color: var(--secondary-text);
+    line-height: 1.8;
+}
+
+/* === 活動実績 (Activities) === */
+.activities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+    margin-bottom: 80px;
+}
+
+.activity-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    padding: 40px 32px;
+    text-align: center;
+    transition: transform 0.3s;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.activity-card:hover {
+    transform: translateY(-5px);
+}
+
+.activity-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--gradient-main);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: white;
+    box-shadow: 0 8px 20px rgba(139, 21, 56, 0.2);
+}
+
+.activity-icon svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+}
+
+.activity-title {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    color: var(--main-enji);
+    font-weight: 700;
+}
+
+.activity-list {
+    text-align: left;
+    padding-left: 0;
+}
+
+.activity-list li {
+    position: relative;
+    padding-left: 1.5em;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    color: var(--secondary-text);
+}
+
+.activity-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 6px;
+    height: 6px;
+    background: var(--main-teal); /* アクセントカラー */
+    border-radius: 50%;
+}
+
+/* === キーワード (Keywords) === */
+.skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 60px;
+}
+
+.skill-tag {
+    padding: 10px 20px;
+    background: #fff;
+    border: 1px solid var(--main-enji);
+    color: var(--main-enji);
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.skill-tag:hover {
+    background: var(--main-enji);
+    color: white;
+    transform: scale(1.05);
+    cursor: default;
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+    .research-hero { height: 50vh; min-height: 300px; }
+    
+    .theme-grid, .activities-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    
+    .theme-card, .activity-card {
+        padding: 24px;
+    }
+}
