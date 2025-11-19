@@ -1,22 +1,62 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const navToggle = document.getElementById('navToggle');
-    const mobileNav = document.getElementById('mobileNav');
-    const navIcon = navToggle.querySelector('.nav-toggle__icon');
+    
+    /* ----------------------------------------
+       ハンバーガーメニュー制御
+    ---------------------------------------- */
+    const menuToggle = document.getElementById('menuToggle');
+    const navigation = document.getElementById('navigation');
 
-    if (navToggle && mobileNav) {
-        navToggle.addEventListener('click', () => {
-            // ARIA属性を切り替えて、現在の状態（開いているか閉じているか）を取得
-            const isOpened = navToggle.getAttribute('aria-expanded') === 'true';
-            navToggle.setAttribute('aria-expanded', !isOpened);
-
-            // メニューの表示・非表示を切り替え
-            mobileNav.classList.toggle('scale-y-100');
-            mobileNav.classList.toggle('opacity-100');
-            mobileNav.classList.toggle('scale-y-0');
-            mobileNav.classList.toggle('opacity-0');
+    if (menuToggle && navigation) {
+        menuToggle.addEventListener('click', () => {
+            navigation.classList.toggle('active');
+            menuToggle.classList.toggle('active');
             
-            // ハンバーガーアイコンを「×」印にアニメーション
-            navIcon.classList.toggle('opened');
+            // アクセシビリティ対応
+            const isExpanded = menuToggle.classList.contains('active');
+            menuToggle.setAttribute('aria-expanded', isExpanded);
+        });
+
+        // メニューリンクをクリックしたら閉じる（SP時）
+        const navLinks = navigation.querySelectorAll('a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navigation.classList.remove('active');
+                menuToggle.classList.remove('active');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
+
+    /* ----------------------------------------
+       スクロール時のヘッダー制御
+    ---------------------------------------- */
+    const header = document.querySelector('.site-header');
+    
+    if (header) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    }
+
+    /* ----------------------------------------
+       ブログページのアコーディオン制御
+    ---------------------------------------- */
+    const blogHeaders = document.querySelectorAll('.blog-header');
+    
+    if (blogHeaders.length > 0) {
+        blogHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                // クリックされた記事の内容を取得
+                const content = header.nextElementSibling;
+                
+                // クラスを切り替え（CSSでアニメーション制御）
+                header.classList.toggle('active');
+                content.classList.toggle('active');
+            });
         });
     }
 });
