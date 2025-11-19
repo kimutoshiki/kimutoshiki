@@ -4,10 +4,10 @@
 .research-hero {
     height: 60vh; min-height: 400px;
     background-image: url('../images/karatsucastle.jpg'); /* 背景画像: 唐津城 */
-    /* 他の背景候補: 
-       url('../images/wasedaookuma.jpg') 
-       url('../images/kyukeisha.jpg')
-    */
+    /* 追加: アニメーション設定 */
+    background-size: cover;
+    background-position: center top;
+    animation: bgPan 25s ease-in-out infinite alternate;
 }
 
 /* === 研究テーマ (Themes) === */
