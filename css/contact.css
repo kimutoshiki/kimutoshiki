@@ -4,8 +4,10 @@
 .contact-hero {
     height: 60vh; min-height: 400px;
     background-image: url('../images/wasedaookuma.jpg'); /* 大隈講堂（共通イメージとして使用） */
+    /* 追加: アニメーション設定 */
     background-size: cover;
-    background-position: center;
+    background-position: center top;
+    animation: bgPan 20s ease-in-out infinite alternate;
 }
 
 /* === コンタクトカード === */
