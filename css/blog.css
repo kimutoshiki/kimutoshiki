@@ -1,0 +1,162 @@
+/* ブログページ専用スタイル */
+
+/* === ヒーローセクション === */
+.blog-hero {
+    height: 60vh; min-height: 400px;
+    background-image: url('../images/kyukeisha.jpg'); /* 旧桂舎 */
+}
+
+/* === ブログコンテナ === */
+.blog-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.blog-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* === ブログアイテム（カード） === */
+.blog-item {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.blog-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+/* === ブログヘッダー（クリックエリア） === */
+.blog-header {
+    padding: 24px 32px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    transition: background-color 0.2s;
+}
+
+.blog-header:hover {
+    background-color: rgba(139, 21, 56, 0.02); /* メインカラーの極薄背景 */
+}
+
+.blog-title-area {
+    flex: 1;
+    padding-right: 20px;
+}
+
+.blog-date {
+    font-family: "Outfit", sans-serif;
+    color: var(--main-enji);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.blog-title {
+    font-size: 1.2rem;
+    margin: 0;
+    color: var(--primary-text);
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+/* === 開閉アイコン === */
+.toggle-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--main-enji);
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+    transition: background-color 0.3s;
+}
+
+.toggle-icon::before,
+.toggle-icon::after {
+    content: '';
+    position: absolute;
+    background: white;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.3s ease;
+}
+
+.toggle-icon::before {
+    width: 14px;
+    height: 2px;
+}
+
+.toggle-icon::after {
+    width: 2px;
+    height: 14px;
+}
+
+/* アクティブ（開いている）状態のアイコン */
+.blog-header.active .toggle-icon {
+    background: var(--enji-dark);
+}
+
+.blog-header.active .toggle-icon::after {
+    transform: translate(-50%, -50%) rotate(90deg); /* プラスがマイナスになる */
+}
+
+/* === ブログコンテンツ（アコーディオンの中身） === */
+.blog-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #fff;
+}
+
+.blog-content.active {
+    max-height: 1000px; /* コンテンツが収まる十分な高さ */
+    border-top: 1px solid var(--border-light);
+}
+
+.blog-content-inner {
+    padding: 32px;
+    color: var(--secondary-text);
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+.blog-content-inner p {
+    margin-bottom: 1.5em;
+}
+
+.blog-content-inner p:last-child {
+    margin-bottom: 0;
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+    .blog-hero { height: 50vh; min-height: 300px; }
+    
+    .blog-header {
+        padding: 20px;
+        align-items: flex-start;
+    }
+    
+    .blog-title { font-size: 1.1rem; }
+    
+    .toggle-icon {
+        margin-top: 4px;
+        width: 28px;
+        height: 28px;
+    }
+    
+    .blog-content-inner {
+        padding: 20px;
+    }
+}
