@@ -13,14 +13,13 @@
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
-    <link rel="stylesheet" href="style.css">
-
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
-            <button class="menu-toggle" id="menuToggle">
+            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
                 <span class="menu-icon"></span>
             </button>
             <nav id="navigation">
@@ -36,11 +35,12 @@
     </header>
 
     <main>
-        <section class="profile-hero">
-            <div class="profile-hero-content">
+        <section class="profile-hero" style="background-image: url('images/karatsucastle.jpg');">
+            <div class="hero-overlay"></div>
+            <div class="profile-hero-content" style="position: relative; z-index: 2;">
                 <div class="profile-intro">
                     <h1>プロフィール</h1>
-                    <p class="description"></p>
+                    <p class="description">学び続ける教育者として</p>
                 </div>
             </div>
         </section>
@@ -215,29 +215,10 @@
         当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
     </footer>
 
+    <script src="js/main.js" defer></script>
+    
     <script>
-        // メニュートグル
-        const menuToggle = document.getElementById('menuToggle');
-        const navigation = document.getElementById('navigation');
-        
-        if (menuToggle && navigation) {
-            menuToggle.addEventListener('click', () => {
-                navigation.classList.toggle('active');
-                menuToggle.classList.toggle('active');
-            });
-        }
-        
-        // ヘッダーのスクロール処理
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('.site-header');
-            if (window.scrollY > 50) { // pageYOffsetは古いプロパティのためscrollYに変更
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
-            }
-        });
-        
-        // フェードインアニメーション（IntersectionObserver）
+        // アニメーション初期化（ページ固有のため残します）
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -254,7 +235,6 @@
         }, observerOptions);
         
         document.querySelectorAll('.detail-section').forEach(section => {
-            // 初期状態をセット（CSSで定義するとJS無効時に見えなくなるためJSでセット）
             section.style.opacity = '0';
             section.style.transform = 'translateY(20px)';
             section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
