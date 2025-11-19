@@ -7,6 +7,10 @@
     background-image: url('../images/kyukeisha.jpg');
     background-size: cover;
     background-position: center;
+    /* 追加: アニメーション設定 */
+    background-size: cover;
+    background-position: center top;
+    animation: bgPan 25s ease-in-out infinite alternate;
 }
 
 /* === ブログコンテナ === */
