@@ -37,15 +37,19 @@
     <main>
         <section class="hero-home">
             <div class="hero-overlay"></div>
-            <div class="hero-text-content animated-text">
-                <h1 class="hero-main-title">教育の未来を、<br class="sp-only">共に創る。</h1>
-                <p class="hero-subtitle">理論と実践の往還 / ICTと協働学習の探究</p>
+            <div class="hero-container">
+                <h1 class="hero-title animate-fade-up delay-1">
+                    教育の未来を、<br class="sp-only">共に創る。
+                </h1>
+                <p class="hero-subtitle animate-fade-up delay-2">
+                    理論と実践の往還 / ICTと協働学習の探究
+                </p>
             </div>
         </section>
 
         <div class="page-content">
             
-            <section class="vision-section animated-section">
+            <section class="vision-section scroll-animate">
                 <div class="section-header">
                     <h2 class="section-title-en">Vision</h2>
                     <p class="section-title-jp">目指す教育の姿</p>
@@ -59,7 +63,7 @@
                 </div>
             </section>
 
-            <section class="home-cards animated-section">
+            <section class="home-cards scroll-animate">
                 <article class="home-card">
                     <div class="card-icon">📝</div>
                     <h3>最新のブログ</h3>
@@ -83,7 +87,7 @@
                 </article>
             </section>
 
-            <section class="news-section animated-section">
+            <section class="news-section scroll-animate">
                 <div class="section-header">
                     <h2 class="section-title-en">News</h2>
                     <p class="section-title-jp">お知らせ</p>
@@ -127,9 +131,9 @@
                         entry.target.classList.add('is-visible');
                     }
                 });
-            }, { threshold: 0.15 });
+            }, { threshold: 0.1 });
 
-            document.querySelectorAll('.animated-section').forEach(section => {
+            document.querySelectorAll('.scroll-animate').forEach(section => {
                 observer.observe(section);
             });
         });
