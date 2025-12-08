@@ -1,10 +1,20 @@
 /* 研究・活動ページ専用スタイル */
 
+/* === CSS変数（必要に応じて） === */
+:root {
+    --main-enji: #8B1538;
+    --main-teal: #2A9D8F;
+    --primary-text: #333;
+    --secondary-text: #666;
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --gradient-main: linear-gradient(135deg, #8B1538 0%, #A91D4A 100%);
+}
+
 /* === ヒーローセクション === */
 .research-hero {
-    height: 60vh; min-height: 400px;
-    background-image: url('../images/karatsucastle.jpg'); /* 背景画像: 唐津城 */
-    /* 追加: アニメーション設定 */
+    height: 60vh;
+    min-height: 400px;
+    background-image: url('../images/karatsucastle.jpg');
     background-size: cover;
     background-position: center top;
     animation: bgPan 25s ease-in-out infinite alternate;
@@ -27,7 +37,7 @@
     overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
     border: 1px solid rgba(0,0,0,0.03);
-    height: 100%; /* 高さを揃える */
+    height: 100%;
 }
 
 .theme-card:hover {
@@ -35,7 +45,6 @@
     box-shadow: 0 12px 30px rgba(0,0,0,0.1);
 }
 
-/* 数字の装飾 */
 .theme-number {
     position: absolute;
     top: -15px;
@@ -43,7 +52,7 @@
     font-family: "Outfit", sans-serif;
     font-size: 5rem;
     font-weight: 800;
-    color: rgba(139, 21, 56, 0.06); /* メインカラーの薄い色 */
+    color: rgba(139, 21, 56, 0.06);
     line-height: 1;
     pointer-events: none;
 }
@@ -54,7 +63,7 @@
     margin-bottom: 16px;
     color: var(--primary-text);
     position: relative;
-    padding-right: 20px; /* 数字と被らないように */
+    padding-right: 20px;
 }
 
 .theme-description {
@@ -131,7 +140,7 @@
     top: 0.6em;
     width: 6px;
     height: 6px;
-    background: var(--main-teal); /* アクセントカラー */
+    background: var(--main-teal);
     border-radius: 50%;
 }
 
@@ -162,16 +171,160 @@
     cursor: default;
 }
 
-/* スマホ対応 */
+/* === 詳細セクション === */
+.detail-section {
+    background: #fff;
+    padding: 40px 32px;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 40px;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+/* === セクション見出し === */
+.section-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--primary-text);
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--main-enji);
+}
+
+.section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--gradient-main);
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.section-icon svg {
+    fill: white;
+}
+
+/* === タイムライン === */
+.timeline {
+    position: relative;
+    padding-left: 40px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--main-enji), var(--main-teal));
+    border-radius: 3px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 28px;
+    padding-bottom: 8px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -40px;
+    top: 4px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border: 3px solid var(--main-enji);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(139, 21, 56, 0.2);
+}
+
+.timeline-year {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--main-enji);
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
+}
+
+.timeline-content {
+    font-size: 1rem;
+    color: var(--primary-text);
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+/* === スクロールアニメーション === */
+.scroll-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.scroll-animate.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* === スマホ対応 === */
 @media (max-width: 768px) {
-    .research-hero { height: 50vh; min-height: 300px; }
+    .research-hero {
+        height: 50vh;
+        min-height: 300px;
+    }
     
-    .theme-grid, .activities-grid {
+    .theme-grid,
+    .activities-grid {
         grid-template-columns: 1fr;
         gap: 24px;
     }
     
-    .theme-card, .activity-card {
+    .theme-card,
+    .activity-card {
         padding: 24px;
+    }
+    
+    .detail-section {
+        padding: 24px 20px;
+    }
+    
+    .section-heading {
+        font-size: 1.2rem;
+        gap: 10px;
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .section-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .timeline {
+        padding-left: 32px;
+    }
+    
+    .timeline::before {
+        left: 6px;
+    }
+    
+    .timeline-item::before {
+        left: -32px;
+        width: 14px;
+        height: 14px;
     }
 }
