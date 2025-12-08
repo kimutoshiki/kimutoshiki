@@ -59,4 +59,27 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    /* ----------------------------------------
+       スクロールアニメーション制御（追加）
+    ---------------------------------------- */
+    const scrollAnimateElements = document.querySelectorAll('.scroll-animate');
+    
+    if (scrollAnimateElements.length > 0) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        scrollAnimateElements.forEach(el => {
+            observer.observe(el);
+        });
+    }
+
 });
