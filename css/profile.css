@@ -1,68 +1,203 @@
-/* プロフィールページ専用スタイル */
+/* === Profile Page Styles === */
 
-/* ヒーローセクション設定 */
+/* Hero */
 .profile-hero {
-    height: 60vh; min-height: 400px;
-    background-image: url('../images/uesugi1944.jpg'); 
-    /* 追加: アニメーション設定 */
+    height: 60vh;
+    min-height: 400px;
+    background-image: url('../images/uesugi1944.jpg');
     background-size: cover;
-    background-position: center top;
-    animation: bgPan 25s ease-in-out infinite alternate;
+    background-position: center center;
 }
 
-/* 詳細セクション枠組み */
+/* Detail Section Card */
 .detail-section {
-    background: #fff; padding: 40px; border-radius: 16px; margin-bottom: 40px;
+    background: var(--pure-white);
+    padding: 44px 40px;
+    border-radius: var(--radius-lg);
+    margin-bottom: 32px;
     box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-subtle);
 }
+
+/* Section Heading */
 .section-heading {
-    display: flex; align-items: center; font-size: 1.5rem; color: var(--main-enji);
-    margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    font-size: 1.35rem;
+    color: var(--main-enji);
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
+
 .section-icon {
-    display: inline-flex; width: 32px; height: 32px; margin-right: 12px;
-    align-items: center; justify-content: center; flex-shrink: 0;
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    margin-right: 14px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--enji-light);
+    border-radius: var(--radius-sm);
 }
-/* SVGサイズの強制指定（崩れ防止） */
-.section-icon svg { width: 100%; height: 100%; fill: currentColor; }
+.section-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--main-enji);
+}
 
-/* 基本情報グリッド */
-.detail-grid { display: grid; gap: 20px; }
+/* Basic Info Grid */
+.detail-grid {
+    display: grid;
+    gap: 0;
+}
+
 .detail-item {
-    display: grid; grid-template-columns: 140px 1fr; gap: 24px;
-    padding-bottom: 16px; border-bottom: 1px dashed #eee;
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 24px;
+    padding: 16px 0;
+    border-bottom: 1px dashed var(--border-light);
+    align-items: baseline;
 }
-.detail-item:last-child { border-bottom: none; padding-bottom: 0; }
-.detail-label { font-weight: 700; color: var(--secondary-text); }
+.detail-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.detail-item:first-child {
+    padding-top: 0;
+}
 
-/* タイムライン (年表) */
-.timeline { border-left: 2px solid var(--border-light); padding-left: 24px; margin-left: 8px; }
-.timeline-item { margin-bottom: 24px; position: relative; }
+.detail-label {
+    font-weight: 700;
+    color: var(--secondary-text);
+    font-size: 0.88rem;
+    letter-spacing: 0.02em;
+}
+
+.detail-value {
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+/* Timeline */
+.timeline {
+    border-left: 2px solid var(--border-light);
+    padding-left: 28px;
+    margin-left: 8px;
+}
+
+.timeline-item {
+    margin-bottom: 24px;
+    position: relative;
+}
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
 .timeline-item::before {
-    content: ''; position: absolute; left: -31px; top: 6px; width: 12px; height: 12px;
-    background: var(--main-enji); border: 3px solid #fff; border-radius: 50%;
-    box-shadow: 0 0 0 1px var(--border-light);
+    content: '';
+    position: absolute;
+    left: -35px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background: var(--main-enji);
+    border: 3px solid var(--pure-white);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px var(--border-light);
 }
-.timeline-year { font-family: "Outfit", sans-serif; color: var(--main-enji); font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
 
-/* 資格バッジ */
-.license-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.timeline-year {
+    font-family: "Outfit", sans-serif;
+    color: var(--main-enji);
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 3px;
+    letter-spacing: 0.02em;
+}
+
+.timeline-content {
+    font-size: 0.95rem;
+    color: var(--primary-text);
+    font-weight: 500;
+}
+
+/* License Badges */
+.license-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+}
+
 .license-badge {
-    display: flex; align-items: center; gap: 16px; padding: 16px;
-    border: 1px solid var(--border-light); border-radius: 12px; background: #fcfcfc;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 18px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--off-white);
+    transition: border-color 0.2s ease, background 0.2s ease;
 }
+.license-badge:hover {
+    border-color: rgba(139, 21, 56, 0.2);
+    background: var(--pure-white);
+}
+
 .license-icon {
-    width: 48px; height: 48px; background: var(--main-enji); color: white;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 10px; flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    background: var(--gradient-main);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
 }
-.license-icon svg { width: 24px; height: 24px; fill: currentColor; }
+.license-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
 
-.license-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
-.license-status { font-size: 0.8rem; color: var(--secondary-text); }
+.license-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+    line-height: 1.4;
+}
 
-/* スマホ対応 */
+.license-status {
+    font-size: 0.78rem;
+    color: var(--muted-text);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .profile-hero { height: 50vh; min-height: 300px; }
-    .detail-item { grid-template-columns: 1fr; gap: 8px; }
+    .profile-hero {
+        height: 50vh;
+        min-height: 300px;
+    }
+
+    .detail-section {
+        padding: 28px 22px;
+    }
+
+    .detail-item {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .section-heading {
+        font-size: 1.15rem;
+    }
+
+    .license-grid {
+        grid-template-columns: 1fr;
+    }
 }

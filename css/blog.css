@@ -1,89 +1,165 @@
-/* ブログページ専用スタイル */
+/* === Blog Page Styles === */
 
-/* === ヒーローセクション === */
+/* Hero */
 .blog-hero {
-    height: 60vh; min-height: 400px;
-    /* 重要: 画像ファイル名の修正 (kyukeisya -> kyukeisha) */
+    height: 60vh;
+    min-height: 400px;
     background-image: url('../images/kyukeisha.jpg');
-    /* 追加: アニメーション設定 */
     background-size: cover;
-    background-position: center top;
-    animation: bgPan 25s ease-in-out infinite alternate;
+    background-position: center center;
 }
 
-/* === ブログコンテナ === */
+/* Blog Container */
 .blog-container {
-    max-width: 900px;
+    max-width: 840px;
     margin: 0 auto;
 }
 
+/* Filter Buttons */
+.filter-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.filter-btn {
+    background-color: var(--off-white);
+    border: 1.5px solid var(--border-light);
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: "Noto Sans JP", sans-serif;
+    letter-spacing: 0.02em;
+}
+
+.filter-btn:hover {
+    border-color: var(--main-enji);
+    color: var(--main-enji);
+    background: var(--enji-light);
+}
+
+.filter-btn.active {
+    background-color: var(--main-enji);
+    border-color: var(--main-enji);
+    color: #ffffff;
+}
+
+/* Category Badges */
+.cat-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 10px;
+    border-radius: 4px;
+    color: #fff;
+    margin-right: 10px;
+    vertical-align: middle;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+
+.cat-notice { background-color: #e67e22; }
+.cat-activity { background-color: #3498db; }
+.cat-thought { background-color: #27ae60; }
+
+/* Blog Posts */
 .blog-posts {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
 }
 
-/* === ブログアイテム（カード） === */
+/* Blog Item Card */
 .blog-item {
-    background: #fff;
-    border-radius: 12px;
+    background: var(--pure-white);
+    border-radius: var(--radius-md);
     box-shadow: var(--card-shadow);
     overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-    border: 1px solid rgba(0,0,0,0.03);
+    transition: transform 0.25s ease;
+    border: 1px solid var(--border-subtle);
 }
 
 .blog-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    box-shadow: var(--card-shadow-hover);
 }
 
-/* === ブログヘッダー（クリックエリア） === */
+/* Filter animation */
+.blog-item.hidden {
+    display: none;
+}
+
+.blog-item.fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Blog Header (click area) */
 .blog-header {
-    padding: 24px 32px;
+    padding: 22px 28px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
-    transition: background-color 0.2s;
+    background: var(--pure-white);
+    transition: background-color 0.2s ease;
 }
 
 .blog-header:hover {
-    background-color: rgba(139, 21, 56, 0.02); /* メインカラーの極薄背景 */
+    background-color: rgba(139, 21, 56, 0.02);
 }
 
 .blog-title-area {
     flex: 1;
-    padding-right: 20px;
+    padding-right: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.blog-meta {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--muted-text);
 }
 
 .blog-date {
     font-family: "Outfit", sans-serif;
-    color: var(--main-enji);
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 6px;
+    color: var(--muted-text);
+    font-weight: 500;
+    font-size: 0.85rem;
     display: block;
 }
 
 .blog-title {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
     margin: 0;
     color: var(--primary-text);
     font-weight: 700;
     line-height: 1.5;
 }
 
-/* === 開閉アイコン === */
+/* Toggle Icon */
 .toggle-icon {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     background: var(--main-enji);
     border-radius: 50%;
     position: relative;
     flex-shrink: 0;
-    transition: background-color 0.3s;
+    transition: all 0.2s ease;
 }
 
 .toggle-icon::before,
@@ -94,46 +170,47 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 .toggle-icon::before {
-    width: 14px;
+    width: 12px;
     height: 2px;
 }
 
 .toggle-icon::after {
     width: 2px;
-    height: 14px;
+    height: 12px;
 }
 
-/* アクティブ（開いている）状態のアイコン */
+/* Active (open) state */
 .blog-header.active .toggle-icon {
     background: var(--enji-dark);
+    transform: rotate(0deg);
 }
 
 .blog-header.active .toggle-icon::after {
-    transform: translate(-50%, -50%) rotate(90deg); /* プラスがマイナスになる */
+    transform: translate(-50%, -50%) rotate(90deg);
 }
 
-/* === ブログコンテンツ（アコーディオンの中身） === */
+/* Blog Content (accordion) */
 .blog-content {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #fff;
+    background: var(--pure-white);
 }
 
 .blog-content.active {
-    max-height: 1000px; /* コンテンツが収まる十分な高さ */
+    max-height: 2000px;
     border-top: 1px solid var(--border-light);
 }
 
 .blog-content-inner {
-    padding: 32px;
+    padding: 28px;
     color: var(--secondary-text);
-    line-height: 1.8;
-    font-size: 1rem;
+    line-height: 1.9;
+    font-size: 0.95rem;
 }
 
 .blog-content-inner p {
@@ -144,24 +221,41 @@
     margin-bottom: 0;
 }
 
-/* スマホ対応 */
+/* Responsive */
 @media (max-width: 768px) {
-    .blog-hero { height: 50vh; min-height: 300px; }
-    
+    .blog-hero {
+        height: 50vh;
+        min-height: 300px;
+    }
+
     .blog-header {
-        padding: 20px;
+        padding: 18px 20px;
         align-items: flex-start;
     }
-    
-    .blog-title { font-size: 1.1rem; }
-    
-    .toggle-icon {
-        margin-top: 4px;
-        width: 28px;
-        height: 28px;
+
+    .blog-title {
+        font-size: 0.95rem;
     }
-    
+
+    .toggle-icon {
+        margin-top: 2px;
+        width: 26px;
+        height: 26px;
+    }
+
+    .toggle-icon::before { width: 10px; }
+    .toggle-icon::after { height: 10px; }
+
     .blog-content-inner {
         padding: 20px;
+    }
+
+    .filter-container {
+        gap: 6px;
+    }
+
+    .filter-btn {
+        padding: 6px 16px;
+        font-size: 0.82rem;
     }
 }

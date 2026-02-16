@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブログ記事エディタ | 木村紀喜</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@400;600&display=swap">
+    <style>
+        :root {
+            --main-enji: #8B1538;
+            --enji-dark: #6B0F2A;
+            --enji-light: rgba(139, 21, 56, 0.06);
+            --off-white: #FAF8F6;
+            --primary-text: #1A1A1A;
+            --secondary-text: #555;
+            --border-light: #E8E4E0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Noto Sans JP", sans-serif;
+            background: var(--off-white);
+            color: var(--primary-text);
+            line-height: 1.7;
+        }
+
+        /* Header */
+        .editor-header {
+            background: var(--primary-text);
+            color: white;
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .editor-header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+        .editor-header .subtitle {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Layout */
+        .editor-layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: var(--enji-light);
+            padding: 16px 24px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--main-enji);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-body {
+            padding: 24px;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: #FFFBF0;
+            border: 1px solid #F0E6C8;
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            font-size: 0.88rem;
+            color: #7A6B3A;
+            line-height: 1.8;
+        }
+        .instructions strong {
+            color: #5C4F2A;
+        }
+        .instructions code {
+            background: rgba(139,21,56,0.08);
+            color: var(--enji-dark);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.84rem;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: var(--secondary-text);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border-light);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            transition: border-color 0.2s;
+            background: white;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--main-enji);
+        }
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.8;
+        }
+        .form-group select {
+            cursor: pointer;
+        }
+
+        /* Category colors preview */
+        .cat-preview {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 10px;
+            border-radius: 4px;
+            color: #fff;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .cat-preview.notice { background: #e67e22; }
+        .cat-preview.activity { background: #3498db; }
+        .cat-preview.thought { background: #27ae60; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--main-enji);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--enji-dark);
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: white;
+            color: var(--main-enji);
+            border: 1.5px solid var(--main-enji);
+        }
+        .btn-secondary:hover {
+            background: var(--enji-light);
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #219a52;
+        }
+        .btn-download {
+            background: #2c3e50;
+            color: white;
+        }
+        .btn-download:hover {
+            background: #1a252f;
+            transform: translateY(-1px);
+        }
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.82rem;
+        }
+        .btn-header {
+            padding: 8px 18px;
+            font-size: 0.82rem;
+            border-radius: 6px;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            background: transparent;
+            color: white;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-header:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        /* Article list */
+        .article-list {
+            margin-top: 16px;
+        }
+        .article-entry {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: var(--off-white);
+            transition: all 0.15s;
+        }
+        .article-entry:hover {
+            border-color: var(--main-enji);
+            background: white;
+        }
+        .article-entry.selected {
+            border-color: var(--main-enji);
+            background: var(--enji-light);
+        }
+        .article-entry .entry-cat {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            color: white;
+            white-space: nowrap;
+        }
+        .article-entry .entry-date {
+            font-family: "Outfit", sans-serif;
+            font-size: 0.8rem;
+            color: #888;
+            min-width: 80px;
+        }
+        .article-entry .entry-title {
+            flex: 1;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+        .article-entry .entry-actions {
+            display: flex;
+            gap: 4px;
+        }
+        .entry-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: opacity 0.15s;
+        }
+        .entry-btn:hover { opacity: 0.85; }
+        .entry-btn.edit { background: #3498db; color: white; }
+        .entry-btn.delete { background: #e74c3c; color: white; }
+        .entry-btn.up, .entry-btn.down { background: #ddd; color: #333; }
+
+        /* Output area */
+        .output-area {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: "Courier New", monospace;
+            font-size: 0.78rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        /* Status messages */
+        .status-msg {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: none;
+        }
+        .status-msg.show { display: block; }
+        .status-msg.success { background: #d5f5e3; color: #1a7a3a; }
+        .status-msg.info { background: #d6eaf8; color: #1a5276; }
+        .status-msg.warning { background: #fef9e7; color: #7d6608; }
+
+        /* Article count badge */
+        .article-count {
+            display: inline-block;
+            background: var(--main-enji);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .editor-layout {
+                grid-template-columns: 1fr;
+                padding: 16px;
+                gap: 20px;
+            }
+            .editor-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-header">
+        <div>
+            <h1>ブログ記事エディタ</h1>
+            <div class="subtitle">blog.html の記事を簡単に作成・編集・ダウンロードできます</div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-header" id="importBtn">&#x1F4C1; blog.htmlを読み込む</button>
+            <button class="btn-header" id="downloadBtn">&#x1F4E5; blog.htmlをダウンロード</button>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".html" style="display:none;">
+
+    <div class="editor-layout">
+        <!-- Left: Editor -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <span>&#x270D;&#xFE0F;</span> 記事の作成・編集
+                </div>
+                <div class="panel-body">
+                    <div class="instructions">
+                        <strong>使い方：</strong><br>
+                        1. 既存の記事は自動で読み込まれています<br>
+                        2. 下のフォームで新しい記事を作成、または既存記事を編集<br>
+                        3. 完成したら上部の「<strong>blog.htmlをダウンロード</strong>」ボタンを押す<br>
+                        4. ダウンロードした <code>blog.html</code> をリポジトリにそのまま置き換え
+                    </div>
+
+                    <div class="form-group">
+                        <label>日付（YYYY.MM.DD形式）</label>
+                        <input type="text" id="articleDate" placeholder="2026.02.16">
+                    </div>
+
+                    <div class="form-group">
+                        <label>カテゴリ
+                            <span class="cat-preview notice" id="catPreview">お知らせ</span>
+                        </label>
+                        <select id="articleCategory">
+                            <option value="notice">お知らせ</option>
+                            <option value="activity">活動</option>
+                            <option value="thought">思考</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>タイトル</label>
+                        <input type="text" id="articleTitle" placeholder="記事のタイトルを入力">
+                    </div>
+
+                    <div class="form-group">
+                        <label>本文（HTML可・空欄OK）</label>
+                        <textarea id="articleContent" placeholder="記事の本文を入力&#10;（空欄にすると内容なしの記事になります）&#10;&#10;HTMLタグも使えます：&#10;&lt;p&gt;段落&lt;/p&gt;&#10;&lt;a href=&quot;URL&quot;&gt;リンク&lt;/a&gt;&#10;&lt;strong&gt;太字&lt;/strong&gt;"></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="addArticleBtn">+ 記事を追加</button>
+                        <button class="btn btn-success" id="updateArticleBtn" style="display:none;">&#x2714; 更新する</button>
+                        <button class="btn btn-secondary" id="cancelEditBtn" style="display:none;">キャンセル</button>
+                    </div>
+                    <div class="status-msg" id="statusMsg"></div>
+                </div>
+            </div>
+
+            <!-- Article list -->
+            <div class="panel" style="margin-top: 24px;">
+                <div class="panel-header">
+                    <span>&#x1F4CB;</span> 記事一覧
+                    <span class="article-count" id="articleCount">0件</span>
+                </div>
+                <div class="panel-body">
+                    <div class="article-list" id="articleList">
+                        <p style="color: #999; font-size: 0.88rem;">まだ記事がありません。上のフォームから追加してください。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Output preview -->
+        <div class="panel" style="position: sticky; top: 80px; align-self: start;">
+            <div class="panel-header">
+                <span>&#x1F4BB;</span> 生成プレビュー（blog.html全体）
+            </div>
+            <div class="panel-body">
+                <p style="font-size: 0.85rem; color: var(--secondary-text); margin-bottom: 16px;">
+                    「<strong>blog.htmlをダウンロード</strong>」ボタンで完成ファイルを取得できます。<br>
+                    ダウンロードした <code>blog.html</code> をそのままリポジトリの同名ファイルに上書きしてください。
+                </p>
+                <div class="btn-group" style="margin-top: 0; margin-bottom: 16px;">
+                    <button class="btn btn-download btn-sm" id="downloadBtn2">&#x1F4E5; blog.htmlをダウンロード</button>
+                    <button class="btn btn-secondary btn-sm" id="copyAllBtn">&#x1F4CB; HTMLをコピー</button>
+                </div>
+                <div class="output-area" id="outputArea"><!-- 記事がここに表示されます --></div>
+                <div class="status-msg" id="copyStatus"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ===== State =====
+        let articles = [];
+        let editingIndex = -1;
+
+        // ===== DOM =====
+        const $ = id => document.getElementById(id);
+        const dateInput      = $('articleDate');
+        const categorySelect = $('articleCategory');
+        const titleInput     = $('articleTitle');
+        const contentInput   = $('articleContent');
+        const addBtn         = $('addArticleBtn');
+        const updateBtn      = $('updateArticleBtn');
+        const cancelBtn      = $('cancelEditBtn');
+        const articleList    = $('articleList');
+        const articleCount   = $('articleCount');
+        const outputArea     = $('outputArea');
+        const catPreview     = $('catPreview');
+        const statusMsg      = $('statusMsg');
+        const copyStatus     = $('copyStatus');
+        const copyAllBtn     = $('copyAllBtn');
+        const importBtn      = $('importBtn');
+        const downloadBtn    = $('downloadBtn');
+        const downloadBtn2   = $('downloadBtn2');
+        const fileInput      = $('fileInput');
+
+        // Set today's date
+        const today = new Date();
+        dateInput.value = today.getFullYear() + '.' +
+            String(today.getMonth() + 1).padStart(2, '0') + '.' +
+            String(today.getDate()).padStart(2, '0');
+
+        // Category labels / classes
+        const catLabels  = { notice: 'お知らせ', activity: '活動', thought: '思考' };
+        const catClasses = { notice: 'cat-notice', activity: 'cat-activity', thought: 'cat-thought' };
+
+        // ===== Pre-loaded articles from existing blog.html =====
+        // These are embedded at build time so the editor works offline
+        const PRELOADED_ARTICLES = [
+            { date: "2025.01.05", category: "thought", title: "2026年", content: "頑張ります" },
+            { date: "2025.12.07", category: "activity", title: "対話型ワークショップ「アフリカ塾2025」に参加しました。", content: "" },
+            { date: "2025.12.04", category: "activity", title: "早稲田から、日本の未来を語ろう「早稲田政治祭2025」に参加しました。", content: "" },
+            { date: "2025.11.29", category: "thought", title: "映画『金髪』を鑑賞して", content: "" },
+            { date: "2025.11.22", category: "activity", title: "明星学園小学校・中学校 公開研究会『繋いでいくもの、創り上げていくもの』に参加しました", content: "" },
+            { date: "2025.11.21", category: "activity", title: "洗足学園小学校 Open Day 2025「主体的に学ぶ子どもの姿」に参加しました。", content: "" },
+            { date: "2025.11.20", category: "activity", title: "東京都主催 「育業」出前講座（講師：小島よしお氏）に参加しました", content: "" },
+            { date: "2025.07.29", category: "activity", title: "文部科学省「生成AIの利用に関する夏季公開学習会」", content: "" },
+            { date: "2025.07.15", category: "notice", title: "生成AIパスポート試験合格", content: "" },
+            { date: "2025.07.07", category: "notice", title: "教育情報化コーディネータ3級合格", content: "" },
+            { date: "2025.07.05", category: "activity", title: "千葉大学教育学部附属小学校での学び", content: "" },
+            { date: "2025.06.15", category: "activity", title: "筑波大学附属小学校参観", content: "" },
+            { date: "2025.06.03", category: "notice", title: "ホームページ開設にあたって", content: "" }
+        ];
+
+        // Load pre-loaded articles on init
+        articles = JSON.parse(JSON.stringify(PRELOADED_ARTICLES));
+
+        // ===== Event Listeners =====
+
+        // Category preview
+        categorySelect.addEventListener('change', () => {
+            const v = categorySelect.value;
+            catPreview.textContent = catLabels[v];
+            catPreview.className = 'cat-preview ' + v;
+        });
+
+        // Add article
+        addBtn.addEventListener('click', () => {
+            const date = dateInput.value.trim();
+            const cat = categorySelect.value;
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+
+            if (!date || !title) {
+                showStatus(statusMsg, '日付とタイトルは必須です', 'info');
+                return;
+            }
+
+            articles.unshift({ date, category: cat, title, content });
+            clearForm();
+            render();
+            showStatus(statusMsg, '記事を追加しました', 'success');
+        });
+
+        // Update article
+        updateBtn.addEventListener('click', () => {
+            if (editingIndex < 0) return;
+            const date = dateInput.value.trim();
+            const cat = categorySelect.value;
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+
+            if (!date || !title) {
+                showStatus(statusMsg, '日付とタイトルは必須です', 'info');
+                return;
+            }
+
+            articles[editingIndex] = { date, category: cat, title, content };
+            editingIndex = -1;
+            clearForm();
+            showEditMode(false);
+            render();
+            showStatus(statusMsg, '記事を更新しました', 'success');
+        });
+
+        // Cancel edit
+        cancelBtn.addEventListener('click', () => {
+            editingIndex = -1;
+            clearForm();
+            showEditMode(false);
+        });
+
+        // Copy full HTML
+        copyAllBtn.addEventListener('click', () => {
+            const text = generateFullHTML();
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus(copyStatus, 'コピーしました！', 'success');
+            }).catch(() => {
+                fallbackCopy(text);
+                showStatus(copyStatus, 'コピーしました！', 'success');
+            });
+        });
+
+        // Import existing blog.html from local file
+        importBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                parseExistingBlog(ev.target.result);
+                render();
+                showStatus(statusMsg, file.name + ' から ' + articles.length + ' 件の記事を読み込みました', 'success');
+            };
+            reader.readAsText(file);
+            fileInput.value = '';
+        });
+
+        // Download blog.html
+        downloadBtn.addEventListener('click', downloadBlogHTML);
+        downloadBtn2.addEventListener('click', downloadBlogHTML);
+
+        // ===== Functions =====
+
+        function downloadBlogHTML() {
+            const html = generateFullHTML();
+            const blob = new Blob([html], { type: 'text/html; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'blog.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showStatus(copyStatus, 'blog.html をダウンロードしました！', 'success');
+        }
+
+        // Parse existing blog.html
+        function parseExistingBlog(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const items = doc.querySelectorAll('.blog-item');
+            articles = [];
+
+            items.forEach(item => {
+                const cat = item.getAttribute('data-category') || 'notice';
+                const dateEl = item.querySelector('.blog-date');
+                const titleEl = item.querySelector('.blog-title');
+                const contentEl = item.querySelector('.blog-content-inner');
+
+                articles.push({
+                    date: dateEl ? dateEl.textContent.trim() : '',
+                    category: cat,
+                    title: titleEl ? titleEl.textContent.trim() : '',
+                    content: contentEl ? contentEl.innerHTML.trim() : ''
+                });
+            });
+        }
+
+        // Generate article HTML snippet for one article
+        function articleToHTML(a) {
+            const catClass = catClasses[a.category] || 'cat-notice';
+            const catLabel = catLabels[a.category] || 'お知らせ';
+            const indent = '                    ';
+            let lines = [];
+            lines.push(indent + '<article class="blog-item" data-category="' + a.category + '">');
+            lines.push(indent + '    <div class="blog-header">');
+            lines.push(indent + '        <div class="blog-title-area">');
+            lines.push(indent + '            <div class="blog-meta">');
+            lines.push(indent + '                <span class="cat-badge ' + catClass + '">' + catLabel + '</span>');
+            lines.push(indent + '                <span class="blog-date">' + escapeHtml(a.date) + '</span>');
+            lines.push(indent + '            </div>');
+            lines.push(indent + '            <h3 class="blog-title">' + escapeHtml(a.title) + '</h3>');
+            lines.push(indent + '        </div>');
+            lines.push(indent + '        <div class="toggle-icon"></div>');
+            lines.push(indent + '    </div>');
+            lines.push(indent + '    <div class="blog-content">');
+            lines.push(indent + '        <div class="blog-content-inner">');
+            lines.push(indent + '        ' + (a.content || ''));
+            lines.push(indent + '        </div>');
+            lines.push(indent + '    </div>');
+            lines.push(indent + '</article>');
+            return lines.join('\n');
+        }
+
+        // Generate complete blog.html
+        function generateFullHTML() {
+            const articlesHTML = articles.map(a => articleToHTML(a)).join('\n\n');
+
+            return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブログ | 木村紀喜</title>
+    
+    <meta name="description" content="木村紀喜のブログ。教育について感じたこと、考えたこと、日々の活動記録。">
+    <meta property="og:title" content="ブログ | 木村紀喜">
+    <meta property="og:description" content="教育について感じたこと、考えたことを綴ります">
+    <meta property="og:type" content="article">
+    
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Outfit:wght@400;600&display=swap">
+    
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/blog.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="logo">木村紀喜</a>
+            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
+                <span class="menu-icon"></span>
+            </button>
+            <nav id="navigation">
+                <ul>
+                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="profile.html">プロフィール</a></li>
+                    <li><a href="research.html">研究・活動</a></li>
+                    <li><a href="blog.html" class="current">ブログ</a></li>
+                    <li><a href="contact.html">お問い合わせ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero-base blog-hero">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <div class="blog-intro">
+                    <h1 class="hero-title animate-fade-up delay-1">ブログ</h1>
+                    <p class="hero-subtitle animate-fade-up delay-2">日々の思考と実践の記録</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="page-content">
+            <div class="blog-container scroll-animate">
+                
+                <div class="filter-container">
+                    <button class="filter-btn active" data-filter="all">すべて</button>
+                    <button class="filter-btn" data-filter="notice">お知らせ</button>
+                    <button class="filter-btn" data-filter="activity">活動</button>
+                    <button class="filter-btn" data-filter="thought">思考</button>
+                </div>
+
+                <div class="blog-posts">
+` + articlesHTML + `
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
+        当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
+    </footer>
+
+    <script src="js/main.js" defer><\/script>
+</body>
+</html>`;
+        }
+
+        // Render both list and output
+        function render() {
+            renderList();
+            renderOutput();
+        }
+
+        // Render article list
+        function renderList() {
+            articleCount.textContent = articles.length + '件';
+
+            if (articles.length === 0) {
+                articleList.innerHTML = '<p style="color: #999; font-size: 0.88rem;">まだ記事がありません。上のフォームから追加してください。</p>';
+                return;
+            }
+
+            articleList.innerHTML = articles.map((a, i) => {
+                const bgColor = a.category === 'notice' ? '#e67e22' :
+                                a.category === 'activity' ? '#3498db' : '#27ae60';
+                return '<div class="article-entry ' + (editingIndex === i ? 'selected' : '') + '">' +
+                    '<span class="entry-cat" style="background:' + bgColor + '">' + catLabels[a.category] + '</span>' +
+                    '<span class="entry-date">' + a.date + '</span>' +
+                    '<span class="entry-title">' + escapeHtml(a.title) + '</span>' +
+                    '<span class="entry-actions">' +
+                    (i > 0 ? '<button class="entry-btn up" data-action="up" data-index="' + i + '">&#x25B2;</button>' : '') +
+                    (i < articles.length - 1 ? '<button class="entry-btn down" data-action="down" data-index="' + i + '">&#x25BC;</button>' : '') +
+                    '<button class="entry-btn edit" data-action="edit" data-index="' + i + '">編集</button>' +
+                    '<button class="entry-btn delete" data-action="delete" data-index="' + i + '">削除</button>' +
+                    '</span>' +
+                    '</div>';
+            }).join('');
+
+            // Event delegation
+            articleList.querySelectorAll('.entry-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.dataset.action;
+                    const idx = parseInt(btn.dataset.index);
+                    handleAction(action, idx);
+                });
+            });
+        }
+
+        function handleAction(action, idx) {
+            if (action === 'edit') {
+                editingIndex = idx;
+                const a = articles[idx];
+                dateInput.value = a.date;
+                categorySelect.value = a.category;
+                categorySelect.dispatchEvent(new Event('change'));
+                titleInput.value = a.title;
+                contentInput.value = a.content;
+                showEditMode(true);
+                renderList();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (action === 'delete') {
+                if (confirm('「' + articles[idx].title + '」を削除しますか？')) {
+                    articles.splice(idx, 1);
+                    if (editingIndex === idx) {
+                        editingIndex = -1;
+                        clearForm();
+                        showEditMode(false);
+                    } else if (editingIndex > idx) {
+                        editingIndex--;
+                    }
+                    render();
+                }
+            } else if (action === 'up' && idx > 0) {
+                [articles[idx - 1], articles[idx]] = [articles[idx], articles[idx - 1]];
+                if (editingIndex === idx) editingIndex = idx - 1;
+                else if (editingIndex === idx - 1) editingIndex = idx;
+                render();
+            } else if (action === 'down' && idx < articles.length - 1) {
+                [articles[idx], articles[idx + 1]] = [articles[idx + 1], articles[idx]];
+                if (editingIndex === idx) editingIndex = idx + 1;
+                else if (editingIndex === idx + 1) editingIndex = idx;
+                render();
+            }
+        }
+
+        // Render output preview
+        function renderOutput() {
+            if (articles.length === 0) {
+                outputArea.textContent = '<!-- 記事を追加するとここにHTMLが表示されます -->';
+                return;
+            }
+            outputArea.textContent = generateFullHTML();
+        }
+
+        // Helpers
+        function clearForm() {
+            const now = new Date();
+            dateInput.value = now.getFullYear() + '.' +
+                String(now.getMonth() + 1).padStart(2, '0') + '.' +
+                String(now.getDate()).padStart(2, '0');
+            categorySelect.value = 'notice';
+            categorySelect.dispatchEvent(new Event('change'));
+            titleInput.value = '';
+            contentInput.value = '';
+        }
+
+        function showEditMode(editing) {
+            addBtn.style.display = editing ? 'none' : '';
+            updateBtn.style.display = editing ? '' : 'none';
+            cancelBtn.style.display = editing ? '' : 'none';
+        }
+
+        function showStatus(el, msg, type) {
+            el.textContent = msg;
+            el.className = 'status-msg show ' + type;
+            setTimeout(() => { el.classList.remove('show'); }, 3000);
+        }
+
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;left:-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+
+        // ===== Initial render =====
+        render();
+        showStatus(statusMsg, '既存の ' + articles.length + ' 件の記事を読み込みました', 'success');
+
+    })();
+    </script>
+</body>
+</html>
