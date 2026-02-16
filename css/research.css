@@ -1,121 +1,203 @@
-/* 研究・活動ページ専用スタイル */
+/* === Research Page Styles === */
 
-/* === CSS変数（必要に応じて） === */
-:root {
-    --main-enji: #8B1538;
-    --main-teal: #2A9D8F;
-    --primary-text: #333;
-    --secondary-text: #666;
-    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --gradient-main: linear-gradient(135deg, #8B1538 0%, #A91D4A 100%);
-}
-
-/* === ヒーローセクション === */
+/* Hero */
 .research-hero {
     height: 60vh;
     min-height: 400px;
     background-image: url('../images/karatsucastle.jpg');
     background-size: cover;
-    background-position: center top;
-    animation: bgPan 25s ease-in-out infinite alternate;
+    background-position: center center;
 }
 
-/* === 研究テーマ (Themes) === */
+/* === Detail Section (timeline card) === */
+.detail-section {
+    background: var(--pure-white);
+    padding: 44px 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    margin-bottom: 32px;
+    border: 1px solid var(--border-subtle);
+}
+
+/* Section Heading with icon */
+.section-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--main-enji);
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--enji-light);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+.section-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--main-enji);
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding-left: 36px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-light);
+    border-radius: 2px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 24px;
+}
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -36px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    background: var(--main-enji);
+    border: 3px solid var(--pure-white);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px var(--border-light);
+}
+
+.timeline-year {
+    font-family: "Outfit", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--main-enji);
+    margin-bottom: 3px;
+    letter-spacing: 0.02em;
+}
+
+.timeline-content {
+    font-size: 0.95rem;
+    color: var(--primary-text);
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+/* === Research Section (shared with themes/activities) === */
+.research-section {
+    margin-bottom: 24px;
+}
+
+/* === Theme Grid === */
 .theme-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 32px;
-    margin-bottom: 80px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
 }
 
 .theme-card {
-    background: #fff;
-    padding: 32px;
-    border-radius: 12px;
+    background: var(--pure-white);
+    padding: 32px 28px;
+    border-radius: var(--radius-md);
     box-shadow: var(--card-shadow);
     position: relative;
     overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-    border: 1px solid rgba(0,0,0,0.03);
-    height: 100%;
+    transition: transform 0.25s ease;
+    border: 1px solid var(--border-subtle);
 }
 
 .theme-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
 }
 
 .theme-number {
     position: absolute;
-    top: -15px;
-    right: -10px;
+    top: -12px;
+    right: -8px;
     font-family: "Outfit", sans-serif;
-    font-size: 5rem;
+    font-size: 4.5rem;
     font-weight: 800;
-    color: rgba(139, 21, 56, 0.06);
+    color: rgba(139, 21, 56, 0.05);
     line-height: 1;
     pointer-events: none;
 }
 
 .theme-title {
-    font-size: 1.2rem;
+    font-size: 1.08rem;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     color: var(--primary-text);
     position: relative;
     padding-right: 20px;
+    line-height: 1.5;
 }
 
 .theme-description {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--secondary-text);
     line-height: 1.8;
 }
 
-/* === 活動実績 (Activities) === */
+/* === Activities Grid === */
 .activities-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 32px;
-    margin-bottom: 80px;
+    gap: 24px;
 }
 
 .activity-card {
-    background: #fff;
-    border-radius: 16px;
+    background: var(--pure-white);
+    border-radius: var(--radius-lg);
     box-shadow: var(--card-shadow);
-    padding: 40px 32px;
+    padding: 36px 28px;
     text-align: center;
-    transition: transform 0.3s;
-    border: 1px solid rgba(0,0,0,0.03);
+    transition: transform 0.25s ease;
+    border: 1px solid var(--border-subtle);
 }
-
 .activity-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-4px);
 }
 
 .activity-icon {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
     background: var(--gradient-main);
-    border-radius: 12px;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 24px;
+    margin: 0 auto 20px;
     color: white;
-    box-shadow: 0 8px 20px rgba(139, 21, 56, 0.2);
+    box-shadow: 0 4px 12px rgba(139, 21, 56, 0.2);
 }
-
 .activity-icon svg {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     fill: currentColor;
 }
 
 .activity-title {
-    font-size: 1.3rem;
-    margin-bottom: 20px;
+    font-size: 1.15rem;
+    margin-bottom: 18px;
     color: var(--main-enji);
     font-weight: 700;
 }
@@ -127,204 +209,99 @@
 
 .activity-list li {
     position: relative;
-    padding-left: 1.5em;
+    padding-left: 1.4em;
     margin-bottom: 10px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--secondary-text);
+    line-height: 1.6;
 }
 
 .activity-list li::before {
     content: '';
     position: absolute;
     left: 0;
-    top: 0.6em;
-    width: 6px;
-    height: 6px;
+    top: 0.65em;
+    width: 5px;
+    height: 5px;
     background: var(--main-teal);
     border-radius: 50%;
 }
 
-/* === キーワード (Keywords) === */
+/* === Keywords === */
+.skills-section {
+    margin-bottom: 0;
+}
+
 .skills-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
     justify-content: center;
-    margin-bottom: 60px;
 }
 
 .skill-tag {
-    padding: 10px 20px;
-    background: #fff;
-    border: 1px solid var(--main-enji);
+    padding: 8px 20px;
+    background: var(--pure-white);
+    border: 1.5px solid var(--main-enji);
     color: var(--main-enji);
     border-radius: 50px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    transition: all 0.3s;
+    transition: all 0.25s ease;
+    letter-spacing: 0.02em;
 }
 
 .skill-tag:hover {
     background: var(--main-enji);
     color: white;
-    transform: scale(1.05);
+    transform: scale(1.04);
     cursor: default;
-}
-
-/* === 詳細セクション === */
-.detail-section {
-    background: #fff;
-    padding: 40px 32px;
-    border-radius: 16px;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 40px;
-    border: 1px solid rgba(0,0,0,0.03);
-}
-
-/* === セクション見出し === */
-.section-heading {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--primary-text);
-    margin-bottom: 32px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--main-enji);
-}
-
-.section-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: var(--gradient-main);
-    border-radius: 10px;
-    flex-shrink: 0;
-}
-
-.section-icon svg {
-    fill: white;
-}
-
-/* === タイムライン === */
-.timeline {
-    position: relative;
-    padding-left: 40px;
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 8px;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: linear-gradient(to bottom, var(--main-enji), var(--main-teal));
-    border-radius: 3px;
-}
-
-.timeline-item {
-    position: relative;
-    margin-bottom: 28px;
-    padding-bottom: 8px;
-}
-
-.timeline-item:last-child {
-    margin-bottom: 0;
-}
-
-.timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -40px;
-    top: 4px;
-    width: 18px;
-    height: 18px;
-    background: #fff;
-    border: 3px solid var(--main-enji);
-    border-radius: 50%;
     box-shadow: 0 2px 8px rgba(139, 21, 56, 0.2);
 }
 
-.timeline-year {
-    font-family: "Outfit", sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--main-enji);
-    margin-bottom: 4px;
-    letter-spacing: 0.02em;
-}
-
-.timeline-content {
-    font-size: 1rem;
-    color: var(--primary-text);
-    font-weight: 500;
-    line-height: 1.6;
-}
-
-/* === スクロールアニメーション === */
-.scroll-animate {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.scroll-animate.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* === スマホ対応 === */
+/* Responsive */
 @media (max-width: 768px) {
     .research-hero {
         height: 50vh;
         min-height: 300px;
     }
-    
+
     .theme-grid,
     .activities-grid {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: 16px;
     }
-    
+
     .theme-card,
     .activity-card {
-        padding: 24px;
-    }
-    
-    .detail-section {
         padding: 24px 20px;
     }
-    
+
+    .detail-section {
+        padding: 28px 22px;
+    }
+
     .section-heading {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         gap: 10px;
     }
-    
+
     .section-icon {
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
     }
-    
-    .section-icon svg {
-        width: 24px;
-        height: 24px;
-    }
-    
+
     .timeline {
-        padding-left: 32px;
+        padding-left: 28px;
     }
-    
+
     .timeline::before {
-        left: 6px;
+        left: 5px;
     }
-    
+
     .timeline-item::before {
-        left: -32px;
-        width: 14px;
-        height: 14px;
+        left: -28px;
+        width: 10px;
+        height: 10px;
     }
 }

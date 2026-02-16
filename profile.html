@@ -13,6 +13,10 @@
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Outfit:wght@400;600&display=swap">
+    
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/profile.css">
 </head>
@@ -116,7 +120,7 @@
                     取得免許・資格
                 </h2>
                 <div class="license-grid">
-                    <div class="license-badge">
+                    <div class="license-badge stagger-child">
                         <div class="license-icon">
                             <svg viewBox="0 0 24 24" width="24" height="24">
                                 <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
@@ -127,7 +131,7 @@
                             <div class="license-status">2024年度取得</div>
                         </div>
                     </div>
-                    <div class="license-badge">
+                    <div class="license-badge stagger-child">
                         <div class="license-icon">
                             <svg viewBox="0 0 24 24" width="24" height="24">
                                 <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
@@ -138,7 +142,7 @@
                             <div class="license-status">2024年度第二種取得・2025年度第一種取得</div>
                         </div>
                     </div>
-                    <div class="license-badge">
+                    <div class="license-badge stagger-child">
                         <div class="license-icon">
                             <svg viewBox="0 0 24 24" width="24" height="24">
                                 <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
@@ -149,7 +153,7 @@
                             <div class="license-status">2024年度取得</div>
                         </div>
                     </div>
-                     <div class="license-badge">
+                    <div class="license-badge stagger-child">
                         <div class="license-icon">
                             <svg viewBox="0 0 24 24" width="24" height="24">
                                 <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
@@ -160,7 +164,7 @@
                             <div class="license-status">2025年度取得</div>
                         </div>
                     </div>
-                    <div class="license-badge">
+                    <div class="license-badge stagger-child">
                         <div class="license-icon">
                             <svg viewBox="0 0 24 24" width="24" height="24">
                                 <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
@@ -171,7 +175,7 @@
                             <div class="license-status">2025年度合格</div>
                         </div>
                     </div>
-                    <div class="license-badge">
+                    <div class="license-badge stagger-child">
                         <div class="license-icon">
                             <svg viewBox="0 0 24 24" width="24" height="24">
                                 <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
@@ -217,21 +221,5 @@
     </footer>
 
     <script src="js/main.js" defer></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                    }
-                });
-            }, { threshold: 0.1 });
-
-            document.querySelectorAll('.scroll-animate').forEach(section => {
-                observer.observe(section);
-            });
-        });
-    </script>
 </body>
 </html>
