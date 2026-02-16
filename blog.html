@@ -1,4 +1,6 @@
-<html lang="ja"><head>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ブログ | 木村紀喜</title>
@@ -11,100 +13,12 @@
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Outfit:wght@400;600&display=swap">
+    
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/blog.css">
-
-    <style>
-        /* ▼▼▼ フィルターボタンのスタイル (YouTube風) ▼▼▼ */
-        .filter-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            overflow-x: auto; /* スマホで横スクロール可能に */
-            padding-bottom: 10px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .filter-btn {
-            background-color: #f2f2f2;
-            border: none;
-            border-radius: 20px; /* 角丸 */
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #0f0f0f;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap; /* 折り返し禁止 */
-        }
-
-        .filter-btn:hover {
-            background-color: #e5e5e5;
-        }
-
-        /* 選択されているボタンのスタイル */
-        .filter-btn.active {
-            background-color: #0f0f0f;
-            color: #ffffff;
-        }
-
-        /* ▼▼▼ カテゴリバッジのスタイル ▼▼▼ */
-        .cat-badge {
-            display: inline-block;
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-            color: #fff;
-            margin-right: 10px;
-            vertical-align: middle;
-            font-weight: normal;
-            letter-spacing: 0.05em;
-        }
-
-        /* カテゴリごとの色定義 */
-        .cat-notice { background-color: #e67e22; }   /* お知らせ：オレンジ */
-        .cat-activity { background-color: #3498db; } /* 活動：青 */
-        .cat-thought { background-color: #27ae60; }  /* 思考：緑 */
-
-        /* ▼▼▼ フィルタリング時のアニメーション ▼▼▼ */
-        .blog-item {
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-        
-        /* 非表示にするクラス */
-        .blog-item.hidden {
-            display: none;
-        }
-        
-        /* フェードイン演出用 */
-        .blog-item.fade-in {
-            animation: fadeIn 0.5s forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ヘッダーエリアの調整（バッジを入れるため） */
-        .blog-title-area {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 5px;
-        }
-        
-        .blog-meta {
-            display: flex;
-            align-items: center;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .blog-date {
-            margin-right: 0; /* 元のCSSを打ち消し */
-        }
-    </style>
 </head>
 <body>
     <header class="site-header">
@@ -147,7 +61,25 @@
                 </div>
 
                 <div class="blog-posts">
-                <article class="blog-item" data-category="thought">
+                    <article class="blog-item" data-category="activity">
+                        <div class="blog-header">
+                            <div class="blog-title-area">
+                                <div class="blog-meta">
+                                    <span class="cat-badge cat-activity">活動</span>
+                                    <span class="blog-date">2026.02.10</span>
+                                </div>
+                                <h3 class="blog-title">就実小学校　探究の、その先へ ― 第3回授業研究発表会に参加しました</h3>
+                            </div>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-content-inner">
+                            
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="blog-item" data-category="thought">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -160,14 +92,12 @@
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            頑張ります
+                            
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="activity">
+                    <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -183,11 +113,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="activity">
+                    <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -203,11 +131,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="thought">
+                    <article class="blog-item" data-category="thought">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -223,11 +149,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="activity">
+                    <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -243,11 +167,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="activity">
+                    <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -263,11 +185,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="activity">
+                    <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -283,11 +203,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="activity">
+                    <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -303,11 +221,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="notice">
+                    <article class="blog-item" data-category="notice">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -323,11 +239,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="notice">
+                    <article class="blog-item" data-category="notice">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -343,11 +257,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="activity">
+                    <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -363,11 +275,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="activity">
+                    <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -383,11 +293,9 @@
                             
                             </div>
                         </div>
-                </article>
-        
+                    </article>
 
-
-                <article class="blog-item" data-category="notice">
+                    <article class="blog-item" data-category="notice">
                         <div class="blog-header">
                             <div class="blog-title-area">
                                 <div class="blog-meta">
@@ -403,75 +311,17 @@
                             
                             </div>
                         </div>
-                </article>
-        </div>
+                    </article>
+                </div>
             </div>
         </div>
     </main>
 
     <footer class="site-footer">
-        <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
+        <p>&copy; 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
         当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
     </footer>
 
-    <script src="js/main.js" defer=""></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // スクロールアニメーション（既存）
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                    }
-                });
-            }, { threshold: 0.1 });
-
-            document.querySelectorAll('.scroll-animate').forEach(section => {
-                observer.observe(section);
-            });
-
-            // ▼▼▼ フィルタリング機能のスクリプト ▼▼▼
-            const filterBtns = document.querySelectorAll('.filter-btn');
-            const blogItems = document.querySelectorAll('.blog-item');
-
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // 1. すべてのボタンからactiveクラスを削除
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    // 2. クリックされたボタンにactiveクラスを追加
-                    btn.classList.add('active');
-
-                    const filterValue = btn.getAttribute('data-filter');
-
-                    // 3. 記事の表示・非表示を切り替え
-                    blogItems.forEach(item => {
-                        // アニメーションリセットのために一旦クラスを整理
-                        item.classList.remove('fade-in');
-                        
-                        if (filterValue === 'all' || item.getAttribute('data-category') === filterValue) {
-                            item.classList.remove('hidden');
-                            // 少し遅らせてフェードインアニメーション
-                            setTimeout(() => {
-                                item.classList.add('fade-in');
-                            }, 10);
-                        } else {
-                            item.classList.add('hidden');
-                        }
-                    });
-                });
-            });
-            
-            // 既存のアコーディオン動作（toggle-icon）があればここでも維持されます
-            // もしアコーディオンのJSが js/main.js ではなく、ページ内に必要ならここに追加してください
-             document.querySelectorAll('.blog-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    const item = header.parentElement;
-                    item.classList.toggle('open'); // CSSで .open .blog-content { display: block; } 等になっている想定
-                });
-            });
-        });
-    </script>
-
-
-</body></html>
+    <script src="js/main.js" defer></script>
+</body>
+</html>
