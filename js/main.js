@@ -10,15 +10,11 @@ document.addEventListener('DOMContentLoaded', function() {
         menuToggle.addEventListener('click', () => {
             navigation.classList.toggle('active');
             menuToggle.classList.toggle('active');
-            
-            // アクセシビリティ対応
             const isExpanded = menuToggle.classList.contains('active');
             menuToggle.setAttribute('aria-expanded', isExpanded);
         });
 
-        // メニューリンクをクリックしたら閉じる（SP時）
-        const navLinks = navigation.querySelectorAll('a');
-        navLinks.forEach(link => {
+        navigation.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
                 navigation.classList.remove('active');
                 menuToggle.classList.remove('active');
@@ -34,12 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (header) {
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
-            }
-        });
+            header.classList.toggle('scrolled', window.scrollY > 50);
+        }, { passive: true });
     }
 
     /* ----------------------------------------
@@ -47,39 +39,46 @@ document.addEventListener('DOMContentLoaded', function() {
     ---------------------------------------- */
     const blogHeaders = document.querySelectorAll('.blog-header');
     
-    if (blogHeaders.length > 0) {
-        blogHeaders.forEach(header => {
-            header.addEventListener('click', () => {
-                // クリックされた記事の内容を取得
-                const content = header.nextElementSibling;
-                
-                // クラスを切り替え（CSSでアニメーション制御）
-                header.classList.toggle('active');
-                content.classList.toggle('active');
-            });
+    blogHeaders.forEach(hdr => {
+        hdr.addEventListener('click', () => {
+            const content = hdr.nextElementSibling;
+            hdr.classList.toggle('active');
+            content.classList.toggle('active');
         });
-    }
+    });
 
     /* ----------------------------------------
-       スクロールアニメーション制御（追加）
+       ブログページのフィルター制御
     ---------------------------------------- */
-    const scrollAnimateElements = document.querySelectorAll('.scroll-animate');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const blogItems = document.querySelectorAll('.blog-item');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filter = btn.dataset.filter;
+            blogItems.forEach(item => {
+                item.style.display = (filter === 'all' || item.dataset.category === filter) ? '' : 'none';
+            });
+        });
+    });
+
+    /* ----------------------------------------
+       スクロールアニメーション制御（全ページ共通）
+    ---------------------------------------- */
+    const scrollElements = document.querySelectorAll('.scroll-animate');
     
-    if (scrollAnimateElements.length > 0) {
+    if (scrollElements.length > 0) {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
+                    entry.target.classList.add('is-visible');
                 }
             });
-        }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        });
+        }, { threshold: 0.1 });
 
-        scrollAnimateElements.forEach(el => {
-            observer.observe(el);
-        });
+        scrollElements.forEach(el => observer.observe(el));
     }
 
 });
