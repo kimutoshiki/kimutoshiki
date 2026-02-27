@@ -1,15 +1,5 @@
 /* 研究・活動ページ専用スタイル */
 
-/* === CSS変数（必要に応じて） === */
-:root {
-    --main-enji: #8B1538;
-    --main-teal: #2A9D8F;
-    --primary-text: #333;
-    --secondary-text: #666;
-    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --gradient-main: linear-gradient(135deg, #8B1538 0%, #A91D4A 100%);
-}
-
 /* === ヒーローセクション === */
 .research-hero {
     height: 60vh;
@@ -263,18 +253,6 @@
     color: var(--primary-text);
     font-weight: 500;
     line-height: 1.6;
-}
-
-/* === スクロールアニメーション === */
-.scroll-animate {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.scroll-animate.visible {
-    opacity: 1;
-    transform: translateY(0);
 }
 
 /* === スマホ対応 === */
