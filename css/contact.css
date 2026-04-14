@@ -1,146 +1,167 @@
-/* お問い合わせページ専用スタイル */
+/* =========================================================
+   contact.html 専用スタイル
+   ========================================================= */
 
-/* === ヒーローセクション === */
+/* ===== HERO ===== */
 .contact-hero {
-    height: 60vh; min-height: 400px;
-    background-image: url('../images/wasedaookuma.jpg'); /* 大隈講堂（共通イメージとして使用） */
-    /* 追加: アニメーション設定 */
+    min-height: 60vh;
+    background-image: url('../images/wasedaookuma.jpg');
     background-size: cover;
-    background-position: center top;
-    animation: bgPan 20s ease-in-out infinite alternate;
+    background-position: center;
+}
+.contact-hero::before {
+    background-image: url('../images/wasedaookuma.jpg');
+    background-size: cover;
+    background-position: center;
 }
 
-/* === コンタクトカード === */
-.contact-content {
-    max-width: 900px;
+/* ===== メインセクション ===== */
+.contact-section {
+    padding: var(--space-xl) 32px;
+    max-width: var(--max-w);
     margin: 0 auto;
 }
-
-.contact-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: var(--card-shadow);
-    padding: 60px 40px;
-    border: 1px solid rgba(0,0,0,0.03);
-}
-
-/* === メールセクション === */
-.email-section {
-    text-align: center;
-    margin-bottom: 60px;
-    padding-bottom: 60px;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.email-label {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--main-enji);
-    margin-bottom: 8px;
-    font-family: "Outfit", sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-.email-address {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 32px;
-    font-family: "Outfit", sans-serif;
-}
-
-.email-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--gradient-main);
-    color: white;
-    padding: 18px 40px;
-    border-radius: 50px;
-    font-weight: 700;
-    transition: transform 0.3s, box-shadow 0.3s;
-    box-shadow: 0 4px 15px rgba(139, 21, 56, 0.3);
-}
-
-.email-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(139, 21, 56, 0.4);
-}
-
-.email-icon svg {
-    fill: white;
-    width: 24px;
-    height: 24px;
-}
-
-/* === お問い合わせタイプ（グリッド） === */
-.contact-types {
+.contact-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 32px;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 60px;
+    align-items: center;
+}
+.contact-lead { max-width: 420px; }
+.contact-title {
+    margin-bottom: 24px;
+}
+.contact-desc {
+    font-size: 0.95rem;
+    line-height: 2.0;
+    color: var(--ink-2);
+    margin-bottom: 16px;
 }
 
-.contact-type {
-    text-align: center;
-    padding: 24px;
-    border-radius: 12px;
-    background: #fcfcfc;
-    border: 1px solid var(--border-light);
-    transition: background-color 0.3s;
+/* ===== メインのメールカード ===== */
+.contact-card {
+    position: relative;
+    background: var(--grad-enji);
+    color: var(--cream);
+    padding: 56px 48px;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
 }
-
-.contact-type:hover {
-    background: #fff5f7; /* メインカラーの極薄ピンク */
+.contact-card::before {
+    content: '@';
+    position: absolute;
+    top: -40px; right: -20px;
+    font-family: "Outfit", sans-serif;
+    font-size: 18rem;
+    font-weight: 300;
+    color: rgba(250, 246, 240, 0.06);
+    line-height: 1;
+    pointer-events: none;
 }
-
-.type-icon {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 20px;
-    color: var(--main-enji);
-    background: white;
-    border-radius: 50%;
+.contact-card-head {
     display: flex;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    justify-content: space-between;
+    margin-bottom: 20px;
+    position: relative;
+}
+.email-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--enji-mist);
+}
+.contact-dot {
+    width: 10px; height: 10px;
+    background: var(--enji-mist);
+    border-radius: 50%;
+    animation: pulse 2s var(--ease-io) infinite;
+}
+.email-address {
+    font-family: "Outfit", sans-serif;
+    font-size: clamp(1.4rem, 3.2vw, 1.9rem);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    margin-bottom: 36px;
+    word-break: break-all;
+    position: relative;
+}
+.contact-btn {
+    background: var(--cream);
+    color: var(--enji);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+    position: relative;
+    z-index: 2;
+}
+.contact-btn::before { display: none; }
+.contact-btn span { color: var(--enji); }
+.contact-btn:hover {
+    background: var(--paper);
+    transform: translateY(-3px);
 }
 
-.type-icon svg {
-    width: 28px;
-    height: 28px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
+/* ===== タイプ一覧 ===== */
+.types-section {
+    padding: var(--space-xl) 32px;
+    background: linear-gradient(180deg, var(--cream) 0%, var(--cream-deep) 100%);
 }
-
+.types-section .section-header { margin-bottom: 56px; }
+.types-grid {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+}
+.type-card {
+    background: var(--paper);
+    padding: 48px 36px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line-soft);
+    box-shadow: var(--shadow-sm);
+    text-align: left;
+    transition: all var(--dur-base) var(--ease-out);
+}
+.type-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--enji-mist);
+}
+.type-emoji {
+    display: inline-block;
+    font-size: 2rem;
+    padding: 14px 18px;
+    background: var(--enji-wash);
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    line-height: 1;
+    transition: transform var(--dur-base) var(--ease-out);
+}
+.type-card:hover .type-emoji { transform: rotate(-6deg) scale(1.05); }
 .type-title {
-    font-weight: 700;
-    margin-bottom: 12px;
     font-size: 1.1rem;
-    color: var(--primary-text);
+    color: var(--ink);
+    margin-bottom: 10px;
 }
-
 .type-desc {
-    font-size: 0.9rem;
-    color: var(--secondary-text);
-    line-height: 1.6;
+    font-size: 0.88rem;
+    color: var(--ink-2);
+    line-height: 1.85;
 }
 
-/* スマホ対応 */
-@media (max-width: 768px) {
-    .contact-hero { height: 50vh; min-height: 300px; }
-    
-    .contact-card {
-        padding: 40px 24px;
-    }
-    
-    .email-address {
-        font-size: 1.2rem;
-    }
-    
-    .contact-types {
+/* ===== レスポンシブ ===== */
+.sp-only { display: none; }
+@media (max-width: 860px) {
+    .sp-only { display: inline; }
+
+    .contact-grid {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: 48px;
     }
+    .contact-lead { max-width: none; }
+    .contact-card { padding: 48px 32px; }
+
+    .types-grid { grid-template-columns: 1fr; }
 }

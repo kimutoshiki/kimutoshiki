@@ -1,29 +1,34 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>お問い合わせ | 木村紀喜</title>
-    
-    <meta name="description" content="木村紀喜へのお問い合わせ。研究・教育に関するご相談はこちらから。" />
-    <meta property="og:title" content="お問い合わせ | 木村紀喜" />
-    <meta property="og:description" content="研究・教育に関するご相談、お問い合わせはこちらから" />
-    <meta property="og:type" content="website" />
-    
-    <link rel="icon" href="favicon.ico" sizes="any" />
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    
+
+    <meta name="description" content="木村紀喜へのお問い合わせ。研究・教育に関するご相談はこちらから。">
+    <meta name="theme-color" content="#8B1538">
+    <meta property="og:title" content="お問い合わせ | 木村紀喜">
+    <meta property="og:description" content="研究・教育に関するご相談、お問い合わせはこちらから">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kimutoshiki.com/contact.html">
+    <meta property="og:image" content="https://kimutoshiki.com/images/wasedaookuma.jpg">
+
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/contact.css">
 </head>
 <body>
+    <a href="#main" class="skip-link">メインコンテンツへ</a>
+
     <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
-            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
+            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く" aria-expanded="false">
                 <span class="menu-icon"></span>
             </button>
-            <nav id="navigation">
+            <nav id="navigation" aria-label="メインナビゲーション">
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
@@ -35,72 +40,103 @@
         </div>
     </header>
 
-    <main>
+    <main id="main">
+        <!-- ====== HERO ====== -->
         <section class="hero-base contact-hero">
             <div class="hero-overlay"></div>
+            <div class="hero-grid"></div>
             <div class="hero-content">
-                <h1 class="hero-title animate-fade-up delay-1">お問い合わせ</h1>
-                <p class="hero-subtitle animate-fade-up delay-2">Contact</p>
+                <span class="hero-kicker animate-up delay-1">Contact</span>
+                <h1 class="hero-title animate-up delay-2">お問い合わせ</h1>
+                <p class="hero-subtitle animate-up delay-3">Let's talk about education.</p>
+            </div>
+            <div class="hero-scroll-hint">SCROLL</div>
+        </section>
+
+        <!-- ====== CONTACT ====== -->
+        <section class="contact-section">
+            <div class="contact-grid">
+                <!-- 左: リード -->
+                <div class="contact-lead reveal">
+                    <span class="section-eyebrow">Get in touch</span>
+                    <h2 class="section-title contact-title">お気軽にご連絡ください</h2>
+                    <p class="contact-desc">
+                        研究・教育に関するご相談、セミナーや研修会のご依頼、
+                        執筆のご依頼など、どのようなことでもお気軽にどうぞ。
+                    </p>
+                    <p class="contact-desc">
+                        いただいたご連絡には、できる限り早くお返事いたします。
+                    </p>
+                </div>
+
+                <!-- 右: メインのメールカード -->
+                <div class="contact-card reveal delay-1">
+                    <div class="contact-card-head">
+                        <span class="email-label font-en">Email</span>
+                        <span class="contact-dot" aria-hidden="true"></span>
+                    </div>
+                    <p class="email-address">kimu.toshiki<br class="sp-only">@gmail.com</p>
+                    <a href="mailto:kimu.toshiki@gmail.com" class="btn btn-primary btn-arrow contact-btn">
+                        <span>メールを送信する</span>
+                    </a>
+                </div>
             </div>
         </section>
 
-        <div class="page-content">
-            <div class="contact-content scroll-animate">
-                <div class="contact-card">
-
-                    <div class="email-section">
-                        <div class="email-label">Email</div>
-                        <div class="email-address">kimu.toshiki@gmail.com</div>
-                        <a href="mailto:kimu.toshiki@gmail.com" class="email-button">
-                            <span class="email-icon">
-                                <svg viewBox="0 0 24 24" width="24" height="24">
-                                    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                </svg>
-                            </span>
-                            <span>メールを送信する</span>
-                        </a>
-                    </div>
-
-                    <div class="contact-types">
-                        <div class="contact-type">
-                            <div class="type-icon">
-                                <svg viewBox="0 0 24 24" width="32" height="32">
-                                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                                </svg>
-                            </div>
-                            <div class="type-title">研究に関するお問い合わせ</div>
-                            <div class="type-desc">研究内容や共同研究について</div>
-                        </div>
-
-                        <div class="contact-type">
-                            <div class="type-icon">
-                                <svg viewBox="0 0 24 24" width="32" height="32">
-                                    <path d="M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-                                </svg>
-                            </div>
-                            <div class="type-title">教育に関するお問い合わせ</div>
-                            <div class="type-desc">授業実践や教材開発について</div>
-                        </div>
-
-                        <div class="contact-type">
-                            <div class="type-icon">
-                                <svg viewBox="0 0 24 24" width="32" height="32">
-                                    <path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
-                                </svg>
-                            </div>
-                            <div class="type-title">その他ご依頼</div>
-                            <div class="type-desc">セミナーや研修会、執筆活動について</div>
-                        </div>
-                    </div>
-
-                </div>
+        <!-- ====== CONTACT TYPES ====== -->
+        <section class="types-section">
+            <div class="section-header reveal">
+                <span class="section-eyebrow">What to ask</span>
+                <h2 class="section-title">ご相談いただける内容</h2>
             </div>
-        </div>
+            <div class="types-grid">
+                <article class="type-card reveal">
+                    <div class="type-emoji">🔬</div>
+                    <h3 class="type-title">研究に関するお問い合わせ</h3>
+                    <p class="type-desc">研究内容のご質問、共同研究のご相談について。</p>
+                </article>
+                <article class="type-card reveal delay-1">
+                    <div class="type-emoji">📚</div>
+                    <h3 class="type-title">教育に関するお問い合わせ</h3>
+                    <p class="type-desc">授業実践、教材開発、公開授業のご相談について。</p>
+                </article>
+                <article class="type-card reveal delay-2">
+                    <div class="type-emoji">✉️</div>
+                    <h3 class="type-title">その他ご依頼</h3>
+                    <p class="type-desc">セミナー・研修会、執筆、講演のご依頼について。</p>
+                </article>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer">
-        <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
-        当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
+                <p>早稲田大学教職大学院にて、ICT・AIを活用した小学校社会科教育を研究しています。</p>
+            </div>
+            <div class="footer-col">
+                <h4>Site Map</h4>
+                <ul>
+                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="profile.html">プロフィール</a></li>
+                    <li><a href="research.html">研究・活動</a></li>
+                    <li><a href="blog.html">ブログ</a></li>
+                    <li><a href="contact.html">お問い合わせ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <ul>
+                    <li><a href="mailto:kimu.toshiki@gmail.com">Email</a></li>
+                    <li><a href="contact.html">お問い合わせフォーム</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+            <p>当サイトは個人が運営しており、所属機関の公式見解ではありません。</p>
+        </div>
     </footer>
 
     <script src="js/main.js" defer></script>

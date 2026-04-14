@@ -4,30 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ブログ | 木村紀喜</title>
-    
+
     <meta name="description" content="木村紀喜のブログ。教育について感じたこと、考えたこと、日々の活動記録。">
+    <meta name="theme-color" content="#8B1538">
     <meta property="og:title" content="ブログ | 木村紀喜">
     <meta property="og:description" content="教育について感じたこと、考えたことを綴ります">
     <meta property="og:type" content="article">
-    
+    <meta property="og:url" content="https://kimutoshiki.com/blog.html">
+    <meta property="og:image" content="https://kimutoshiki.com/images/kyukeisha.jpg">
+
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Outfit:wght@400;600&display=swap">
-    
+
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/blog.css">
 </head>
 <body>
+    <a href="#main" class="skip-link">メインコンテンツへ</a>
+
     <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
-            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
+            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く" aria-expanded="false">
                 <span class="menu-icon"></span>
             </button>
-            <nav id="navigation">
+            <nav id="navigation" aria-label="メインナビゲーション">
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
@@ -39,19 +40,20 @@
         </div>
     </header>
 
-    <main>
+    <main id="main">
         <section class="hero-base blog-hero">
             <div class="hero-overlay"></div>
+            <div class="hero-grid"></div>
             <div class="hero-content">
-                <div class="blog-intro">
-                    <h1 class="hero-title animate-fade-up delay-1">ブログ</h1>
-                    <p class="hero-subtitle animate-fade-up delay-2">日々の思考と実践の記録</p>
-                </div>
+                <span class="hero-kicker animate-up delay-1">Blog</span>
+                <h1 class="hero-title animate-up delay-2">日々の思考と実践の記録</h1>
+                <p class="hero-subtitle animate-up delay-3">Thoughts, experiences, and reflections.</p>
             </div>
+            <div class="hero-scroll-hint">SCROLL</div>
         </section>
 
         <div class="page-content">
-            <div class="blog-container scroll-animate">
+            <div class="blog-container reveal">
                 
                 <div class="filter-container">
                     <button class="filter-btn active" data-filter="all">すべて</button>
@@ -556,8 +558,33 @@
     </main>
 
     <footer class="site-footer">
-        <p>&copy; 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
-        当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
+                <p>早稲田大学教職大学院にて、ICT・AIを活用した小学校社会科教育を研究しています。</p>
+            </div>
+            <div class="footer-col">
+                <h4>Site Map</h4>
+                <ul>
+                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="profile.html">プロフィール</a></li>
+                    <li><a href="research.html">研究・活動</a></li>
+                    <li><a href="blog.html">ブログ</a></li>
+                    <li><a href="contact.html">お問い合わせ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <ul>
+                    <li><a href="mailto:kimu.toshiki@gmail.com">Email</a></li>
+                    <li><a href="contact.html">お問い合わせフォーム</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+            <p>当サイトは個人が運営しており、所属機関の公式見解ではありません。</p>
+        </div>
     </footer>
 
     <script src="js/main.js" defer></script>
