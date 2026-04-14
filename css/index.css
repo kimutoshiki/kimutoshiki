@@ -63,9 +63,9 @@
     content: '教育';
     position: absolute;
     top: 40px; right: -10px;
-    font-family: "Noto Serif JP", serif;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
     font-size: clamp(10rem, 22vw, 22rem);
-    font-weight: 900;
+    font-weight: 600;
     color: var(--enji);
     opacity: 0.04;
     line-height: 0.9;
@@ -209,12 +209,12 @@
     letter-spacing: 0.02em;
 }
 .highlight-ja {
-    font-family: "Noto Serif JP", serif;
-    font-size: 0.9rem;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
+    font-size: 0.95rem;
     color: var(--enji);
     margin-bottom: 18px;
-    font-weight: 700;
-    letter-spacing: 0.15em;
+    font-weight: 600;
+    letter-spacing: 0.12em;
 }
 .highlight-desc {
     font-size: 0.92rem;

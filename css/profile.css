@@ -242,9 +242,9 @@
     content: '未来';
     position: absolute;
     bottom: -40px; right: -10px;
-    font-family: "Noto Serif JP", serif;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
     font-size: 14rem;
-    font-weight: 900;
+    font-weight: 600;
     color: rgba(255,255,255,0.06);
     line-height: 1;
     pointer-events: none;

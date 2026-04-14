@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Noto+Serif+JP:wght@500;700;900&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Klee+One:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 /* =========================================================
    デザインシステム
    - カラー: 臙脂 (enji) 基調 + クリーム / 墨
-   - タイポ: Noto Serif JP (見出し) / Noto Sans JP (本文) / Outfit (英字)
+   - タイポ: Klee One (見出し=教科書体) / BIZ UDPGothic (本文=UD) / Outfit (英字)
    - モーション: cubic-bezier(0.16, 1, 0.3, 1) を基準
    ========================================================= */
 
@@ -81,10 +81,10 @@ html {
 }
 
 body {
-    font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+    font-family: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
     background: var(--cream);
     color: var(--ink);
-    line-height: 1.8;
+    line-height: 1.85;
     font-weight: 400;
     overflow-x: hidden;
     position: relative;
@@ -127,14 +127,14 @@ html { scrollbar-color: var(--enji) var(--cream-deep); }
 /* =========================================================
    タイポグラフィ
    ========================================================= */
-.font-serif { font-family: "Noto Serif JP", "Yu Mincho", serif; font-feature-settings: "palt"; }
+.font-serif { font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif; font-feature-settings: "palt"; }
 .font-en { font-family: "Outfit", sans-serif; letter-spacing: 0.08em; }
 
 h1, h2, h3, h4 {
-    font-family: "Noto Serif JP", "Yu Mincho", serif;
-    font-weight: 700;
-    line-height: 1.35;
-    letter-spacing: 0.02em;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: 0.03em;
 }
 
 /* =========================================================
@@ -165,12 +165,13 @@ h1, h2, h3, h4 {
 }
 
 .logo {
-    font-family: "Noto Serif JP", serif;
-    font-weight: 900;
-    font-size: 1.25rem;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
     color: var(--ink);
     display: flex; align-items: center; gap: 10px;
     position: relative;
+    letter-spacing: 0.04em;
 }
 .logo::before {
     content: '';
@@ -320,11 +321,11 @@ nav a.current::after {
 }
 
 .hero-title {
-    font-family: "Noto Serif JP", serif;
-    font-size: clamp(2.25rem, 5.5vw, 4.25rem);
-    font-weight: 900;
-    line-height: 1.25;
-    letter-spacing: 0.04em;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
+    font-size: clamp(2.1rem, 5.2vw, 3.8rem);
+    font-weight: 600;
+    line-height: 1.45;
+    letter-spacing: 0.05em;
     margin-bottom: 24px;
     text-shadow: 0 4px 24px rgba(0,0,0,0.35);
 }
@@ -411,11 +412,12 @@ nav a.current::after {
 .section-eyebrow::after { left: 100%; }
 
 .section-title {
-    font-family: "Noto Serif JP", serif;
-    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
-    font-weight: 900;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
+    font-size: clamp(1.65rem, 3.2vw, 2.3rem);
+    font-weight: 600;
     color: var(--ink);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    line-height: 1.5;
 }
 
 /* ボタン */
@@ -567,9 +569,9 @@ nav a.current::after {
     margin-bottom: 48px;
 }
 .footer-brand .footer-logo {
-    font-family: "Noto Serif JP", serif;
-    font-size: 1.4rem;
-    font-weight: 900;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
     color: var(--cream);
     margin-bottom: 12px;
 }

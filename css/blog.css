@@ -141,9 +141,9 @@
     letter-spacing: 0.03em;
 }
 .blog-title {
-    font-family: "Noto Serif JP", serif;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
     font-size: 1.15rem;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--ink);
     line-height: 1.65;
     margin: 0;

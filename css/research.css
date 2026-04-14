@@ -26,7 +26,7 @@
     position: relative;
 }
 .lead-quote {
-    font-family: "Noto Serif JP", serif;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
     font-size: clamp(1.25rem, 2.5vw, 1.85rem);
     font-weight: 500;
     line-height: 2.2;
@@ -117,9 +117,9 @@
     margin-bottom: 24px;
 }
 .theme-title {
-    font-family: "Noto Serif JP", serif;
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
     line-height: 1.75;
     color: var(--ink);
     margin-bottom: 18px;
