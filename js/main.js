@@ -139,9 +139,8 @@
         const symbols = ['✦', '✧', '★', '♡', '◆'];
 
         on(document, 'click', (e) => {
-            // ボタンや特定要素のみ反応
-            const target = e.target.closest('a, button, .card, .highlight-card, .blog-header, .keyword, .logo');
-            if (!target) return;
+            // どこをクリックしてもスパークル発火 (フォーム入力欄のみ除外)
+            if (e.target.closest('input, textarea, select')) return;
 
             const x = e.clientX;
             const y = e.clientY;
