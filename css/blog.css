@@ -2,10 +2,8 @@
    blog.html — Pop Diplomacy
    ========================================================= */
 
-/* ===== HERO (高さも内容もコンパクトに) ===== */
+/* ===== HERO (他ページと同じサイズ) ===== */
 .blog-hero {
-    min-height: 0;
-    height: auto;
     background-image: url('../images/kyukeisha.jpg');
     background-size: cover;
     background-position: center;
@@ -15,43 +13,15 @@
     background-size: cover;
     background-position: center;
 }
-.blog-hero .hero-content {
-    padding: 28px 24px 36px;
-    max-width: 880px;
-}
-.blog-hero .hero-kicker {
-    margin-bottom: 18px;
-    font-size: 0.92rem;
-    padding: 9px 22px;
-    box-shadow: 4px 4px 0 var(--pop-pink);
-}
-.blog-hero .hero-title {
-    font-size: clamp(1.8rem, 4.5vw, 2.7rem);
-    line-height: 1.4;
-    margin-bottom: 14px;
-    letter-spacing: 0.04em;
-}
-.blog-hero .hero-subtitle {
-    font-size: clamp(0.92rem, 1.5vw, 1.05rem);
-    padding: 6px 0;
-}
-.blog-hero .hero-subtitle::before,
-.blog-hero .hero-subtitle::after {
-    width: 24px; height: 2px;
-    margin: 0 10px;
-}
-/* SCROLLヒントは短いヒーローでは不要 (重なり防止) */
-.blog-hero .hero-scroll-hint { display: none; }
 
 /* ===== コンテナ ===== */
 .blog-container {
     max-width: 920px;
     margin: 0 auto;
 }
-/* ヒーローを短くした分、page-content の上下padding を控えめに */
 .blog-hero + .page-content,
 .blog-hero ~ .page-content {
-    padding-top: 32px;
+    padding-top: 56px;
     padding-bottom: 64px;
 }
 
