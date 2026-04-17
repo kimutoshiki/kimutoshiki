@@ -16,14 +16,19 @@
 }
 
 .hero-accent {
-    color: var(--pop-yellow);
-    font-style: italic;
-    font-weight: 700;
+    color: var(--navy);
+    font-style: normal;
+    font-weight: 800;
     position: relative;
     display: inline-block;
-    padding: 0 10px;
+    padding: 0.05em 0.35em;
+    margin: 0 0.1em;
     transform: rotate(-3deg);
-    text-shadow: 3px 3px 0 var(--pop-pink);
+    background: var(--pop-yellow);
+    border: 2.5px solid var(--navy-deep);
+    border-radius: 0.18em;
+    box-shadow: 4px 4px 0 var(--pop-pink);
+    text-shadow: none;
     animation: wobble 4s ease-in-out infinite;
 }
 
