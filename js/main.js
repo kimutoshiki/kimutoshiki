@@ -1,5 +1,5 @@
 /* =========================================================
-   kimutoshiki.com - interaction script
+   kimutoshiki.com — Pop Diplomacy interaction script
    ========================================================= */
 (() => {
     'use strict';
@@ -10,14 +10,18 @@
     const ready = (fn) => document.readyState !== 'loading'
         ? fn()
         : document.addEventListener('DOMContentLoaded', fn);
+    const isCoarse = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     ready(() => {
         initHeader();
         initMenu();
         initReveal();
+        initSplitChars();
         initBlogAccordion();
         initBlogFilter();
-        initCursorAccent();
+        initSparkles();
+        initFloatTilt();
         initHomeNews();
     });
 
@@ -70,8 +74,25 @@
                     io.unobserve(entry.target);
                 }
             });
-        }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
         els.forEach(el => io.observe(el));
+    }
+
+    /* -------- 文字を一文字ずつspanに分割 (yui540風) -------- */
+    function initSplitChars() {
+        $$('.split-chars').forEach(el => {
+            if (el.dataset.split) return;
+            const text = el.textContent;
+            el.textContent = '';
+            [...text].forEach((ch, i) => {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.style.setProperty('--i', i);
+                span.textContent = ch === ' ' ? '\u00A0' : ch;
+                el.appendChild(span);
+            });
+            el.dataset.split = '1';
+        });
     }
 
     /* -------- ブログアコーディオン -------- */
@@ -111,38 +132,77 @@
         });
     }
 
-    /* -------- カーソル追従アクセント (大画面のみ) -------- */
-    function initCursorAccent() {
-        if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    /* -------- クリック時のスパークルエフェクト -------- */
+    function initSparkles() {
+        if (reducedMotion) return;
+        const colors = ['#FF5C8A', '#FFD83D', '#4ED4A4', '#5DA8FF', '#B488FF'];
+        const symbols = ['✦', '✧', '★', '♡', '◆'];
 
-        const dot = document.createElement('div');
-        dot.className = 'cursor-accent';
-        dot.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(dot);
+        on(document, 'click', (e) => {
+            // ボタンや特定要素のみ反応
+            const target = e.target.closest('a, button, .card, .highlight-card, .blog-header, .keyword, .logo');
+            if (!target) return;
 
-        let x = window.innerWidth / 2;
-        let y = window.innerHeight / 2;
-        let tx = x, ty = y;
-        let raf = null;
-
-        const render = () => {
-            x += (tx - x) * 0.12;
-            y += (ty - y) * 0.12;
-            dot.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-            raf = requestAnimationFrame(render);
-        };
-
-        on(window, 'mousemove', (e) => {
-            tx = e.clientX;
-            ty = e.clientY;
-            if (!raf) raf = requestAnimationFrame(render);
+            const x = e.clientX;
+            const y = e.clientY;
+            const count = 6;
+            for (let i = 0; i < count; i++) {
+                const s = document.createElement('span');
+                s.className = 'sparkle-burst';
+                s.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                s.style.left = x + 'px';
+                s.style.top = y + 'px';
+                s.style.color = colors[Math.floor(Math.random() * colors.length)];
+                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+                const dist = 40 + Math.random() * 50;
+                s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+                s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+                s.style.setProperty('--rot', (Math.random() * 360 - 180) + 'deg');
+                document.body.appendChild(s);
+                setTimeout(() => s.remove(), 800);
+            }
         });
 
-        const hovertargets = 'a, button, .card, .theme-card, .blog-header, .btn, .home-card, .news-item';
-        $$(hovertargets).forEach(el => {
-            on(el, 'mouseenter', () => dot.classList.add('is-hover'));
-            on(el, 'mouseleave', () => dot.classList.remove('is-hover'));
+        // スタイル注入
+        if (!$('#sparkle-style')) {
+            const st = document.createElement('style');
+            st.id = 'sparkle-style';
+            st.textContent = `
+                .sparkle-burst {
+                    position: fixed;
+                    pointer-events: none;
+                    font-size: 18px;
+                    z-index: 9998;
+                    transform: translate(-50%, -50%);
+                    animation: sparkleFly 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                    will-change: transform, opacity;
+                }
+                @keyframes sparkleFly {
+                    0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.4) rotate(0); }
+                    50%  { opacity: 1; transform: translate(calc(-50% + var(--dx) * 0.6), calc(-50% + var(--dy) * 0.6)) scale(1.2) rotate(calc(var(--rot) * 0.5)); }
+                    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.6) rotate(var(--rot)); }
+                }
+            `;
+            document.head.appendChild(st);
+        }
+    }
+
+    /* -------- カードに微小な3Dティルト -------- */
+    function initFloatTilt() {
+        if (isCoarse || reducedMotion) return;
+        const targets = $$('.highlight-card, .theme-card, .activity-card, .type-card, .future-card, .contact-card, .license-item');
+        targets.forEach(el => {
+            on(el, 'mousemove', (e) => {
+                const r = el.getBoundingClientRect();
+                const x = (e.clientX - r.left) / r.width - 0.5;
+                const y = (e.clientY - r.top)  / r.height - 0.5;
+                el.style.setProperty('--tilt-x', (y * -4) + 'deg');
+                el.style.setProperty('--tilt-y', (x *  4) + 'deg');
+            });
+            on(el, 'mouseleave', () => {
+                el.style.setProperty('--tilt-x', '0deg');
+                el.style.setProperty('--tilt-y', '0deg');
+            });
         });
     }
 
@@ -154,9 +214,9 @@
         const limit = parseInt(list.dataset.limit || '5', 10);
 
         const categoryMap = {
-            notice: { label: 'お知らせ', cls: 'cat-notice' },
-            activity: { label: '活動', cls: 'cat-activity' },
-            thought: { label: '思考', cls: 'cat-thought' },
+            notice:   { label: 'お知らせ', cls: 'cat-notice' },
+            activity: { label: '活動',     cls: 'cat-activity' },
+            thought:  { label: '思考',     cls: 'cat-thought' },
         };
 
         try {
@@ -199,7 +259,6 @@
                 `;
             }).join('');
 
-            // 追加されたreveal要素にobserverを再適用
             initReveal();
         } catch (err) {
             console.warn('[home news] fallback to static content:', err);

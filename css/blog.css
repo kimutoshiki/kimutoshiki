@@ -1,10 +1,11 @@
 /* =========================================================
-   blog.html 専用スタイル
+   blog.html — Pop Diplomacy
    ========================================================= */
 
-/* ===== HERO ===== */
+/* ===== HERO (高さも内容もコンパクトに) ===== */
 .blog-hero {
-    min-height: 60vh;
+    min-height: 0;
+    height: auto;
     background-image: url('../images/kyukeisha.jpg');
     background-size: cover;
     background-position: center;
@@ -14,11 +15,44 @@
     background-size: cover;
     background-position: center;
 }
+.blog-hero .hero-content {
+    padding: 28px 24px 36px;
+    max-width: 880px;
+}
+.blog-hero .hero-kicker {
+    margin-bottom: 18px;
+    font-size: 0.92rem;
+    padding: 9px 22px;
+    box-shadow: 4px 4px 0 var(--pop-pink);
+}
+.blog-hero .hero-title {
+    font-size: clamp(1.8rem, 4.5vw, 2.7rem);
+    line-height: 1.4;
+    margin-bottom: 14px;
+    letter-spacing: 0.04em;
+}
+.blog-hero .hero-subtitle {
+    font-size: clamp(0.92rem, 1.5vw, 1.05rem);
+    padding: 6px 0;
+}
+.blog-hero .hero-subtitle::before,
+.blog-hero .hero-subtitle::after {
+    width: 24px; height: 2px;
+    margin: 0 10px;
+}
+/* SCROLLヒントは短いヒーローでは不要 (重なり防止) */
+.blog-hero .hero-scroll-hint { display: none; }
 
 /* ===== コンテナ ===== */
 .blog-container {
     max-width: 920px;
     margin: 0 auto;
+}
+/* ヒーローを短くした分、page-content の上下padding を控えめに */
+.blog-hero + .page-content,
+.blog-hero ~ .page-content {
+    padding-top: 32px;
+    padding-bottom: 64px;
 }
 
 /* ===== フィルター ===== */
@@ -28,122 +62,130 @@
     margin-bottom: 48px;
     flex-wrap: wrap;
     justify-content: center;
-    padding: 16px 20px;
+    padding: 14px 18px;
     background: var(--paper);
-    border-radius: 100px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--line-soft);
+    border: 2.5px solid var(--navy);
+    border-radius: var(--radius-pill);
+    box-shadow: 6px 6px 0 var(--navy);
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
 }
 .filter-btn {
     padding: 10px 24px;
-    border: none;
-    background: transparent;
-    color: var(--ink-2);
-    border-radius: 100px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
+    border: 2.5px solid var(--navy);
+    background: var(--paper);
+    color: var(--navy);
+    border-radius: var(--radius-pill);
+    box-shadow: 3px 3px 0 var(--navy);
+    font-family: "BIZ UDPGothic", "Kiwi Maru", sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
     cursor: pointer;
-    transition: all var(--dur-fast) var(--ease-out);
-    font-family: inherit;
+    transition: transform var(--dur-base) var(--ease-bounce),
+                box-shadow var(--dur-base),
+                background var(--dur-base);
 }
 .filter-btn:hover {
-    color: var(--enji);
-    background: var(--enji-wash);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--pop-pink);
+    background: var(--pop-yellow);
 }
 .filter-btn.active {
-    background: var(--grad-enji);
+    background: var(--navy);
     color: var(--cream);
-    box-shadow: var(--shadow-enji);
+    box-shadow: 3px 3px 0 var(--pop-pink);
+}
+.filter-btn.active:hover {
+    background: var(--navy);
+    color: var(--cream);
+    box-shadow: 5px 5px 0 var(--pop-pink);
 }
 
 /* ===== カテゴリバッジ ===== */
 .cat-badge {
     display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 5px 14px;
-    border-radius: 100px;
+    font-family: "Fredoka", "BIZ UDPGothic", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 400;
+    padding: 6px 14px;
+    border: 2.5px solid var(--navy);
+    border-radius: var(--radius-pill);
+    color: var(--navy);
     letter-spacing: 0.08em;
     white-space: nowrap;
-    border: 1px solid;
+    box-shadow: 2px 2px 0 var(--navy);
 }
-.cat-notice { background: var(--enji-wash); color: var(--enji); border-color: var(--enji-mist); }
-.cat-activity { background: #FEF7E6; color: #A26F1E; border-color: #EDD8A6; }
-.cat-thought { background: #EEF4F0; color: #316B49; border-color: #BFD9C8; }
+.cat-notice   { background: var(--pop-blue); }
+.cat-activity { background: var(--pop-yellow); }
+.cat-thought  { background: var(--pop-mint); }
 
 /* ===== 記事リスト ===== */
 .blog-posts {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 22px;
 }
 
 /* ===== 記事カード ===== */
 .blog-item {
     background: var(--paper);
+    border: 2.5px solid var(--navy);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--line-soft);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 6px 6px 0 var(--navy);
     overflow: hidden;
-    transition: all var(--dur-base) var(--ease-out);
-    animation: blogItemIn 0.5s var(--ease-out) both;
+    transition: transform var(--dur-base) var(--ease-bounce),
+                box-shadow var(--dur-base);
 }
-@keyframes blogItemIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
+.blog-item:nth-child(4n+1) { background: #FFF6FA; }
+.blog-item:nth-child(4n+2) { background: #F2FBFF; }
+.blog-item:nth-child(4n+3) { background: #FFFCEB; }
+.blog-item:nth-child(4n+4) { background: #F2FBF6; }
+
 .blog-item:hover {
-    border-color: var(--enji-mist);
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+    transform: translate(-4px, -4px);
+    box-shadow: 11px 11px 0 var(--pop-pink);
 }
 
 /* ===== 記事ヘッダー ===== */
 .blog-header {
-    padding: 28px 36px;
+    padding: 24px 32px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    transition: background var(--dur-fast) var(--ease-out);
-    position: relative;
+    transition: background var(--dur-fast) var(--ease-out),
+                box-shadow var(--dur-base);
 }
-.blog-header::before {
-    content: '';
-    position: absolute;
-    top: 0; bottom: 0; left: 0;
-    width: 4px;
-    background: var(--grad-enji);
-    transform: scaleY(0);
-    transform-origin: center;
-    transition: transform var(--dur-base) var(--ease-out);
+.blog-header:hover {
+    background: rgba(255, 216, 61, 0.22);
 }
-.blog-header:hover::before,
-.blog-header.active::before {
-    transform: scaleY(1);
+.blog-header.active {
+    box-shadow: inset 6px 0 0 var(--pop-pink);
+    background: rgba(255, 92, 138, 0.08);
 }
-.blog-header:hover { background: var(--enji-wash); }
 
-.blog-title-area { flex: 1; }
+.blog-title-area { flex: 1; min-width: 0; }
 .blog-meta {
     display: flex;
     align-items: center;
     gap: 14px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 .blog-date {
-    font-family: "Outfit", sans-serif;
-    color: var(--ink-3);
-    font-weight: 500;
-    font-size: 0.82rem;
-    letter-spacing: 0.03em;
+    font-family: "Fredoka", sans-serif;
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
 }
 .blog-title {
-    font-family: "Klee One", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", sans-serif;
-    font-size: 1.15rem;
-    font-weight: 600;
+    font-family: "Kiwi Maru", "Zen Maru Gothic", sans-serif;
+    font-size: 1.4rem;
+    font-weight: 500;
     color: var(--ink);
     line-height: 1.65;
     margin: 0;
@@ -151,37 +193,37 @@
 
 /* ===== 開閉アイコン ===== */
 .toggle-icon {
-    width: 38px; height: 38px;
-    border: 1.5px solid var(--enji);
+    width: 40px; height: 40px;
+    border: 2.5px solid var(--navy);
     border-radius: 50%;
+    background: var(--pop-yellow);
+    box-shadow: 3px 3px 0 var(--navy);
     position: relative;
     flex-shrink: 0;
-    transition: all var(--dur-base) var(--ease-out);
-    background: transparent;
+    transition: transform var(--dur-base) var(--ease-bounce),
+                background var(--dur-base);
 }
 .toggle-icon::before,
 .toggle-icon::after {
     content: '';
     position: absolute;
     top: 50%; left: 50%;
-    background: var(--enji);
+    background: var(--navy);
     transform: translate(-50%, -50%);
     transition: all var(--dur-base) var(--ease-out);
     border-radius: 2px;
 }
-.toggle-icon::before { width: 12px; height: 2px; }
-.toggle-icon::after  { width: 2px; height: 12px; }
+.toggle-icon::before { width: 15px; height: 2.5px; }
+.toggle-icon::after  { width: 2.5px; height: 15px; }
 
 .blog-header:hover .toggle-icon {
-    background: var(--enji);
-}
-.blog-header:hover .toggle-icon::before,
-.blog-header:hover .toggle-icon::after {
-    background: var(--cream);
+    transform: rotate(90deg) scale(1.05);
+    background: var(--pop-mint);
 }
 .blog-header.active .toggle-icon {
-    background: var(--enji);
+    background: var(--pop-pink);
     transform: rotate(135deg);
+    box-shadow: 3px 3px 0 var(--navy);
 }
 .blog-header.active .toggle-icon::before,
 .blog-header.active .toggle-icon::after {
@@ -196,18 +238,18 @@
 }
 .blog-content.active {
     max-height: 2400px;
-    border-top: 1px solid var(--line-soft);
 }
 .blog-content-inner {
-    padding: 36px 36px 40px 40px;
+    margin: 0 24px 24px;
+    padding: 28px 32px;
+    background: #FFFCEB;
+    border: 2px dashed var(--navy);
+    border-radius: var(--radius-md);
     color: var(--ink-2);
-    line-height: 2.0;
-    font-size: 0.95rem;
+    line-height: 2.05;
+    font-size: 1rem;
     white-space: pre-line;
-    border-left: 3px solid var(--enji-mist);
-    margin: 24px 24px 24px 36px;
-    background: var(--enji-wash);
-    border-radius: var(--radius-sm);
+    font-family: inherit;
 }
 
 /* ===== 空記事プレースホルダ ===== */
@@ -221,28 +263,42 @@
 /* ===== レスポンシブ ===== */
 @media (max-width: 860px) {
     .filter-container {
-        padding: 12px;
+        padding: 10px 14px;
         gap: 6px;
-        border-radius: var(--radius-md);
+        box-shadow: 4px 4px 0 var(--navy);
     }
-    .filter-btn { padding: 8px 16px; font-size: 0.8rem; }
+    .filter-btn {
+        padding: 7px 14px;
+        font-size: 0.78rem;
+        box-shadow: 2px 2px 0 var(--navy);
+    }
+    .filter-btn:hover {
+        box-shadow: 4px 4px 0 var(--pop-pink);
+    }
+
+    .blog-item:hover {
+        transform: translate(-3px, -3px);
+        box-shadow: 8px 8px 0 var(--pop-pink);
+    }
 
     .blog-header {
-        padding: 22px 22px 22px 26px;
+        padding: 20px 18px;
         gap: 12px;
         align-items: flex-start;
     }
-    .blog-title { font-size: 1.02rem; }
-    .blog-meta { flex-wrap: wrap; gap: 10px; }
+    .blog-title { font-size: 1.1rem; }
+    .blog-meta { gap: 10px; }
 
     .toggle-icon {
-        width: 32px; height: 32px;
+        width: 36px; height: 36px;
         margin-top: 2px;
     }
+    .toggle-icon::before { width: 13px; }
+    .toggle-icon::after  { height: 13px; }
 
     .blog-content-inner {
-        padding: 24px;
-        margin: 18px;
-        font-size: 0.9rem;
+        margin: 0 16px 16px;
+        padding: 20px 22px;
+        font-size: 0.95rem;
     }
 }

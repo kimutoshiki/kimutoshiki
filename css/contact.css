@@ -1,5 +1,5 @@
 /* =========================================================
-   contact.html 専用スタイル
+   contact.html — Pop Diplomacy
    ========================================================= */
 
 /* ===== HERO ===== */
@@ -20,6 +20,8 @@
     padding: var(--space-xl) 32px;
     max-width: var(--max-w);
     margin: 0 auto;
+    position: relative;
+    z-index: 2;
 }
 .contact-grid {
     display: grid;
@@ -27,35 +29,44 @@
     gap: 60px;
     align-items: center;
 }
-.contact-lead { max-width: 420px; }
-.contact-title {
-    margin-bottom: 24px;
-}
+.contact-lead { max-width: 460px; }
+.contact-title { margin-bottom: 24px; }
 .contact-desc {
-    font-size: 0.95rem;
-    line-height: 2.0;
+    font-size: 1.05rem;
+    line-height: 2.05;
     color: var(--ink-2);
     margin-bottom: 16px;
+    font-weight: 500;
 }
 
 /* ===== メインのメールカード ===== */
 .contact-card {
     position: relative;
-    background: var(--grad-enji);
+    background: var(--navy);
     color: var(--cream);
-    padding: 56px 48px;
+    padding: 64px 48px;
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
+    border: 3px solid var(--navy);
+    box-shadow: 10px 10px 0 var(--pop-pink);
     overflow: hidden;
 }
 .contact-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(255, 92, 138, 0.30), transparent 42%),
+        radial-gradient(circle at 80% 70%, rgba(93, 168, 255, 0.28), transparent 42%);
+    pointer-events: none;
+}
+.contact-card::after {
     content: '@';
     position: absolute;
-    top: -40px; right: -20px;
-    font-family: "Outfit", sans-serif;
-    font-size: 18rem;
-    font-weight: 300;
-    color: rgba(250, 246, 240, 0.06);
+    bottom: -60px; right: -20px;
+    font-family: "Fredoka", "BIZ UDPGothic", sans-serif;
+    font-size: 16rem;
+    font-weight: 400;
+    color: rgba(255, 216, 61, 0.10);
     line-height: 1;
     pointer-events: none;
 }
@@ -63,92 +74,138 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
     position: relative;
+    z-index: 1;
 }
 .email-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.3em;
+    display: inline-block;
+    font-family: "Fredoka", "BIZ UDPGothic", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--navy);
+    background: var(--pop-yellow);
+    padding: 7px 16px;
+    border: 2px solid var(--cream);
+    border-radius: var(--radius-pill);
+    box-shadow: 3px 3px 0 var(--pop-pink);
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--enji-mist);
 }
 .contact-dot {
-    width: 10px; height: 10px;
-    background: var(--enji-mist);
+    width: 12px; height: 12px;
+    background: var(--pop-pink);
+    border: 2px solid var(--cream);
     border-radius: 50%;
     animation: pulse 2s var(--ease-io) infinite;
 }
 .email-address {
-    font-family: "Outfit", sans-serif;
-    font-size: clamp(1.4rem, 3.2vw, 1.9rem);
-    font-weight: 500;
+    font-family: "Fredoka", "BIZ UDPGothic", sans-serif;
+    font-size: clamp(1.55rem, 3.6vw, 2.15rem);
+    font-weight: 700;
     letter-spacing: 0.02em;
     margin-bottom: 36px;
     word-break: break-all;
     position: relative;
+    z-index: 1;
+    color: var(--cream);
 }
 .contact-btn {
-    background: var(--cream);
-    color: var(--enji);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+    background: var(--pop-yellow);
+    color: var(--navy);
+    border-color: var(--cream);
+    box-shadow: 6px 6px 0 var(--cream);
     position: relative;
     z-index: 2;
 }
 .contact-btn::before { display: none; }
-.contact-btn span { color: var(--enji); }
+.contact-btn span { color: var(--navy); }
 .contact-btn:hover {
-    background: var(--paper);
-    transform: translateY(-3px);
+    background: var(--pop-pink);
+    color: var(--navy);
+    box-shadow: 9px 9px 0 var(--cream);
+    transform: translate(-3px, -3px);
 }
+.contact-btn:hover span { color: var(--navy); }
 
 /* ===== タイプ一覧 ===== */
 .types-section {
     padding: var(--space-xl) 32px;
     background: linear-gradient(180deg, var(--cream) 0%, var(--cream-deep) 100%);
+    position: relative;
+    overflow: hidden;
 }
-.types-section .section-header { margin-bottom: 56px; }
+.types-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(78, 212, 164, 0.06) 1.5px, transparent 2px);
+    background-size: 26px 26px;
+    pointer-events: none;
+}
+.types-section .section-header {
+    margin-bottom: 56px;
+    position: relative;
+    z-index: 1;
+}
 .types-grid {
     max-width: var(--max-w);
     margin: 0 auto;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 28px;
+    position: relative;
+    z-index: 1;
 }
 .type-card {
     background: var(--paper);
-    padding: 48px 36px;
+    padding: 40px 32px;
+    border: 2.5px solid var(--navy);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--line-soft);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 6px 6px 0 var(--navy);
     text-align: left;
-    transition: all var(--dur-base) var(--ease-out);
+    transition: transform var(--dur-base) var(--ease-bounce),
+                box-shadow var(--dur-base);
 }
+.type-card:nth-child(1) { background: #FFF6FA; }
+.type-card:nth-child(2) { background: #F2FBFF; transform: rotate(1deg); }
+.type-card:nth-child(3) { background: #FFFCEB; transform: rotate(-1deg); }
 .type-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--enji-mist);
+    transform: translate(-4px, -4px) rotate(0) !important;
+    box-shadow: 11px 11px 0 var(--pop-pink);
 }
 .type-emoji {
     display: inline-block;
-    font-size: 2rem;
-    padding: 14px 18px;
-    background: var(--enji-wash);
+    font-size: 2.4rem;
+    padding: 16px 20px;
+    background: var(--pop-yellow);
+    border: 2.5px solid var(--navy);
     border-radius: var(--radius-md);
+    box-shadow: 3px 3px 0 var(--navy);
     margin-bottom: 24px;
     line-height: 1;
-    transition: transform var(--dur-base) var(--ease-out);
+    transition: transform 0.7s var(--ease-bounce),
+                background var(--dur-base);
 }
-.type-card:hover .type-emoji { transform: rotate(-6deg) scale(1.05); }
+.type-card:nth-child(2) .type-emoji { background: var(--pop-mint); }
+.type-card:nth-child(3) .type-emoji { background: var(--pop-blue); }
+.type-card:hover .type-emoji {
+    transform: rotate(360deg);
+    background: var(--pop-pink);
+}
 .type-title {
-    font-size: 1.1rem;
+    font-family: "Kiwi Maru", "Zen Maru Gothic", sans-serif;
+    font-size: 1.35rem;
+    font-weight: 400;
     color: var(--ink);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    line-height: 1.55;
 }
 .type-desc {
-    font-size: 0.88rem;
+    font-size: 1rem;
     color: var(--ink-2);
-    line-height: 1.85;
+    line-height: 1.95;
+    font-weight: 500;
 }
 
 /* ===== レスポンシブ ===== */
@@ -158,10 +215,23 @@
 
     .contact-grid {
         grid-template-columns: 1fr;
-        gap: 48px;
+        gap: 40px;
     }
     .contact-lead { max-width: none; }
-    .contact-card { padding: 48px 32px; }
+    .contact-card {
+        padding: 48px 28px;
+        box-shadow: 6px 6px 0 var(--pop-pink);
+    }
+    .contact-card::after { font-size: 9rem; bottom: -30px; }
 
     .types-grid { grid-template-columns: 1fr; }
+    .type-card {
+        transform: none !important;
+        padding: 32px 24px;
+    }
+    .type-emoji { font-size: 2.1rem; padding: 14px 18px; }
+    .type-card:hover {
+        transform: translate(-3px, -3px) !important;
+        box-shadow: 8px 8px 0 var(--pop-pink);
+    }
 }
