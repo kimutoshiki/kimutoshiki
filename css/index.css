@@ -38,6 +38,8 @@
     justify-content: center;
     margin-top: 48px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
 }
 
 .sp-hide { display: inline; }
