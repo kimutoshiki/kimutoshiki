@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Kiwi+Maru:wght@400;500&family=Zen+Maru+Gothic:wght@500;700;900&family=Fredoka:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&display=swap');
 
 /* =========================================================
    デザインシステム — "Enji Pop — UD Friendly & Bold"
@@ -75,6 +75,7 @@
     --dur-fast: 0.2s;
     --dur-base: 0.4s;
     --dur-slow: 0.8s;
+    --scroll-progress: 0;
 }
 
 /* =========================================================
@@ -98,6 +99,12 @@ body {
     font-weight: 400;
     overflow-x: hidden;
     position: relative;
+}
+
+/* 指定フォントを全ページ・全要素に統一 */
+body,
+body * {
+    font-family: "Mochiy Pop P One", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif !important;
 }
 
 /* ドット背景 (やわらかい臙脂) */
@@ -237,6 +244,24 @@ h1, h2, h3, h4 {
     z-index: 1000;
     border-bottom: 4px solid var(--pop-yellow);
     transition: background var(--dur-base) var(--ease-out), border-bottom-color var(--dur-base);
+}
+/* 現在位置が一目で分かる軽量スクロール・プログレス */
+.site-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    height: 4px;
+    z-index: 2;
+    background: linear-gradient(90deg,
+        var(--pop-pink), var(--pop-orange), var(--pop-yellow),
+        var(--pop-mint), var(--pop-blue), var(--pop-lav));
+    box-shadow: 0 0 12px rgba(255, 205, 31, 0.62);
+    transform: scaleX(var(--scroll-progress));
+    transform-origin: left center;
+    transition: transform 80ms linear;
+    pointer-events: none;
 }
 .site-header.scrolled {
     background: rgba(91, 15, 36, 0.97);
@@ -404,6 +429,22 @@ nav a.current {
         radial-gradient(circle at 80% 70%, rgba(255, 205, 31, 0.14), transparent 55%);
     z-index: 1;
     pointer-events: none;
+}
+
+/* DOMを増やさず、ポインターに反応する柔らかな色光を重ねる */
+.hero-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        circle 190px at var(--pointer-x, 50%) var(--pointer-y, 50%),
+        rgba(255, 205, 31, 0.28),
+        rgba(78, 212, 164, 0.14) 36%,
+        transparent 72%
+    );
+    opacity: var(--pointer-active, 0);
+    transition: opacity var(--dur-base) var(--ease-out);
+    mix-blend-mode: screen;
 }
 
 /* ドット装飾レイヤー */
@@ -600,6 +641,13 @@ nav a.current {
     letter-spacing: 0.05em;
     line-height: 1.5;
     margin-bottom: 12px;
+    background-image: linear-gradient(90deg,
+        var(--pop-pink), var(--pop-orange), var(--pop-yellow),
+        var(--pop-mint), var(--pop-blue));
+    background-repeat: no-repeat;
+    background-size: 100% 0.16em;
+    background-position: 0 96%;
+    padding-bottom: 0.08em;
 }
 
 /* ボタン (ステッカー風 ぽってり) */
@@ -674,6 +722,27 @@ nav a.current {
     box-shadow: 11px 11px 0 var(--navy);
 }
 
+/* カードをステッカーのように見せる短いホバー反応 */
+:is(.highlight-card, .theme-card, .activity-card, .type-card, .future-card,
+    .contact-card, .license-item, .blog-item, .about-item) {
+    outline: 3px solid transparent;
+    outline-offset: 4px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    :is(.highlight-card, .theme-card, .activity-card, .type-card, .future-card,
+        .contact-card, .license-item, .blog-item, .about-item):hover {
+        outline-color: rgba(255, 205, 31, 0.72);
+        animation: popJiggle 0.5s var(--ease-bounce) both;
+    }
+}
+
+:is(a, button, input, textarea, select, [role="button"]):focus-visible {
+    outline: 4px solid var(--pop-yellow);
+    outline-offset: 4px;
+    border-radius: 8px;
+}
+
 /* =========================================================
    アニメーション
    ========================================================= */
@@ -715,6 +784,11 @@ nav a.current {
     60%  { color: var(--pop-mint); }
     80%  { color: var(--pop-blue); }
     100% { color: var(--pop-lav); }
+}
+@keyframes popJiggle {
+    0%, 100% { rotate: 0deg; }
+    35% { rotate: -1.2deg; }
+    70% { rotate: 0.8deg; }
 }
 
 .reveal {
@@ -898,6 +972,42 @@ nav a.current {
 /* =========================================================
    レスポンシブ
    ========================================================= */
+@media (max-width: 1040px) {
+    .header-inner { padding: 0 18px; }
+    .logo { font-size: 1.08rem; }
+    .menu-toggle { display: block; }
+    nav {
+        position: fixed;
+        top: var(--header-h);
+        left: 0;
+        width: 100%;
+        background: var(--navy);
+        padding: 32px 24px 48px;
+        border-bottom: 4px solid var(--pop-yellow);
+        transform: translateY(-110%);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
+    }
+    nav.active {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    nav ul {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+    nav a {
+        display: block;
+        padding: 16px 20px;
+        font-size: 1.05rem;
+        text-align: center;
+        border-radius: var(--radius-md);
+    }
+}
+
 @media (max-width: 860px) {
     :root {
         --space-lg: 3rem;
@@ -960,10 +1070,27 @@ nav a.current {
     .btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--navy); }
 }
 
+@media (max-width: 520px) {
+    .hero-base { min-height: 72svh; }
+    .hero-title {
+        font-size: clamp(1.9rem, 9.5vw, 2.8rem);
+        letter-spacing: 0.025em;
+    }
+    .hero-title .split-chars { padding-inline: 0.22em; }
+    .float-deco:nth-of-type(n + 4),
+    .deco-puzzle:nth-of-type(n + 5) { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal,
+    .animate-up {
+        opacity: 1 !important;
+        transform: none !important;
+    }
     *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
+        animation: none !important;
         transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
     }
 }
