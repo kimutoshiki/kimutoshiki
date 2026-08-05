@@ -15,6 +15,7 @@
 
     ready(() => {
         initHeader();
+        initScrollProgress();
         initMenu();
         initReveal();
         initSplitChars();
@@ -22,6 +23,7 @@
         initBlogFilter();
         initSparkles();
         initFloatTilt();
+        initPointerGlow();
         initHomeNews();
     });
 
@@ -34,6 +36,23 @@
         on(window, 'scroll', update, { passive: true });
     }
 
+    /* -------- ページ上端のスクロール・プログレス -------- */
+    function initScrollProgress() {
+        let frame = 0;
+        const update = () => {
+            frame = 0;
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+            document.documentElement.style.setProperty('--scroll-progress', progress.toFixed(4));
+        };
+        const schedule = () => {
+            if (!frame) frame = requestAnimationFrame(update);
+        };
+        update();
+        on(window, 'scroll', schedule, { passive: true });
+        on(window, 'resize', schedule, { passive: true });
+    }
+
     /* -------- ハンバーガーメニュー -------- */
     function initMenu() {
         const toggle = $('#menuToggle');
@@ -44,6 +63,7 @@
             toggle.classList.remove('active');
             nav.classList.remove('active');
             toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'メニューを開く');
             document.body.style.overflow = '';
         };
 
@@ -52,11 +72,12 @@
             toggle.classList.toggle('active', active);
             nav.classList.toggle('active', active);
             toggle.setAttribute('aria-expanded', String(active));
+            toggle.setAttribute('aria-label', active ? 'メニューを閉じる' : 'メニューを開く');
             document.body.style.overflow = active ? 'hidden' : '';
         });
 
         $$('a', nav).forEach(a => on(a, 'click', close));
-        on(window, 'resize', () => { if (window.innerWidth > 860) close(); });
+        on(window, 'resize', () => { if (window.innerWidth > 1040) close(); });
         on(document, 'keydown', (e) => { if (e.key === 'Escape') close(); });
     }
 
@@ -83,11 +104,13 @@
         $$('.split-chars').forEach(el => {
             if (el.dataset.split) return;
             const text = el.textContent;
+            el.setAttribute('aria-label', text);
             el.textContent = '';
             [...text].forEach((ch, i) => {
                 const span = document.createElement('span');
                 span.className = 'char';
                 span.style.setProperty('--i', i);
+                span.setAttribute('aria-hidden', 'true');
                 span.textContent = ch === ' ' ? '\u00A0' : ch;
                 el.appendChild(span);
             });
@@ -97,12 +120,34 @@
 
     /* -------- ブログアコーディオン -------- */
     function initBlogAccordion() {
-        $$('.blog-header').forEach(hdr => {
-            on(hdr, 'click', () => {
+        $$('.blog-header').forEach((hdr, index) => {
+            const content = hdr.nextElementSibling;
+            const headerId = `blog-header-${index + 1}`;
+            const contentId = `blog-content-${index + 1}`;
+            hdr.id = headerId;
+            hdr.setAttribute('role', 'button');
+            hdr.setAttribute('tabindex', '0');
+            hdr.setAttribute('aria-expanded', 'false');
+            if (content) {
+                content.id = contentId;
+                content.setAttribute('role', 'region');
+                content.setAttribute('aria-labelledby', headerId);
+                hdr.setAttribute('aria-controls', contentId);
+            }
+
+            const toggle = () => {
                 const content = hdr.nextElementSibling;
                 const isActive = hdr.classList.toggle('active');
+                hdr.setAttribute('aria-expanded', String(isActive));
                 if (content) {
                     content.classList.toggle('active', isActive);
+                }
+            };
+            on(hdr, 'click', toggle);
+            on(hdr, 'keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggle();
                 }
             });
         });
@@ -115,9 +160,12 @@
         if (!btns.length || !items.length) return;
 
         btns.forEach(btn => {
+            btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
             on(btn, 'click', () => {
                 btns.forEach(b => b.classList.remove('active'));
+                btns.forEach(b => b.setAttribute('aria-pressed', 'false'));
                 btn.classList.add('active');
+                btn.setAttribute('aria-pressed', 'true');
                 const filter = btn.dataset.filter;
                 items.forEach(item => {
                     const show = filter === 'all' || item.dataset.category === filter;
@@ -142,12 +190,16 @@
             // どこをクリックしてもスパークル発火 (フォーム入力欄のみ除外)
             if (e.target.closest('input, textarea, select')) return;
 
+            if (!e.clientX && !e.clientY) return;
+
             const x = e.clientX;
             const y = e.clientY;
             const count = 6;
+            const fragment = document.createDocumentFragment();
             for (let i = 0; i < count; i++) {
                 const s = document.createElement('span');
                 s.className = 'sparkle-burst';
+                s.setAttribute('aria-hidden', 'true');
                 s.textContent = symbols[Math.floor(Math.random() * symbols.length)];
                 s.style.left = x + 'px';
                 s.style.top = y + 'px';
@@ -157,9 +209,10 @@
                 s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
                 s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
                 s.style.setProperty('--rot', (Math.random() * 360 - 180) + 'deg');
-                document.body.appendChild(s);
+                fragment.appendChild(s);
                 setTimeout(() => s.remove(), 800);
             }
+            document.body.appendChild(fragment);
         });
 
         // スタイル注入
@@ -191,17 +244,40 @@
         if (isCoarse || reducedMotion) return;
         const targets = $$('.highlight-card, .theme-card, .activity-card, .type-card, .future-card, .contact-card, .license-item');
         targets.forEach(el => {
+            let frame = 0;
+            let lastEvent;
             on(el, 'mousemove', (e) => {
-                const r = el.getBoundingClientRect();
-                const x = (e.clientX - r.left) / r.width - 0.5;
-                const y = (e.clientY - r.top)  / r.height - 0.5;
-                el.style.setProperty('--tilt-x', (y * -4) + 'deg');
-                el.style.setProperty('--tilt-y', (x *  4) + 'deg');
+                lastEvent = e;
+                if (frame) return;
+                frame = requestAnimationFrame(() => {
+                    frame = 0;
+                    const r = el.getBoundingClientRect();
+                    const x = (lastEvent.clientX - r.left) / r.width - 0.5;
+                    const y = (lastEvent.clientY - r.top)  / r.height - 0.5;
+                    el.style.setProperty('--tilt-x', (y * -4) + 'deg');
+                    el.style.setProperty('--tilt-y', (x *  4) + 'deg');
+                });
             });
             on(el, 'mouseleave', () => {
+                if (frame) cancelAnimationFrame(frame);
+                frame = 0;
                 el.style.setProperty('--tilt-x', '0deg');
                 el.style.setProperty('--tilt-y', '0deg');
             });
+        });
+    }
+
+    /* -------- ヒーローの軽量ポインターグロー -------- */
+    function initPointerGlow() {
+        if (isCoarse || reducedMotion) return;
+        $$('.hero-base').forEach(hero => {
+            on(hero, 'pointermove', (e) => {
+                const r = hero.getBoundingClientRect();
+                hero.style.setProperty('--pointer-x', `${e.clientX - r.left}px`);
+                hero.style.setProperty('--pointer-y', `${e.clientY - r.top}px`);
+                hero.style.setProperty('--pointer-active', '1');
+            }, { passive: true });
+            on(hero, 'pointerleave', () => hero.style.setProperty('--pointer-active', '0'));
         });
     }
 
@@ -219,7 +295,7 @@
         };
 
         try {
-            const res = await fetch('blog.html', { cache: 'no-store' });
+            const res = await fetch('blog.html');
             if (!res.ok) throw new Error('blog.html fetch failed');
             const html = await res.text();
 
