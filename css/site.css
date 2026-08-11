@@ -80,6 +80,7 @@ nav a,
 :where(h1, h2, h3, h4, p, li, a, button, label) {
     line-break: strict;
     word-break: normal;
+    word-break: auto-phrase;
     overflow-wrap: break-word;
 }
 
@@ -1338,47 +1339,6 @@ img.decor-art {
         color var(--motion-fast) var(--ease-fluid);
 }
 
-/* Distinct crops let one original illustration support several card meanings. */
-.activity-visual,
-.type-visual {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    margin-bottom: 24px;
-    overflow: hidden;
-    background:
-        radial-gradient(circle at 20% 20%, rgba(255, 205, 31, 0.18), transparent 34%),
-        #fffaf0;
-    border: 2px solid var(--enji);
-    border-radius: 17px;
-    box-shadow: 3px 4px 0 rgba(140, 30, 60, 0.88), 0 12px 28px rgba(91, 15, 36, 0.09);
-}
-
-.activity-visual img,
-.type-visual img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: drop-shadow(0 9px 12px rgba(91, 15, 36, 0.13));
-    transform: scale(1.08);
-    transition: transform 520ms var(--ease-fluid);
-}
-
-.activity-visual--1 img { object-position: 20% 56%; }
-.activity-visual--2 img { object-position: 78% 22%; transform: scale(1.14); }
-.activity-visual--3 img { object-position: 70% 82%; transform: scale(1.12); }
-
-.type-visual--1 img { object-position: 12% 52%; transform: scale(1.16); }
-.type-visual--2 img { object-position: 50% 56%; transform: scale(1.1); }
-.type-visual--3 img { object-position: 88% 20%; transform: scale(1.18); }
-
-@media (hover: hover) and (pointer: fine) {
-    .activity-card:hover .activity-visual img,
-    .type-card:hover .type-visual img {
-        transform: scale(1.2);
-    }
-}
-
 .about-lead,
 .vision-text,
 .research-lead .lead-body,
@@ -1884,11 +1844,6 @@ img.decor-art {
         gap: 34px;
     }
 
-    .activity-visual,
-    .type-visual {
-        aspect-ratio: 16 / 8.5;
-    }
-
     .filter-container {
         width: 100%;
         justify-content: stretch;
@@ -2155,8 +2110,6 @@ img.decor-art {
     .portfolio-control,
     .portfolio-dot::before,
     img.decor-art,
-    .activity-visual img,
-    .type-visual img,
     .btn,
     .filter-btn,
     .blog-content,
@@ -2179,9 +2132,7 @@ img.decor-art {
     }
 
     .hero-base::before,
-    .hero-slides,
-    .activity-visual img,
-    .type-visual img {
+    .hero-slides {
         transform: none !important;
     }
 
