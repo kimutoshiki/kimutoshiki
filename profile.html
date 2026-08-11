@@ -13,25 +13,26 @@
     <meta property="og:url" content="https://kimutoshiki.com/profile.html">
     <meta property="og:image" content="https://kimutoshiki.com/images/uesugi1944.jpg">
 
-    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
     <a href="#main" class="skip-link">メインコンテンツへ</a>
 
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="logo">木村紀喜のホームページ</a>
-            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く" aria-expanded="false">
+            <a href="index.html" class="logo">木村紀喜</a>
+            <button class="menu-toggle" id="menuToggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="navigation">
                 <span class="menu-icon"></span>
             </button>
             <nav id="navigation" aria-label="メインナビゲーション">
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
-                    <li><a href="profile.html" class="current">プロフィール</a></li>
+                    <li><a href="profile.html" class="current" aria-current="page">プロフィール</a></li>
                     <li><a href="research.html">研究・活動</a></li>
                     <li><a href="blog.html">ブログ</a></li>
                     <li><a href="contact.html">お問い合わせ</a></li>
@@ -45,33 +46,12 @@
         <section class="hero-base profile-hero">
             <div class="hero-overlay"></div>
             <div class="hero-grid"></div>
-            <span class="float-deco delay-1" aria-hidden="true" style="top:18%;left:8%;font-size:2.4rem;color:var(--pop-yellow);text-shadow:0 4px 18px rgba(0,0,0,0.4);">★</span>
-            <span class="float-deco delay-2" aria-hidden="true" style="top:26%;right:9%;font-size:1.7rem;color:var(--pop-mint);text-shadow:0 4px 18px rgba(0,0,0,0.4);">●</span>
-            <span class="float-deco delay-3" aria-hidden="true" style="bottom:24%;left:11%;font-size:1.9rem;color:var(--pop-pink);text-shadow:0 4px 18px rgba(0,0,0,0.4);">✦</span>
-            <span class="deco-puzzle puzzle-yellow delay-2" aria-hidden="true" style="bottom:18%;right:10%;"></span>
             <div class="hero-content">
                 <span class="hero-kicker animate-up delay-1">Profile</span>
-                <h1 class="hero-title animate-up delay-2"><span class="split-chars">学び続ける</span><br class="sp-only"><span class="split-chars">教育者として</span></h1>
-                <p class="hero-subtitle animate-up delay-3">A lifelong learner, a future teacher.</p>
+                <h1 class="hero-title animate-up delay-2"><span class="split-chars">プロフィール</span></h1>
+                <p class="hero-subtitle animate-up delay-3">経歴・学び・取得資格について</p>
             </div>
-            <div class="hero-scroll-hint">SCROLL</div>
         </section>
-
-        <!-- ====== MARQUEE ====== -->
-        <div class="marquee" aria-hidden="true">
-            <div class="marquee-track">
-                <span class="marquee-item">PROFILE</span>
-                <span class="marquee-item">FROM KARATSU</span>
-                <span class="marquee-item">WASEDA EDU</span>
-                <span class="marquee-item">CLASSROOM TO POLICY</span>
-                <span class="marquee-item">TEACHING &amp; LEARNING</span>
-                <span class="marquee-item">PROFILE</span>
-                <span class="marquee-item">FROM KARATSU</span>
-                <span class="marquee-item">WASEDA EDU</span>
-                <span class="marquee-item">CLASSROOM TO POLICY</span>
-                <span class="marquee-item">TEACHING &amp; LEARNING</span>
-            </div>
-        </div>
 
         <!-- ====== ABOUT ====== -->
         <section class="about-section">
@@ -108,8 +88,8 @@
 
         <!-- ====== TIMELINE ====== -->
         <section class="timeline-section">
-            <span class="deco-puzzle puzzle-pink delay-1" aria-hidden="true" style="top:60px;left:6%;"></span>
-            <span class="deco-puzzle puzzle-mint delay-3" aria-hidden="true" style="bottom:80px;right:7%;"></span>
+            <span class="deco-puzzle puzzle-pink delay-1 deco-section-top-left" aria-hidden="true"></span>
+            <span class="deco-puzzle puzzle-mint delay-3 deco-section-bottom-right" aria-hidden="true"></span>
             <div class="section-header reveal">
                 <span class="section-eyebrow">Timeline</span>
                 <h2 class="section-title">学びの道のり</h2>
@@ -217,10 +197,10 @@
         <div class="footer-inner">
             <div class="footer-brand">
                 <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
-                <p>早稲田大学教職大学院にて、ICT・AIを活用した小学校社会科教育を研究しています。</p>
+                <p>小学校教育、授業づくり、教育研究の内容と活動記録を掲載しています。</p>
             </div>
             <div class="footer-col">
-                <h4>Site Map</h4>
+                <h2>ページ</h2>
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
@@ -230,15 +210,15 @@
                 </ul>
             </div>
             <div class="footer-col">
-                <h4>Connect</h4>
+                <h2>連絡先</h2>
                 <ul>
                     <li><a href="mailto:kimu.toshiki@gmail.com">Email</a></li>
-                    <li><a href="contact.html">お問い合わせフォーム</a></li>
+                    <li><a href="contact.html">お問い合わせページ</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+            <p>© 2025–2026 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
             <p>当サイトは個人が運営しており、所属機関の公式見解ではありません。</p>
         </div>
     </footer>

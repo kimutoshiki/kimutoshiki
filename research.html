@@ -13,26 +13,27 @@
     <meta property="og:url" content="https://kimutoshiki.com/research.html">
     <meta property="og:image" content="https://kimutoshiki.com/images/karatsucastle.jpg">
 
-    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/research.css">
+    <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
     <a href="#main" class="skip-link">メインコンテンツへ</a>
 
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="logo">木村紀喜のホームページ</a>
-            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く" aria-expanded="false">
+            <a href="index.html" class="logo">木村紀喜</a>
+            <button class="menu-toggle" id="menuToggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="navigation">
                 <span class="menu-icon"></span>
             </button>
             <nav id="navigation" aria-label="メインナビゲーション">
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
-                    <li><a href="research.html" class="current">研究・活動</a></li>
+                    <li><a href="research.html" class="current" aria-current="page">研究・活動</a></li>
                     <li><a href="blog.html">ブログ</a></li>
                     <li><a href="contact.html">お問い合わせ</a></li>
                 </ul>
@@ -45,33 +46,12 @@
         <section class="hero-base research-hero">
             <div class="hero-overlay"></div>
             <div class="hero-grid"></div>
-            <span class="float-deco delay-1" aria-hidden="true" style="top:20%;left:7%;font-size:2.4rem;color:var(--pop-yellow);text-shadow:0 4px 18px rgba(0,0,0,0.4);">★</span>
-            <span class="float-deco delay-3" aria-hidden="true" style="top:30%;right:8%;font-size:1.8rem;color:var(--pop-mint);text-shadow:0 4px 18px rgba(0,0,0,0.4);">▲</span>
-            <span class="float-deco delay-2" aria-hidden="true" style="bottom:22%;left:14%;font-size:1.6rem;color:var(--pop-pink);text-shadow:0 4px 18px rgba(0,0,0,0.4);">●</span>
-            <span class="deco-puzzle puzzle-blue delay-2" aria-hidden="true" style="bottom:20%;right:10%;"></span>
             <div class="hero-content">
                 <span class="hero-kicker animate-up delay-1">Research &amp; Activities</span>
-                <h1 class="hero-title animate-up delay-2"><span class="split-chars">理論の実践と探究</span></h1>
-                <p class="hero-subtitle animate-up delay-3">Bridging theory and practice.</p>
+                <h1 class="hero-title animate-up delay-2"><span class="split-chars">研究・活動</span></h1>
+                <p class="hero-subtitle animate-up delay-3">研究テーマと教育実践の記録</p>
             </div>
-            <div class="hero-scroll-hint">SCROLL</div>
         </section>
-
-        <!-- ====== MARQUEE ====== -->
-        <div class="marquee" aria-hidden="true">
-            <div class="marquee-track">
-                <span class="marquee-item">RESEARCH</span>
-                <span class="marquee-item">SOCIAL STUDIES × DISCUSSION</span>
-                <span class="marquee-item">AI × EDUCATION</span>
-                <span class="marquee-item">CRITICAL ICT</span>
-                <span class="marquee-item">DESIGN FOR ACCESSIBILITY</span>
-                <span class="marquee-item">RESEARCH</span>
-                <span class="marquee-item">SOCIAL STUDIES × DISCUSSION</span>
-                <span class="marquee-item">AI × EDUCATION</span>
-                <span class="marquee-item">CRITICAL ICT</span>
-                <span class="marquee-item">DESIGN FOR ACCESSIBILITY</span>
-            </div>
-        </div>
 
         <!-- ====== LEAD ====== -->
         <section class="research-lead">
@@ -90,8 +70,8 @@
 
         <!-- ====== THEMES ====== -->
         <section class="themes-section">
-            <span class="deco-puzzle puzzle-pink delay-1" aria-hidden="true" style="top:60px;left:4%;"></span>
-            <span class="deco-puzzle puzzle-yellow delay-3" aria-hidden="true" style="top:90px;right:5%;"></span>
+            <span class="deco-puzzle puzzle-pink delay-1 deco-section-top-left" aria-hidden="true"></span>
+            <span class="deco-puzzle puzzle-yellow delay-3 deco-section-top-right" aria-hidden="true"></span>
             <div class="section-header reveal">
                 <span class="section-eyebrow">Themes</span>
                 <h2 class="section-title">研究テーマ</h2>
@@ -191,7 +171,7 @@
             </div>
             <div class="activities-grid">
                 <article class="activity-card reveal">
-                    <div class="activity-emoji">📚</div>
+                    <div class="activity-emoji" aria-hidden="true">📚</div>
                     <h3 class="activity-title">教育実践</h3>
                     <ul>
                         <li>教育ボランティア（唐津市立小学校）</li>
@@ -202,7 +182,7 @@
                 </article>
 
                 <article class="activity-card reveal delay-1">
-                    <div class="activity-emoji">✏️</div>
+                    <div class="activity-emoji" aria-hidden="true">✏️</div>
                     <h3 class="activity-title">学習支援</h3>
                     <ul>
                         <li>放課後等学習支援員（唐津市立中学校）</li>
@@ -212,7 +192,7 @@
                 </article>
 
                 <article class="activity-card reveal delay-2">
-                    <div class="activity-emoji">🎤</div>
+                    <div class="activity-emoji" aria-hidden="true">🎤</div>
                     <h3 class="activity-title">研究発表・参加</h3>
                     <ul>
                         <li>教育関連ワークショップへの参加</li>
@@ -250,10 +230,10 @@
         <div class="footer-inner">
             <div class="footer-brand">
                 <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
-                <p>早稲田大学教職大学院にて、ICT・AIを活用した小学校社会科教育を研究しています。</p>
+                <p>小学校教育、授業づくり、教育研究の内容と活動記録を掲載しています。</p>
             </div>
             <div class="footer-col">
-                <h4>Site Map</h4>
+                <h2>ページ</h2>
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
@@ -263,15 +243,15 @@
                 </ul>
             </div>
             <div class="footer-col">
-                <h4>Connect</h4>
+                <h2>連絡先</h2>
                 <ul>
                     <li><a href="mailto:kimu.toshiki@gmail.com">Email</a></li>
-                    <li><a href="contact.html">お問い合わせフォーム</a></li>
+                    <li><a href="contact.html">お問い合わせページ</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+            <p>© 2025–2026 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
             <p>当サイトは個人が運営しており、所属機関の公式見解ではありません。</p>
         </div>
     </footer>

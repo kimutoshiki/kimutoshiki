@@ -4,24 +4,26 @@
 (() => {
     'use strict';
 
+    document.documentElement.classList.add('js');
+
     const on = (el, ev, fn, opts) => el && el.addEventListener(ev, fn, opts);
     const $  = (sel, ctx = document) => ctx.querySelector(sel);
     const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
     const ready = (fn) => document.readyState !== 'loading'
         ? fn()
         : document.addEventListener('DOMContentLoaded', fn);
-    const isCoarse = window.matchMedia('(hover: none), (pointer: coarse)').matches;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     ready(() => {
         initHeader();
+        initScrollProgress();
         initMenu();
         initReveal();
         initSplitChars();
+        initHeroSlideshow();
         initBlogAccordion();
         initBlogFilter();
         initSparkles();
-        initFloatTilt();
         initHomeNews();
     });
 
@@ -34,17 +36,41 @@
         on(window, 'scroll', update, { passive: true });
     }
 
+    /* -------- ページ上部の進行表示 -------- */
+    function initScrollProgress() {
+        let frame = 0;
+        const update = () => {
+            frame = 0;
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+            document.documentElement.style.setProperty('--scroll-progress', progress.toFixed(4));
+        };
+        const schedule = () => {
+            if (!frame) frame = requestAnimationFrame(update);
+        };
+        update();
+        on(window, 'scroll', schedule, { passive: true });
+        on(window, 'resize', schedule, { passive: true });
+    }
+
     /* -------- ハンバーガーメニュー -------- */
     function initMenu() {
         const toggle = $('#menuToggle');
         const nav = $('#navigation');
         if (!toggle || !nav) return;
 
-        const close = () => {
+        const isMobile = () => window.innerWidth <= 1040;
+        const syncInert = () => {
+            nav.toggleAttribute('inert', isMobile() && !nav.classList.contains('active'));
+        };
+        const close = (restoreFocus = false) => {
             toggle.classList.remove('active');
             nav.classList.remove('active');
             toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'メニューを開く');
             document.body.style.overflow = '';
+            syncInert();
+            if (restoreFocus && isMobile()) toggle.focus();
         };
 
         on(toggle, 'click', () => {
@@ -52,12 +78,21 @@
             toggle.classList.toggle('active', active);
             nav.classList.toggle('active', active);
             toggle.setAttribute('aria-expanded', String(active));
+            toggle.setAttribute('aria-label', active ? 'メニューを閉じる' : 'メニューを開く');
             document.body.style.overflow = active ? 'hidden' : '';
+            syncInert();
+            if (active) $('a', nav)?.focus();
         });
 
-        $$('a', nav).forEach(a => on(a, 'click', close));
-        on(window, 'resize', () => { if (window.innerWidth > 860) close(); });
-        on(document, 'keydown', (e) => { if (e.key === 'Escape') close(); });
+        $$('a', nav).forEach(a => on(a, 'click', () => close(false)));
+        on(window, 'resize', () => {
+            if (!isMobile()) close();
+            else syncInert();
+        });
+        on(document, 'keydown', (e) => {
+            if (e.key === 'Escape' && nav.classList.contains('active')) close(true);
+        });
+        syncInert();
     }
 
     /* -------- スクロール連動表示 -------- */
@@ -83,11 +118,13 @@
         $$('.split-chars').forEach(el => {
             if (el.dataset.split) return;
             const text = el.textContent;
+            el.setAttribute('aria-label', text);
             el.textContent = '';
             [...text].forEach((ch, i) => {
                 const span = document.createElement('span');
                 span.className = 'char';
                 span.style.setProperty('--i', i);
+                span.setAttribute('aria-hidden', 'true');
                 span.textContent = ch === ' ' ? '\u00A0' : ch;
                 el.appendChild(span);
             });
@@ -95,17 +132,128 @@
         });
     }
 
+    /* -------- ホームの背景スライドショー -------- */
+    function initHeroSlideshow() {
+        const root = $('[data-hero-slideshow]');
+        if (!root) return;
+
+        const slides = $$('.hero-slide', root);
+        const dots = $$('.hero-slide-dot', root);
+        const pause = $('[data-slide-pause]', root);
+        if (slides.length < 2) return;
+
+        let current = 0;
+        let timer = 0;
+        let paused = reducedMotion;
+
+        const show = (index, userInitiated = false) => {
+            current = (index + slides.length) % slides.length;
+            slides.forEach((slide, i) => slide.classList.toggle('is-active', i === current));
+            dots.forEach((dot, i) => {
+                const active = i === current;
+                dot.classList.toggle('is-active', active);
+                dot.setAttribute('aria-pressed', String(active));
+            });
+            if (userInitiated && !paused) restart();
+        };
+
+        const stop = () => {
+            window.clearInterval(timer);
+            timer = 0;
+        };
+        const start = () => {
+            if (paused || document.hidden || timer) return;
+            timer = window.setInterval(() => show(current + 1), 6500);
+        };
+        const restart = () => {
+            stop();
+            start();
+        };
+        const syncPauseButton = () => {
+            if (!pause) return;
+            pause.setAttribute('aria-label', paused ? 'スライドショーを再生' : 'スライドショーを一時停止');
+            const icon = $('span', pause);
+            if (icon) icon.textContent = paused ? '▶' : 'Ⅱ';
+        };
+
+        dots.forEach(dot => on(dot, 'click', () => show(Number(dot.dataset.slide || 0), true)));
+        on(pause, 'click', () => {
+            paused = !paused;
+            syncPauseButton();
+            if (paused) stop();
+            else start();
+        });
+        on(document, 'visibilitychange', () => {
+            if (document.hidden) stop();
+            else start();
+        });
+        const controls = $('.hero-slide-controls', root);
+        on(controls, 'mouseenter', stop);
+        on(controls, 'mouseleave', start);
+
+        show(0);
+        syncPauseButton();
+        start();
+    }
+
     /* -------- ブログアコーディオン -------- */
     function initBlogAccordion() {
-        $$('.blog-header').forEach(hdr => {
-            on(hdr, 'click', () => {
-                const content = hdr.nextElementSibling;
-                const isActive = hdr.classList.toggle('active');
-                if (content) {
-                    content.classList.toggle('active', isActive);
+        const items = $$('.blog-item');
+        if (!items.length) return;
+
+        items.forEach((item, index) => {
+            const hdr = $('.blog-header', item);
+            const content = $('.blog-content', item);
+            const inner = $('.blog-content-inner', item);
+            if (!hdr || !content) return;
+
+            const date = $('.blog-date', item)?.textContent.trim().replace(/\D/g, '') || 'entry';
+            item.id ||= `post-${date}-${index + 1}`;
+
+            const headerId = `${item.id}-header`;
+            const contentId = `${item.id}-content`;
+            hdr.id = headerId;
+            hdr.setAttribute('role', 'button');
+            hdr.setAttribute('tabindex', '0');
+            hdr.setAttribute('aria-expanded', 'false');
+            hdr.setAttribute('aria-controls', contentId);
+            content.id = contentId;
+            content.setAttribute('role', 'region');
+            content.setAttribute('aria-labelledby', headerId);
+            content.style.maxHeight = '0px';
+
+            if (inner && !inner.textContent.trim()) {
+                inner.textContent = '本文は準備中です。';
+                item.classList.add('is-pending');
+            }
+
+            const setOpen = (open) => {
+                hdr.classList.toggle('active', open);
+                hdr.setAttribute('aria-expanded', String(open));
+                content.classList.toggle('active', open);
+                content.style.maxHeight = open ? `${content.scrollHeight}px` : '0px';
+            };
+            const toggle = () => setOpen(hdr.getAttribute('aria-expanded') !== 'true');
+
+            on(hdr, 'click', toggle);
+            on(hdr, 'keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggle();
                 }
             });
+
+            if (location.hash === `#${item.id}`) {
+                setOpen(true);
+                requestAnimationFrame(() => item.scrollIntoView({ block: 'start' }));
+            }
         });
+
+        on(window, 'resize', () => {
+            $$('.blog-content.active').forEach(content => {
+                content.style.maxHeight = `${content.scrollHeight}px`;
+            });
+        }, { passive: true });
     }
 
     /* -------- ブログフィルター -------- */
@@ -115,18 +263,16 @@
         if (!btns.length || !items.length) return;
 
         btns.forEach(btn => {
+            btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
             on(btn, 'click', () => {
                 btns.forEach(b => b.classList.remove('active'));
+                btns.forEach(b => b.setAttribute('aria-pressed', 'false'));
                 btn.classList.add('active');
+                btn.setAttribute('aria-pressed', 'true');
                 const filter = btn.dataset.filter;
                 items.forEach(item => {
                     const show = filter === 'all' || item.dataset.category === filter;
                     item.style.display = show ? '' : 'none';
-                    if (show) {
-                        item.style.animation = 'none';
-                        void item.offsetWidth;
-                        item.style.animation = '';
-                    }
                 });
             });
         });
@@ -135,12 +281,12 @@
     /* -------- クリック時のスパークルエフェクト -------- */
     function initSparkles() {
         if (reducedMotion) return;
-        const colors = ['#FF5C8A', '#FFD83D', '#4ED4A4', '#5DA8FF', '#B488FF'];
+        const colors = ['var(--pop-pink)', 'var(--pop-yellow)', 'var(--pop-mint)', 'var(--pop-blue)', 'var(--pop-lav)'];
         const symbols = ['✦', '✧', '★', '♡', '◆'];
 
         on(document, 'click', (e) => {
             // どこをクリックしてもスパークル発火 (フォーム入力欄のみ除外)
-            if (e.target.closest('input, textarea, select')) return;
+            if (!e.detail || e.target.closest('input, textarea, select')) return;
 
             const x = e.clientX;
             const y = e.clientY;
@@ -161,48 +307,6 @@
                 setTimeout(() => s.remove(), 800);
             }
         });
-
-        // スタイル注入
-        if (!$('#sparkle-style')) {
-            const st = document.createElement('style');
-            st.id = 'sparkle-style';
-            st.textContent = `
-                .sparkle-burst {
-                    position: fixed;
-                    pointer-events: none;
-                    font-size: 18px;
-                    z-index: 9998;
-                    transform: translate(-50%, -50%);
-                    animation: sparkleFly 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                    will-change: transform, opacity;
-                }
-                @keyframes sparkleFly {
-                    0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.4) rotate(0); }
-                    50%  { opacity: 1; transform: translate(calc(-50% + var(--dx) * 0.6), calc(-50% + var(--dy) * 0.6)) scale(1.2) rotate(calc(var(--rot) * 0.5)); }
-                    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.6) rotate(var(--rot)); }
-                }
-            `;
-            document.head.appendChild(st);
-        }
-    }
-
-    /* -------- カードに微小な3Dティルト -------- */
-    function initFloatTilt() {
-        if (isCoarse || reducedMotion) return;
-        const targets = $$('.highlight-card, .theme-card, .activity-card, .type-card, .future-card, .contact-card, .license-item');
-        targets.forEach(el => {
-            on(el, 'mousemove', (e) => {
-                const r = el.getBoundingClientRect();
-                const x = (e.clientX - r.left) / r.width - 0.5;
-                const y = (e.clientY - r.top)  / r.height - 0.5;
-                el.style.setProperty('--tilt-x', (y * -4) + 'deg');
-                el.style.setProperty('--tilt-y', (x *  4) + 'deg');
-            });
-            on(el, 'mouseleave', () => {
-                el.style.setProperty('--tilt-x', '0deg');
-                el.style.setProperty('--tilt-y', '0deg');
-            });
-        });
     }
 
     /* -------- ホームのNews自動生成 (blog.htmlから抽出) -------- */
@@ -219,16 +323,18 @@
         };
 
         try {
-            const res = await fetch('blog.html', { cache: 'no-store' });
+            const res = await fetch('blog.html');
             if (!res.ok) throw new Error('blog.html fetch failed');
             const html = await res.text();
 
             const doc = new DOMParser().parseFromString(html, 'text/html');
-            const posts = $$('.blog-item', doc).map(item => {
+            const posts = $$('.blog-item', doc).map((item, index) => {
                 const cat = item.dataset.category || 'notice';
                 const date = $('.blog-date', item)?.textContent.trim() || '';
                 const title = $('.blog-title', item)?.textContent.trim() || '';
-                return { cat, date, title };
+                const dateKey = date.replace(/\D/g, '') || 'entry';
+                const id = item.id || `post-${dateKey}-${index + 1}`;
+                return { cat, date, title, id };
             }).filter(p => p.title);
 
             const sorted = posts.sort((a, b) => {
@@ -248,7 +354,7 @@
                 const cat = categoryMap[p.cat] || categoryMap.notice;
                 return `
                     <li class="news-item reveal delay-${Math.min(i + 1, 4)}">
-                        <a href="blog.html" class="news-link">
+                        <a href="blog.html#${escapeHtml(p.id)}" class="news-link">
                             <span class="news-date font-en">${escapeHtml(p.date)}</span>
                             <span class="news-cat ${cat.cls}">${cat.label}</span>
                             <span class="news-title">${escapeHtml(p.title)}</span>

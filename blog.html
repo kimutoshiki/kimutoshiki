@@ -4,60 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ブログ | 木村紀喜</title>
-    
+
     <meta name="description" content="木村紀喜のブログ。教育について感じたこと、考えたこと、日々の活動記録。">
+    <meta name="theme-color" content="#8C1E3C">
     <meta property="og:title" content="ブログ | 木村紀喜">
-    <meta property="og:description" content="教育について感じたこと、考えたことを綴ります">
-    <meta property="og:type" content="article">
-    
-    <link rel="icon" href="favicon.ico" sizes="any">
+    <meta property="og:description" content="研修会や教育実践、日々の学びに関する記録。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kimutoshiki.com/blog.html">
+    <meta property="og:image" content="https://kimutoshiki.com/images/kyukeisha.jpg">
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Outfit:wght@400;600&display=swap">
-    
+
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/blog.css">
+    <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
+    <a href="#main" class="skip-link">メインコンテンツへ</a>
+
     <header class="site-header">
         <div class="header-inner">
             <a href="index.html" class="logo">木村紀喜</a>
-            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
+            <button class="menu-toggle" id="menuToggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="navigation">
                 <span class="menu-icon"></span>
             </button>
-            <nav id="navigation">
+            <nav id="navigation" aria-label="メインナビゲーション">
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
                     <li><a href="research.html">研究・活動</a></li>
-                    <li><a href="blog.html" class="current">ブログ</a></li>
+                    <li><a href="blog.html" class="current" aria-current="page">ブログ</a></li>
                     <li><a href="contact.html">お問い合わせ</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
-    <main>
+    <main id="main">
         <section class="hero-base blog-hero">
             <div class="hero-overlay"></div>
+            <div class="hero-grid"></div>
             <div class="hero-content">
-                <div class="blog-intro">
-                    <h1 class="hero-title animate-fade-up delay-1">ブログ</h1>
-                    <p class="hero-subtitle animate-fade-up delay-2">日々の思考と実践の記録</p>
-                </div>
+                <span class="hero-kicker animate-up delay-1">Blog</span>
+                <h1 class="hero-title animate-up delay-2"><span class="split-chars">ブログ</span></h1>
+                <p class="hero-subtitle animate-up delay-3">研修・活動・日々の学びの記録</p>
             </div>
         </section>
 
         <div class="page-content">
             <div class="blog-container scroll-animate">
-                
+                <h2 class="visually-hidden">ブログ記事一覧</h2>
+
                 <div class="filter-container">
-                    <button class="filter-btn active" data-filter="all">すべて</button>
-                    <button class="filter-btn" data-filter="notice">お知らせ</button>
-                    <button class="filter-btn" data-filter="activity">活動</button>
-                    <button class="filter-btn" data-filter="thought">思考</button>
+                    <button class="filter-btn active" type="button" data-filter="all">すべて</button>
+                    <button class="filter-btn" type="button" data-filter="notice">お知らせ</button>
+                    <button class="filter-btn" type="button" data-filter="activity">活動</button>
+                    <button class="filter-btn" type="button" data-filter="thought">思考</button>
                 </div>
 
                 <div class="blog-posts">
@@ -92,7 +95,7 @@
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -461,7 +464,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -479,7 +482,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -497,7 +500,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -515,7 +518,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -533,7 +536,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -551,7 +554,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -569,7 +572,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -587,7 +590,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -605,7 +608,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -623,7 +626,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -641,7 +644,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -659,7 +662,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -677,7 +680,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -695,7 +698,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -713,7 +716,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -731,7 +734,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -749,7 +752,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -767,7 +770,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -785,7 +788,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -803,7 +806,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -821,7 +824,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -839,7 +842,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-                            
+
                             </div>
                         </div>
                     </article>
@@ -849,8 +852,33 @@ https://cocomirai.jp/post-1581/
     </main>
 
     <footer class="site-footer">
-        <p>&copy; 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
-        当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
+                <p>小学校教育、授業づくり、教育研究の内容と活動記録を掲載しています。</p>
+            </div>
+            <div class="footer-col">
+                <h2>ページ</h2>
+                <ul>
+                    <li><a href="index.html">ホーム</a></li>
+                    <li><a href="profile.html">プロフィール</a></li>
+                    <li><a href="research.html">研究・活動</a></li>
+                    <li><a href="blog.html">ブログ</a></li>
+                    <li><a href="contact.html">お問い合わせ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h2>連絡先</h2>
+                <ul>
+                    <li><a href="mailto:kimu.toshiki@gmail.com">Email</a></li>
+                    <li><a href="contact.html">お問い合わせページ</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025–2026 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+            <p>当サイトは個人が運営しており、所属機関の公式見解ではありません。</p>
+        </div>
     </footer>
 
     <script src="js/main.js" defer></script>

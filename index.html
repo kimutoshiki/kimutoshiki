@@ -3,34 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>木村紀喜 | Toshiki Kimura — 未来の教育をつくる</title>
+    <title>木村紀喜 | 小学校教育・研究・実践</title>
 
     <meta name="description" content="木村紀喜のポートフォリオサイト。早稲田大学教職大学院で学ぶ、小学校教員志望。ICT・AI活用、社会科教育、議論を育てる授業づくりを研究しています。">
     <meta name="theme-color" content="#8C1E3C">
     <meta property="og:title" content="木村紀喜 | Toshiki Kimura">
-    <meta property="og:description" content="理論と実践を往還する、これからの教育者のポートフォリオ。">
+    <meta property="og:description" content="小学校教育、授業づくり、教育研究の内容と活動記録を掲載しています。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kimutoshiki.com/">
     <meta property="og:image" content="https://kimutoshiki.com/images/wasedaookuma.jpg">
 
-    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
     <a href="#main" class="skip-link">メインコンテンツへ</a>
 
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="logo">木村紀喜のホームページ</a>
-            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く" aria-expanded="false">
+            <a href="index.html" class="logo">木村紀喜</a>
+            <button class="menu-toggle" id="menuToggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="navigation">
                 <span class="menu-icon"></span>
             </button>
             <nav id="navigation" aria-label="メインナビゲーション">
                 <ul>
-                    <li><a href="index.html" class="current">ホーム</a></li>
+                    <li><a href="index.html" class="current" aria-current="page">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
                     <li><a href="research.html">研究・活動</a></li>
                     <li><a href="blog.html">ブログ</a></li>
@@ -43,23 +44,18 @@
     <main id="main">
 
         <!-- ====== HERO ====== -->
-        <section class="hero-base hero-home">
+        <section class="hero-base hero-home" data-hero-slideshow>
+            <div class="hero-slides" aria-hidden="true">
+                <div class="hero-slide hero-slide--waseda is-active"></div>
+                <div class="hero-slide hero-slide--karatsu"></div>
+                <div class="hero-slide hero-slide--kyukeisha"></div>
+            </div>
             <div class="hero-overlay"></div>
             <div class="hero-grid"></div>
-
-            <span class="float-deco deco-star deco-1" aria-hidden="true">★</span>
-            <span class="float-deco deco-circle deco-2" aria-hidden="true">●</span>
-            <span class="float-deco deco-tri deco-3" aria-hidden="true">▲</span>
-            <span class="float-deco deco-spark deco-4" aria-hidden="true">✦</span>
-            <span class="deco-puzzle puzzle-yellow delay-2" aria-hidden="true" style="top:42%;left:5%;"></span>
-            <span class="deco-puzzle puzzle-mint delay-3" aria-hidden="true" style="bottom:18%;right:6%;"></span>
-
             <div class="hero-content">
-                <span class="hero-kicker animate-up delay-1">Toshiki Kimura — Portfolio</span>
-                <h1 class="hero-title animate-up delay-2">
-                    <span class="split-chars">未来の</span><span class="hero-accent">教育を</span><span class="split-chars">考える</span>
-                </h1>
-                <p class="hero-subtitle animate-up delay-3">Learning. Teaching. Researching.</p>
+                <span class="hero-kicker animate-up delay-1">Portfolio</span>
+                <h1 class="hero-title animate-up delay-2"><span class="split-chars">木村 紀喜</span></h1>
+                <p class="hero-subtitle animate-up delay-3">小学校教育・授業づくり・教育研究の記録</p>
 
                 <div class="hero-cta animate-up delay-3">
                     <a href="profile.html" class="btn btn-primary btn-arrow"><span>プロフィールを見る</span></a>
@@ -67,24 +63,13 @@
                 </div>
             </div>
 
-            <div class="hero-scroll-hint">SCROLL</div>
-        </section>
-
-        <!-- ====== MARQUEE ====== -->
-        <div class="marquee" aria-hidden="true">
-            <div class="marquee-track">
-                <span class="marquee-item">EDUCATION × ICT</span>
-                <span class="marquee-item">DISCUSSION × AI</span>
-                <span class="marquee-item">SOCIAL STUDIES</span>
-                <span class="marquee-item">FROM KARATSU TO WASEDA</span>
-                <span class="marquee-item">LEARNING NEVER STOPS</span>
-                <span class="marquee-item">EDUCATION × ICT</span>
-                <span class="marquee-item">DISCUSSION × AI</span>
-                <span class="marquee-item">SOCIAL STUDIES</span>
-                <span class="marquee-item">FROM KARATSU TO WASEDA</span>
-                <span class="marquee-item">LEARNING NEVER STOPS</span>
+            <div class="hero-slide-controls" role="group" aria-label="背景写真の切り替え">
+                <button class="hero-slide-dot is-active" type="button" data-slide="0" aria-label="早稲田大学の写真を表示" aria-pressed="true"></button>
+                <button class="hero-slide-dot" type="button" data-slide="1" aria-label="唐津城の写真を表示" aria-pressed="false"></button>
+                <button class="hero-slide-dot" type="button" data-slide="2" aria-label="久敬社の写真を表示" aria-pressed="false"></button>
+                <button class="hero-slide-pause" type="button" data-slide-pause aria-label="スライドショーを一時停止"><span aria-hidden="true">Ⅱ</span></button>
             </div>
-        </div>
+        </section>
 
         <!-- ====== VISION ====== -->
         <section class="vision-section">
@@ -98,23 +83,19 @@
                     </h2>
                 </div>
                 <div class="vision-col-body reveal delay-1">
-                    <p class="vision-text">
-                        子どもたちが自分のアイデンティティを見つけ、
-                        何かに誇りを持って打ち込めるよう支える存在でありたい。
-                        理論と実践を往還しながら、その一歩を重ねていきます。
-                    </p>
+                    <p class="vision-text">子どもたちが自分のよさや関心に気付き、何かに打ち込めるよう支えたいと考えています。大学院での学びと学校での実践を、このサイトに記録しています。</p>
                     <div class="vision-meta">
                         <div class="vision-meta-item">
                             <span class="meta-num font-en">2027</span>
-                            <span class="meta-label">小学校教諭として着任</span>
+                            <span class="meta-label">小学校教諭として着任予定</span>
                         </div>
                         <div class="vision-meta-item">
                             <span class="meta-num font-en">06</span>
-                            <span class="meta-label">研究テーマ</span>
+                            <span class="meta-label">掲載中の研究テーマ</span>
                         </div>
                         <div class="vision-meta-item">
-                            <span class="meta-num font-en">∞</span>
-                            <span class="meta-label">学び続ける</span>
+                            <span class="meta-num font-en">2025</span>
+                            <span class="meta-label">教職大学院へ進学</span>
                         </div>
                     </div>
                 </div>
@@ -132,8 +113,8 @@
                 <a href="profile.html" class="highlight-card reveal delay-1">
                     <span class="highlight-num font-en">01</span>
                     <div class="highlight-body">
-                        <h3 class="highlight-title">Profile</h3>
-                        <p class="highlight-ja">プロフィール</p>
+                        <h3 class="highlight-title">プロフィール</h3>
+                        <p class="highlight-ja">経歴・学び・資格</p>
                         <p class="highlight-desc">佐賀県唐津市出身。早稲田大学教職大学院で学びを深めています。</p>
                     </div>
                     <span class="highlight-arrow" aria-hidden="true">→</span>
@@ -142,8 +123,8 @@
                 <a href="research.html" class="highlight-card reveal delay-2">
                     <span class="highlight-num font-en">02</span>
                     <div class="highlight-body">
-                        <h3 class="highlight-title">Research</h3>
-                        <p class="highlight-ja">研究・活動</p>
+                        <h3 class="highlight-title">研究・活動</h3>
+                        <p class="highlight-ja">研究テーマ・実践記録</p>
                         <p class="highlight-desc">小学校社会科における議論形成や、生成AIを活用した授業デザインを研究中。</p>
                     </div>
                     <span class="highlight-arrow" aria-hidden="true">→</span>
@@ -152,8 +133,8 @@
                 <a href="blog.html" class="highlight-card reveal delay-3">
                     <span class="highlight-num font-en">03</span>
                     <div class="highlight-body">
-                        <h3 class="highlight-title">Blog</h3>
-                        <p class="highlight-ja">ブログ</p>
+                        <h3 class="highlight-title">ブログ</h3>
+                        <p class="highlight-ja">研修・活動・考えたこと</p>
                         <p class="highlight-desc">日々の学び、授業参観や実践の記録、考えたことを綴ります。</p>
                     </div>
                     <span class="highlight-arrow" aria-hidden="true">→</span>
@@ -165,13 +146,36 @@
         <section class="news-section">
             <div class="news-inner">
                 <div class="news-head reveal">
-                    <span class="section-eyebrow">News &amp; Updates</span>
+                    <span class="section-eyebrow">Updates</span>
                     <h2 class="section-title">最新のお知らせ</h2>
-                    <p class="news-lead">ブログから自動で最新エントリを表示しています。</p>
+                    <p class="news-lead">ブログの新しい記事を表示しています。</p>
                 </div>
 
                 <ul class="news-list" id="homeNewsList" data-limit="5">
-                    <li class="news-placeholder">読み込み中…</li>
+                    <li class="news-item">
+                        <a href="blog.html#post-20260615-1" class="news-link">
+                            <span class="news-date font-en">2026.06.15</span>
+                            <span class="news-cat cat-activity">活動</span>
+                            <span class="news-title">生成AIリテラシー検定（2026年1月）を受験しました。</span>
+                            <span class="news-arrow" aria-hidden="true">→</span>
+                        </a>
+                    </li>
+                    <li class="news-item">
+                        <a href="blog.html#post-20260603-2" class="news-link">
+                            <span class="news-date font-en">2026.06.03</span>
+                            <span class="news-cat cat-thought">思考</span>
+                            <span class="news-title">台風６号の休校対応について</span>
+                            <span class="news-arrow" aria-hidden="true">→</span>
+                        </a>
+                    </li>
+                    <li class="news-item">
+                        <a href="blog.html#post-20260526-3" class="news-link">
+                            <span class="news-date font-en">2026.05.26</span>
+                            <span class="news-cat cat-thought">思考</span>
+                            <span class="news-title">生成AIによって出力された情報の鵜呑みについて</span>
+                            <span class="news-arrow" aria-hidden="true">→</span>
+                        </a>
+                    </li>
                 </ul>
 
                 <div class="news-more reveal">
@@ -186,10 +190,10 @@
         <div class="footer-inner">
             <div class="footer-brand">
                 <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
-                <p>早稲田大学教職大学院にて、ICT・AIを活用した小学校社会科教育を研究しています。</p>
+                <p>小学校教育、授業づくり、教育研究の内容と活動記録を掲載しています。</p>
             </div>
             <div class="footer-col">
-                <h4>Site Map</h4>
+                <h2>ページ</h2>
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
@@ -199,15 +203,15 @@
                 </ul>
             </div>
             <div class="footer-col">
-                <h4>Connect</h4>
+                <h2>連絡先</h2>
                 <ul>
                     <li><a href="mailto:kimu.toshiki@gmail.com">Email</a></li>
-                    <li><a href="contact.html">お問い合わせフォーム</a></li>
+                    <li><a href="contact.html">お問い合わせページ</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
+            <p>© 2025–2026 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
             <p>当サイトは個人が運営しており、所属機関の公式見解ではありません。</p>
         </div>
     </footer>
