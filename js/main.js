@@ -12,11 +12,26 @@
     const ready = (fn) => document.readyState !== 'loading'
         ? fn()
         : document.addEventListener('DOMContentLoaded', fn);
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const motionSubscribers = new Set();
+    let reducedMotion = motionQuery.matches;
+
+    const notifyMotionChange = (event) => {
+        reducedMotion = event.matches;
+        motionSubscribers.forEach(fn => fn(reducedMotion));
+    };
+    if ('addEventListener' in motionQuery) {
+        motionQuery.addEventListener('change', notifyMotionChange);
+    } else {
+        motionQuery.addListener(notifyMotionChange);
+    }
+
+    // CSS側では .is-loaded が付くまで背景画像を取得しない。deferスクリプト
+    // なので、この時点でDOMは構築済みであり、先頭画像だけをすぐに許可できる。
+    $('.hero-slide')?.classList.add('is-loaded');
 
     ready(() => {
-        initHeader();
-        initScrollProgress();
+        initPageMotion();
         initMenu();
         initReveal();
         initSplitChars();
@@ -27,30 +42,97 @@
         initHomeNews();
     });
 
-    /* -------- ヘッダースクロール -------- */
-    function initHeader() {
+    /* -------- ヘッダー・進行表示・小さなパララックス -------- */
+    function initPageMotion() {
         const header = $('.site-header');
-        if (!header) return;
-        const update = () => header.classList.toggle('scrolled', window.scrollY > 24);
-        update();
-        on(window, 'scroll', update, { passive: true });
-    }
+        const hero = $('.hero-base');
+        const pageArt = $$('.page-art, [data-page-art], [data-parallax-art]');
+        if (!header && !hero && !pageArt.length) return;
 
-    /* -------- ページ上部の進行表示 -------- */
-    function initScrollProgress() {
         let frame = 0;
+        let maxScroll = 0;
+        let metricsDirty = true;
+        let wasScrolled = null;
+        const activeArt = new Set();
+
+        const clamp = (min, value, max) => Math.min(max, Math.max(min, value));
+        const refreshMetrics = () => {
+            maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+            metricsDirty = false;
+        };
+        const resetParallax = () => {
+            hero?.style.setProperty('--hero-shift', '0px');
+            pageArt.forEach(art => art.style.setProperty('--art-shift', '0px'));
+        };
         const update = () => {
             frame = 0;
-            const max = document.documentElement.scrollHeight - window.innerHeight;
-            const progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-            document.documentElement.style.setProperty('--scroll-progress', progress.toFixed(4));
+            if (metricsDirty) refreshMetrics();
+
+            const scrollY = window.scrollY;
+            const progress = maxScroll > 0 ? clamp(0, scrollY / maxScroll, 1) : 0;
+            if (header) {
+                header.style.setProperty('--scroll-progress', progress.toFixed(4));
+                const isScrolled = scrollY > 24;
+                if (isScrolled !== wasScrolled) {
+                    header.classList.toggle('scrolled', isScrolled);
+                    wasScrolled = isScrolled;
+                }
+            }
+
+            if (reducedMotion) return;
+
+            const viewportHeight = window.innerHeight;
+            if (hero) {
+                const rect = hero.getBoundingClientRect();
+                const nearViewport = rect.bottom > -viewportHeight * 0.15
+                    && rect.top < viewportHeight * 1.15;
+                if (nearViewport) {
+                    const shift = clamp(-18, -rect.top * 0.025, 18);
+                    hero.style.setProperty('--hero-shift', `${shift.toFixed(2)}px`);
+                }
+            }
+
+            activeArt.forEach(art => {
+                const rect = art.getBoundingClientRect();
+                const centerOffset = (rect.top + rect.height / 2 - viewportHeight / 2) / viewportHeight;
+                const shift = clamp(-12, centerOffset * -12, 12);
+                art.style.setProperty('--art-shift', `${shift.toFixed(2)}px`);
+            });
         };
-        const schedule = () => {
+        const schedule = (refresh = false) => {
+            if (refresh) metricsDirty = true;
             if (!frame) frame = requestAnimationFrame(update);
         };
-        update();
+
+        if ('IntersectionObserver' in window && pageArt.length) {
+            const artObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) activeArt.add(entry.target);
+                    else activeArt.delete(entry.target);
+                });
+                schedule();
+            }, { rootMargin: '25% 0px' });
+            pageArt.forEach(art => artObserver.observe(art));
+        } else {
+            pageArt.forEach(art => activeArt.add(art));
+        }
+
+        if ('ResizeObserver' in window && document.body) {
+            const sizeObserver = new ResizeObserver(() => schedule(true));
+            sizeObserver.observe(document.body);
+        }
+
+        motionSubscribers.add(isReduced => {
+            if (isReduced) resetParallax();
+            schedule(true);
+        });
+
         on(window, 'scroll', schedule, { passive: true });
-        on(window, 'resize', schedule, { passive: true });
+        on(window, 'resize', () => schedule(true), { passive: true });
+        on(window, 'load', () => schedule(true), { once: true });
+        on(window, 'pageshow', () => schedule(true));
+        if (reducedMotion) resetParallax();
+        schedule(true);
     }
 
     /* -------- ハンバーガーメニュー -------- */
@@ -59,40 +141,85 @@
         const nav = $('#navigation');
         if (!toggle || !nav) return;
 
-        const isMobile = () => window.innerWidth <= 1040;
-        const syncInert = () => {
-            nav.toggleAttribute('inert', isMobile() && !nav.classList.contains('active'));
+        const mobileQuery = window.matchMedia('(max-width: 1180px)');
+        const pageRegions = [$('main'), $('.site-footer')].filter(Boolean);
+        let previousBodyOverflow = '';
+
+        const isOpen = () => nav.classList.contains('active');
+        const setPageInert = (active) => {
+            pageRegions.forEach(region => region.toggleAttribute('inert', active));
+        };
+        const syncState = () => {
+            const mobile = mobileQuery.matches;
+            nav.toggleAttribute('inert', mobile && !isOpen());
+            if (!mobile) {
+                toggle.classList.remove('active');
+                nav.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-label', 'メニューを開く');
+                nav.removeAttribute('inert');
+                setPageInert(false);
+                document.body.style.overflow = previousBodyOverflow;
+            }
         };
         const close = (restoreFocus = false) => {
             toggle.classList.remove('active');
             nav.classList.remove('active');
             toggle.setAttribute('aria-expanded', 'false');
             toggle.setAttribute('aria-label', 'メニューを開く');
-            document.body.style.overflow = '';
-            syncInert();
-            if (restoreFocus && isMobile()) toggle.focus();
+            document.body.style.overflow = previousBodyOverflow;
+            setPageInert(false);
+            syncState();
+            if (restoreFocus && mobileQuery.matches) toggle.focus();
+        };
+        const open = () => {
+            previousBodyOverflow = document.body.style.overflow;
+            toggle.classList.add('active');
+            nav.classList.add('active');
+            toggle.setAttribute('aria-expanded', 'true');
+            toggle.setAttribute('aria-label', 'メニューを閉じる');
+            nav.removeAttribute('inert');
+            setPageInert(true);
+            document.body.style.overflow = 'hidden';
+            $('a[href]', nav)?.focus();
         };
 
         on(toggle, 'click', () => {
-            const active = !toggle.classList.contains('active');
-            toggle.classList.toggle('active', active);
-            nav.classList.toggle('active', active);
-            toggle.setAttribute('aria-expanded', String(active));
-            toggle.setAttribute('aria-label', active ? 'メニューを閉じる' : 'メニューを開く');
-            document.body.style.overflow = active ? 'hidden' : '';
-            syncInert();
-            if (active) $('a', nav)?.focus();
+            if (!mobileQuery.matches) return;
+            if (isOpen()) close(false);
+            else open();
         });
 
         $$('a', nav).forEach(a => on(a, 'click', () => close(false)));
-        on(window, 'resize', () => {
-            if (!isMobile()) close();
-            else syncInert();
-        });
         on(document, 'keydown', (e) => {
-            if (e.key === 'Escape' && nav.classList.contains('active')) close(true);
+            if (!mobileQuery.matches || !isOpen()) return;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                close(true);
+                return;
+            }
+            if (e.key !== 'Tab') return;
+
+            const focusable = [toggle, ...$$('a[href]', nav).filter(link => !link.hasAttribute('disabled'))];
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const activeIndex = focusable.indexOf(document.activeElement);
+
+            if (e.shiftKey && (document.activeElement === first || activeIndex < 0)) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && (document.activeElement === last || activeIndex < 0)) {
+                e.preventDefault();
+                first.focus();
+            }
         });
-        syncInert();
+
+        if ('addEventListener' in mobileQuery) {
+            mobileQuery.addEventListener('change', syncState);
+        } else {
+            mobileQuery.addListener(syncState);
+        }
+        syncState();
     }
 
     /* -------- スクロール連動表示 -------- */
@@ -142,57 +269,125 @@
         const pause = $('[data-slide-pause]', root);
         if (slides.length < 2) return;
 
-        let current = 0;
+        const interval = 6500;
+        const preloadLead = 2400;
+        let current = Math.max(0, slides.findIndex(slide => slide.classList.contains('is-active')));
         let timer = 0;
-        let paused = reducedMotion;
+        let preloadTimer = 0;
+        let userPaused = false;
+        let preferencePaused = reducedMotion;
+        let pointerPaused = false;
+        let focusPaused = false;
+
+        const loadSlide = (index) => {
+            const normalized = (index + slides.length) % slides.length;
+            slides[normalized]?.classList.add('is-loaded');
+        };
+        const isPermanentlyPaused = () => userPaused || preferencePaused;
+        const isTemporarilyPaused = () => pointerPaused || focusPaused || document.hidden;
+        const stop = () => {
+            window.clearTimeout(timer);
+            window.clearTimeout(preloadTimer);
+            timer = 0;
+            preloadTimer = 0;
+        };
+        const scheduleUpcomingLoad = () => {
+            const next = (current + 1) % slides.length;
+            if (slides[next].classList.contains('is-loaded')) return;
+            preloadTimer = window.setTimeout(() => {
+                preloadTimer = 0;
+                loadSlide(next);
+            }, Math.max(0, interval - preloadLead));
+        };
+        const start = () => {
+            if (isPermanentlyPaused() || isTemporarilyPaused() || timer) return;
+            scheduleUpcomingLoad();
+            timer = window.setTimeout(() => {
+                timer = 0;
+                show(current + 1);
+                start();
+            }, interval);
+        };
+        const restart = () => {
+            stop();
+            start();
+        };
 
         const show = (index, userInitiated = false) => {
             current = (index + slides.length) % slides.length;
+            loadSlide(current);
             slides.forEach((slide, i) => slide.classList.toggle('is-active', i === current));
             dots.forEach((dot, i) => {
                 const active = i === current;
                 dot.classList.toggle('is-active', active);
                 dot.setAttribute('aria-pressed', String(active));
             });
-            if (userInitiated && !paused) restart();
-        };
-
-        const stop = () => {
-            window.clearInterval(timer);
-            timer = 0;
-        };
-        const start = () => {
-            if (paused || document.hidden || timer) return;
-            timer = window.setInterval(() => show(current + 1), 6500);
-        };
-        const restart = () => {
-            stop();
-            start();
+            if (userInitiated) restart();
         };
         const syncPauseButton = () => {
             if (!pause) return;
+            const paused = isPermanentlyPaused();
             pause.setAttribute('aria-label', paused ? 'スライドショーを再生' : 'スライドショーを一時停止');
             const icon = $('span', pause);
             if (icon) icon.textContent = paused ? '▶' : 'Ⅱ';
         };
 
-        dots.forEach(dot => on(dot, 'click', () => show(Number(dot.dataset.slide || 0), true)));
+        dots.forEach(dot => {
+            const index = Number(dot.dataset.slide || 0);
+            on(dot, 'pointerenter', () => loadSlide(index), { passive: true });
+            on(dot, 'focus', () => loadSlide(index));
+            on(dot, 'click', () => show(index, true));
+        });
         on(pause, 'click', () => {
-            paused = !paused;
+            if (preferencePaused) {
+                preferencePaused = false;
+                userPaused = false;
+            } else {
+                userPaused = !userPaused;
+            }
             syncPauseButton();
-            if (paused) stop();
-            else start();
+            restart();
         });
         on(document, 'visibilitychange', () => {
             if (document.hidden) stop();
             else start();
         });
         const controls = $('.hero-slide-controls', root);
-        on(controls, 'mouseenter', stop);
-        on(controls, 'mouseleave', start);
+        on(controls, 'pointerenter', () => {
+            pointerPaused = true;
+            stop();
+        }, { passive: true });
+        on(controls, 'pointerleave', () => {
+            pointerPaused = false;
+            start();
+        }, { passive: true });
+        on(controls, 'focusin', () => {
+            focusPaused = true;
+            stop();
+        });
+        on(controls, 'focusout', () => {
+            requestAnimationFrame(() => {
+                focusPaused = Boolean(controls?.contains(document.activeElement));
+                if (!focusPaused) start();
+            });
+        });
 
-        show(0);
+        motionSubscribers.add(isReduced => {
+            preferencePaused = isReduced;
+            syncPauseButton();
+            if (isReduced) stop();
+            else start();
+        });
+
+        loadSlide(current);
+        show(current);
         syncPauseButton();
+        const loadNext = () => loadSlide(current + 1);
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(loadNext, { timeout: 1400 });
+        } else {
+            window.setTimeout(loadNext, 500);
+        }
         start();
     }
 
@@ -200,6 +395,17 @@
     function initBlogAccordion() {
         const items = $$('.blog-item');
         if (!items.length) return;
+        let resizeFrame = 0;
+
+        const refreshOpenContent = () => {
+            resizeFrame = 0;
+            $$('.blog-content.active').forEach(content => {
+                content.style.maxHeight = `${content.scrollHeight}px`;
+            });
+        };
+        const scheduleOpenContentRefresh = () => {
+            if (!resizeFrame) resizeFrame = requestAnimationFrame(refreshOpenContent);
+        };
 
         items.forEach((item, index) => {
             const hdr = $('.blog-header', item);
@@ -249,11 +455,11 @@
             }
         });
 
-        on(window, 'resize', () => {
-            $$('.blog-content.active').forEach(content => {
-                content.style.maxHeight = `${content.scrollHeight}px`;
-            });
-        }, { passive: true });
+        on(window, 'resize', scheduleOpenContentRefresh, { passive: true });
+        if (document.fonts) {
+            document.fonts.ready.then(scheduleOpenContentRefresh);
+            on(document.fonts, 'loadingdone', scheduleOpenContentRefresh);
+        }
     }
 
     /* -------- ブログフィルター -------- */
@@ -280,17 +486,40 @@
 
     /* -------- クリック時のスパークルエフェクト -------- */
     function initSparkles() {
-        if (reducedMotion) return;
         const colors = ['var(--pop-pink)', 'var(--pop-yellow)', 'var(--pop-mint)', 'var(--pop-blue)', 'var(--pop-lav)'];
         const symbols = ['✦', '✧', '★', '♡', '◆'];
+        const interactiveSelector = [
+            'a',
+            'button',
+            '[role="button"]',
+            '[data-sparkle]',
+            '.card',
+            '.highlight-card',
+            '.theme-card',
+            '.activity-card',
+            '.type-card',
+            '.future-card',
+            '.contact-card',
+            '.license-item',
+            '.blog-item',
+            '.about-item',
+            '.vision-meta-item',
+            '.roadmap-item',
+        ].join(',');
+        let lastBurst = -Infinity;
 
         on(document, 'click', (e) => {
-            // どこをクリックしてもスパークル発火 (フォーム入力欄のみ除外)
-            if (!e.detail || e.target.closest('input, textarea, select')) return;
+            if (reducedMotion || !e.detail || !(e.target instanceof Element)) return;
+            if (!e.target.closest(interactiveSelector)) return;
+
+            const now = performance.now();
+            if (now - lastBurst < 120) return;
+            lastBurst = now;
 
             const x = e.clientX;
             const y = e.clientY;
-            const count = 6;
+            const count = 4;
+            const fragment = document.createDocumentFragment();
             for (let i = 0; i < count; i++) {
                 const s = document.createElement('span');
                 s.className = 'sparkle-burst';
@@ -299,13 +528,15 @@
                 s.style.top = y + 'px';
                 s.style.color = colors[Math.floor(Math.random() * colors.length)];
                 const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-                const dist = 40 + Math.random() * 50;
+                const dist = 22 + Math.random() * 28;
                 s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
                 s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
                 s.style.setProperty('--rot', (Math.random() * 360 - 180) + 'deg');
-                document.body.appendChild(s);
-                setTimeout(() => s.remove(), 800);
+                on(s, 'animationend', () => s.remove(), { once: true });
+                window.setTimeout(() => s.remove(), 800);
+                fragment.appendChild(s);
             }
+            document.body.appendChild(fragment);
         });
     }
 

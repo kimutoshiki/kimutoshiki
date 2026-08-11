@@ -11,10 +11,14 @@
     <meta property="og:description" content="小学校教育、授業づくり、教育研究の内容と活動記録を掲載しています。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kimutoshiki.com/">
-    <meta property="og:image" content="https://kimutoshiki.com/images/wasedaookuma.jpg">
+    <meta property="og:image" content="https://kimutoshiki.com/images/og-portfolio.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="本と鉛筆を紙細工で表したポートフォリオサイトのビジュアル">
 
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="preload" href="images/hero-waseda.webp" as="image" type="image/webp">
 
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/index.css">
@@ -25,7 +29,7 @@
 
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="logo">木村紀喜</a>
+            <a href="index.html" class="logo" aria-label="ホーム：木村紀喜のポートフォリオサイト"><img class="logo-mark" src="images/brand-mark.webp" alt="" width="244" height="256" decoding="async"><span class="logo-copy">木村紀喜のポートフォリオサイト</span></a>
             <button class="menu-toggle" id="menuToggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="navigation">
                 <span class="menu-icon"></span>
             </button>
@@ -81,6 +85,11 @@
                         <em class="vision-em">前向きに生きる力</em><br>
                         を育てる
                     </h2>
+                    <figure class="page-art page-art--home" data-parallax-art aria-hidden="true">
+                        <div class="page-art-frame">
+                            <img class="page-art-image" src="images/paper-home.webp" alt="" width="900" height="585" loading="lazy" decoding="async">
+                        </div>
+                    </figure>
                 </div>
                 <div class="vision-col-body reveal delay-1">
                     <p class="vision-text">子どもたちが自分のよさや関心に気付き、何かに打ち込めるよう支えたいと考えています。大学院での学びと学校での実践を、このサイトに記録しています。</p>
@@ -189,7 +198,10 @@
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-brand">
-                <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
+                <div class="footer-brand-lockup">
+                    <img class="footer-mark" src="images/brand-mark.webp" alt="" width="244" height="256" loading="lazy" decoding="async">
+                    <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
+                </div>
                 <p>小学校教育、授業づくり、教育研究の内容と活動記録を掲載しています。</p>
             </div>
             <div class="footer-col">
