@@ -180,7 +180,10 @@
     top: 50%; left: 50%;
     background: var(--navy);
     transform: translate(-50%, -50%);
-    transition: all var(--dur-base) var(--ease-out);
+    transition: width var(--dur-base) var(--ease-out),
+                height var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-out),
+                background-color var(--dur-base) var(--ease-out);
     border-radius: 2px;
 }
 .toggle-icon::before { width: 15px; height: 2.5px; }

@@ -290,7 +290,9 @@
     font-size: 1.4rem;
     font-weight: 800;
     box-shadow: 3px 3px 0 var(--navy);
-    transition: all var(--dur-base) var(--ease-bounce);
+    transition: transform var(--dur-base) var(--ease-bounce),
+                box-shadow var(--dur-base) var(--ease-out),
+                background-color var(--dur-base) var(--ease-out);
 }
 
 /* ===== NEWS ===== */
@@ -373,7 +375,9 @@
     font-weight: 800;
     opacity: 0;
     transform: translateX(-8px);
-    transition: all var(--dur-base) var(--ease-bounce);
+    transition: opacity var(--dur-base) var(--ease-out),
+                transform var(--dur-base) var(--ease-bounce),
+                color var(--dur-base) var(--ease-out);
 }
 .news-item:hover .news-arrow {
     opacity: 1;

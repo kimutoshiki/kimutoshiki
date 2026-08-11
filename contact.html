@@ -56,8 +56,85 @@
             </div>
         </section>
 
+        <section class="portfolio-slider-section has-decor" data-portfolio-slider aria-roledescription="carousel" aria-labelledby="portfolio-guide-title">
+            <img class="decor-art decor-art--confetti" src="images/decor-confetti.webp" alt="" aria-hidden="true" width="1440" height="960" loading="lazy" decoding="async">
+            <div class="portfolio-slider-shell">
+                <div class="portfolio-slider-head">
+                    <h2 id="portfolio-guide-title">ページ案内</h2>
+                    <p>各ページの内容を選んでご覧いただけます。</p>
+                </div>
+                <div class="portfolio-viewport">
+                    <div class="portfolio-track">
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="1 / 5">
+                            <a class="portfolio-slide-link" href="index.html">
+                                <span class="portfolio-slide-number" aria-hidden="true">01</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>ホーム</h3>
+                                    <p>サイト全体の概要と最新情報を掲載しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="2 / 5">
+                            <a class="portfolio-slide-link" href="profile.html">
+                                <span class="portfolio-slide-number" aria-hidden="true">02</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>プロフィール</h3>
+                                    <p>経歴、学び、取得免許・資格を掲載しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="3 / 5">
+                            <a class="portfolio-slide-link" href="research.html">
+                                <span class="portfolio-slide-number" aria-hidden="true">03</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>研究・活動</h3>
+                                    <p>研究テーマ、研究計画、教育実践を掲載しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="4 / 5">
+                            <a class="portfolio-slide-link" href="blog.html">
+                                <span class="portfolio-slide-number" aria-hidden="true">04</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>ブログ</h3>
+                                    <p>研修、活動、日々の学びを記録しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="5 / 5">
+                            <a class="portfolio-slide-link" href="contact.html" aria-current="page">
+                                <span class="portfolio-slide-number" aria-hidden="true">05</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>お問い合わせ</h3>
+                                    <p>研究・教育に関する連絡先を掲載しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                    </div>
+                </div>
+                <div class="portfolio-controls" role="group" aria-label="ページ案内の操作">
+                    <button class="portfolio-control portfolio-control--prev" type="button" data-portfolio-prev aria-label="前のページ案内を表示"><span aria-hidden="true">←</span></button>
+                    <button class="portfolio-control portfolio-control--pause" type="button" data-portfolio-pause aria-label="自動再生を一時停止" aria-pressed="false"><span class="portfolio-pause-icon" aria-hidden="true">Ⅱ</span><span class="portfolio-pause-label">一時停止</span></button>
+                    <button class="portfolio-control portfolio-control--next" type="button" data-portfolio-next aria-label="次のページ案内を表示"><span aria-hidden="true">→</span></button>
+                    <div class="portfolio-dots" role="group" aria-label="表示するページ">
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="0" aria-label="ホームの案内を表示" aria-pressed="false"></button>
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="1" aria-label="プロフィールの案内を表示" aria-pressed="false"></button>
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="2" aria-label="研究・活動の案内を表示" aria-pressed="false"></button>
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="3" aria-label="ブログの案内を表示" aria-pressed="false"></button>
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="4" aria-label="お問い合わせの案内を表示" aria-pressed="false"></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- ====== CONTACT ====== -->
-        <section class="contact-section">
+        <section class="contact-section has-decor">
+            <img class="decor-art decor-art--paper-contact" src="images/paper-contact.webp" alt="" aria-hidden="true" width="900" height="594" loading="lazy" decoding="async">
             <div class="contact-grid">
                 <!-- 左: リード -->
                 <div class="contact-lead reveal">
@@ -67,11 +144,6 @@
                     <p class="contact-desc">
                         いただいたご連絡には、できる限り早くお返事いたします。
                     </p>
-                    <figure class="page-art page-art--contact" data-parallax-art aria-hidden="true">
-                        <div class="page-art-frame">
-                            <img class="page-art-image" src="images/paper-contact.webp" alt="" width="900" height="594" loading="lazy" decoding="async">
-                        </div>
-                    </figure>
                 </div>
 
                 <!-- 右: メインのメールカード -->
@@ -80,7 +152,7 @@
                         <span class="email-label font-en">Email</span>
                         <span class="contact-dot" aria-hidden="true"></span>
                     </div>
-                    <p class="email-address">kimu.toshiki<br class="sp-only">@gmail.com</p>
+                    <p class="email-address">kimu.toshiki<wbr>@gmail.com</p>
                     <a href="mailto:kimu.toshiki@gmail.com" class="btn btn-primary btn-arrow contact-btn">
                         <span>メールを送信する</span>
                     </a>
@@ -89,7 +161,8 @@
         </section>
 
         <!-- ====== CONTACT TYPES ====== -->
-        <section class="types-section">
+        <section class="types-section has-decor">
+            <img class="decor-art decor-art--contact-flight" src="images/decor-contact-flight.webp" alt="" aria-hidden="true" width="1440" height="960" loading="lazy" decoding="async">
             <span class="deco-puzzle puzzle-mint delay-1 deco-section-top-left" aria-hidden="true"></span>
             <span class="deco-puzzle puzzle-lav delay-3 deco-section-bottom-right" aria-hidden="true"></span>
             <div class="section-header reveal">

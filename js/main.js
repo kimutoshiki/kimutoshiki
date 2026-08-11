@@ -36,9 +36,10 @@
         initReveal();
         initSplitChars();
         initHeroSlideshow();
+        initPortfolioSliders();
         initBlogAccordion();
         initBlogFilter();
-        initSparkles();
+        initClickEffects();
         initHomeNews();
     });
 
@@ -46,9 +47,10 @@
     function initPageMotion() {
         const header = $('.site-header');
         const hero = $('.hero-base');
-        const pageArt = $$('.page-art, [data-page-art], [data-parallax-art]');
+        const pageArt = $$('.page-art, [data-page-art], [data-parallax-art], img.decor-art');
         if (!header && !hero && !pageArt.length) return;
 
+        const mobileMotionQuery = window.matchMedia('(max-width: 860px), (hover: none), (pointer: coarse)');
         let frame = 0;
         let maxScroll = 0;
         let metricsDirty = true;
@@ -79,7 +81,7 @@
                 }
             }
 
-            if (reducedMotion) return;
+            if (reducedMotion || mobileMotionQuery.matches) return;
 
             const viewportHeight = window.innerHeight;
             if (hero) {
@@ -95,7 +97,8 @@
             activeArt.forEach(art => {
                 const rect = art.getBoundingClientRect();
                 const centerOffset = (rect.top + rect.height / 2 - viewportHeight / 2) / viewportHeight;
-                const shift = clamp(-12, centerOffset * -12, 12);
+                const maxShift = art.matches('img.decor-art') ? 5 : 10;
+                const shift = clamp(-maxShift, centerOffset * -maxShift, maxShift);
                 art.style.setProperty('--art-shift', `${shift.toFixed(2)}px`);
             });
         };
@@ -126,12 +129,21 @@
             if (isReduced) resetParallax();
             schedule(true);
         });
+        const syncMobileMotion = () => {
+            if (mobileMotionQuery.matches) resetParallax();
+            schedule(true);
+        };
+        if ('addEventListener' in mobileMotionQuery) {
+            mobileMotionQuery.addEventListener('change', syncMobileMotion);
+        } else {
+            mobileMotionQuery.addListener(syncMobileMotion);
+        }
 
         on(window, 'scroll', schedule, { passive: true });
         on(window, 'resize', () => schedule(true), { passive: true });
         on(window, 'load', () => schedule(true), { once: true });
         on(window, 'pageshow', () => schedule(true));
-        if (reducedMotion) resetParallax();
+        if (reducedMotion || mobileMotionQuery.matches) resetParallax();
         schedule(true);
     }
 
@@ -391,6 +403,221 @@
         start();
     }
 
+    /* -------- 全ページ共通のページ案内スライダー -------- */
+    function initPortfolioSliders() {
+        $$('[data-portfolio-slider]').forEach(root => {
+            const viewport = $('.portfolio-viewport', root);
+            const track = $('.portfolio-track', root);
+            const slides = $$('.portfolio-slide', root);
+            const previous = $('[data-portfolio-prev]', root);
+            const next = $('[data-portfolio-next]', root);
+            const pause = $('[data-portfolio-pause]', root);
+            const dots = $$('[data-portfolio-dot]', root);
+            if (!viewport || !track || slides.length < 2) return;
+
+            const interval = 5600;
+            let current = slides.findIndex(slide => (
+                slide.classList.contains('is-active') || Boolean($('[aria-current="page"]', slide))
+            ));
+            if (current < 0) current = 0;
+
+            let timer = 0;
+            let resizeFrame = 0;
+            let transitionResetFrame = 0;
+            let userPaused = false;
+            let pointerPaused = false;
+            let focusPaused = false;
+
+            const status = document.createElement('span');
+            status.className = 'visually-hidden portfolio-status';
+            status.setAttribute('role', 'status');
+            status.setAttribute('aria-live', 'polite');
+            status.setAttribute('aria-atomic', 'true');
+
+            const progress = document.createElement('span');
+            progress.className = 'visually-hidden portfolio-progress-a11y';
+            progress.setAttribute('role', 'progressbar');
+            progress.setAttribute('aria-label', 'ページ案内の進行');
+            progress.setAttribute('aria-valuemin', '1');
+            progress.setAttribute('aria-valuemax', String(slides.length));
+            root.append(status, progress);
+
+            viewport.setAttribute('aria-live', 'off');
+            if (!viewport.hasAttribute('tabindex')) viewport.setAttribute('tabindex', '0');
+            if (!viewport.hasAttribute('aria-label')) {
+                viewport.setAttribute('aria-label', 'ページ案内。左右の矢印キーでも切り替えられます');
+            }
+
+            const isTemporarilyPaused = () => pointerPaused || focusPaused || document.hidden;
+            const isPaused = () => userPaused || reducedMotion;
+            const stop = () => {
+                window.clearTimeout(timer);
+                timer = 0;
+            };
+            const getOffset = index => {
+                const firstOffset = slides[0].offsetLeft;
+                const rawOffset = Math.max(0, slides[index].offsetLeft - firstOffset);
+                const maxOffset = Math.max(0, track.scrollWidth - viewport.clientWidth);
+                return Math.min(rawOffset, maxOffset);
+            };
+            const positionTrack = (instant = false) => {
+                window.cancelAnimationFrame(transitionResetFrame);
+                transitionResetFrame = 0;
+
+                if (instant || reducedMotion) track.style.transition = 'none';
+                else track.style.removeProperty('transition');
+
+                track.style.transform = `translate3d(${-getOffset(current)}px, 0, 0)`;
+
+                if (instant && !reducedMotion) {
+                    transitionResetFrame = requestAnimationFrame(() => {
+                        transitionResetFrame = 0;
+                        track.style.removeProperty('transition');
+                    });
+                }
+            };
+            const announceCurrent = () => {
+                const title = $('h2, h3, h4', slides[current])?.textContent.trim();
+                status.textContent = `${title ? `「${title}」` : 'ページ案内'}、${current + 1} / ${slides.length}`;
+            };
+            const syncProgress = () => {
+                const progressValue = (current + 1) / slides.length;
+                root.dataset.portfolioIndex = String(current);
+                root.style.setProperty('--portfolio-index', String(current));
+                root.style.setProperty('--portfolio-progress', progressValue.toFixed(4));
+                progress.setAttribute('aria-valuenow', String(current + 1));
+                progress.setAttribute('aria-valuetext', `${current + 1} / ${slides.length}`);
+            };
+            const syncPauseButton = () => {
+                if (!pause) return;
+                const paused = isPaused();
+                const icon = $('.portfolio-pause-icon, [aria-hidden="true"]', pause);
+                const label = $('.portfolio-pause-label', pause);
+
+                pause.setAttribute('aria-pressed', String(paused));
+                pause.setAttribute('aria-disabled', String(reducedMotion));
+                pause.setAttribute('aria-label', reducedMotion
+                    ? 'モーション低減設定により自動再生は停止中です'
+                    : paused ? '自動再生を再開' : '自動再生を一時停止');
+                if (icon) icon.textContent = paused ? '▶' : 'Ⅱ';
+                if (label) label.textContent = reducedMotion ? '停止中' : paused ? '再生' : '一時停止';
+            };
+            const start = () => {
+                if (isPaused() || isTemporarilyPaused() || timer) return;
+                timer = window.setTimeout(() => {
+                    timer = 0;
+                    show(current + 1);
+                    start();
+                }, interval);
+            };
+            const restart = () => {
+                stop();
+                start();
+            };
+            const show = (index, options = {}) => {
+                const { announce = false, instant = false, userInitiated = false } = options;
+                current = (index + slides.length) % slides.length;
+                slides.forEach((slide, slideIndex) => {
+                    const active = slideIndex === current;
+                    slide.classList.toggle('is-active', active);
+                    slide.setAttribute('aria-hidden', String(!active));
+                    slide.toggleAttribute('inert', !active);
+                });
+                dots.forEach((dot, dotIndex) => {
+                    const active = dotIndex === current;
+                    dot.classList.toggle('is-active', active);
+                    dot.setAttribute('aria-pressed', String(active));
+                });
+                positionTrack(instant);
+                syncProgress();
+                if (announce) announceCurrent();
+                if (userInitiated) restart();
+            };
+
+            on(previous, 'click', () => show(current - 1, { announce: true, userInitiated: true }));
+            on(next, 'click', () => show(current + 1, { announce: true, userInitiated: true }));
+            dots.forEach((dot, dotIndex) => {
+                const requestedIndex = Number(dot.dataset.portfolioDot);
+                const index = Number.isFinite(requestedIndex) ? requestedIndex : dotIndex;
+                on(dot, 'click', () => show(index, { announce: true, userInitiated: true }));
+            });
+            on(pause, 'click', () => {
+                if (reducedMotion) {
+                    status.textContent = 'モーション低減設定により自動再生は停止しています。';
+                    return;
+                }
+                userPaused = !userPaused;
+                syncPauseButton();
+                status.textContent = userPaused ? '自動再生を停止しました。' : '自動再生を再開しました。';
+                if (userPaused) stop();
+                else restart();
+            });
+
+            on(root, 'pointerenter', () => {
+                pointerPaused = true;
+                stop();
+            }, { passive: true });
+            on(root, 'pointerleave', () => {
+                pointerPaused = false;
+                start();
+            }, { passive: true });
+            on(root, 'focusin', () => {
+                focusPaused = true;
+                stop();
+            });
+            on(root, 'focusout', () => {
+                requestAnimationFrame(() => {
+                    focusPaused = root.contains(document.activeElement);
+                    if (!focusPaused) start();
+                });
+            });
+            on(root, 'keydown', event => {
+                if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+                if (event.target instanceof Element
+                    && event.target.closest('a, button, input, textarea, select, [contenteditable="true"]')) return;
+                event.preventDefault();
+                show(current + (event.key === 'ArrowRight' ? 1 : -1), {
+                    announce: true,
+                    userInitiated: true,
+                });
+            });
+            on(document, 'visibilitychange', () => {
+                if (document.hidden) stop();
+                else start();
+            });
+
+            const schedulePositionRefresh = () => {
+                if (!resizeFrame) {
+                    resizeFrame = requestAnimationFrame(() => {
+                        resizeFrame = 0;
+                        positionTrack(true);
+                    });
+                }
+            };
+            if ('ResizeObserver' in window) {
+                const viewportObserver = new ResizeObserver(schedulePositionRefresh);
+                viewportObserver.observe(viewport);
+                viewportObserver.observe(track);
+            } else {
+                on(window, 'resize', schedulePositionRefresh, { passive: true });
+            }
+            if (document.fonts) document.fonts.ready.then(schedulePositionRefresh);
+
+            motionSubscribers.add(isReduced => {
+                root.classList.toggle('is-reduced-motion', isReduced);
+                syncPauseButton();
+                positionTrack(true);
+                if (isReduced) stop();
+                else start();
+            });
+
+            root.classList.toggle('is-reduced-motion', reducedMotion);
+            show(current, { instant: true });
+            syncPauseButton();
+            start();
+        });
+    }
+
     /* -------- ブログアコーディオン -------- */
     function initBlogAccordion() {
         const items = $$('.blog-item');
@@ -484,16 +711,14 @@
         });
     }
 
-    /* -------- クリック時のスパークルエフェクト -------- */
-    function initSparkles() {
+    /* -------- 操作要素だけのリップル＋紙吹雪 -------- */
+    function initClickEffects() {
         const colors = ['var(--pop-pink)', 'var(--pop-yellow)', 'var(--pop-mint)', 'var(--pop-blue)', 'var(--pop-lav)'];
-        const symbols = ['✦', '✧', '★', '♡', '◆'];
         const interactiveSelector = [
-            'a',
+            'a[href]',
             'button',
             '[role="button"]',
             '[data-sparkle]',
-            '.card',
             '.highlight-card',
             '.theme-card',
             '.activity-card',
@@ -501,10 +726,11 @@
             '.future-card',
             '.contact-card',
             '.license-item',
-            '.blog-item',
             '.about-item',
             '.vision-meta-item',
             '.roadmap-item',
+            '.blog-header',
+            '.portfolio-slide',
         ].join(',');
         let lastBurst = -Infinity;
 
@@ -518,25 +744,45 @@
 
             const x = e.clientX;
             const y = e.clientY;
-            const count = 4;
+            const color = colors[Math.floor(Math.random() * colors.length)];
             const fragment = document.createDocumentFragment();
+
+            const ripple = document.createElement('span');
+            ripple.className = 'click-ripple';
+            ripple.setAttribute('aria-hidden', 'true');
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            ripple.style.setProperty('--ripple-color', color);
+
+            const confetti = document.createElement('span');
+            confetti.className = 'click-confetti';
+            confetti.setAttribute('aria-hidden', 'true');
+            confetti.style.left = `${x}px`;
+            confetti.style.top = `${y}px`;
+
+            const count = 6;
             for (let i = 0; i < count; i++) {
-                const s = document.createElement('span');
-                s.className = 'sparkle-burst';
-                s.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-                s.style.left = x + 'px';
-                s.style.top = y + 'px';
-                s.style.color = colors[Math.floor(Math.random() * colors.length)];
-                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-                const dist = 22 + Math.random() * 28;
-                s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
-                s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
-                s.style.setProperty('--rot', (Math.random() * 360 - 180) + 'deg');
-                on(s, 'animationend', () => s.remove(), { once: true });
-                window.setTimeout(() => s.remove(), 800);
-                fragment.appendChild(s);
+                const piece = document.createElement('span');
+                const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.38;
+                const distance = 34 + Math.random() * 28;
+                const pieceColor = colors[(i + Math.floor(Math.random() * colors.length)) % colors.length];
+
+                piece.className = 'click-confetti-piece';
+                piece.style.backgroundColor = pieceColor;
+                piece.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+                piece.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+                piece.style.setProperty('--rot', `${Math.random() * 320 - 160}deg`);
+                piece.style.setProperty('--piece-color', pieceColor);
+                piece.style.setProperty('--delay', `${Math.round(Math.random() * 55)}ms`);
+                confetti.appendChild(piece);
             }
+
+            fragment.append(ripple, confetti);
             document.body.appendChild(fragment);
+            window.setTimeout(() => {
+                ripple.remove();
+                confetti.remove();
+            }, 780);
         });
     }
 

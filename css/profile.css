@@ -160,7 +160,8 @@
     border: 3px solid var(--navy);
     border-radius: 50%;
     z-index: 1;
-    transition: all var(--dur-base) var(--ease-bounce);
+    transition: transform var(--dur-base) var(--ease-bounce),
+                background-color var(--dur-base) var(--ease-out);
 }
 .timeline-v-item:nth-child(1)::before { background: var(--pop-pink); }
 .timeline-v-item:nth-child(2)::before { background: var(--pop-yellow); }

@@ -56,28 +56,101 @@
             </div>
         </section>
 
+        <section class="portfolio-slider-section has-decor" data-portfolio-slider aria-roledescription="carousel" aria-labelledby="portfolio-guide-title">
+            <img class="decor-art decor-art--confetti" src="images/decor-confetti.webp" alt="" aria-hidden="true" width="1440" height="960" loading="lazy" decoding="async">
+            <div class="portfolio-slider-shell">
+                <div class="portfolio-slider-head">
+                    <h2 id="portfolio-guide-title">ページ案内</h2>
+                    <p>各ページの内容を選んでご覧いただけます。</p>
+                </div>
+                <div class="portfolio-viewport">
+                    <div class="portfolio-track">
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="1 / 5">
+                            <a class="portfolio-slide-link" href="index.html">
+                                <span class="portfolio-slide-number" aria-hidden="true">01</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>ホーム</h3>
+                                    <p>サイト全体の概要と最新情報を掲載しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="2 / 5">
+                            <a class="portfolio-slide-link" href="profile.html">
+                                <span class="portfolio-slide-number" aria-hidden="true">02</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>プロフィール</h3>
+                                    <p>経歴、学び、取得免許・資格を掲載しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="3 / 5">
+                            <a class="portfolio-slide-link" href="research.html" aria-current="page">
+                                <span class="portfolio-slide-number" aria-hidden="true">03</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>研究・活動</h3>
+                                    <p>研究テーマ、研究計画、教育実践を掲載しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="4 / 5">
+                            <a class="portfolio-slide-link" href="blog.html">
+                                <span class="portfolio-slide-number" aria-hidden="true">04</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>ブログ</h3>
+                                    <p>研修、活動、日々の学びを記録しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="5 / 5">
+                            <a class="portfolio-slide-link" href="contact.html">
+                                <span class="portfolio-slide-number" aria-hidden="true">05</span>
+                                <div class="portfolio-slide-copy">
+                                    <h3>お問い合わせ</h3>
+                                    <p>研究・教育に関する連絡先を掲載しています。</p>
+                                </div>
+                                <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </article>
+                    </div>
+                </div>
+                <div class="portfolio-controls" role="group" aria-label="ページ案内の操作">
+                    <button class="portfolio-control portfolio-control--prev" type="button" data-portfolio-prev aria-label="前のページ案内を表示"><span aria-hidden="true">←</span></button>
+                    <button class="portfolio-control portfolio-control--pause" type="button" data-portfolio-pause aria-label="自動再生を一時停止" aria-pressed="false"><span class="portfolio-pause-icon" aria-hidden="true">Ⅱ</span><span class="portfolio-pause-label">一時停止</span></button>
+                    <button class="portfolio-control portfolio-control--next" type="button" data-portfolio-next aria-label="次のページ案内を表示"><span aria-hidden="true">→</span></button>
+                    <div class="portfolio-dots" role="group" aria-label="表示するページ">
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="0" aria-label="ホームの案内を表示" aria-pressed="false"></button>
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="1" aria-label="プロフィールの案内を表示" aria-pressed="false"></button>
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="2" aria-label="研究・活動の案内を表示" aria-pressed="false"></button>
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="3" aria-label="ブログの案内を表示" aria-pressed="false"></button>
+                        <button class="portfolio-dot" type="button" data-portfolio-dot="4" aria-label="お問い合わせの案内を表示" aria-pressed="false"></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- ====== LEAD ====== -->
-        <section class="research-lead">
+        <section class="research-lead has-decor">
+            <img class="decor-art decor-art--paper-research" src="images/paper-research.webp" alt="" aria-hidden="true" width="684" height="720" loading="lazy" decoding="async">
             <div class="research-lead-inner reveal">
                 <p class="lead-quote">
                     <span class="quote-mark">“</span>
-                    目の前の子どもたちの学びを、より確かに支えるために。<br>
+                    目の前の子どもたちの学びを、より確かに支えるために。
                     <span class="quote-mark">”</span>
                 </p>
                 <p class="lead-body">
                     小学校社会科を軸に、議論形成・生成AI活用・科学的探究など、
                     多角的な視点から授業づくりを研究しています。
                 </p>
-                <figure class="page-art page-art--research" data-parallax-art aria-hidden="true">
-                    <div class="page-art-frame">
-                        <img class="page-art-image" src="images/paper-research.webp" alt="" width="684" height="720" loading="lazy" decoding="async">
-                    </div>
-                </figure>
             </div>
         </section>
 
         <!-- ====== THEMES ====== -->
-        <section class="themes-section">
+        <section class="themes-section has-decor">
+            <img class="decor-art decor-art--research-orbit" src="images/decor-research-orbit.webp" alt="" aria-hidden="true" width="1440" height="960" loading="lazy" decoding="async">
             <span class="deco-puzzle puzzle-pink delay-1 deco-section-top-left" aria-hidden="true"></span>
             <span class="deco-puzzle puzzle-yellow delay-3 deco-section-top-right" aria-hidden="true"></span>
             <div class="section-header reveal">
@@ -88,42 +161,42 @@
             <div class="theme-grid">
                 <article class="theme-card reveal">
                     <div class="theme-num font-en">01</div>
-                    <h3 class="theme-title">小学校社会科における<br>「議論する力」の育成</h3>
+                    <h3 class="theme-title">小学校社会科における「議論する力」の育成</h3>
                     <p class="theme-desc">対話的な学びを通じて、子どもたちの批判的思考力と議論スキルを育成する授業方法を研究。</p>
                     <span class="theme-tag">授業開発</span>
                 </article>
 
                 <article class="theme-card theme-card-accent reveal delay-1">
                     <div class="theme-num font-en">02</div>
-                    <h3 class="theme-title">Claude.aiを活用した<br>アクセシブルな教育活動</h3>
+                    <h3 class="theme-title">Claude.aiを活用したアクセシブルな教育活動</h3>
                     <p class="theme-desc">最新のAI技術を教育現場に適用し、すべての子どもが学びやすい環境づくりを目指す。</p>
                     <span class="theme-tag">AI活用</span>
                 </article>
 
                 <article class="theme-card reveal delay-2">
                     <div class="theme-num font-en">03</div>
-                    <h3 class="theme-title">小学校社会科における<br>科学的探究的な学びの支援</h3>
+                    <h3 class="theme-title">小学校社会科における科学的探究的な学びの支援</h3>
                     <p class="theme-desc">データと根拠に基づいた思考を社会科教育に取り入れ、探究心を育む学習方法を開発。</p>
                     <span class="theme-tag">探究学習</span>
                 </article>
 
                 <article class="theme-card reveal delay-1">
                     <div class="theme-num font-en">04</div>
-                    <h3 class="theme-title">学力向上におけるICTの<br>利活用に関する考察</h3>
+                    <h3 class="theme-title">学力向上におけるICTの利活用に関する考察</h3>
                     <p class="theme-desc">効果的なICT活用により、個別最適化された学習と協働的な学びの実現を研究。</p>
                     <span class="theme-tag">ICT教育</span>
                 </article>
 
                 <article class="theme-card reveal delay-2">
                     <div class="theme-num font-en">05</div>
-                    <h3 class="theme-title">反ICT教育に関する<br>批判的考察</h3>
+                    <h3 class="theme-title">反ICT教育に関する批判的考察</h3>
                     <p class="theme-desc">ICT導入への懸念や批判を真摯に検討し、バランスの取れた教育環境の構築を探求。</p>
                     <span class="theme-tag">批判的考察</span>
                 </article>
 
                 <article class="theme-card theme-card-accent reveal delay-3">
                     <div class="theme-num font-en">06</div>
-                    <h3 class="theme-title">AI活用の意義と是非の<br>判断に関する考察</h3>
+                    <h3 class="theme-title">AI活用の意義と是非の判断に関する考察</h3>
                     <p class="theme-desc">AI技術の教育的価値と倫理的課題を多角的に分析し、適切な活用指針を研究。</p>
                     <span class="theme-tag">AI倫理</span>
                 </article>
