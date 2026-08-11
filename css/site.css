@@ -1106,7 +1106,7 @@ nav a[aria-current="page"] {
     z-index: 1;
 }
 
-img.decor-art {
+.decor-art {
     --decor-width: 118%;
     --decor-height: 110%;
     --decor-opacity: 0.2;
