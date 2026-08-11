@@ -445,7 +445,7 @@
             viewport.setAttribute('aria-live', 'off');
             if (!viewport.hasAttribute('tabindex')) viewport.setAttribute('tabindex', '0');
             if (!viewport.hasAttribute('aria-label')) {
-                viewport.setAttribute('aria-label', 'ページ案内。左右の矢印キーでも切り替えられます');
+                viewport.setAttribute('aria-label', 'ページ案内。上下の矢印キーでも切り替えられます');
             }
 
             const isTemporarilyPaused = () => pointerPaused || focusPaused || document.hidden;
@@ -455,9 +455,9 @@
                 timer = 0;
             };
             const getOffset = index => {
-                const firstOffset = slides[0].offsetLeft;
-                const rawOffset = Math.max(0, slides[index].offsetLeft - firstOffset);
-                const maxOffset = Math.max(0, track.scrollWidth - viewport.clientWidth);
+                const firstOffset = slides[0].offsetTop;
+                const rawOffset = Math.max(0, slides[index].offsetTop - firstOffset);
+                const maxOffset = Math.max(0, track.scrollHeight - viewport.clientHeight);
                 return Math.min(rawOffset, maxOffset);
             };
             const positionTrack = (instant = false) => {
@@ -467,7 +467,7 @@
                 if (instant || reducedMotion) track.style.transition = 'none';
                 else track.style.removeProperty('transition');
 
-                track.style.transform = `translate3d(${-getOffset(current)}px, 0, 0)`;
+                track.style.transform = `translate3d(0, ${-getOffset(current)}px, 0)`;
 
                 if (instant && !reducedMotion) {
                     transitionResetFrame = requestAnimationFrame(() => {
@@ -572,11 +572,11 @@
                 });
             });
             on(root, 'keydown', event => {
-                if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+                if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
                 if (event.target instanceof Element
                     && event.target.closest('a, button, input, textarea, select, [contenteditable="true"]')) return;
                 event.preventDefault();
-                show(current + (event.key === 'ArrowRight' ? 1 : -1), {
+                show(current + (event.key === 'ArrowDown' ? 1 : -1), {
                     announce: true,
                     userInitiated: true,
                 });
@@ -711,32 +711,13 @@
         });
     }
 
-    /* -------- 操作要素だけのリップル＋紙吹雪 -------- */
+    /* -------- ページ全体のリップル＋紙吹雪 -------- */
     function initClickEffects() {
         const colors = ['var(--pop-pink)', 'var(--pop-yellow)', 'var(--pop-mint)', 'var(--pop-blue)', 'var(--pop-lav)'];
-        const interactiveSelector = [
-            'a[href]',
-            'button',
-            '[role="button"]',
-            '[data-sparkle]',
-            '.highlight-card',
-            '.theme-card',
-            '.activity-card',
-            '.type-card',
-            '.future-card',
-            '.contact-card',
-            '.license-item',
-            '.about-item',
-            '.vision-meta-item',
-            '.roadmap-item',
-            '.blog-header',
-            '.portfolio-slide',
-        ].join(',');
         let lastBurst = -Infinity;
 
         on(document, 'click', (e) => {
-            if (reducedMotion || !e.detail || !(e.target instanceof Element)) return;
-            if (!e.target.closest(interactiveSelector)) return;
+            if (reducedMotion || !e.detail || e.button !== 0) return;
 
             const now = performance.now();
             if (now - lastBurst < 120) return;
