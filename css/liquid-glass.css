@@ -1,0 +1,444 @@
+/* =========================================================
+   Liquid Glass inspired progressive layer
+   Loaded after site.css so it can be removed in one step.
+   Uses only stable CSS; no SVG displacement or WebGL.
+   ========================================================= */
+
+:root {
+    --glass-paper: rgba(255, 253, 248, 0.82);
+    --glass-paper-strong: rgba(255, 253, 248, 0.91);
+    --glass-enji: rgba(91, 15, 36, 0.78);
+    --glass-enji-strong: rgba(75, 10, 29, 0.88);
+    --glass-line-light: rgba(255, 255, 255, 0.58);
+    --glass-line-dark: rgba(91, 15, 36, 0.24);
+    --glass-shadow: 0 18px 44px rgba(56, 7, 22, 0.16);
+    --glass-shadow-raised: 0 24px 58px rgba(56, 7, 22, 0.22);
+    --glass-highlight:
+        inset 0 1px 0 rgba(255, 255, 255, 0.72),
+        inset 0 -1px 0 rgba(91, 15, 36, 0.12);
+}
+
+/* The fallback is the existing solid site design. Glass is enabled only when
+   the browser can blur content behind a surface. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    /* Header and navigation: the main floating control layer. */
+    .site-header,
+    .site-header.scrolled {
+        background:
+            linear-gradient(115deg, rgba(255, 255, 255, 0.09), transparent 28%),
+            linear-gradient(180deg, var(--glass-enji), rgba(75, 10, 29, 0.72));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.22),
+            0 14px 42px rgba(45, 5, 17, 0.24);
+        backdrop-filter: blur(18px) saturate(1.35);
+        -webkit-backdrop-filter: blur(18px) saturate(1.35);
+    }
+
+    .site-header.scrolled {
+        background:
+            linear-gradient(115deg, rgba(255, 255, 255, 0.08), transparent 30%),
+            linear-gradient(180deg, var(--glass-enji-strong), rgba(65, 7, 24, 0.84));
+    }
+
+    .site-header nav a {
+        border: 1px solid transparent;
+        border-radius: 999px;
+        box-shadow: inset 0 1px 0 transparent;
+    }
+
+    .site-header nav a:hover,
+    .site-header nav a:focus-visible {
+        background: rgba(255, 255, 255, 0.13);
+        border-color: rgba(255, 255, 255, 0.28);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.24),
+            0 8px 20px rgba(31, 2, 11, 0.15);
+    }
+
+    .site-header nav a.current,
+    .site-header nav a[aria-current="page"] {
+        color: var(--enji-deep);
+        background:
+            radial-gradient(circle at 25% 5%, rgba(255, 255, 255, 0.72), transparent 36%),
+            rgba(255, 205, 31, 0.88);
+        border-color: rgba(255, 255, 255, 0.66);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.78),
+            inset 0 -2px 0 rgba(91, 15, 36, 0.13),
+            0 8px 22px rgba(28, 2, 10, 0.2);
+        backdrop-filter: blur(10px) saturate(1.18);
+        -webkit-backdrop-filter: blur(10px) saturate(1.18);
+    }
+
+    /* Hero: stronger tint keeps the title readable over every slide. */
+    .hero-content {
+        background:
+            radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.13), transparent 34%),
+            linear-gradient(145deg, rgba(101, 20, 46, 0.7), rgba(34, 3, 14, 0.5));
+        border-color: rgba(255, 255, 255, 0.46);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.26),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+            0 28px 80px rgba(20, 0, 7, 0.38);
+        backdrop-filter: blur(14px) saturate(1.28);
+        -webkit-backdrop-filter: blur(14px) saturate(1.28);
+    }
+
+    .hero-kicker,
+    .section-eyebrow,
+    :is(.cat-badge, .news-cat, .keyword, .about-label, .email-label) {
+        background:
+            radial-gradient(circle at 22% 0%, rgba(255, 255, 255, 0.72), transparent 36%),
+            rgba(255, 205, 31, 0.82);
+        border-color: rgba(91, 15, 36, 0.72);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.72),
+            3px 4px 0 rgba(91, 15, 36, 0.8),
+            0 9px 22px rgba(91, 15, 36, 0.13);
+        /* Repeated labels use highlights and tint, not another compositing
+           layer. This keeps long pages responsive. */
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .hero-slide-controls {
+        background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.13), transparent 42%),
+            rgba(49, 7, 19, 0.54);
+        border-color: rgba(255, 255, 255, 0.48);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.25),
+            0 14px 34px rgba(20, 0, 7, 0.28);
+        backdrop-filter: blur(18px) saturate(1.35);
+        -webkit-backdrop-filter: blur(18px) saturate(1.35);
+    }
+
+    .hero-slide-dot,
+    .hero-slide-pause {
+        background:
+            radial-gradient(circle at 32% 18%, rgba(255, 255, 255, 0.34), transparent 42%),
+            rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.52);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.32),
+            0 7px 18px rgba(20, 0, 7, 0.2);
+    }
+
+    .hero-slide-dot.is-active {
+        background:
+            radial-gradient(circle at 28% 10%, rgba(255, 255, 255, 0.75), transparent 38%),
+            rgba(255, 205, 31, 0.9);
+        border-color: rgba(255, 255, 255, 0.62);
+    }
+
+    /* Shared buttons: transparent enough to read as glass, tinted enough to
+       keep text contrast stable over photographs and illustrations. */
+    .btn,
+    .portfolio-control,
+    .filter-btn,
+    .menu-toggle,
+    .toggle-icon {
+        border-width: 1px;
+        border-color: rgba(255, 255, 255, 0.66);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.76),
+            inset 0 -1px 0 rgba(91, 15, 36, 0.18),
+            0 9px 22px rgba(56, 7, 22, 0.18),
+            3px 4px 0 rgba(91, 15, 36, 0.72);
+        backdrop-filter: blur(12px) saturate(1.28);
+        -webkit-backdrop-filter: blur(12px) saturate(1.28);
+    }
+
+    .btn-primary,
+    .portfolio-control,
+    .filter-btn.active {
+        color: var(--enji-deep);
+        background:
+            radial-gradient(circle at 22% 0%, rgba(255, 255, 255, 0.82), transparent 38%),
+            rgba(255, 205, 31, 0.82);
+    }
+
+    .btn-outline,
+    .filter-btn,
+    .toggle-icon {
+        color: var(--enji-deep);
+        background:
+            radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.92), transparent 40%),
+            rgba(255, 253, 248, 0.78);
+    }
+
+    .hero-cta .btn-outline {
+        background:
+            radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.92), transparent 40%),
+            rgba(255, 253, 248, 0.86);
+    }
+
+    .btn:hover,
+    .portfolio-control:hover,
+    .filter-btn:hover {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.84),
+            inset 0 -1px 0 rgba(91, 15, 36, 0.15),
+            0 14px 30px rgba(56, 7, 22, 0.22),
+            4px 5px 0 rgba(224, 73, 119, 0.78) !important;
+    }
+
+    /* Page guide: preserve the five hues while revealing the artwork behind. */
+    .portfolio-slider-head p,
+    .portfolio-controls {
+        background:
+            radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.76), transparent 34%),
+            rgba(255, 253, 248, 0.76);
+        border-color: rgba(255, 255, 255, 0.78);
+        box-shadow: var(--glass-highlight), var(--glass-shadow);
+        backdrop-filter: blur(16px) saturate(1.26);
+        -webkit-backdrop-filter: blur(16px) saturate(1.26);
+    }
+
+    .portfolio-slide-link {
+        border-color: rgba(91, 15, 36, 0.54);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.64),
+            inset 0 -1px 0 rgba(91, 15, 36, 0.1),
+            7px 9px 0 rgba(91, 15, 36, 0.76),
+            0 26px 54px rgba(56, 7, 22, 0.16);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .portfolio-slide.is-active .portfolio-slide-link,
+    .portfolio-slide:focus-within .portfolio-slide-link {
+        backdrop-filter: blur(10px) saturate(1.2);
+        -webkit-backdrop-filter: blur(10px) saturate(1.2);
+    }
+
+    .portfolio-slide:nth-child(1) .portfolio-slide-link {
+        background:
+            radial-gradient(circle at 88% 5%, rgba(224, 73, 119, 0.28), transparent 34%),
+            linear-gradient(135deg, rgba(112, 25, 52, 0.82), rgba(57, 6, 22, 0.8));
+    }
+
+    .portfolio-slide:nth-child(2) .portfolio-slide-link {
+        background:
+            radial-gradient(circle at 88% 5%, rgba(255, 138, 31, 0.2), transparent 34%),
+            rgba(255, 244, 189, 0.78);
+    }
+
+    .portfolio-slide:nth-child(3) .portfolio-slide-link {
+        background:
+            radial-gradient(circle at 88% 5%, rgba(46, 224, 168, 0.22), transparent 34%),
+            rgba(217, 248, 237, 0.78);
+    }
+
+    .portfolio-slide:nth-child(4) .portfolio-slide-link {
+        background:
+            radial-gradient(circle at 88% 5%, rgba(74, 149, 255, 0.21), transparent 34%),
+            rgba(222, 237, 255, 0.78);
+    }
+
+    .portfolio-slide:nth-child(5) .portfolio-slide-link {
+        background:
+            radial-gradient(circle at 88% 5%, rgba(224, 73, 119, 0.2), transparent 34%),
+            rgba(255, 227, 236, 0.78);
+    }
+
+    .portfolio-slide-link[aria-current="page"]::after {
+        background:
+            radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.76), transparent 40%),
+            rgba(255, 205, 31, 0.86);
+        border-color: rgba(255, 255, 255, 0.62);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.78),
+            0 7px 18px rgba(56, 7, 22, 0.18);
+        backdrop-filter: blur(9px) saturate(1.2);
+        -webkit-backdrop-filter: blur(9px) saturate(1.2);
+    }
+
+    /* Large information surfaces use a modest blur and high paper tint.
+       Their nested labels stay more opaque, avoiding glass-on-glass noise. */
+    .has-decor :is(.decor-surface, .vision-col-text, .vision-col-body, .about-intro, .contact-lead),
+    .has-decor .research-lead-inner {
+        background:
+            linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
+            rgba(255, 253, 248, 0.8);
+        border-color: rgba(255, 255, 255, 0.78);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.82),
+            inset 0 -1px 0 rgba(91, 15, 36, 0.09),
+            5px 6px 0 rgba(91, 15, 36, 0.68),
+            0 20px 46px rgba(56, 7, 22, 0.12);
+        backdrop-filter: blur(11px) saturate(1.18);
+        -webkit-backdrop-filter: blur(11px) saturate(1.18);
+    }
+
+    :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item) {
+        background:
+            linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
+            rgba(255, 253, 248, 0.8);
+        border-color: rgba(255, 255, 255, 0.78);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.82),
+            inset 0 -1px 0 rgba(91, 15, 36, 0.09),
+            5px 6px 0 rgba(91, 15, 36, 0.68),
+            0 20px 46px rgba(56, 7, 22, 0.12);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    :is(.highlight-card, .activity-card, .about-item, .license-item, .blog-item):nth-child(4n + 1) {
+        background:
+            linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
+            rgba(255, 240, 247, 0.82);
+    }
+
+    :is(.highlight-card, .activity-card, .about-item, .license-item, .blog-item):nth-child(4n + 2) {
+        background:
+            linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
+            rgba(238, 248, 255, 0.82);
+    }
+
+    :is(.highlight-card, .activity-card, .about-item, .license-item, .blog-item):nth-child(4n + 3) {
+        background:
+            linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
+            rgba(255, 250, 226, 0.82);
+    }
+
+    :is(.highlight-card, .activity-card, .about-item, .license-item, .blog-item):nth-child(4n + 4) {
+        background:
+            linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
+            rgba(238, 250, 244, 0.82);
+    }
+
+    .future-card,
+    .contact-card {
+        background:
+            radial-gradient(circle at 18% 8%, rgba(224, 73, 119, 0.25), transparent 38%),
+            radial-gradient(circle at 86% 90%, rgba(74, 149, 255, 0.2), transparent 38%),
+            rgba(91, 15, 36, 0.82);
+        border-color: rgba(255, 255, 255, 0.42);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.24),
+            8px 10px 0 rgba(224, 73, 119, 0.74),
+            0 28px 62px rgba(56, 7, 22, 0.24);
+        backdrop-filter: blur(14px) saturate(1.24);
+        -webkit-backdrop-filter: blur(14px) saturate(1.24);
+    }
+
+    /* Small metadata controls can be translucent without adding another blur
+       layer over the glass cards. */
+    :is(.portfolio-slide-number, .portfolio-slide-arrow, .highlight-num,
+        .theme-num, .license-num, .activity-emoji) {
+        border-color: rgba(255, 255, 255, 0.62);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.72),
+            3px 4px 0 rgba(91, 15, 36, 0.72),
+            0 8px 18px rgba(56, 7, 22, 0.13);
+    }
+}
+
+/* On small screens, large card blurs are removed to keep scrolling light.
+   Compact controls retain the visual language. */
+@media (max-width: 860px) {
+    @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .site-header,
+        .site-header.scrolled,
+        nav {
+            backdrop-filter: blur(15px) saturate(1.25);
+            -webkit-backdrop-filter: blur(15px) saturate(1.25);
+        }
+
+        nav {
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 34%),
+                rgba(75, 10, 29, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 0;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                0 24px 48px rgba(41, 4, 15, 0.28);
+        }
+
+        .hero-content {
+            background: rgba(49, 7, 19, 0.74);
+            backdrop-filter: blur(11px) saturate(1.2);
+            -webkit-backdrop-filter: blur(11px) saturate(1.2);
+        }
+
+        .portfolio-slide-link,
+        .has-decor :is(.decor-surface, .vision-col-text, .vision-col-body, .about-intro, .contact-lead),
+        .has-decor .research-lead-inner,
+        :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+        .future-card,
+        .contact-card {
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .portfolio-slide-link {
+            background-color: rgba(255, 253, 248, 0.92);
+        }
+
+        .portfolio-slide:first-child .portfolio-slide-link {
+            background-color: rgba(75, 10, 29, 0.94);
+        }
+    }
+}
+
+/* Respect explicit requests for less transparency or greater contrast. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    .site-header,
+    .site-header.scrolled,
+    nav,
+    .hero-content,
+    .hero-slide-controls,
+    .portfolio-slider-head p,
+    .portfolio-controls,
+    .portfolio-slide-link,
+    .has-decor :is(.decor-surface, .vision-col-text, .vision-col-body, .about-intro, .contact-lead),
+    .has-decor .research-lead-inner,
+    :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+    .future-card,
+    .contact-card {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .site-header,
+    .site-header.scrolled,
+    nav,
+    .hero-content,
+    .future-card,
+    .contact-card {
+        background-color: #5b0f24 !important;
+    }
+
+    .portfolio-slider-head p,
+    .portfolio-controls,
+    .portfolio-slide-link,
+    .has-decor :is(.decor-surface, .vision-col-text, .vision-col-body, .about-intro, .contact-lead),
+    .has-decor .research-lead-inner,
+    :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item) {
+        background-color: #fffdf8 !important;
+    }
+}
+
+@media (forced-colors: active) {
+    .site-header,
+    nav,
+    .hero-content,
+    .hero-slide-controls,
+    .btn,
+    .portfolio-controls,
+    .portfolio-slide-link,
+    :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+    .future-card,
+    .contact-card {
+        background: Canvas !important;
+        color: CanvasText !important;
+        border: 2px solid CanvasText !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+}
