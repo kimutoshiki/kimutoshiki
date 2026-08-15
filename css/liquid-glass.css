@@ -135,10 +135,7 @@
     /* Shared buttons: transparent enough to read as glass, tinted enough to
        keep text contrast stable over photographs and illustrations. */
     .btn,
-    .portfolio-control,
-    .filter-btn,
-    .menu-toggle,
-    .toggle-icon {
+    .menu-toggle {
         border-width: 1px;
         border-color: rgba(255, 255, 255, 0.66);
         box-shadow:
@@ -168,10 +165,55 @@
             rgba(255, 253, 248, 0.78);
     }
 
+    /* Repeated controls use faux glass. Avoiding a blur layer on every blog
+       plus icon and filter button keeps the long article list responsive. */
+    .portfolio-control,
+    .filter-btn,
+    .toggle-icon {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
     .hero-cta .btn-outline {
         background:
             radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.92), transparent 40%),
             rgba(255, 253, 248, 0.86);
+    }
+
+    /* Keep the site's original category and accent colors while making their
+       surfaces slightly translucent. */
+    .cat-notice {
+        background:
+            radial-gradient(circle at 22% 0%, rgba(255, 255, 255, 0.72), transparent 36%),
+            rgba(220, 238, 255, 0.9);
+    }
+
+    .cat-activity {
+        background:
+            radial-gradient(circle at 22% 0%, rgba(255, 255, 255, 0.72), transparent 36%),
+            rgba(255, 240, 168, 0.9);
+    }
+
+    .cat-thought {
+        background:
+            radial-gradient(circle at 22% 0%, rgba(255, 255, 255, 0.72), transparent 36%),
+            rgba(205, 243, 229, 0.9);
+    }
+
+    .about-item:nth-child(2) .about-label { background-color: rgba(46, 224, 168, 0.84); }
+    .about-item:nth-child(3) .about-label { background-color: rgba(74, 149, 255, 0.84); }
+    .about-item:nth-child(4) .about-label {
+        color: var(--cream);
+        background-color: rgba(224, 73, 119, 0.86);
+    }
+
+    .keyword:nth-child(3n) { background-color: rgba(255, 229, 125, 0.9); }
+    .keyword:nth-child(3n + 1) { background-color: rgba(255, 253, 248, 0.88); }
+    .keyword:nth-child(3n + 2) { background-color: rgba(255, 229, 240, 0.88); }
+    .keyword:nth-child(5n) { background-color: rgba(205, 243, 229, 0.9); }
+    .keyword:nth-child(7n) {
+        color: var(--cream);
+        background-color: rgba(74, 149, 255, 0.88);
     }
 
     .btn:hover,
@@ -185,8 +227,9 @@
     }
 
     /* Page guide: preserve the five hues while revealing the artwork behind. */
-    .portfolio-slider-head p,
-    .portfolio-controls {
+    .portfolio-slider-head,
+    .news-list,
+    .filter-container {
         background:
             radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.76), transparent 34%),
             rgba(255, 253, 248, 0.76);
@@ -272,7 +315,7 @@
         -webkit-backdrop-filter: blur(11px) saturate(1.18);
     }
 
-    :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item) {
+    :is(.highlight-card, .theme-card, .activity-card, .type-card, .about-item, .license-item, .blog-item, .vision-meta-item) {
         background:
             linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
             rgba(255, 253, 248, 0.8);
@@ -286,28 +329,57 @@
         -webkit-backdrop-filter: none;
     }
 
-    :is(.highlight-card, .activity-card, .about-item, .license-item, .blog-item):nth-child(4n + 1) {
+    .blog-item {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.82),
+            4px 5px 0 rgba(91, 15, 36, 0.68),
+            0 10px 24px rgba(56, 7, 22, 0.09);
+    }
+
+    :is(.highlight-card, .activity-card, .type-card, .about-item, .license-item, .blog-item):nth-child(4n + 1) {
         background:
             linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
             rgba(255, 240, 247, 0.82);
     }
 
-    :is(.highlight-card, .activity-card, .about-item, .license-item, .blog-item):nth-child(4n + 2) {
+    :is(.highlight-card, .activity-card, .type-card, .about-item, .license-item, .blog-item):nth-child(4n + 2) {
         background:
             linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
             rgba(238, 248, 255, 0.82);
     }
 
-    :is(.highlight-card, .activity-card, .about-item, .license-item, .blog-item):nth-child(4n + 3) {
+    :is(.highlight-card, .activity-card, .type-card, .about-item, .license-item, .blog-item):nth-child(4n + 3) {
         background:
             linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
             rgba(255, 250, 226, 0.82);
     }
 
-    :is(.highlight-card, .activity-card, .about-item, .license-item, .blog-item):nth-child(4n + 4) {
+    :is(.highlight-card, .activity-card, .type-card, .about-item, .license-item, .blog-item):nth-child(4n + 4) {
         background:
             linear-gradient(125deg, rgba(255, 255, 255, 0.58), transparent 42%),
             rgba(238, 250, 244, 0.82);
+    }
+
+    .timeline-body,
+    .roadmap-body,
+    .blog-content-inner {
+        background:
+            linear-gradient(125deg, rgba(255, 255, 255, 0.6), transparent 44%),
+            rgba(255, 253, 248, 0.8);
+        border-color: rgba(255, 255, 255, 0.78);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.82),
+            inset 0 -1px 0 rgba(91, 15, 36, 0.08),
+            0 14px 30px rgba(56, 7, 22, 0.1);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .timeline-body,
+    .roadmap-body {
+        padding: 22px 24px;
+        border: 1px solid rgba(255, 255, 255, 0.78);
+        border-radius: 18px;
     }
 
     .future-card,
@@ -365,10 +437,15 @@
             -webkit-backdrop-filter: blur(11px) saturate(1.2);
         }
 
+        .portfolio-slider-head,
+        .news-list,
+        .filter-container,
         .portfolio-slide-link,
         .has-decor :is(.decor-surface, .vision-col-text, .vision-col-body, .about-intro, .contact-lead),
         .has-decor .research-lead-inner,
-        :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+        :is(.highlight-card, .theme-card, .activity-card, .type-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+        .timeline-body,
+        .roadmap-body,
         .future-card,
         .contact-card {
             backdrop-filter: none;
@@ -383,6 +460,17 @@
             background-color: rgba(75, 10, 29, 0.94);
         }
     }
+
+    .timeline-body,
+    .roadmap-body {
+        padding: 18px;
+    }
+
+    .blog-item {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.78),
+            4px 5px 0 rgba(91, 15, 36, 0.62);
+    }
 }
 
 /* Respect explicit requests for less transparency or greater contrast. */
@@ -392,12 +480,17 @@
     nav,
     .hero-content,
     .hero-slide-controls,
-    .portfolio-slider-head p,
+    .portfolio-slider-head,
+    .news-list,
+    .filter-container,
     .portfolio-controls,
     .portfolio-slide-link,
     .has-decor :is(.decor-surface, .vision-col-text, .vision-col-body, .about-intro, .contact-lead),
     .has-decor .research-lead-inner,
-    :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+    :is(.highlight-card, .theme-card, .activity-card, .type-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+    .timeline-body,
+    .roadmap-body,
+    .blog-content-inner,
     .future-card,
     .contact-card {
         backdrop-filter: none !important;
@@ -413,13 +506,25 @@
         background-color: #5b0f24 !important;
     }
 
-    .portfolio-slider-head p,
+    .portfolio-slider-head,
+    .news-list,
+    .filter-container,
     .portfolio-controls,
     .portfolio-slide-link,
     .has-decor :is(.decor-surface, .vision-col-text, .vision-col-body, .about-intro, .contact-lead),
     .has-decor .research-lead-inner,
-    :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item) {
+    :is(.highlight-card, .theme-card, .activity-card, .type-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+    .timeline-body,
+    .roadmap-body,
+    .blog-content-inner {
         background-color: #fffdf8 !important;
+    }
+}
+
+@media (prefers-contrast: more) {
+    .portfolio-slide {
+        opacity: 1;
+        transform: none;
     }
 }
 
@@ -429,9 +534,15 @@
     .hero-content,
     .hero-slide-controls,
     .btn,
+    .portfolio-slider-head,
+    .news-list,
+    .filter-container,
     .portfolio-controls,
     .portfolio-slide-link,
-    :is(.highlight-card, .theme-card, .activity-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+    :is(.highlight-card, .theme-card, .activity-card, .type-card, .about-item, .license-item, .blog-item, .vision-meta-item),
+    .timeline-body,
+    .roadmap-body,
+    .blog-content-inner,
     .future-card,
     .contact-card {
         background: Canvas !important;
@@ -440,5 +551,10 @@
         box-shadow: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
+    }
+
+    .portfolio-slide {
+        opacity: 1;
+        transform: none;
     }
 }

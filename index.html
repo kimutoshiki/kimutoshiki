@@ -22,8 +22,8 @@
 
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="css/site.css?v=20260811-background">
-    <link rel="stylesheet" href="css/liquid-glass.css?v=20260814-preview">
+    <link rel="stylesheet" href="css/site.css?v=20260815-scroll-glass">
+    <link rel="stylesheet" href="css/liquid-glass.css?v=20260815-scroll-glass">
 </head>
 <body>
     <a href="#main" class="skip-link">メインコンテンツへ</a>
@@ -68,24 +68,18 @@
                 </div>
             </div>
 
-            <div class="hero-slide-controls" role="group" aria-label="背景写真の切り替え">
-                <button class="hero-slide-dot is-active" type="button" data-slide="0" aria-label="早稲田大学の写真を表示" aria-pressed="true"></button>
-                <button class="hero-slide-dot" type="button" data-slide="1" aria-label="唐津城の写真を表示" aria-pressed="false"></button>
-                <button class="hero-slide-dot" type="button" data-slide="2" aria-label="久敬社の写真を表示" aria-pressed="false"></button>
-                <button class="hero-slide-pause" type="button" data-slide-pause aria-label="スライドショーを一時停止"><span aria-hidden="true">Ⅱ</span></button>
-            </div>
         </section>
 
-        <section class="portfolio-slider-section has-decor" data-portfolio-slider aria-roledescription="carousel" aria-labelledby="portfolio-guide-title">
+        <section class="portfolio-slider-section has-decor" data-portfolio-slider aria-labelledby="portfolio-guide-title">
             <img class="decor-art decor-art--confetti" src="images/decor-confetti.webp" alt="" aria-hidden="true" width="1440" height="960" loading="lazy" decoding="async">
             <div class="portfolio-slider-shell">
                 <div class="portfolio-slider-head">
                     <h2 id="portfolio-guide-title">ページ案内</h2>
-                    <p>各ページの内容を選んでご覧いただけます。</p>
+                    <p>スクロールに合わせて、各ページの内容をご案内します。</p>
                 </div>
                 <div class="portfolio-viewport">
                     <div class="portfolio-track">
-                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="1 / 5">
+                        <article class="portfolio-slide">
                             <a class="portfolio-slide-link" href="index.html" aria-current="page">
                                 <span class="portfolio-slide-number" aria-hidden="true">01</span>
                                 <div class="portfolio-slide-copy">
@@ -95,7 +89,7 @@
                                 <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
                             </a>
                         </article>
-                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="2 / 5">
+                        <article class="portfolio-slide">
                             <a class="portfolio-slide-link" href="profile.html">
                                 <span class="portfolio-slide-number" aria-hidden="true">02</span>
                                 <div class="portfolio-slide-copy">
@@ -105,7 +99,7 @@
                                 <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
                             </a>
                         </article>
-                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="3 / 5">
+                        <article class="portfolio-slide">
                             <a class="portfolio-slide-link" href="research.html">
                                 <span class="portfolio-slide-number" aria-hidden="true">03</span>
                                 <div class="portfolio-slide-copy">
@@ -115,7 +109,7 @@
                                 <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
                             </a>
                         </article>
-                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="4 / 5">
+                        <article class="portfolio-slide">
                             <a class="portfolio-slide-link" href="blog.html">
                                 <span class="portfolio-slide-number" aria-hidden="true">04</span>
                                 <div class="portfolio-slide-copy">
@@ -125,7 +119,7 @@
                                 <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
                             </a>
                         </article>
-                        <article class="portfolio-slide" role="group" aria-roledescription="スライド" aria-label="5 / 5">
+                        <article class="portfolio-slide">
                             <a class="portfolio-slide-link" href="contact.html">
                                 <span class="portfolio-slide-number" aria-hidden="true">05</span>
                                 <div class="portfolio-slide-copy">
@@ -135,18 +129,6 @@
                                 <span class="portfolio-slide-arrow" aria-hidden="true">→</span>
                             </a>
                         </article>
-                    </div>
-                </div>
-                <div class="portfolio-controls" role="group" aria-label="ページ案内の操作">
-                    <button class="portfolio-control portfolio-control--prev" type="button" data-portfolio-prev aria-label="一つ前のページ案内を表示"><span aria-hidden="true">↑</span></button>
-                    <button class="portfolio-control portfolio-control--pause" type="button" data-portfolio-pause aria-label="自動再生を一時停止" aria-pressed="false"><span class="portfolio-pause-icon" aria-hidden="true">Ⅱ</span><span class="portfolio-pause-label">一時停止</span></button>
-                    <button class="portfolio-control portfolio-control--next" type="button" data-portfolio-next aria-label="一つ次のページ案内を表示"><span aria-hidden="true">↓</span></button>
-                    <div class="portfolio-dots" role="group" aria-label="表示するページ">
-                        <button class="portfolio-dot" type="button" data-portfolio-dot="0" aria-label="ホームの案内を表示" aria-pressed="false"></button>
-                        <button class="portfolio-dot" type="button" data-portfolio-dot="1" aria-label="プロフィールの案内を表示" aria-pressed="false"></button>
-                        <button class="portfolio-dot" type="button" data-portfolio-dot="2" aria-label="研究・活動の案内を表示" aria-pressed="false"></button>
-                        <button class="portfolio-dot" type="button" data-portfolio-dot="3" aria-label="ブログの案内を表示" aria-pressed="false"></button>
-                        <button class="portfolio-dot" type="button" data-portfolio-dot="4" aria-label="お問い合わせの案内を表示" aria-pressed="false"></button>
                     </div>
                 </div>
             </div>
@@ -298,6 +280,6 @@
         </div>
     </footer>
 
-    <script src="js/main.js?v=20260811-vertical" defer></script>
+    <script src="js/main.js?v=20260815-scroll-glass" defer></script>
 </body>
 </html>
