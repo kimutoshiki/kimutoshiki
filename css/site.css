@@ -2158,6 +2158,18 @@ nav a[aria-current="page"] {
     transition-duration: 680ms;
 }
 
+.vision-heading {
+    font-size: clamp(1.55rem, 3.05vw, 2.25rem);
+    letter-spacing: 0.035em;
+}
+
+.vision-em {
+    display: inline-block;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+}
+
 .portfolio-slider-section {
     --portfolio-card-height: clamp(248px, 25vw, 300px);
     --portfolio-gap: clamp(22px, 3vw, 38px);
