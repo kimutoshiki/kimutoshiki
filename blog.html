@@ -4,73 +4,189 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ブログ | 木村紀喜</title>
-
+    
     <meta name="description" content="木村紀喜のブログ。教育について感じたこと、考えたこと、日々の活動記録。">
-    <meta name="theme-color" content="#8C1E3C">
     <meta property="og:title" content="ブログ | 木村紀喜">
-    <meta property="og:description" content="研修会や教育実践、日々の学びに関する記録。">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kimutoshiki.com/blog.html">
-    <meta property="og:image" content="https://kimutoshiki.com/images/og-portfolio.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="本と鉛筆を紙細工で表したポートフォリオサイトのビジュアル">
-
-    <link rel="icon" href="favicon.png" type="image/png">
+    <meta property="og:description" content="教育について感じたこと、考えたことを綴ります">
+    <meta property="og:type" content="article">
+    
+    <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;800&family=Outfit:wght@400;600&display=swap">
+    
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/blog.css">
-    <link rel="stylesheet" href="css/site.css?v=20260815-scroll-glass">
-    <link rel="stylesheet" href="css/liquid-glass.css?v=20260815-scroll-glass">
 </head>
 <body>
-    <a href="#main" class="skip-link">メインコンテンツへ</a>
-
     <header class="site-header">
         <div class="header-inner">
-            <a href="index.html" class="logo" aria-label="ホーム：木村紀喜のポートフォリオサイト"><img class="logo-mark" src="images/brand-mark.webp" alt="" width="244" height="256" decoding="async"><span class="logo-copy">木村紀喜のポートフォリオサイト</span></a>
-            <button class="menu-toggle" id="menuToggle" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="navigation">
+            <a href="index.html" class="logo">木村紀喜</a>
+            <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
                 <span class="menu-icon"></span>
             </button>
-            <nav id="navigation" aria-label="メインナビゲーション">
+            <nav id="navigation">
                 <ul>
                     <li><a href="index.html">ホーム</a></li>
                     <li><a href="profile.html">プロフィール</a></li>
                     <li><a href="research.html">研究・活動</a></li>
-                    <li><a href="blog.html" class="current" aria-current="page">ブログ</a></li>
+                    <li><a href="blog.html" class="current">ブログ</a></li>
                     <li><a href="contact.html">お問い合わせ</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
-    <main id="main">
+    <main>
         <section class="hero-base blog-hero">
             <div class="hero-overlay"></div>
-            <div class="hero-grid"></div>
             <div class="hero-content">
-                <span class="hero-kicker animate-up delay-1">Blog</span>
-                <h1 class="hero-title animate-up delay-2"><span class="split-chars">ブログ</span></h1>
-                <p class="hero-subtitle animate-up delay-3">研修・活動・日々の学びの記録</p>
+                <div class="blog-intro">
+                    <h1 class="hero-title animate-fade-up delay-1">ブログ</h1>
+                    <p class="hero-subtitle animate-fade-up delay-2">日々の思考と実践の記録</p>
+                </div>
             </div>
         </section>
 
-        <section class="page-content blog-list-section has-decor" aria-labelledby="blog-list-title">
-            <img class="decor-art decor-art--confetti" src="images/decor-confetti.webp" alt="" aria-hidden="true" width="1440" height="960" loading="lazy" decoding="async">
-            <img class="decor-art decor-art--paper-blog" src="images/paper-blog.webp" alt="" aria-hidden="true" width="870" height="620" loading="lazy" decoding="async">
-            <img class="decor-art decor-art--blog-ribbon" src="images/decor-blog-ribbon.webp" alt="" aria-hidden="true" width="1440" height="480" loading="lazy" decoding="async">
+        <div class="page-content">
             <div class="blog-container scroll-animate">
-                <h2 class="visually-hidden" id="blog-list-title">ブログ記事一覧</h2>
-
+                
                 <div class="filter-container">
-                    <button class="filter-btn active" type="button" data-filter="all">すべて</button>
-                    <button class="filter-btn" type="button" data-filter="notice">お知らせ</button>
-                    <button class="filter-btn" type="button" data-filter="activity">活動</button>
-                    <button class="filter-btn" type="button" data-filter="thought">思考</button>
+                    <button class="filter-btn active" data-filter="all">すべて</button>
+                    <button class="filter-btn" data-filter="notice">お知らせ</button>
+                    <button class="filter-btn" data-filter="activity">活動</button>
+                    <button class="filter-btn" data-filter="thought">思考</button>
                 </div>
 
                 <div class="blog-posts">
+                    <article class="blog-item" data-category="activity">
+                        <div class="blog-header">
+                            <div class="blog-title-area">
+                                <div class="blog-meta">
+                                    <span class="cat-badge cat-activity">活動</span>
+                                    <span class="blog-date">2026.08.10</span>
+                                </div>
+                                <h3 class="blog-title">学生寮のメンバーで富士登山に行きました！</h3>
+                            </div>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-content-inner">
+                            準備中
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="blog-item" data-category="thought">
+                        <div class="blog-header">
+                            <div class="blog-title-area">
+                                <div class="blog-meta">
+                                    <span class="cat-badge cat-thought">思考</span>
+                                    <span class="blog-date">2026.08.05</span>
+                                </div>
+                                <h3 class="blog-title">夏期集中講義を受けて（UDL）</h3>
+                            </div>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-content-inner">
+                            準備中
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="blog-item" data-category="activity">
+                        <div class="blog-header">
+                            <div class="blog-title-area">
+                                <div class="blog-meta">
+                                    <span class="cat-badge cat-activity">活動</span>
+                                    <span class="blog-date">2026.08.01</span>
+                                </div>
+                                <h3 class="blog-title">万福寺盆踊りのボランティアに参加しました</h3>
+                            </div>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-content-inner">
+                            準備中
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="blog-item" data-category="activity">
+                        <div class="blog-header">
+                            <div class="blog-title-area">
+                                <div class="blog-meta">
+                                    <span class="cat-badge cat-activity">活動</span>
+                                    <span class="blog-date">2026.07.24</span>
+                                </div>
+                                <h3 class="blog-title">早稲田大学教職大学院　佐賀ツアーを開催しました！</h3>
+                            </div>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-content-inner">
+                            準備中
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="blog-item" data-category="activity">
+                        <div class="blog-header">
+                            <div class="blog-title-area">
+                                <div class="blog-meta">
+                                    <span class="cat-badge cat-activity">活動</span>
+                                    <span class="blog-date">2026.07.20</span>
+                                </div>
+                                <h3 class="blog-title">東京都大田区子どもフェスタのボランティアに参加しました！</h3>
+                            </div>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-content-inner">
+                            準備中
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="blog-item" data-category="activity">
+                        <div class="blog-header">
+                            <div class="blog-title-area">
+                                <div class="blog-meta">
+                                    <span class="cat-badge cat-activity">活動</span>
+                                    <span class="blog-date">2026.07.18</span>
+                                </div>
+                                <h3 class="blog-title">千代ケ丘小夏祭りボランティアに参加しました</h3>
+                            </div>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-content-inner">
+                            準備中
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="blog-item" data-category="activity">
+                        <div class="blog-header">
+                            <div class="blog-title-area">
+                                <div class="blog-meta">
+                                    <span class="cat-badge cat-activity">活動</span>
+                                    <span class="blog-date">2026.07.16</span>
+                                </div>
+                                <h3 class="blog-title">千代ヶ丘小学校にて出前授業を行いました</h3>
+                            </div>
+                            <div class="toggle-icon"></div>
+                        </div>
+                        <div class="blog-content">
+                            <div class="blog-content-inner">
+                            準備中
+                            </div>
+                        </div>
+                    </article>
+
                     <article class="blog-item" data-category="activity">
                         <div class="blog-header">
                             <div class="blog-title-area">
@@ -102,7 +218,7 @@
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -471,7 +587,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -489,7 +605,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -507,7 +623,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -525,7 +641,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -543,7 +659,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -561,7 +677,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -579,7 +695,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -597,7 +713,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -615,7 +731,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -633,7 +749,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -651,7 +767,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -669,7 +785,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -687,7 +803,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -705,7 +821,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -723,7 +839,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -741,7 +857,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -759,7 +875,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -777,7 +893,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -795,7 +911,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -813,7 +929,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -831,7 +947,7 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
@@ -849,48 +965,20 @@ https://cocomirai.jp/post-1581/
                         </div>
                         <div class="blog-content">
                             <div class="blog-content-inner">
-
+                            
                             </div>
                         </div>
                     </article>
                 </div>
             </div>
-        </section>
+        </div>
     </main>
 
     <footer class="site-footer">
-        <div class="footer-inner">
-            <div class="footer-brand">
-                <div class="footer-brand-lockup">
-                    <img class="footer-mark" src="images/brand-mark.webp" alt="" width="244" height="256" loading="lazy" decoding="async">
-                    <div class="footer-logo">木村紀喜 / Toshiki Kimura</div>
-                </div>
-                <p>小学校教育、授業づくり、教育研究の内容と活動記録を掲載しています。</p>
-            </div>
-            <div class="footer-col">
-                <h2>ページ</h2>
-                <ul>
-                    <li><a href="index.html">ホーム</a></li>
-                    <li><a href="profile.html">プロフィール</a></li>
-                    <li><a href="research.html">研究・活動</a></li>
-                    <li><a href="blog.html">ブログ</a></li>
-                    <li><a href="contact.html">お問い合わせ</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h2>連絡先</h2>
-                <ul>
-                    <li><a href="mailto:kimu.toshiki@gmail.com">Email</a></li>
-                    <li><a href="contact.html">お問い合わせページ</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>© 2025–2026 木村紀喜 (Toshiki Kimura). All Rights Reserved.</p>
-            <p>当サイトは個人が運営しており、所属機関の公式見解ではありません。</p>
-        </div>
+        <p>&copy; 2025 木村紀喜 (Toshiki Kimura). All Rights Reserved.<br>
+        当サイトは個人が運営しており、所属自治体・学校の公式見解ではありません。</p>
     </footer>
 
-    <script src="js/main.js?v=20260815-scroll-glass" defer></script>
+    <script src="js/main.js" defer></script>
 </body>
 </html>
