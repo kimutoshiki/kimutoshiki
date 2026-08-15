@@ -2151,6 +2151,216 @@ nav a[aria-current="page"] {
     }
 }
 
+/* ---------- Scroll-led home sequences ----------
+   The hero photographs and page guide now follow the visitor's page scroll.
+   All five page links remain in the normal document flow. */
+.hero-home .hero-slide {
+    transition-duration: 680ms;
+}
+
+.portfolio-slider-section {
+    --portfolio-card-height: clamp(248px, 25vw, 300px);
+    --portfolio-gap: clamp(22px, 3vw, 38px);
+}
+
+.portfolio-slider-shell {
+    grid-template-areas: "head viewport";
+    grid-template-columns: minmax(250px, 0.58fr) minmax(0, 1.42fr);
+    gap: clamp(30px, 6vw, 82px);
+    align-items: start;
+}
+
+.portfolio-slider-head {
+    position: sticky;
+    z-index: 4;
+    top: calc(var(--header-h) + 28px);
+    display: block;
+    margin: 0;
+    padding: clamp(24px, 3.4vw, 36px);
+    background: rgba(255, 253, 248, 0.84);
+    border: 1px solid rgba(140, 30, 60, 0.15);
+    border-radius: 26px;
+    box-shadow: 6px 8px 0 rgba(91, 15, 36, 0.72), 0 22px 48px rgba(91, 15, 36, 0.12);
+}
+
+.portfolio-slider-head h2 {
+    margin-bottom: 22px;
+}
+
+.portfolio-slider-head p {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.portfolio-viewport {
+    height: auto;
+    padding: 0 20px 0 2px;
+    overflow: visible;
+    touch-action: auto;
+}
+
+.portfolio-track {
+    display: grid;
+    gap: var(--portfolio-gap);
+    padding-bottom: 8px;
+    transform: none !important;
+    transition: none;
+}
+
+.portfolio-slide {
+    flex: none;
+    min-height: var(--portfolio-card-height);
+    padding-bottom: 12px;
+    opacity: 0.64;
+    transform: translate3d(14px, 24px, 0) scale(0.975);
+    transition:
+        opacity 520ms var(--ease-fluid),
+        transform 620ms var(--ease-fluid);
+}
+
+.portfolio-slide.is-before {
+    opacity: 0.78;
+    transform: translate3d(-8px, 0, 0) scale(0.988);
+}
+
+.portfolio-slide.is-active,
+.portfolio-slide:focus-within {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* Skip rendering the long blog list outside the viewport while keeping the
+   familiar plus-button accordion and deep links intact. */
+.blog-item {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 126px;
+}
+
+.blog-item:target {
+    content-visibility: visible;
+}
+
+.blog-content {
+    transition-duration: 360ms;
+}
+
+@media (max-width: 860px) {
+    .portfolio-slider-section {
+        --portfolio-card-height: clamp(250px, 58vw, 310px);
+        --portfolio-gap: 20px;
+        padding: 64px 16px 72px;
+    }
+
+    .portfolio-slider-shell {
+        grid-template-areas:
+            "head"
+            "viewport";
+        grid-template-columns: minmax(0, 1fr);
+        gap: 28px;
+    }
+
+    .portfolio-slider-head {
+        position: relative;
+        top: auto;
+        margin: 0;
+        padding: 24px;
+    }
+
+    .portfolio-slider-head h2 {
+        margin-bottom: 16px;
+    }
+
+    .portfolio-viewport {
+        height: auto;
+        padding: 0 16px 0 2px;
+    }
+
+    .portfolio-track {
+        gap: var(--portfolio-gap);
+        padding-bottom: 6px;
+    }
+
+    .portfolio-slide {
+        flex-basis: auto;
+        min-height: var(--portfolio-card-height);
+    }
+
+    .portfolio-slide-link {
+        min-height: var(--portfolio-card-height);
+    }
+
+    .vision-section {
+        padding-right: clamp(16px, 5vw, 24px);
+        padding-left: clamp(16px, 5vw, 24px);
+    }
+
+    .has-decor .vision-col-text {
+        padding: clamp(18px, 5vw, 24px);
+    }
+
+    .vision-heading {
+        font-size: clamp(1.25rem, 7.2vw, 2.15rem);
+        line-height: 1.55;
+        letter-spacing: 0.025em;
+        text-wrap: wrap;
+    }
+
+    .vision-em {
+        display: inline-block;
+        max-width: 100%;
+        margin-right: 0.08em;
+        margin-left: 0.08em;
+        padding: 0.03em 0.2em;
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow-wrap: normal;
+        transform: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .hero-home {
+        padding-bottom: 64px;
+    }
+
+    .portfolio-slider-section {
+        --portfolio-card-height: 300px;
+        --portfolio-gap: 18px;
+        padding: 54px 12px 62px;
+    }
+
+    .portfolio-slider-head {
+        padding: 22px 18px;
+    }
+
+    .portfolio-slide-link {
+        height: 100%;
+    }
+
+    .vision-heading {
+        font-size: clamp(1.25rem, 6.8vw, 1.78rem);
+    }
+
+    .vision-em {
+        margin-right: 0;
+        margin-left: 0;
+        padding-right: 0.16em;
+        padding-left: 0.16em;
+    }
+
+    .blog-item {
+        contain-intrinsic-size: auto 112px;
+    }
+}
+
+@media (hover: none), (pointer: coarse) {
+    .blog-item:hover {
+        transform: none !important;
+    }
+}
+
 /* Progressive enhancement: same-origin page changes use a short fade only. */
 @view-transition {
     navigation: auto;

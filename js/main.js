@@ -36,7 +36,7 @@
         initReveal();
         initSplitChars();
         initHeroSlideshow();
-        initPortfolioSliders();
+        initPortfolioScrollGuide();
         initBlogAccordion();
         initBlogFilter();
         initClickEffects();
@@ -120,10 +120,14 @@
             pageArt.forEach(art => activeArt.add(art));
         }
 
-        if ('ResizeObserver' in window && document.body) {
+        /* Blog accordion height animations must not make the whole page
+           recompute its scroll metrics on every animation frame. */
+        if ('ResizeObserver' in window && document.body && !$('.blog-posts')) {
             const sizeObserver = new ResizeObserver(() => schedule(true));
             sizeObserver.observe(document.body);
         }
+
+        on(document, 'site:layoutchange', () => schedule(true));
 
         motionSubscribers.add(isReduced => {
             if (isReduced) resetParallax();
@@ -271,350 +275,153 @@
         });
     }
 
-    /* -------- ホームの背景スライドショー -------- */
+    /* -------- ホームの背景写真：ページスクロールに連動 -------- */
     function initHeroSlideshow() {
         const root = $('[data-hero-slideshow]');
         if (!root) return;
 
         const slides = $$('.hero-slide', root);
-        const dots = $$('.hero-slide-dot', root);
-        const pause = $('[data-slide-pause]', root);
         if (slides.length < 2) return;
 
-        const interval = 6500;
-        const preloadLead = 2400;
         let current = Math.max(0, slides.findIndex(slide => slide.classList.contains('is-active')));
-        let timer = 0;
-        let preloadTimer = 0;
-        let userPaused = false;
-        let preferencePaused = reducedMotion;
-        let pointerPaused = false;
-        let focusPaused = false;
+        let frame = 0;
+        let nearViewport = true;
+
+        const clamp = (min, value, max) => Math.min(max, Math.max(min, value));
 
         const loadSlide = (index) => {
             const normalized = (index + slides.length) % slides.length;
             slides[normalized]?.classList.add('is-loaded');
         };
-        const isPermanentlyPaused = () => userPaused || preferencePaused;
-        const isTemporarilyPaused = () => pointerPaused || focusPaused || document.hidden;
-        const stop = () => {
-            window.clearTimeout(timer);
-            window.clearTimeout(preloadTimer);
-            timer = 0;
-            preloadTimer = 0;
-        };
-        const scheduleUpcomingLoad = () => {
-            const next = (current + 1) % slides.length;
-            if (slides[next].classList.contains('is-loaded')) return;
-            preloadTimer = window.setTimeout(() => {
-                preloadTimer = 0;
-                loadSlide(next);
-            }, Math.max(0, interval - preloadLead));
-        };
-        const start = () => {
-            if (isPermanentlyPaused() || isTemporarilyPaused() || timer) return;
-            scheduleUpcomingLoad();
-            timer = window.setTimeout(() => {
-                timer = 0;
-                show(current + 1);
-                start();
-            }, interval);
-        };
-        const restart = () => {
-            stop();
-            start();
-        };
 
-        const show = (index, userInitiated = false) => {
-            current = (index + slides.length) % slides.length;
+        const show = (index) => {
+            const next = clamp(0, index, slides.length - 1);
+            current = next;
             loadSlide(current);
+            loadSlide(Math.min(current + 1, slides.length - 1));
             slides.forEach((slide, i) => slide.classList.toggle('is-active', i === current));
-            dots.forEach((dot, i) => {
-                const active = i === current;
-                dot.classList.toggle('is-active', active);
-                dot.setAttribute('aria-pressed', String(active));
-            });
-            if (userInitiated) restart();
-        };
-        const syncPauseButton = () => {
-            if (!pause) return;
-            const paused = isPermanentlyPaused();
-            pause.setAttribute('aria-label', paused ? 'スライドショーを再生' : 'スライドショーを一時停止');
-            const icon = $('span', pause);
-            if (icon) icon.textContent = paused ? '▶' : 'Ⅱ';
+            root.dataset.heroIndex = String(current);
         };
 
-        dots.forEach(dot => {
-            const index = Number(dot.dataset.slide || 0);
-            on(dot, 'pointerenter', () => loadSlide(index), { passive: true });
-            on(dot, 'focus', () => loadSlide(index));
-            on(dot, 'click', () => show(index, true));
-        });
-        on(pause, 'click', () => {
-            if (preferencePaused) {
-                preferencePaused = false;
-                userPaused = false;
-            } else {
-                userPaused = !userPaused;
+        const update = () => {
+            frame = 0;
+            if (!nearViewport || document.hidden) return;
+            if (reducedMotion) {
+                root.style.setProperty('--hero-scroll-progress', '0');
+                show(0);
+                return;
             }
-            syncPauseButton();
-            restart();
-        });
-        on(document, 'visibilitychange', () => {
-            if (document.hidden) stop();
-            else start();
-        });
-        const controls = $('.hero-slide-controls', root);
-        on(controls, 'pointerenter', () => {
-            pointerPaused = true;
-            stop();
-        }, { passive: true });
-        on(controls, 'pointerleave', () => {
-            pointerPaused = false;
-            start();
-        }, { passive: true });
-        on(controls, 'focusin', () => {
-            focusPaused = true;
-            stop();
-        });
-        on(controls, 'focusout', () => {
-            requestAnimationFrame(() => {
-                focusPaused = Boolean(controls?.contains(document.activeElement));
-                if (!focusPaused) start();
-            });
-        });
 
-        motionSubscribers.add(isReduced => {
-            preferencePaused = isReduced;
-            syncPauseButton();
-            if (isReduced) stop();
-            else start();
-        });
+            const rect = root.getBoundingClientRect();
+            const travel = Math.max(1, root.offsetHeight * 0.72);
+            const progress = clamp(0, -rect.top / travel, 1);
+            const index = Math.min(slides.length - 1, Math.floor(progress * slides.length));
+            root.style.setProperty('--hero-scroll-progress', progress.toFixed(4));
+            if (index !== current) show(index);
+        };
+
+        const schedule = () => {
+            if (!frame) frame = requestAnimationFrame(update);
+        };
+
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver(entries => {
+                nearViewport = entries.some(entry => entry.isIntersecting);
+                if (nearViewport) schedule();
+            }, { rootMargin: '25% 0px' });
+            observer.observe(root);
+        }
+
+        on(window, 'scroll', schedule, { passive: true });
+        on(window, 'resize', schedule, { passive: true });
+        on(window, 'pageshow', schedule);
+        on(document, 'visibilitychange', schedule);
+        motionSubscribers.add(schedule);
 
         loadSlide(current);
         show(current);
-        syncPauseButton();
-        const loadNext = () => loadSlide(current + 1);
+        const loadRemaining = () => slides.forEach((_, index) => loadSlide(index));
         if ('requestIdleCallback' in window) {
-            window.requestIdleCallback(loadNext, { timeout: 1400 });
+            window.requestIdleCallback(loadRemaining, { timeout: 1400 });
         } else {
-            window.setTimeout(loadNext, 500);
+            window.setTimeout(loadRemaining, 500);
         }
-        start();
+        schedule();
     }
 
-    /* -------- 全ページ共通のページ案内スライダー -------- */
-    function initPortfolioSliders() {
+    /* -------- ホームのページ案内：通常スクロールで順に強調 -------- */
+    function initPortfolioScrollGuide() {
         $$('[data-portfolio-slider]').forEach(root => {
-            const viewport = $('.portfolio-viewport', root);
-            const track = $('.portfolio-track', root);
             const slides = $$('.portfolio-slide', root);
-            const previous = $('[data-portfolio-prev]', root);
-            const next = $('[data-portfolio-next]', root);
-            const pause = $('[data-portfolio-pause]', root);
-            const dots = $$('[data-portfolio-dot]', root);
-            if (!viewport || !track || slides.length < 2) return;
+            if (slides.length < 2) return;
 
-            const interval = 5600;
             let current = slides.findIndex(slide => (
                 slide.classList.contains('is-active') || Boolean($('[aria-current="page"]', slide))
             ));
             if (current < 0) current = 0;
 
-            let timer = 0;
-            let resizeFrame = 0;
-            let transitionResetFrame = 0;
-            let userPaused = false;
-            let pointerPaused = false;
-            let focusPaused = false;
+            let frame = 0;
+            let nearViewport = true;
 
-            const status = document.createElement('span');
-            status.className = 'visually-hidden portfolio-status';
-            status.setAttribute('role', 'status');
-            status.setAttribute('aria-live', 'polite');
-            status.setAttribute('aria-atomic', 'true');
-
-            const progress = document.createElement('span');
-            progress.className = 'visually-hidden portfolio-progress-a11y';
-            progress.setAttribute('role', 'progressbar');
-            progress.setAttribute('aria-label', 'ページ案内の進行');
-            progress.setAttribute('aria-valuemin', '1');
-            progress.setAttribute('aria-valuemax', String(slides.length));
-            root.append(status, progress);
-
-            viewport.setAttribute('aria-live', 'off');
-            if (!viewport.hasAttribute('tabindex')) viewport.setAttribute('tabindex', '0');
-            if (!viewport.hasAttribute('aria-label')) {
-                viewport.setAttribute('aria-label', 'ページ案内。上下の矢印キーでも切り替えられます');
-            }
-
-            const isTemporarilyPaused = () => pointerPaused || focusPaused || document.hidden;
-            const isPaused = () => userPaused || reducedMotion;
-            const stop = () => {
-                window.clearTimeout(timer);
-                timer = 0;
-            };
-            const getOffset = index => {
-                const firstOffset = slides[0].offsetTop;
-                const rawOffset = Math.max(0, slides[index].offsetTop - firstOffset);
-                const maxOffset = Math.max(0, track.scrollHeight - viewport.clientHeight);
-                return Math.min(rawOffset, maxOffset);
-            };
-            const positionTrack = (instant = false) => {
-                window.cancelAnimationFrame(transitionResetFrame);
-                transitionResetFrame = 0;
-
-                if (instant || reducedMotion) track.style.transition = 'none';
-                else track.style.removeProperty('transition');
-
-                track.style.transform = `translate3d(0, ${-getOffset(current)}px, 0)`;
-
-                if (instant && !reducedMotion) {
-                    transitionResetFrame = requestAnimationFrame(() => {
-                        transitionResetFrame = 0;
-                        track.style.removeProperty('transition');
-                    });
-                }
-            };
-            const announceCurrent = () => {
-                const title = $('h2, h3, h4', slides[current])?.textContent.trim();
-                status.textContent = `${title ? `「${title}」` : 'ページ案内'}、${current + 1} / ${slides.length}`;
-            };
-            const syncProgress = () => {
+            const show = (index) => {
+                current = Math.min(slides.length - 1, Math.max(0, index));
                 const progressValue = (current + 1) / slides.length;
                 root.dataset.portfolioIndex = String(current);
                 root.style.setProperty('--portfolio-index', String(current));
                 root.style.setProperty('--portfolio-progress', progressValue.toFixed(4));
-                progress.setAttribute('aria-valuenow', String(current + 1));
-                progress.setAttribute('aria-valuetext', `${current + 1} / ${slides.length}`);
-            };
-            const syncPauseButton = () => {
-                if (!pause) return;
-                const paused = isPaused();
-                const icon = $('.portfolio-pause-icon, [aria-hidden="true"]', pause);
-                const label = $('.portfolio-pause-label', pause);
-
-                pause.setAttribute('aria-pressed', String(paused));
-                pause.setAttribute('aria-disabled', String(reducedMotion));
-                pause.setAttribute('aria-label', reducedMotion
-                    ? 'モーション低減設定により自動再生は停止中です'
-                    : paused ? '自動再生を再開' : '自動再生を一時停止');
-                if (icon) icon.textContent = paused ? '▶' : 'Ⅱ';
-                if (label) label.textContent = reducedMotion ? '停止中' : paused ? '再生' : '一時停止';
-            };
-            const start = () => {
-                if (isPaused() || isTemporarilyPaused() || timer) return;
-                timer = window.setTimeout(() => {
-                    timer = 0;
-                    show(current + 1);
-                    start();
-                }, interval);
-            };
-            const restart = () => {
-                stop();
-                start();
-            };
-            const show = (index, options = {}) => {
-                const { announce = false, instant = false, userInitiated = false } = options;
-                current = (index + slides.length) % slides.length;
                 slides.forEach((slide, slideIndex) => {
                     const active = slideIndex === current;
                     slide.classList.toggle('is-active', active);
-                    slide.setAttribute('aria-hidden', String(!active));
-                    slide.toggleAttribute('inert', !active);
+                    slide.classList.toggle('is-before', slideIndex < current);
+                    slide.classList.toggle('is-after', slideIndex > current);
                 });
-                dots.forEach((dot, dotIndex) => {
-                    const active = dotIndex === current;
-                    dot.classList.toggle('is-active', active);
-                    dot.setAttribute('aria-pressed', String(active));
-                });
-                positionTrack(instant);
-                syncProgress();
-                if (announce) announceCurrent();
-                if (userInitiated) restart();
             };
 
-            on(previous, 'click', () => show(current - 1, { announce: true, userInitiated: true }));
-            on(next, 'click', () => show(current + 1, { announce: true, userInitiated: true }));
-            dots.forEach((dot, dotIndex) => {
-                const requestedIndex = Number(dot.dataset.portfolioDot);
-                const index = Number.isFinite(requestedIndex) ? requestedIndex : dotIndex;
-                on(dot, 'click', () => show(index, { announce: true, userInitiated: true }));
-            });
-            on(pause, 'click', () => {
-                if (reducedMotion) {
-                    status.textContent = 'モーション低減設定により自動再生は停止しています。';
-                    return;
-                }
-                userPaused = !userPaused;
-                syncPauseButton();
-                status.textContent = userPaused ? '自動再生を停止しました。' : '自動再生を再開しました。';
-                if (userPaused) stop();
-                else restart();
-            });
+            const update = () => {
+                frame = 0;
+                if (!nearViewport || document.hidden) return;
 
-            on(root, 'pointerenter', () => {
-                pointerPaused = true;
-                stop();
-            }, { passive: true });
-            on(root, 'pointerleave', () => {
-                pointerPaused = false;
-                start();
-            }, { passive: true });
-            on(root, 'focusin', () => {
-                focusPaused = true;
-                stop();
-            });
-            on(root, 'focusout', () => {
-                requestAnimationFrame(() => {
-                    focusPaused = root.contains(document.activeElement);
-                    if (!focusPaused) start();
+                const targetY = Math.min(window.innerHeight * 0.52, window.innerHeight - 120);
+                let closestIndex = current;
+                let closestDistance = Number.POSITIVE_INFINITY;
+                slides.forEach((slide, index) => {
+                    const rect = slide.getBoundingClientRect();
+                    const distance = Math.abs(rect.top + rect.height / 2 - targetY);
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestIndex = index;
+                    }
                 });
-            });
-            on(root, 'keydown', event => {
-                if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
-                if (event.target instanceof Element
-                    && event.target.closest('a, button, input, textarea, select, [contenteditable="true"]')) return;
-                event.preventDefault();
-                show(current + (event.key === 'ArrowDown' ? 1 : -1), {
-                    announce: true,
-                    userInitiated: true,
-                });
-            });
-            on(document, 'visibilitychange', () => {
-                if (document.hidden) stop();
-                else start();
-            });
-
-            const schedulePositionRefresh = () => {
-                if (!resizeFrame) {
-                    resizeFrame = requestAnimationFrame(() => {
-                        resizeFrame = 0;
-                        positionTrack(true);
-                    });
-                }
+                if (closestIndex !== current) show(closestIndex);
             };
+
+            const schedule = () => {
+                if (!frame) frame = requestAnimationFrame(update);
+            };
+
             if ('ResizeObserver' in window) {
-                const viewportObserver = new ResizeObserver(schedulePositionRefresh);
-                viewportObserver.observe(viewport);
-                viewportObserver.observe(track);
-            } else {
-                on(window, 'resize', schedulePositionRefresh, { passive: true });
+                const observer = new ResizeObserver(schedule);
+                observer.observe(root);
             }
-            if (document.fonts) document.fonts.ready.then(schedulePositionRefresh);
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver(entries => {
+                    nearViewport = entries.some(entry => entry.isIntersecting);
+                    if (nearViewport) schedule();
+                }, { rootMargin: '30% 0px' });
+                observer.observe(root);
+            }
 
-            motionSubscribers.add(isReduced => {
-                root.classList.toggle('is-reduced-motion', isReduced);
-                syncPauseButton();
-                positionTrack(true);
-                if (isReduced) stop();
-                else start();
+            on(window, 'scroll', schedule, { passive: true });
+            on(window, 'resize', schedule, { passive: true });
+            on(root, 'focusin', event => {
+                const slide = event.target instanceof Element ? event.target.closest('.portfolio-slide') : null;
+                const index = slides.indexOf(slide);
+                if (index >= 0) show(index);
             });
+            motionSubscribers.add(schedule);
 
-            root.classList.toggle('is-reduced-motion', reducedMotion);
-            show(current, { instant: true });
-            syncPauseButton();
-            start();
+            show(current);
+            schedule();
         });
     }
 
@@ -624,10 +431,14 @@
         if (!items.length) return;
         let resizeFrame = 0;
 
+        let layoutTimer = 0;
+
         const refreshOpenContent = () => {
             resizeFrame = 0;
-            $$('.blog-content.active').forEach(content => {
-                content.style.maxHeight = `${content.scrollHeight}px`;
+            const openContents = $$('.blog-content.active');
+            const heights = openContents.map(content => content.scrollHeight);
+            openContents.forEach((content, index) => {
+                content.style.maxHeight = `${heights[index]}px`;
             });
         };
         const scheduleOpenContentRefresh = () => {
@@ -665,6 +476,10 @@
                 hdr.setAttribute('aria-expanded', String(open));
                 content.classList.toggle('active', open);
                 content.style.maxHeight = open ? `${content.scrollHeight}px` : '0px';
+                window.clearTimeout(layoutTimer);
+                layoutTimer = window.setTimeout(() => {
+                    document.dispatchEvent(new Event('site:layoutchange'));
+                }, reducedMotion ? 0 : 380);
             };
             const toggle = () => setOpen(hdr.getAttribute('aria-expanded') !== 'true');
 
@@ -707,6 +522,9 @@
                     const show = filter === 'all' || item.dataset.category === filter;
                     item.style.display = show ? '' : 'none';
                 });
+                requestAnimationFrame(() => {
+                    document.dispatchEvent(new Event('site:layoutchange'));
+                });
             });
         });
     }
@@ -718,6 +536,7 @@
 
         on(document, 'click', (e) => {
             if (reducedMotion || !e.detail || e.button !== 0) return;
+            if (e.target instanceof Element && e.target.closest('.blog-header')) return;
 
             const now = performance.now();
             if (now - lastBurst < 120) return;
