@@ -1049,3 +1049,641 @@ nav a {
     padding-bottom: 28px;
   }
 }
+
+/* 2026-08-28: compact controls and page chrome */
+
+:root {
+  --header-h: 64px;
+  --max-w: 1600px;
+  --content-w: 1280px;
+  --space-md: 1.25rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4.25rem;
+}
+
+/* Multi-page header, banners, controls, and footer */
+.site-header {
+  border-bottom-width: 3px;
+}
+
+.site-header::before,
+.site-header::after {
+  bottom: -3px;
+  height: 3px;
+}
+
+.header-inner {
+  width: min(100%, 1680px);
+  max-width: 1680px;
+  padding-inline: clamp(16px, 2.2vw, 36px);
+}
+
+.site-header .logo {
+  gap: 0.45em;
+  font-size: clamp(0.76rem, 0.82vw, 0.86rem);
+  line-height: 1.25;
+}
+
+.site-header .logo::before {
+  font-size: 1.15em;
+}
+
+.site-header nav a {
+  min-height: 0;
+  padding: 0.48em 0.78em;
+  font-size: 0.84rem;
+  line-height: 1.3;
+  border-width: 1.5px;
+}
+
+.menu-toggle {
+  width: 38px;
+  height: 38px;
+}
+
+.menu-icon,
+.menu-icon::before,
+.menu-icon::after {
+  width: 21px;
+  height: 2.5px;
+}
+
+.menu-icon::before {
+  top: -7px;
+}
+
+.menu-icon::after {
+  top: 7px;
+}
+
+.marquee {
+  margin: 10px 0;
+  padding: 10px 0;
+  border-block-width: 3px;
+}
+
+.marquee-track,
+.marquee-item {
+  gap: 36px;
+}
+
+.marquee-track {
+  padding-right: 36px;
+}
+
+.marquee-item {
+  font-size: 1rem;
+}
+
+.section-header,
+.highlights-section .section-header,
+.types-section .section-header {
+  margin-bottom: 30px;
+}
+
+.section-eyebrow {
+  margin-bottom: 11px;
+  padding: 0.42em 0.9em;
+}
+
+.btn {
+  min-height: 0;
+  gap: 0.55em;
+  padding: 0.56em 1em;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  border-width: 2px;
+}
+
+.btn-primary,
+.btn-outline {
+  box-shadow: 4px 4px 0 var(--navy);
+}
+
+.btn-arrow::after {
+  font-size: 1.05em;
+}
+
+.filter-container {
+  gap: 6px;
+  margin-bottom: 28px;
+  padding: 8px 10px;
+}
+
+.filter-btn {
+  min-height: 0;
+  padding: 0.46em 0.85em;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  border-width: 2px;
+}
+
+.site-footer {
+  padding: 40px 22px 18px;
+  border-top-width: 3px;
+}
+
+.site-footer .footer-inner {
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.site-footer .footer-brand .footer-logo {
+  margin-bottom: 9px;
+  font-size: 1.05rem;
+}
+
+.site-footer .footer-brand p {
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.site-footer .footer-col h4 {
+  margin-bottom: 12px;
+  font-size: 0.84rem;
+}
+
+.site-footer .footer-col ul {
+  gap: 8px;
+}
+
+.site-footer .footer-col a {
+  gap: 7px;
+  font-size: 0.86rem;
+}
+
+.site-footer .footer-bottom {
+  padding-top: 15px;
+  font-size: 0.78rem;
+}
+
+/* One-page Sites preview and GitHub homepage */
+.masthead {
+  top: 9px;
+  min-height: 56px;
+  height: 56px;
+  padding: 5px 7px 5px 6px;
+  gap: 12px;
+}
+
+.brand {
+  gap: 7px;
+}
+
+.brand-seal {
+  width: 40px;
+  height: 40px;
+  font-size: 12px;
+}
+
+.brand-name {
+  font-size: 13px;
+}
+
+.brand-name small {
+  margin-top: 2px;
+  font-size: 6px;
+}
+
+.mast-nav {
+  gap: clamp(10px, 1.5vw, 23px);
+}
+
+.mast-nav a {
+  min-height: 0;
+  padding: 10px 0 6px;
+  font-size: 10.5px;
+  line-height: 1.15;
+}
+
+.mast-nav a span {
+  top: 0;
+  font-size: 6.5px;
+}
+
+.lang-switch,
+.menu-button {
+  min-height: 36px;
+  height: 36px;
+}
+
+.lang-switch {
+  padding: 2px;
+}
+
+.lang-switch button {
+  width: 30px;
+  height: 30px;
+  font-size: 9px;
+}
+
+.menu-button {
+  width: 36px;
+  padding: 8px;
+}
+
+.hero-stage,
+.hero-shell {
+  min-height: clamp(570px, 70svh, 720px);
+}
+
+.hero-topline {
+  top: 78px;
+}
+
+.hero-summary {
+  bottom: 3.5vh;
+  width: min(570px, 47vw);
+  padding: 13px 15px;
+}
+
+.slide-index {
+  margin-bottom: 7px;
+  padding: 0.38em 0.7em;
+}
+
+.hero-summary p {
+  margin-bottom: 10px;
+  font-size: clamp(13px, 1.05vw, 16px);
+}
+
+.hero-links {
+  gap: 6px;
+}
+
+.hero-links a {
+  min-width: 0;
+  min-height: 0;
+  gap: 0.7em;
+  padding: 0.52em 0.9em;
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.hero-data {
+  bottom: 3.5vh;
+}
+
+.hero-controls {
+  gap: 5px;
+}
+
+.hero-controls > button {
+  width: 38px;
+  height: 38px;
+  font-size: 12px;
+}
+
+.hero-controls > div {
+  gap: 4px;
+}
+
+.hero-controls > div button {
+  min-height: 0;
+  height: 13px;
+}
+
+.hero-controls > div button.active {
+  height: 24px;
+}
+
+.kinetic-banner {
+  height: 72px;
+  margin-top: -8px;
+}
+
+.banner-row {
+  height: 34px;
+  border-block-width: 1.5px;
+  font-size: 10px;
+}
+
+.row-one {
+  top: 7px;
+}
+
+.row-two {
+  top: 33px;
+}
+
+.section-pad {
+  padding: clamp(52px, 5.8vw, 78px) max(3vw, 20px);
+}
+
+.section-number {
+  top: 14px;
+  left: max(3vw, 20px);
+  padding: 0.4em 0.7em;
+}
+
+.vision,
+.profile {
+  gap: 3.5vw;
+}
+
+.vision-copy > p,
+.large-copy,
+.research-intro > p,
+.blog-head > p {
+  margin: 20px 0;
+}
+
+.stat-row div {
+  padding: 14px 10px 7px;
+}
+
+.photo-stack {
+  padding: 10px 10px 42px;
+}
+
+.photo-frame {
+  height: clamp(360px, 38vw, 450px);
+}
+
+.name-ticket {
+  padding: 11px 15px;
+}
+
+.mini-grid {
+  margin: 20px 0;
+}
+
+.mini-grid article {
+  padding: 14px;
+}
+
+.text-link {
+  min-height: 0;
+  gap: 0.5em;
+  padding-bottom: 0.22em;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.theme-grid {
+  margin: 28px 0 20px;
+}
+
+.theme-card {
+  min-height: 235px;
+  padding: 17px;
+}
+
+.theme-card h3 {
+  margin: 38px 0 9px;
+  font-size: 21px;
+}
+
+.button {
+  min-height: 0;
+  gap: 0.7em;
+  padding: 0.54em 0.95em;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+.post-list {
+  margin: 28px 0 20px;
+}
+
+.post-list article {
+  padding: 14px 5px;
+}
+
+.post-num {
+  width: 38px;
+  height: 38px;
+  font-size: 12px;
+}
+
+.contact {
+  min-height: 460px;
+}
+
+.contact > div > p:not(.eyebrow) {
+  margin: 17px 0 22px;
+}
+
+.contact-stamp {
+  width: min(190px, 18vw);
+}
+
+.mega-footer .footer-top {
+  padding: 36px max(3vw, 20px) 20px;
+  gap: 20px;
+}
+
+.mega-footer .footer-brand {
+  font-size: clamp(44px, 7vw, 98px);
+}
+
+.mega-footer .footer-marquee {
+  padding: 7px 0;
+  font-size: 13px;
+}
+
+.mega-footer .footer-bottom {
+  padding: 20px max(3vw, 20px) 24px;
+  gap: 16px;
+  font-size: 10.5px;
+}
+
+.mega-footer .footer-bottom nav {
+  gap: 7px 16px;
+}
+
+.mega-footer .footer-bottom nav a {
+  min-height: 0;
+  line-height: 1.35;
+}
+
+.mega-footer .back-top {
+  width: 46px;
+  height: 46px;
+  font-size: 9px;
+}
+
+.mega-footer .footer-bottom small {
+  padding-top: 12px;
+}
+
+@media (max-width: 1040px) {
+  .site-header nav {
+    padding: 18px 18px 24px;
+  }
+
+  .site-header nav ul {
+    gap: 5px;
+  }
+
+  .site-header nav a {
+    padding: 0.58em 0.85em;
+    font-size: 0.92rem;
+  }
+}
+
+@media (max-width: 860px) {
+  :root {
+    --header-h: 58px;
+    --space-lg: 2.15rem;
+    --space-xl: 3.65rem;
+  }
+
+  .hero-cta {
+    align-items: center;
+  }
+
+  .hero-cta .btn {
+    width: auto;
+  }
+
+  .site-footer .footer-inner {
+    gap: 20px;
+  }
+
+  .masthead {
+    top: 8px;
+    min-height: 54px;
+    height: 54px;
+  }
+
+  .brand-seal {
+    width: 38px;
+    height: 38px;
+  }
+
+  .hero-topline {
+    top: 72px;
+  }
+
+  .hero-summary {
+    padding: 12px 14px;
+  }
+
+  .hero-controls {
+    right: 16px;
+  }
+
+  .section-pad {
+    padding: 52px 20px;
+  }
+
+  .mega-footer .footer-bottom {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --header-h: 56px;
+    --space-xl: 3.25rem;
+  }
+
+  .site-header nav {
+    padding: 14px 14px 20px;
+  }
+
+  .site-footer {
+    padding-top: 34px;
+  }
+
+  .masthead {
+    top: 7px;
+    min-height: 52px;
+    height: 52px;
+  }
+
+  .brand-seal {
+    width: 36px;
+    height: 36px;
+  }
+
+  .lang-switch,
+  .menu-button {
+    min-height: 34px;
+    height: 34px;
+  }
+
+  .lang-switch button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .menu-button {
+    width: 34px;
+  }
+
+  .hero-stage,
+  .hero-shell {
+    min-height: clamp(560px, 70svh, 610px);
+  }
+
+  .hero-topline {
+    top: 68px;
+  }
+
+  .hero-summary {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    padding: 11px 12px;
+  }
+
+  .hero-links a {
+    padding: 0.5em 0.82em;
+    font-size: 0.7rem;
+  }
+
+  .hero-controls {
+    right: 12px;
+  }
+
+  .hero-controls > button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .kinetic-banner {
+    height: 64px;
+  }
+
+  .banner-row {
+    height: 31px;
+    font-size: 9px;
+  }
+
+  .row-one {
+    top: 6px;
+  }
+
+  .row-two {
+    top: 30px;
+  }
+
+  .section-pad {
+    padding: 46px 16px;
+  }
+
+  .section-number {
+    top: 11px;
+    left: 16px;
+  }
+
+  .theme-card {
+    min-height: 210px;
+  }
+
+  .contact {
+    min-height: 500px;
+  }
+
+  .mega-footer .footer-top {
+    padding-top: 30px;
+  }
+
+  .mega-footer .footer-bottom {
+    padding-top: 17px;
+    padding-bottom: 20px;
+  }
+}
