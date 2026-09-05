@@ -34,3 +34,8 @@ main>section:not(.campus-hero),.page-content{padding:52px var(--gutter);scroll-m
 .campus-inner .scene-tools p{display:none}
 
 @media(max-width:760px){.campus-inner .scene-caption{bottom:119px;max-width:calc(100% - 194px)}}
+@media(max-width:360px){.campus-inner .scene-caption{bottom:153px;max-width:none}}
+@media(max-width:360px){
+ .header-inner{padding-left:14px;padding-right:14px;gap:8px}.logo{gap:10px}.brand-monogram{font-size:30px}.logo-copy{font-size:14px}.logo-copy small{font-size:8px}.header-tools{gap:8px}.menu-toggle{white-space:nowrap;font-size:11px;gap:4px;padding-left:8px}
+ .page-dock a,.campus-inner .page-dock a{gap:5px;padding:14px 7px}.page-dock strong{font-size:12px;white-space:nowrap}.page-dock a>span{flex-shrink:0;white-space:nowrap}
+}
