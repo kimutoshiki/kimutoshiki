@@ -1,0 +1,55 @@
+/* HTML links stay usable before, during, and without 3D loading. */
+(() => {
+  const study = document.querySelector('.study');
+  const dialog = document.getElementById('reader');
+  const pins = document.querySelector('.room-pins');
+  const status = document.getElementById('room-status');
+  const motion = document.getElementById('motion-toggle');
+  const nightButton = document.getElementById('night-toggle');
+  let engine, opener, ready = false, markers = true, night = false;
+  let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const panels = {
+    profile: ['01', 'プロフィール', '机の名札から、これまでの歩みへ。'],
+    research: ['02', '研究・活動', '本棚から、学びと実践の記録へ。'],
+    blog: ['03', 'ブログ', '開いたノートから、日々の記録へ。'],
+    gallery: ['04', '写真', '壁の額縁から、大切な風景へ。'],
+    contact: ['05', 'お問い合わせ', '机の手紙から、ご連絡を。']
+  };
+  const landmarkPanels = {'landmark-okuma-auditorium':'profile','landmark-okuma-statue':'research','landmark-karatsu-castle':'gallery','landmark-karatsu-bank':'blog'};
+  function show(id, source) {
+    const panelId = landmarkPanels[id] || id;
+    const panel = panels[panelId], template = document.getElementById('panel-' + panelId);
+    if (!panel || !template || typeof dialog.showModal !== 'function') return false;
+    opener = source || document.activeElement;
+    document.getElementById('reader-number').textContent = panel[0] + ' / MY STUDY';
+    document.getElementById('reader-title').textContent = panel[1];
+    document.getElementById('reader-subtitle').textContent = panel[2];
+    document.getElementById('reader-body').replaceChildren(template.content.cloneNode(true));
+    if (!dialog.open) dialog.showModal();
+    dialog.scrollTop = 0;
+    engine?.focus?.(id);
+    return true;
+  }
+  document.querySelectorAll('[data-room-open]').forEach(link => link.addEventListener('click', e => {
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (show(link.dataset.roomOpen, link)) e.preventDefault();
+  }));
+  document.querySelectorAll('[data-close-reader]').forEach(button => button.addEventListener('click', () => dialog.close()));
+  dialog.addEventListener('click', e => { if (e.target === dialog) { const b=dialog.getBoundingClientRect(); if(e.clientX<b.left || e.clientX>b.right || e.clientY<b.top || e.clientY>b.bottom) dialog.close(); } });
+  dialog.addEventListener('close', () => { engine?.focus?.(null); opener?.focus?.({preventScroll:true}); });
+  function setPinState() { pins.classList.toggle('hidden-pins', !markers); pins.querySelectorAll('a').forEach(a=>a.tabIndex=ready&&markers?0:-1); }
+  document.getElementById('markers-toggle').addEventListener('click', e => {markers=!markers;e.currentTarget.setAttribute('aria-pressed',String(markers));setPinState();});
+  motion.addEventListener('click', () => {paused=!paused;engine?.setPaused?.(paused);motion.setAttribute('aria-pressed',String(paused));motion.setAttribute('aria-label',paused?'動きを再開する':'動きを止める');});
+  nightButton.addEventListener('click', () => {night=!night;engine?.setNight?.(night);nightButton.setAttribute('aria-pressed',String(night));nightButton.setAttribute('aria-label',night?'昼の明かりにする':'夜の明かりにする');});
+  document.getElementById('zoom-in').addEventListener('click',()=>engine?.zoom?.(-.7));
+  document.getElementById('zoom-out').addEventListener('click',()=>engine?.zoom?.(.7));
+  document.getElementById('view-reset').addEventListener('click',()=>engine?.reset?.());
+  function failed(error) { console.error('Study could not render',error);status.hidden=true;study.classList.add('is-failed');document.getElementById('room-fallback').hidden=false; }
+  import('../scene/study.js?v=20260906-home').then(async ({mountStudy}) => {
+    engine = await mountStudy({canvas:document.getElementById('study-canvas'),pins,onSelect:show,onError:failed,onReady(){ready=true;study.classList.add('is-ready');status.hidden=true;setPinState();}});
+    engine?.setPaused?.(paused);engine?.setNight?.(night);
+    motion.setAttribute('aria-pressed',String(paused));
+    if (engine?.software) {document.getElementById('render-mode').textContent='· シンプル表示';motion.disabled=true;nightButton.disabled=true;motion.title='この環境では静止表示です';nightButton.title='この環境では昼の明かりで表示します';}
+  }).catch(failed);
+  window.addEventListener('pagehide', e => {if(!e.persisted)engine?.dispose?.();});
+})();

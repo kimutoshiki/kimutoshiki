@@ -1,0 +1,36 @@
+/* The reading pages continue the study's paper, walnut, olive and burgundy palette. */
+:root{--ink:#302a21;--muted:#766955;--wine:#76283c;--line:#d9cfbb;--paper:#f8f4e9;--gutter:clamp(22px,5vw,80px)}
+body.study-detail{background:var(--paper);color:var(--ink)}
+.site-header{height:76px;background:#f8f4e9f5;border-color:#d9cfbb;backdrop-filter:blur(12px)}
+.brand-monogram{font-weight:400}.logo-copy{font-weight:500}.site-header nav a{font-size:13px}.nav-num{color:#958163}
+.study-detail main>section.study-page-heading{padding:34px var(--gutter) 38px;background:linear-gradient(115deg,#e8dfc8,#f0e9d8);border-bottom:1px solid #d5c7ad}
+.heading-inner,.page-heading-inner{display:flex;align-items:center;justify-content:space-between;gap:38px;max-width:1180px!important}
+.breadcrumbs{display:flex;gap:12px;font-size:12px;color:#78694f;margin-bottom:22px}.breadcrumbs a{text-decoration:underline;text-underline-offset:4px}
+.page-kicker{font-size:11px;letter-spacing:.16em;color:#85684a;margin-bottom:7px}
+.study-page-heading h1{font-family:'Yu Mincho','Hiragino Mincho ProN',serif;font-size:clamp(29px,3.2vw,43px);letter-spacing:.08em;font-weight:500}
+.page-description{font-size:15px;color:#6b5d49;margin-top:12px;max-width:39em}
+.heading-photo{margin:0;max-width:285px;width:28%;flex-shrink:0;padding:8px;background:#ede3cc;border:8px solid #71543b;box-shadow:2px 7px 15px #4c30121f;transform:rotate(1deg)}
+.heading-photo img{width:100%;height:auto;object-fit:contain;display:block}
+.study-detail main>section:not(.study-page-heading){padding-top:44px;padding-bottom:44px}
+.study-detail main>section:not(.study-page-heading):nth-of-type(odd){background:#f0eadc}
+.study-detail main>section>div{max-width:1180px}
+.section-title,.highlight-title,.lead-quote,.theme-title{font-family:'Yu Mincho','Hiragino Mincho ProN',serif;font-weight:500}
+.section-title{font-size:clamp(24px,2.5vw,32px)}.section-eyebrow{color:#8a684b;letter-spacing:.12em;font-size:11px}
+.theme-card,.activity-card,.contact-card{background:#f6f0e2;border-color:#d5c6ae;box-shadow:none}
+.cat-badge,.theme-tag,.keyword,.news-cat{background:#e1e5cf;color:#52603c}
+.cat-thought{background:#ecdee0;color:#76283c}.cat-notice{background:#ecdfc6;color:#78602f}
+.btn{border-color:#aa9475}.btn-primary{border-color:var(--wine)}.filter-btn{border-color:#bead91}.filter-btn:hover{background:#ede3d0}
+.filter-btn.active:hover{background:var(--wine)}.blog-header{padding:25px 0}.blog-title{font-size:19px}.blog-content-inner{max-width:850px}
+.blog-content-inner img{width:auto;height:auto;object-fit:contain}.toggle-icon{border-color:#bead91}
+.about-inner{gap:50px}.license-item{border-color:#d9cfbb}.keyword{border-color:#d1c6ad}
+.study-detail main>section.return-study{background:#e4dcc8!important;border-top:1px solid #cbbd9e;padding-top:30px;padding-bottom:30px}
+.return-study>div{display:flex;align-items:center;justify-content:space-between;gap:20px}.return-study a{font-family:'Yu Mincho',serif;font-size:22px;color:#643448}.return-study p{font-size:13px;color:#786a52}
+.site-footer{background:#423d2d;color:#f1e9d7}.footer-brand p{color:#c6baa2}.footer-bottom{border-color:#71664e;color:#c6baa2}
+.full-gallery>div{max-width:1000px!important}.gallery-photo{margin:0 0 52px}.gallery-photo img{display:block;width:100%;height:auto;aspect-ratio:auto;object-fit:contain;border:12px solid #70523b;box-shadow:0 7px 20px #6046291c}
+.gallery-photo figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-top:15px;font-size:16px}.gallery-photo figcaption span{font-size:13px;color:#7e6d54}
+@media(max-width:1180px){.site-header nav{top:75px}.site-header{height:76px}}
+@media(max-width:760px){.site-header{height:70px}.site-header nav{top:69px}.study-detail main>section.study-page-heading{padding:26px 22px 30px}.page-heading-inner{gap:18px;align-items:flex-start}.breadcrumbs{margin-bottom:18px;font-size:11px}.page-kicker{font-size:10px}.page-description{font-size:13px}.heading-photo{width:26%;padding:3px;border-width:5px;margin-top:34px}.study-page-heading h1{font-size:29px}.study-detail main>section:not(.study-page-heading){padding-top:32px;padding-bottom:32px}.about-inner{gap:26px}.return-study>div{display:block}.return-study p{margin-top:8px}.blog-title{font-size:17px}.gallery-photo figcaption{display:block}.gallery-photo figcaption span{display:block;margin-top:4px}.gallery-photo img{border-width:7px}.gallery-photo{margin-bottom:34px}}
+
+.heading-photo figcaption{font-size:10px;letter-spacing:.06em;text-align:center;padding-top:5px;color:#725d42}
+
+@media(max-width:760px){.heading-photo figcaption{font-size:8px;letter-spacing:0}}
