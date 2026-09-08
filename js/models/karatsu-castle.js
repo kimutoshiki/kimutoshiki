@@ -21,12 +21,12 @@ export function createKaratsuCastle(T) {
 
   const material = (color, roughness = 0.87) => new T.MeshStandardMaterial({ color, roughness, metalness: 0 });
   const m = {
-    plaster: material('#eee9da'), plasterLight: material('#faf5e7'),
-    plasterShade: material('#d7d6c8'), roof: material('#363e40'),
-    tile: material('#505b5a'), tileLight: material('#64706c'),
-    roofEdge: material('#89918a'), timber: material('#5b5148'),
+    plaster: material('#eeeae0'), plasterLight: material('#fffaf0'),
+    plasterShade: material('#d1d1c8'), roof: material('#344044', .77),
+    tile: material('#56646a', .69), tileLight: material('#738084', .74),
+    roofEdge: material('#737e7e'), timber: material('#5b5148'),
     dark: material('#242e2e'), window: material('#354543', 0.6),
-    balcony: material('#a3503f'), balconyCap: material('#713f35'),
+    balcony: material('#aa5e42'), balconyCap: material('#9d583a'),
     gravel: material('#c8bea4'), path: material('#ddd0b5'),
     earth: material('#64665b'), soil: material('#828272'),
     lawn: material('#8a9770'), moss: material('#657956'),
@@ -36,13 +36,12 @@ export function createKaratsuCastle(T) {
     shallow: material('#99b9ad', 0.65), foam: material('#cbd8c7'),
   };
   const boxGeometry = new T.BoxGeometry(1, 1, 1);
-  const cylinderGeometry = new T.CylinderGeometry(1, 1, 1, 4, 1, true);
+  const cylinderGeometry = new T.CylinderGeometry(1, 1, 1, 4, 1, false);
   const foliageGeometry = new T.IcosahedronGeometry(1, 1);
   const rockGeometry = new T.IcosahedronGeometry(1, 0);
   // Shared, flat end tiles add readable eave detail with only ten faces each.
   const tileEndGeometry = new T.CircleGeometry(1, 10);
   const unitY = new T.Vector3(0, 1, 0);
-  const ribbonMaterials = new Map();
   let seed = 216608;
   const random = () => { seed = (1664525 * seed + 1013904223) >>> 0; return seed / 4294967296; };
   const mix = (a, b, t) => a + (b - a) * t;
@@ -77,26 +76,29 @@ export function createKaratsuCastle(T) {
     g.computeVertexNormals();
     return g;
   }
+  // Closed fascia: the eave remains solid when viewed from below or behind.
   function ribbon(points, thickness, mat, parent = architecture) {
-    const vertices = [], indices = [];
-    points.forEach(p => vertices.push([p[0], p[1], p[2]], [p[0], p[1] - thickness, p[2]]));
-    for (let i = 0; i < points.length - 1; i++) {
-      const a = i * 2;
-      indices.push(a, a + 1, a + 2, a + 2, a + 1, a + 3);
+    const vertices = [], indices = [], breadth = .055;
+    points.forEach((p, i) => {
+      const a = points[Math.max(0, i - 1)], b = points[Math.min(points.length - 1, i + 1)];
+      const dx = b[0] - a[0], dz = b[2] - a[2], len = Math.hypot(dx, dz) || 1;
+      const nx = dz / len * breadth, nz = -dx / len * breadth;
+      vertices.push([p[0]+nx,p[1],p[2]+nz], [p[0]-nx,p[1],p[2]-nz],
+        [p[0]-nx,p[1]-thickness,p[2]-nz], [p[0]+nx,p[1]-thickness,p[2]+nz]);
+    });
+    for (let i=0;i<points.length-1;i++) for(let j=0;j<4;j++) {
+      const a=i*4+j,b=i*4+(j+1)%4,c=a+4,d=b+4;
+      indices.push(a,b,c,b,d,c);
     }
-    if (!ribbonMaterials.has(mat)) {
-      const twoSided = mat.clone();
-      twoSided.side = T.DoubleSide;
-      ribbonMaterials.set(mat, twoSided);
-    }
-    const matCopy = ribbonMaterials.get(mat);
-    return mesh(geometry(vertices, indices), matCopy, parent);
+    const n=(points.length-1)*4;
+    indices.push(0,2,1,0,3,2,n,n+1,n+2,n,n+2,n+3);
+    return mesh(geometry(vertices,indices),mat,parent);
   }
   function slab(outline, bottom, top, mat, parent = landscape, lowerScale = 1) {
     const vertices = outline.map(([x, z]) => [x * lowerScale, bottom, z * lowerScale]);
     vertices.push(...outline.map(([x, z]) => [x, top, z]));
     const n = outline.length, indices = [];
-    for (let i = 1; i < n - 1; i++) indices.push(n, n + i + 1, n + i);
+    for (let i = 1; i < n - 1; i++) indices.push(n, n + i + 1, n + i, 0, i, i + 1);
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n;
       indices.push(i, n + i, j, j, n + i, n + j);
@@ -154,25 +156,40 @@ export function createKaratsuCastle(T) {
   function frustum(w0,d0,w1,d1,y0,y1,mat) {
     const v=[[-w0/2,y0,-d0/2],[w0/2,y0,-d0/2],[w0/2,y0,d0/2],[-w0/2,y0,d0/2],
       [-w1/2,y1,-d1/2],[w1/2,y1,-d1/2],[w1/2,y1,d1/2],[-w1/2,y1,d1/2]];
-    return mesh(geometry(v,[0,4,1,1,4,5,1,5,2,2,5,6,2,6,3,3,6,7,3,7,0,0,7,4,4,7,5,5,7,6]),mat);
+    return mesh(geometry(v,[0,4,1,1,4,5,1,5,2,2,5,6,2,6,3,3,6,7,3,7,0,0,7,4,4,7,5,5,7,6,0,1,2,0,2,3]),mat);
   }
   frustum(bottomW,bottomD,topW,topD,stoneBottom,stoneTop,m.stone[5]);
-  for (let row=0;row<6;row++) {
-    const t=(row+0.5)/6, y=mix(stoneBottom,stoneTop,t);
-    const w=mix(bottomW,topW,t), d=mix(bottomD,topD,t);
-    for(let side=0;side<4;side++) {
-      const front=side<2, sign=side%2===0?1:-1;
-      const span=front?w:d;
-      const count=Math.round(span/1.24);
+  // The official detail photograph shows uncoursed, irregular granite rather
+  // than rectangular brickwork. Staggered polygon stones follow the battered
+  // surface; darker backing occupies their joints and closes the whole plinth.
+  const courses = [0, .11, .25, .40, .55, .71, .86, 1];
+  for(let side=0;side<4;side++) {
+    const front=side<2, sign=side%2===0?1:-1;
+    for(let row=0;row<courses.length-1;row++) {
+      const low=courses[row], high=courses[row+1], mid=(low+high)/2;
+      const span=mix(front?bottomW:bottomD, front?topW:topD, mid);
+      const count=Math.round(span/(row%2?1.39:1.72));
+      const divisions=[-.5];
+      for(let i=1;i<count;i++)divisions.push(i/count-.5+(random()-.5)*.36/count);
+      divisions.push(.5);
       for(let i=0;i<count;i++) {
-        const p=-span/2+(i+0.5)*span/count;
-        // Keep the welcoming doorway legible through the lower two front rows.
-        if(side===0 && row<3 && Math.abs(p-1.2)<1.30) continue;
-        const block=box(span/count-0.05,0.59+random()*0.10,0.29,
-          front?p:sign*w/2,y+(random()-.5)*.055,front?sign*d/2:p,m.stone[Math.floor(random()*6)]);
-        if(front) block.rotation.x=-sign*Math.atan((bottomD-topD)/2/(stoneTop-stoneBottom));
-        else { block.rotation.y=Math.PI/2; block.rotation.z=sign*Math.atan((bottomW-topW)/2/(stoneTop-stoneBottom)); }
-        block.rotation.z+=(random()-.5)*0.04;
+        const left=divisions[i]*span+.035, right=divisions[i+1]*span-.035;
+        const cy=mix(stoneBottom,stoneTop,mid), h=(high-low)*(stoneTop-stoneBottom)-.07;
+        if(side===0 && row<3 && right>-.1 && left<2.5)continue;
+        const w=right-left,cx=(left+right)/2;
+        const profile=[[-.5,-.40],[-.43,-.50],[.36,-.50],[.50,-.35],[.49,.41],[.37,.50],[-.42,.48],[-.51,.35]].map(([x,y],j)=>[x+(j%2?(random()-.5)*.10:0),y+(random()-.5)*.10]);
+        const verts=[],indices=[];
+        for(const depth of [-.14,.16])for(const [xx,yy] of profile) {
+          const y=cy+yy*h+(random()-.5)*.045;
+          const t=(y-stoneBottom)/(stoneTop-stoneBottom);
+          const plane=mix(front?bottomD:bottomW,front?topD:topW,t)/2+depth;
+          verts.push(front?[cx+xx*w,y,sign*plane]:[sign*plane,y,cx+xx*w]);
+        }
+        for(let j=1;j<7;j++)indices.push(0,j+1,j,8,8+j,9+j);
+        for(let j=0;j<8;j++){const k=(j+1)%8;indices.push(j,k,8+j,k,8+k,8+j);}
+        // Prism winding follows the outward axis, including the far two faces.
+        if((front&&sign<0)||(!front&&sign>0))for(let j=0;j<indices.length;j+=3)[indices[j+1],indices[j+2]]=[indices[j+2],indices[j+1]];
+        mesh(geometry(verts,indices),m.stone[Math.floor(random()*6)]);
       }
     }
   }
@@ -201,7 +218,7 @@ export function createKaratsuCastle(T) {
         if(!front){sill.rotation.y=Math.PI/2;lintel.rotation.y=Math.PI/2;}
         for(let bar=0;bar<5;bar++) {
           const offset=(bar/4-.5)*ww*.86;
-          const part=box(.057,wh,.09,wx+(front?offset:sign*.045),wy,wz+(front?sign*.045:offset),m.plasterShade);
+          const part=box(.057,wh,.09,wx+(front?offset:sign*.045),wy,wz+(front?sign*.045:offset),m.dark);
           if(!front)part.rotation.y=Math.PI/2;
         }
         // Narrow recessed frame edges make the existing openings feel carved
@@ -218,7 +235,7 @@ export function createKaratsuCastle(T) {
         const offset=-span/2+.30+i*(span-.60)/Math.floor(span/.76);
         const fixed=front?d/2:w/2;
         const corbel=box(.14,.15,.54,front?offset:sign*(fixed+.18),y1-.24,
-          front?sign*(fixed+.18):offset,m.timber);
+          front?sign*(fixed+.18):offset,m.plasterShade);
         const foot=box(.12,.14,.28,front?offset:sign*(fixed+.095),y1-.37,
           front?sign*(fixed+.095):offset,m.plasterShade);
         if(!front){corbel.rotation.y=Math.PI/2;foot.rotation.y=Math.PI/2;}
@@ -226,148 +243,192 @@ export function createKaratsuCastle(T) {
     }
   }
   storey(14.6,11.8,6.15,8.96,5);
-  storey(12.65,10.45,9.76,11.79,4);
-  storey(10.95,9.03,12.58,15.08,3);
-  storey(8.6,7.25,16.08,18.35,3);
+  storey(14.20,11.12,9.56,11.79,4);
+  storey(11.40,9.03,12.58,15.08,3);
+  storey(8.6,7.00,16.08,18.35,3);
 
-  // Concave hipped tile roofs; the edge and corners turn gently upward.
-  // One sampled roof skin and repeated thin ribs keep tile detail inexpensive.
+  // Roofs are closed shells, with shallow concavity and a restrained turned
+  // edge. Photographs show two broad lower roofs and a much smaller belvedere.
+  // A tile strip has a rounded crest, not a triangular ridge painted on a plane.
   function hipRoof(w,d,y,rise,ridge,detail=true) {
-    const roofGroup = new T.Group(); architecture.add(roofGroup);
-    const ribVertices=[],ribIndices=[];
-    function tileRib(points) {
-      const first=ribVertices.length;
-      points.forEach((p,i)=>{
+    const roofGroup=new T.Group(); roofGroup.name='Closed tiled roof'; architecture.add(roofGroup);
+    const ribV=[],ribI=[];
+    function tileRib(points,r=.055) {
+      const start=ribV.length, ring=4;
+      points.forEach((p,i)=> {
         const a=points[Math.max(0,i-1)],b=points[Math.min(points.length-1,i+1)];
-        const dx=b[0]-a[0],dz=b[2]-a[2],length=Math.hypot(dx,dz)||1;
-        const px=dz/length*.037,pz=-dx/length*.037;
-        ribVertices.push([p[0]-px,p[1],p[2]-pz],[p[0],p[1]+.043,p[2]],[p[0]+px,p[1],p[2]+pz]);
+        const dx=b[0]-a[0],dz=b[2]-a[2],len=Math.hypot(dx,dz)||1;
+        for(let k=0;k<ring;k++) {
+          const theta=Math.PI*k/(ring-1);
+          ribV.push([p[0]+dz/len*Math.cos(theta)*r,p[1]+Math.sin(theta)*r,p[2]-dx/len*Math.cos(theta)*r]);
+        }
       });
-      for(let i=0;i<points.length-1;i++) {
-        const a=first+i*3;
-        ribIndices.push(a,a+3,a+1,a+1,a+3,a+4,a+1,a+4,a+2,a+2,a+4,a+5);
+      for(let i=0;i<points.length-1;i++)for(let k=0;k<ring-1;k++) {
+        const a=start+i*ring+k,b=a+ring;
+        ribI.push(a,a+1,b,a+1,b+1,b);
       }
     }
     function point(side,u,v,lift=0) {
-      const corner=0.20*Math.pow(Math.abs(u),6)*Math.pow(v,5);
-      const yy=y+rise*Math.pow(1-v,1.46)+0.19*Math.pow(v,8)+corner+lift;
-      if(side<2) return [u*mix(ridge,w,v)/2,yy,(side===0?1:-1)*d*v/2];
-      return [(side===2?1:-1)*mix(ridge,w,v)/2,yy,u*d*v/2];
+      const turn=.15*Math.pow(v,8)+.17*Math.pow(Math.abs(u),8)*Math.pow(v,5);
+      const yy=y+rise*Math.pow(1-v,1.28)+turn+lift;
+      if(side<2)return[u*mix(ridge,w,v)/2,yy,(side===0?1:-1)*d*v/2];
+      return[(side===2?1:-1)*mix(ridge,w,v)/2,yy,u*d*v/2];
     }
     for(let side=0;side<4;side++) {
-      const verts=[], idx=[], nu=side<2?16:10,nv=6;
-      for(let v=0;v<=nv;v++) for(let u=0;u<=nu;u++) verts.push(point(side,u/nu*2-1,v/nv));
+      const verts=[],idx=[],nu=side<2?14:8,nv=6,row=nu+1;
+      for(let layer=0;layer<2;layer++)for(let v=0;v<=nv;v++)for(let u=0;u<=nu;u++)
+        verts.push(point(side,u/nu*2-1,v/nv,layer?-.25:0));
+      const n=row*(nv+1);
+      function face(a,b,c,upper=true) {
+        const A=verts[a],B=verts[b],C=verts[c];
+        const nx=(B[1]-A[1])*(C[2]-A[2])-(B[2]-A[2])*(C[1]-A[1]);
+        const ny=(B[2]-A[2])*(C[0]-A[0])-(B[0]-A[0])*(C[2]-A[2]);
+        const nz=(B[0]-A[0])*(C[1]-A[1])-(B[1]-A[1])*(C[0]-A[0]);
+        if(nx*nx+ny*ny+nz*nz<1e-12)return;
+        if((ny>0)!==upper)idx.push(a,c,b);else idx.push(a,b,c);
+      }
       for(let v=0;v<nv;v++)for(let u=0;u<nu;u++) {
-        const a=v*(nu+1)+u,b=a+nu+1;
-        if(side===0||side===3) idx.push(a,b,a+1,a+1,b,b+1);
-        else idx.push(a,a+1,b,a+1,b+1,b);
+        const a=v*row+u,b=a+row;
+        face(a,b,a+1);face(a+1,b,b+1);
+        face(a+n,b+n,a+1+n,false);face(a+1+n,b+n,b+1+n,false);
+      }
+      const perimeter=[];
+      for(let u=0;u<=nu;u++)perimeter.push(u);
+      for(let v=1;v<=nv;v++)perimeter.push(v*row+nu);
+      for(let u=nu-1;u>=0;u--)perimeter.push(nv*row+u);
+      for(let v=nv-1;v>0;v--)perimeter.push(v*row);
+      for(let j=0;j<perimeter.length;j++) {
+        const a=perimeter[j],b=perimeter[(j+1)%perimeter.length];
+        if(side===0||side===3)idx.push(a,a+n,b,b,a+n,b+n);
+        else idx.push(a,b,a+n,b,b+n,a+n);
       }
       mesh(geometry(verts,idx),m.roof,roofGroup);
-      const edge=[];for(let i=0;i<=20;i++)edge.push(point(side,i/10-1,1,.015));
-      ribbon(edge,.20,m.roofEdge,roofGroup);
-      // The lower contrasting fascia is a separate thin band.
+      const edge=[];for(let i=0;i<=16;i++)edge.push(point(side,i/8-1,1,.013));
+      ribbon(edge,.16,m.tileLight,roofGroup);
       ribbon(edge.map(([x,yy,z])=>[x,yy-.16,z]),.12,m.plasterShade,roofGroup);
       if(detail) {
-        const ribs=Math.round((side<2?w:d)/.68);
+        const ribs=Math.round((side<2?w:d)/.415);
         for(let j=0;j<=ribs;j++) {
-          const u=j/ribs*2-1;
-          const rib=[];for(let k=0;k<=4;k++)rib.push(point(side,u,.07+k*.2325,.018));
-          tileRib(rib);
-          // Round terminal tiles follow the exact curve of the authored roof.
-          // They sit inside its original fascia height, keeping the silhouette.
+          const u=j/ribs*2-1, rib=[];
+          const fixed=u*(side<2?w:d)/2;
+          // True parallel tile courses clip against the diagonal hip ridge;
+          // stretching every course from a short ridge produces a false fan.
+          const minimum=side<2?Math.max(0,(2*Math.abs(fixed)-ridge)/(w-ridge)):2*Math.abs(fixed)/d;
+          if(minimum<.99) {
+            const first=Math.max(.012,minimum+.003);
+            for(let k=0;k<=4;k++) {
+              const v=first+(1-first)*k/4;
+              const uu=side<2?2*fixed/mix(ridge,w,v):2*fixed/(d*v);
+              rib.push(point(side,uu,v,.017));
+            }
+            tileRib(rib,.049);
+          }
           if(j>0&&j<ribs) {
-            const end=point(side,u,1,.01);
-            const cap=mesh(tileEndGeometry,j%3?m.tile:m.tileLight,roofGroup);
-            cap.position.set(end[0],end[1]-.071,end[2]);
-            if(side===0){cap.position.z+=.023;cap.rotation.y=0;}
-            if(side===1){cap.position.z-=.023;cap.rotation.y=Math.PI;}
-            if(side===2){cap.position.x+=.023;cap.rotation.y=Math.PI/2;}
-            if(side===3){cap.position.x-=.023;cap.rotation.y=-Math.PI/2;}
-            cap.scale.setScalar(.073);
+            const end=point(side,u,1,-.056);
+            const cap=mesh(tileEndGeometry,j%4?m.tile:m.tileLight,roofGroup);
+            cap.position.set(...end);cap.scale.setScalar(.062);
+            if(side===0){cap.position.z+=.056;}
+            if(side===1){cap.position.z-=.056;cap.rotation.y=Math.PI;}
+            if(side===2){cap.position.x+=.056;cap.rotation.y=Math.PI/2;}
+            if(side===3){cap.position.x-=.056;cap.rotation.y=-Math.PI/2;}
           }
         }
-        for(let k=1;k<4;k++) {
-          const v=.18+k*.22;
-          for(let j=0;j<4;j++) beam(point(side,-1+j*.5,v,.017),point(side,-.5+j*.5,v,.017),.017,m.tileLight,roofGroup);
+        // White double rafters are prominent in the official low-angle image.
+        const rafters=Math.round((side<2?w:d)/.47);
+        for(let j=1;j<rafters;j++) {
+          const u=j/rafters*2-1;
+          const a=point(side,u,.79,-.33),b=point(side,u,.99,-.33);
+          beam(a,b,.052,m.plasterShade,roofGroup);
         }
       }
     }
-    if(ribVertices.length)mesh(geometry(ribVertices,ribIndices),m.tile,roofGroup);
-    beam([-ridge/2,y+rise+.055,0],[ridge/2,y+rise+.055,0],.13,m.tile,roofGroup);
-    // Stacked ridge bedding and regularly spaced caps retain the existing line.
-    box(ridge,.075,.22,0,y+rise-.025,0,m.roofEdge,roofGroup);
-    for(let x=-ridge/2+.19;x<ridge/2;x+=.37)
-      box(.045,.065,.255,x,y+rise+.061,0,m.tileLight,roofGroup);
-    for(const sign of [-1,1]) {
-      const end=[sign*(ridge/2+.25),y+rise+.45,0];
-      beam([sign*(ridge/2-.28),y+rise+.08,0],end,.095,m.tileLight,roofGroup);
-      for(const back of [-1,1]) {
-        const pts=[];for(let i=0;i<=8;i++) pts.push(point(back===1?0:1,sign,i/8,.07));
-        for(let i=0;i<8;i++)beam(pts[i],pts[i+1],.083,m.tile,roofGroup);
-      }
+    if(ribV.length)mesh(geometry(ribV,ribI),m.tile,roofGroup);
+    box(ridge,.20,.28,0,y+rise+.07,0,m.roofEdge,roofGroup);
+    beam([-ridge/2,y+rise+.19,0],[ridge/2,y+rise+.19,0],.095,m.tile,roofGroup);
+    for(let x=-ridge/2+.18;x<ridge/2;x+=.34)box(.04,.07,.26,x,y+rise+.17,0,m.tileLight,roofGroup);
+    for(const sign of [-1,1])for(const front of [true,false]) {
+      const pts=[];for(let i=0;i<=9;i++)pts.push(point(front?0:1,sign,i/9,.075));
+      for(let i=0;i<9;i++)beam(pts[i],pts[i+1],.078,m.tile,roofGroup);
     }
     return roofGroup;
   }
-  hipRoof(17.95,15.2,8.82,2.0,8.2);
-  hipRoof(16.20,13.70,11.71,2.0,7.5);
-  hipRoof(14.40,12.25,14.94,2.15,6.65);
-  hipRoof(11.87,10.45,18.20,1.75,5.50);
+  hipRoof(18.60,15.20,8.82,1.94,9.2);
+  hipRoof(18.15,14.15,11.71,2.25,8.7);
+  hipRoof(15.00,12.25,14.94,2.12,6.65);
+  hipRoof(12.10,10.18,18.20,1.61,5.30);
 
   // Decorative irimoya and karahafu gables, set proud of their roof skins.
   function gable(w,h,depth,y,z,style='triangle',rotation=0) {
-    const parent = new T.Group(); parent.rotation.y=rotation; architecture.add(parent);
-    const samples=24;
+    const parent=new T.Group();parent.name=style==='curved'?'Karahafu curved gable':'Irimoya triangular gable';
+    parent.rotation.y=rotation;architecture.add(parent);
+    const samples=18;
     function height(x) {
       const t=Math.abs(x)/(w/2);
-      if(style==='curved') return y+h*(.08+.90*Math.exp(-6.0*t*t))+.22*Math.pow(t,8);
-      return y+h*Math.pow(1-t,1.14)+.20*Math.pow(t,8);
+      if(style==='curved')return y+h*(.05+.95*Math.exp(-5.7*t*t))+.12*Math.pow(t,8);
+      return y+h*Math.pow(1-t,1.08)+.16*Math.pow(t,8);
     }
-    const vertices=[],indices=[];
+    const faceV=[],faceI=[];
+    for(const back of [false,true])for(let i=0;i<=samples;i++) {
+      const x=-w/2+w*i/samples,zz=back?z-depth:z;
+      faceV.push([x,y-.14,zz],[x,height(x)-.14,zz]);
+    }
+    const n=(samples+1)*2;
+    for(let i=0;i<samples;i++) {
+      const a=i*2;
+      faceI.push(a,a+2,a+1,a+1,a+2,a+3, a+n,a+1+n,a+2+n,a+1+n,a+3+n,a+2+n);
+      faceI.push(a+1,a+3,a+1+n,a+3,a+3+n,a+1+n, a,a+n,a+2,a+2,a+n,a+2+n);
+    }
+    faceI.push(0,1,n,1,n+1,n,n-2,2*n-2,n-1,n-1,2*n-2,2*n-1);
+    mesh(geometry(faceV,faceI),m.plasterLight,parent);
+    const roofV=[],roofI=[];
+    for(let layer=0;layer<2;layer++)for(let i=0;i<=samples;i++) {
+      const x=-w/2+w*i/samples,yy=height(x)-layer*.20;
+      roofV.push([x,yy,z+.24],[x*.92,yy+.14,z-depth]);
+    }
+    for(let i=0;i<samples;i++) {
+      const a=i*2;
+      roofI.push(a,a+2,a+1,a+2,a+3,a+1, a+n,a+1+n,a+2+n,a+2+n,a+1+n,a+3+n);
+      roofI.push(a,a+n,a+2,a+2,a+n,a+2+n,a+1,a+3,a+1+n,a+3,a+3+n,a+1+n);
+    }
+    roofI.push(0,1,n,1,n+1,n,n-2,2*n-2,n-1,n-1,2*n-2,2*n-1);
+    mesh(geometry(roofV,roofI),m.roof,parent);
+    const edge=[];
+    for(let i=0;i<=samples;i++){const x=-w/2+w*i/samples;edge.push([x,height(x)+.035,z+.27]);}
+    ribbon(edge,.17,m.tileLight,parent);
+    ribbon(edge.map(([x,yy,zz])=>[x*.976,yy-.23,zz+.02]),.16,m.plasterShade,parent);
     for(let i=0;i<=samples;i++) {
       const x=-w/2+w*i/samples;
-      vertices.push([x,y-.09,z],[x,height(x)-.13,z]);
-    }
-    for(let i=0;i<samples;i++) {const a=i*2;indices.push(a,a+2,a+1,a+1,a+2,a+3);}
-    mesh(geometry(vertices,indices),m.plasterLight,parent);
-    const roofVerts=[],roofIdx=[];
-    for(let i=0;i<=samples;i++) {
-      const x=-w/2+w*i/samples, yy=height(x);
-      roofVerts.push([x,yy,z+.24],[x*.83,yy+.19,z-depth]);
-    }
-    for(let i=0;i<samples;i++){const a=i*2;roofIdx.push(a,a+2,a+1,a+2,a+3,a+1);}
-    mesh(geometry(roofVerts,roofIdx),m.roof,parent);
-    const edge=[];for(let i=0;i<=samples;i++){const x=-w/2+w*i/samples;edge.push([x,height(x)+.025,z+.26]);}
-    ribbon(edge,.19,m.tileLight,parent);
-    ribbon(edge.map(([x,yy,zz])=>[x*.97,yy-.22,zz+.013]),.15,m.plasterShade,parent);
-    for(let i=0;i<=samples;i+=2){
-      const x=-w/2+w*i/samples;beam([x,height(x)+.06,z+.24],[x*.83,height(x)+.25,z-depth],.034,m.tile,parent);
+      beam([x,height(x)+.045,z+.26],[x*.92,height(x)+.19,z-depth],.039,m.tile,parent);
     }
     if(style==='triangle') {
-      box(1.12,.58,.05,0,y+.60,z+.03,m.window,parent);
-      for(let i=0;i<5;i++)box(.055,.58,.06,(i-2)*.22,y+.60,z+.07,m.plasterShade,parent);
-      beam([0,y+h+.02,z+.24],[0,y+h+.17,z-depth],.1,m.tile,parent);
-    } else {
-      box(.54,.30,.06,0,y+.50,z+.055,m.plasterShade,parent);
+      box(w*.22,.56,.06,0,y+.60,z+.035,m.window,parent);
+      for(let i=0;i<7;i++)box(.045,.57,.085,(i-3)*w*.027,y+.60,z+.08,m.dark,parent);
+      beam([0,y+h+.08,z+.24],[0,y+h+.22,z-depth],.093,m.tile,parent);
+      // Short vertical supporting post and white corner returns in the pediment.
+      box(.11,Math.max(.1,h-.85),.08,0,y+.86+(h-.85)/2,z+.10,m.plasterShade,parent);
     }
+    return parent;
   }
-  gable(6.30,2.06,2.10,15.65,5.30,'triangle');
-  gable(6.30,2.06,2.10,15.65,5.30,'triangle',Math.PI);
-  gable(4.02,1.00,1.45,18.72,4.78,'curved');
-  gable(4.02,1.00,1.45,18.72,4.78,'curved',Math.PI);
-  gable(5.95,2.03,1.50,12.03,6.70,'triangle',Math.PI/2);
-  gable(5.95,2.03,1.50,12.03,6.70,'triangle',-Math.PI/2);
+  // Front and rear: a central third-roof chidori and the smaller fourth-roof
+  // karahafu. The major second-roof irimoya are on the transverse elevations.
+  gable(6.20,2.13,2.10,15.32,5.60,'triangle');
+  gable(6.20,2.13,2.10,15.32,5.60,'triangle',Math.PI);
+  gable(4.24,1.02,1.55,18.62,4.89,'curved');
+  gable(4.24,1.02,1.55,18.62,4.89,'curved',Math.PI);
+  gable(11.0,3.70,2.28,12.03,8.23,'triangle',Math.PI/2);
+  gable(11.0,3.70,2.28,12.03,8.23,'triangle',-Math.PI/2);
 
   // Open fifth-floor observation balcony: muted vermilion rails, pale posts.
-  const deckY=20.02, deckW=8.55, deckD=7.48;
-  box(6.75,1.55,5.85,0,19.2,0,m.plaster);
+  const deckY=20.02, deckW=7.67, deckD=6.48;
+  box(6.35,1.55,5.15,0,19.2,0,m.plaster);
   box(deckW,.24,deckD,0,deckY,0,m.plasterShade);
   box(deckW+.18,.12,deckD+.18,0,deckY-.17,0,m.roofEdge);
-  box(6.35,2.22,5.45,0,21.22,0,m.plasterLight);
+  box(5.70,2.22,4.65,0,21.22,0,m.plasterLight);
   for(const front of [true,false])for(const sign of [-1,1]) {
-    const span=front?6.35:5.45, p=front?2.76:3.20;
+    const span=front?5.70:4.65, p=front?2.356:2.882;
     for(let i=0;i<3;i++) {
       const offset=(i-1)*span*.28;
-      const opening=box(1.32,1.38,.075,front?offset:sign*p,21.27,front?sign*p:offset,m.dark);
+      const opening=box(1.18,1.38,.075,front?offset:sign*p,21.27,front?sign*p:offset,m.dark);
       if(!front)opening.rotation.y=Math.PI/2;
       const post=box(.1,1.4,.09,front?offset:sign*(p+.03),21.27,front?sign*(p+.03):offset,m.plasterShade);
       if(!front)post.rotation.y=Math.PI/2;
@@ -393,10 +454,13 @@ export function createKaratsuCastle(T) {
       box(.155,.055,.155,front?offset:sign*fixed,deckY+1.00,front?sign*fixed:offset,m.balconyCap);
     }
   }
-  hipRoof(9.95,8.65,22.30,2.24,6.0);
+  hipRoof(9.10,7.92,22.30,2.24,5.65);
+  // The top is an irimoya: exposed triangular gables on both ridge ends.
+  gable(4.02,1.47,1.40,23.08,3.24,'triangle',Math.PI/2);
+  gable(4.02,1.47,1.40,23.08,3.24,'triangle',-Math.PI/2);
   // Two small shachihoko-inspired ridge silhouettes, modeled abstractly.
   for(const sign of [-1,1]) {
-    const x=sign*3.03;
+    const x=sign*2.87;
     beam([x,24.68,0],[x+sign*.15,25.08,0],.14,m.tileLight);
     beam([x+sign*.15,25.08,0],[x+sign*.32,25.60,0],.115,m.tile);
     beam([x+sign*.32,25.60,0],[x+sign*.54,25.88,0],.09,m.tileLight);
@@ -475,10 +539,41 @@ export function createKaratsuCastle(T) {
   }
   lantern(-4.8,9.0);lantern(7.8,7.3);
 
+  // Unique surface meshes (granite polygons, roof shells and tile strips) are
+  // consolidated by material. Repeated box/cylinder primitives remain shared so
+  // the existing renderer can instance them; named extraction group survives.
+  function consolidateSurfaces(root) {
+    root.updateMatrixWorld(true);
+    const inverse=root.matrixWorld.clone().invert(), sets=new Map(), shared=new Set([boxGeometry,cylinderGeometry,tileEndGeometry,foliageGeometry,rockGeometry]);
+    root.traverse(o=> {
+      if(!o.isMesh||shared.has(o.geometry))return;
+      if(!sets.has(o.material))sets.set(o.material,[]);
+      sets.get(o.material).push(o);
+    });
+    for(const [mat,objects] of sets) {
+      if(objects.length<2)continue;
+      const positions=[],normals=[];
+      for(const o of objects) {
+        const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();
+        g.applyMatrix4(new T.Matrix4().multiplyMatrices(inverse,o.matrixWorld));
+        positions.push(...g.attributes.position.array);normals.push(...g.attributes.normal.array);g.dispose();
+        o.removeFromParent();
+      }
+      const g=new T.BufferGeometry();
+      g.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+      g.setAttribute('normal',new T.Float32BufferAttribute(normals,3));
+      g.computeBoundingBox();g.computeBoundingSphere();
+      mesh(g,mat,root).name='Consolidated architectural surfaces';
+    }
+  }
+  consolidateSurfaces(architecture);
+
   group.userData = {
     asset: 'karatsu-castle',
     description: 'Original miniature of the present five-tier Karatsu Castle keep',
-    referenceURLs: ['https://karatsujo.com/','https://www.city.karatsu.lg.jp/page/4527.html','https://www.city.karatsu.lg.jp/page/1041.html'],
+    referenceURLs: ['https://karatsujo.com/','https://karatsujo.com/images/top-about1.jpg','https://karatsujo.com/images/top-instagram4.jpg','https://karatsujo.com/images/top-instagram5.jpg','https://www.city.karatsu.lg.jp/page/3841.html','https://online.bunka.go.jp/heritages/detail/442823','https://kojodan.jp/castle/146/photo/397738.html'],
+    revision: '20260908-multiangle',
+    sourceBasis: 'Observed official elevation, eave-understructure and granite detail photographs; interpreted dimensions, not a survey',
     measuredSurvey: false,
     frontAxis: '+Z',
   };

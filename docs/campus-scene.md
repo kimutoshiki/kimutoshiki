@@ -1,35 +1,76 @@
-# 唐津と早稲田の3D案内
+# 木村紀喜のホームページ — 3D 表示
 
-5ページの本文は GitHub main の a236037014de07eb4b02b0afbf6fab32b238b677 を基準に保持しています。ブログ44記事の順序、本文、カテゴリー、記事IDも保持しています。
+ホームの部屋は `scene/room-model.js`、模型の机上配置は `scene/desk-landmarks.js`、カメラと入力は `scene/study.js` と `scene/orbit-navigation.js` にあります。４つの模型の生成元は `js/models/` です。プロフィールなどの下層ページは通常の HTML で内容を表示します。サイトはビルド不要の静的ファイルとして GitHub Pages で配信します。
 
-共通デザインは public/css/campus.css、案内・記事の開閉は public/js/campus-ui.js、描画と操作は public/js/campus-scene.js、独立した模型は public/js/models/ にあります。GitHub Pages では public の内容をリポジトリ直下に反映します。Sites は同じ public/index.html をルートで配信します。
+## 操作
 
-| ページ | 模型 | 主な外観の特徴 |
-| --- | --- | --- |
-| ホーム | 大隈講堂 | 左側の時計塔、石造装飾の塔頂、浅い尖頭アーチの三連入口、鉄扉、れんが目地 |
-| プロフィール | 唐津城 | 現在の五層の天守、反りのある屋根、破風、上部の欄干、石垣 |
-| 研究・活動 | 大隈重信立像 | 1932年の大学服姿の立像、角帽、垂れた袖、衣のひだ、右手の杖 |
-| ブログ | 旧唐津銀行 | 赤れんがと白い石の帯、大窓のアーチ、両端の玄関、銅色の隅飾り |
-| お問い合わせ | ３模型の展示 | 唐津城・立像・銀行を並べた場面 |
+- ドラッグ／１本指／矢印キーで上下左右へ回転。
+- Shift＋ドラッグ、右ドラッグ、Shift＋矢印で移動。２本指では移動と拡大を同時に操作。
+- ホイール、＋／−ボタン、＋／−キーで0.65〜6倍に拡大。Ctrl／Command＋ホイールはブラウザに渡します。
+- 「見るもの」で模型や猫を選ぶと、同じ形状・材質のコピーを単独で360度鑑賞できます。他の模型や家具による遮蔽はありません。
+- 正面・左・右・後ろ・上・下の６方向ボタン。Home、0、「全体へ」で部屋の初期表示へ戻ります。
 
-模型は写真と建築解説から作成した独自の解釈です。実測図面、測量データ、ストリートビューの3Dデータは使用していません。ユーザー提供の Maps 短縮リンクは作業環境では開けず、ストリートビュー自体を確認できませんでした。寸法、背面、地形、周辺の建物・植栽は画面に合わせて簡略化しています。参照写真そのものを新しい模型のテクスチャとして配布していません。
+部屋のカメラは壁と天井の内側に制限し、レンズによる拡大で壁抜けを防ぎます。単独鑑賞では独立した軌道と移動範囲を使います。表示中の物体をカメラが横切らないよう、視点切替は直接反映します。家具の背後に隠れる案内ピンも非表示になります。通常のページリンクは3Dに依存しません。
 
-## 外観資料
+## 2026年9月の改修
 
-- 大隈講堂：早稲田大学の建築・文化解説 https://www.waseda.jp/culture/news/2020/04/20/10208/ 、https://www.waseda.jp/inst/weekly/feature/2017/10/09/34727/
-- 大隈講堂：正面外観写真（高田馬場経済新聞） https://images.keizai.biz/takadanobaba_keizai/photonews/1634612891_b.jpg
-- 唐津城：公式外観写真 https://karatsujo.com/images/top-about1.jpg 、唐津市 https://www.city.karatsu.lg.jp/page/1041.html 、https://www.city.karatsu.lg.jp/page/4527.html
-- 大隈重信立像：早稲田大学の解説 https://www.waseda.jp/inst/weekly/column/2011/06/02/56864/
-- 立像全身写真 https://cdn.japan-forward.com/wp-content/uploads/2023/06/wo-270_waseda-okuma-statue-230526_110127_020127939_pxl.jpg 、顔の写真 https://images.keizai.biz/takadanobaba_keizai/headline/1597975936_photo.jpg
-- 旧唐津銀行：施工者の建築アーカイブ・外観写真 https://www.shimzarchives.jp/heritage/heritage_566/ 、施設の歴史 https://karatsu-bank.jp/history.html 、公式観光案内 https://www.karatsu-kankou.jp/sp/spots/detail/194/
-- 日本語書体 Zen Kaku Gothic New https://fonts.google.com/specimen/Zen+Kaku+Gothic+New
+| 対象 | 修正内容 |
+| --- | --- |
+| 大隈講堂 | 時計塔の本体が机上配置時の座標判定で除外されていた不具合を修正。建築専用グループを保持し、塔の壁・時計・鐘楼・裏側を一体で配置。鐘楼は実際の開口と厚みを持つ構造。 |
+| 大隈重信像 | 大学服の全身像を維持。連続した顔面、体と頭の比率、袖と手、杖、角帽、背面の肩と衣服のひだ、青銅と花崗岩の表面を調整。 |
+| 唐津城 | 下層と最上層の比率、各面の破風、平行な瓦列、格子窓、垂木、不規則な石垣を調整。屋根・軒裏・天守台の下面を閉じる。 |
+| 旧唐津銀行 | 非対称の屋根と後方の塔、銅屋根、窓のアーチ、側面・裏面・付属棟を改善。ストリートビュー照合後、余分な階間の白帯を削除し、屋上飾り・交互の石材・１階の石まぐさを修正。 |
+| 植物と猫 | 種類ごとの湾曲した葉、葉脈、茎、微細な表面。猫の毛並み、縞模様、耳・目・ひげ・しっぽを追加。既存の植物の揺れ、猫の呼吸を保持。 |
+| 部屋 | 右壁・前壁・天井・連続する腰壁と廻り縁・扉・壁灯を追加。既存窓は壁の実開口へ変更。 |
 
-## 描画と操作
+第三者の参照写真やストリートビュー画像をテクスチャとして配布していません。追加の材質模様は手続き生成です。実測図面・測量・写真測量モデルではなく、複数の写真から比率を解釈した模型です。顔の細かな彫刻痕、写真に写らない背面の寸法などは近似を含みます。
 
-Three.js 0.185.0 はローカル配信し、MITライセンスを public/js/vendor/THREE-LICENSE.txt に保持しています。Google Fonts は必要な文字の分割フォントを読み込み、利用できない場合は端末の日本語フォントを使います。EN は現在のページを Google 翻訳で開きます。
+## 実際に照合した資料
 
-各ページは必要な模型だけを動的に読み込みます。通常の3D描画は最大30fps、画素密度はPC1.6・スマートフォン1.25まで。静的形状はインスタンシングし、影は初回だけ描画します。画面外・非表示タブでは描画を停止します。単独模型は約2.9万〜4.4万三角形、３模型の展示は約9.9万三角形です。
+### 大隈講堂
 
-WebGLが使えない環境では同じ模型をCanvasで投影し、初期状態は静止して操作時に描画します。頂点カラーも反映して立像の青銅色を維持します。OSの視差効果を減らす設定とユーザーの動き停止設定を尊重します。描画が使えない場合もHTMLのリンクが残ります。
+- [早稲田大学の建築・文化解説](https://www.waseda.jp/culture/news/2020/04/20/10208/)
+- [早稲田大学の講堂紹介](https://www.waseda.jp/inst/weekly/feature/2017/10/09/34727/)
+- [正面外観写真・高田馬場経済新聞](https://images.keizai.biz/takadanobaba_keizai/photonews/1634612891_b.jpg)
+- [Google ストリートビュー](https://maps.app.goo.gl/g7VwMiVRQbqJjrHw6)：2025年12月撮影の画像をブラウザで表示し、正面と塔の側面、時計、鐘楼の開口と壁を確認。
 
-回転はドラッグまたは左右キー、拡大縮小はボタンまたは上下キー、初期位置はリセットボタンまたはHomeキー。通常のナビゲーションは3D処理に依存しません。スマートフォンでは見出しと模型を上下に分けています。
+### 唐津城
+
+- [唐津城公式の全景](https://karatsujo.com/images/top-about1.jpg)、[軒を下から見た近景](https://karatsujo.com/images/top-instagram4.jpg)、[石垣](https://karatsujo.com/images/top-instagram5.jpg)
+- [文化庁・唐津城跡の俯瞰写真](https://online.bunka.go.jp/heritages/detail/442823)
+- [撮影者による中庭からの写真](https://kojodan.jp/castle/146/photo/397738.html)
+- [空撮掲載ページ](https://tripdesign.info/karatusjyo/)：写真による形状確認の補助。
+- [Google ストリートビュー](https://maps.app.goo.gl/Z5dx5ixBnZKsaTMq8)：2024年10月撮影の登城口前の道路から、天守の段構成と輪郭を確認。下層は樹木で隠れるため、背面・上面・天守台は空撮と近景を併用。
+
+### 大隈重信像
+
+- [朝倉彫塑館・作品解説](https://www.taitogeibun.net/asakura/exhibitions/collection/okuma/)、[斜めからの全身写真](https://www.taitogeibun.net/asakura/wp-content/uploads/sites/3/2023/07/okuma.jpg)
+- [撮影者による背面の写真](https://photohito.com/photo/765550/)
+- [顔の近接写真・高田馬場経済新聞](https://images.keizai.biz/takadanobaba_keizai/headline/1597975936_photo.jpg)
+- [早稲田大学・1932年の大学服姿の立像について](https://www.waseda.jp/inst/weekly/column/2011/06/02/56864/)
+- [Google マップの指定地点](https://maps.app.goo.gl/ZJqfyHGT14gWWSLq9)：周辺の2022年10月のストリートビューも開いたが、道路からは柵と樹木で像を十分に確認できなかった。像の細部は上記の正面・斜め・背面写真を根拠とする。
+
+### 旧唐津銀行
+
+- [施工者・清水建設の建築アーカイブ](https://www.shimzarchives.jp/heritage/heritage_566/)
+- [唐津市・外観写真](https://www.city.karatsu.lg.jp/uploaded/image/3166.jpg)
+- [施設公式ギャラリー・裏庭側と窓の詳細](https://karatsu-bank.jp/gallery.html)
+- [撮影者による複数方向の写真](https://kmy4.livedoor.blog/archives/1845594.html)：裏の塔、付属棟、連絡部分、前面の近景を確認。
+- [Google マップのストリートビューと360度ビュー](https://maps.app.goo.gl/qmjZcA1xSsWUxter7)：屋外パノラマの３連アーチと上下の窓を確認（撮影表示2017年7月）。屋内パノラマも閲覧したが、外形の根拠にはしていない。
+
+### 猫の寝姿
+
+- [エリエール・眠る猫の写真](https://www.elleair.jp/kimiomoi/article/useful/203375/)
+- [Mobile Photography Awards・寝顔の近接写真](https://mobilephotoawards.com/wp-content/uploads/2025/03/28822_20241216020533_47058_1000px.jpg)
+
+頭と耳の比率、伏せた姿勢、肩と腰の輪郭、縞の境界を比較しました。
+
+## 描画・検証
+
+Three.js は `js/vendor/` から配信し、MIT ライセンスを同ディレクトリに保持しています。静的な繰り返し形状をインスタンシングし、影をキャッシュします。部屋と単独鑑賞の切替時は影とソフトウェア描画の形状キャッシュを更新します。非表示タブでは描画を止め、動きの停止設定を尊重します。
+
+WebGL が利用できない環境では、同じ模型を CPU で描画するシンプル表示に切り替えます。この場合は静止状態で操作に応じて更新し、最大1200×900ピクセルで描画します。金属反射・微細な凹凸・動的な光は WebGL と同等ではありません。
+
+ローカル確認は `npm run dev -- --host 0.0.0.0 --port 4173`。追加依存のインストールは不要です。回帰検証は `npm test` で実行できます。
+
+改修時には各模型の有限座標・法線・不透明構造、鐘楼と塔への複数方向のレイ判定、５対象×６方向と連続旋回、カメラの衝突範囲、ズーム・ピンチ・キャンセル操作、ピンの遮蔽、単独鑑賞と部屋の復帰を検証しています。ブラウザではシンプル表示で実画面を確認しました。WebGL の反射や影の最終的な見え方は、このブラウザ環境では確認できていません。

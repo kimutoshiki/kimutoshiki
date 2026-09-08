@@ -2,10 +2,10 @@
  * Architecture is retained as authored. Only independently separable scenery is
  * removed; every retained geometry, material and instance transform is original.
  */
-import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260908-detail';
-import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260908-detail';
-import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260908-detail';
-import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260908-detail';
+import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260909-orbit';
+import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260909-orbit';
+import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260909-orbit';
+import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260909-orbit';
 import { batchStaticMeshes } from '../js/models/model-utils.js';
 
 const TABLE_Y = 2.164;
@@ -28,88 +28,19 @@ function countGeometry(root) {
   return { meshes, primitives, triangles, lines };
 }
 
-function near(actual, expected) { return Math.abs(actual - expected) < 1e-5; }
-function vectorIs(actual, expected) { return expected.every((v, i) => near(actual.getComponent(i), v)); }
-
-// Two unbatched factories have a contiguous, clearly identifiable authored
-// monument section. Retain whole objects between exact existing authoring marks,
-// so no facade, sculptural detail, or shared geometry is cut or approximated.
-function retainAuthoredSection(root, first, last, label) {
-  const children = root.children.slice();
-  const start = children.findIndex(first);
-  const finish = children.findIndex((object, i) => i >= start && last(object));
-  if (start < 0 || finish < start) throw new Error(`Cannot locate the original ${label} architecture section.`);
-  children.forEach((object, i) => { if (i < start || i > finish) object.removeFromParent(); });
+// Factories explicitly identify the complete architecture before batching.
+// Never decide whether an entire tower belongs to a model by rounding its bounds.
+function retainArchitecture(model, name) {
+  const architecture = model.architecture || model.group.getObjectByName(name);
+  if (!architecture) throw new Error('Missing landmark architecture: ' + name);
+  if (architecture === model.group) return;
+  architecture.removeFromParent();
+  model.group = architecture;
 }
-
-function extractStatue(model) {
-  retainAuthoredSection(model.group,
-    object => object.isMesh && vectorIs(object.position, [0, .49, 0]) && vectorIs(object.scale, [5, .20, 4.25]),
-    object => object.isGroup && vectorIs(object.position, [0, 16.93, 0]),
-    'Okuma statue');
-}
-
-function extractBank(model) {
-  // The first perimeter-fence rail immediately follows the last rainwater-pipe
-  // bracket. Find that rail, then keep the full preceding building section.
-  const root = model.group;
-  const fence = root.children.findIndex(object => object.isMesh && vectorIs(object.position, [-13.925, .83, 8.46]));
-  if (fence < 1) throw new Error('Cannot locate the original Karatsu Bank scenery boundary.');
-  const lastArchitecture = root.children[fence - 1];
-  retainAuthoredSection(root,
-    object => object.isMesh && vectorIs(object.position, [0, 5.81, -1.45]) && vectorIs(object.scale, [28, 10.62, 15]),
-    object => object === lastArchitecture,
-    'Karatsu Bank');
-}
-
-function extractCastle(model) {
-  const architecture = model.group.getObjectByName('Five-tier keep');
-  if (!architecture || architecture.parent !== model.group) throw new Error('Cannot locate the original Karatsu Castle keep.');
-  for (const child of model.group.children.slice()) if (child !== architecture) child.removeFromParent();
-}
-
-function extractAuditorium(T, model) {
-  // This original model already batches building and scenery primitives together.
-  // Select intact instances within the authored building envelope and omit the
-  // materials used only by landscaping. The four unbatched clock groups survive.
-  const root = model.group;
-  const landscapeColors = new Set([0xc3c9b1, 0x7b8b72, 0x9bad76, 0x4d7359, 0x759767,
-    0x375d4a, 0x923b4f, 0x48635a, 0xbbc7bf, 0x64817a, 0x927e5e]);
-  const envelope = new T.Box3(new T.Vector3(-12.60, .21, -13.76), new T.Vector3(12.96, 29.5, 8.55));
-  const matrix = new T.Matrix4();
-  const bounds = new T.Box3();
-  for (const person of model.people ?? []) person.object.removeFromParent();
-  for (const source of root.children.slice()) {
-    if (!source.isInstancedMesh) continue;
-    const color = source.material.color.getHex();
-    if (landscapeColors.has(color)) { source.removeFromParent(); continue; }
-    source.geometry.computeBoundingBox();
-    const indices = [];
-    for (let i = 0; i < source.count; i++) {
-      source.getMatrixAt(i, matrix);
-      bounds.copy(source.geometry.boundingBox).applyMatrix4(matrix);
-      // White below the belfry belongs to the detached forecourt lamps.
-      if (color === 0xf3eee0 && bounds.max.y < 6) continue;
-      if (envelope.containsBox(bounds)) indices.push(i);
-    }
-    if (indices.length === source.count) continue;
-    if (indices.length) {
-      const selected = new T.InstancedMesh(source.geometry, source.material, indices.length);
-      selected.name = source.name;
-      selected.position.copy(source.position);
-      selected.quaternion.copy(source.quaternion);
-      selected.scale.copy(source.scale);
-      indices.forEach((index, i) => { source.getMatrixAt(index, matrix); selected.setMatrixAt(i, matrix); });
-      selected.instanceMatrix.needsUpdate = true;
-      selected.castShadow = true;
-      selected.receiveShadow = true;
-      selected.computeBoundingBox();
-      selected.computeBoundingSphere();
-      root.add(selected);
-    }
-    source.removeFromParent();
-  }
-}
+function extractStatue(model) { retainArchitecture(model, 'Okuma statue monument'); }
+function extractBank(model) { retainArchitecture(model, 'Landmark architecture'); }
+function extractCastle(model) { retainArchitecture(model, 'Five-tier keep'); }
+function extractAuditorium(T, model) { retainArchitecture(model, 'Okuma auditorium architecture'); }
 
 function nameplate(T, title, subtitle) {
   const canvas = document.createElement('canvas');
@@ -187,6 +118,7 @@ export async function createDeskLandmarks(T) {
     const scale = Math.min(MODEL_WIDTH / nativeSize.x, MODEL_DEPTH / nativeSize.z, layout.height / nativeSize.y);
     const mount = new T.Group();
     mount.name = `${layout.title} · original model at uniform scale`;
+    mount.userData.inspectionSource = true;
     mount.scale.setScalar(scale);
     mount.position.set(-nativeCenter.x * scale, BASE_HEIGHT - nativeBounds.min.y * scale, -nativeCenter.z * scale - .013);
     mount.add(turn);

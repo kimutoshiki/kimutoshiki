@@ -11,6 +11,10 @@
   canvas.addEventListener('viewchange', event => {
     const zoom = event.detail?.zoom;
     if (zoomLevel && Number.isFinite(zoom)) zoomLevel.textContent = zoom.toFixed(1) + '×';
+    const subject=document.getElementById('view-subject');if(subject&&event.detail.subject)subject.value=event.detail.subject;
+    const inspecting=event.detail.subject&&event.detail.subject!=='room';study.classList.toggle('is-inspecting',!!inspecting);
+    const caption=document.getElementById('inspection-caption');caption.hidden=!inspecting;
+    if(inspecting)caption.textContent=subject.selectedOptions[0].textContent+' · 360°鑑賞';
   });
   let engine, opener, ready = false, markers = true, night = false;
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -47,11 +51,13 @@
   document.getElementById('markers-toggle').addEventListener('click', e => {markers=!markers;e.currentTarget.setAttribute('aria-pressed',String(markers));setPinState();});
   motion.addEventListener('click', () => {paused=!paused;engine?.setPaused?.(paused);motion.setAttribute('aria-pressed',String(paused));motion.setAttribute('aria-label',paused?'動きを再開する':'動きを止める');});
   nightButton.addEventListener('click', () => {night=!night;engine?.setNight?.(night);nightButton.setAttribute('aria-pressed',String(night));nightButton.setAttribute('aria-label',night?'昼の明かりにする':'夜の明かりにする');});
+  document.getElementById('view-subject').addEventListener('change',e=>engine?.inspect?.(e.target.value));
+  document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>engine?.preset?.(button.dataset.view)));
   document.getElementById('zoom-in').addEventListener('click',()=>engine?.zoom?.(-.7));
   document.getElementById('zoom-out').addEventListener('click',()=>engine?.zoom?.(.7));
   document.getElementById('view-reset').addEventListener('click',()=>engine?.reset?.());
   function failed(error) { console.error('3D scene could not render',error);status.hidden=true;study.classList.add('is-failed');document.getElementById('room-fallback').hidden=false; }
-  import('../scene/study.js?v=20260908-detail').then(async ({mountStudy}) => {
+  import('../scene/study.js?v=20260909-orbit').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas:document.getElementById('study-canvas'),pins,onSelect:show,onError:failed,onReady(){ready=true;study.classList.add('is-ready');status.hidden=true;setPinState();}});
     engine?.setPaused?.(paused);engine?.setNight?.(night);
     motion.setAttribute('aria-pressed',String(paused));

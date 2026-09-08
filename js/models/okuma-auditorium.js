@@ -1,12 +1,22 @@
 /* Original architectural model; official exterior references are listed in docs/campus-scene.md. */
 export function createOkumaAuditorium(T) {
  const root=new T.Group();
+ root.name='Okuma auditorium and surroundings';
+ // Architecture and context keep separate batches from the moment of authoring.
+ // Desk displays retain this complete semantic group; no coordinate or color
+ // heuristic may remove a structural wall, roof, clock, or future detail.
+ const architecture=new T.Group();
+ architecture.name='Okuma auditorium architecture';
+ architecture.userData.landmarkRoot='okuma-auditorium';
+ const surroundings=new T.Group();surroundings.name='Okuma auditorium surroundings';
+ root.add(architecture,surroundings);
+ let owner=surroundings;
  const materials={};
  const mat=(name,color)=>materials[name]??=(new T.MeshStandardMaterial({color,roughness:.9,metalness:0}));
  const stone=mat('stone',0xccb78b),wall=mat('wall',0xb59a66),trim=mat('trim',0xe3ce9d),dark=mat('dark',0x344c46),roofMat=mat('roof',0x696e59),paving=mat('paving',0xd9d5c1),edge=mat('edge',0xc3c9b1),earth=mat('earth',0x7b8b72),grass=mat('grass',0x9bad76),trunk=mat('trunk',0x6f6751),leaf=mat('leaf',0x4d7359),leafLight=mat('leafLight',0x759767),leafDark=mat('leafDark',0x375d4a),white=mat('white',0xf3eee0),wine=mat('wine',0x923b4f),metal=mat('metal',0x48635a),neighbor=mat('neighbor',0xbbc7bf),glass=mat('glass',0x64817a),soil=mat('soil',0x927e5e);
  const geometries={box:new T.BoxGeometry(1,1,1),cylinder:new T.CylinderGeometry(1,1,1,8),cone:new T.ConeGeometry(1,1,8),sphere:new T.IcosahedronGeometry(1,1),circle:new T.CylinderGeometry(1,1,1,32)};
  const batches=new Map(), dummy=new T.Object3D();
- function add(g,m,x,y,z,sx=1,sy=1,sz=1,ry=0,rz=0,rx=0){const id=g.uuid+':'+m.uuid;let b=batches.get(id);if(!b){b={g,m,transforms:[]};batches.set(id,b);}dummy.position.set(x,y,z);dummy.rotation.set(rx,ry,rz);dummy.scale.set(sx,sy,sz);dummy.updateMatrix();b.transforms.push(dummy.matrix.clone());}
+ function add(g,m,x,y,z,sx=1,sy=1,sz=1,ry=0,rz=0,rx=0){const id=owner.uuid+':'+g.uuid+':'+m.uuid;let b=batches.get(id);if(!b){b={g,m,owner,transforms:[]};batches.set(id,b);}dummy.position.set(x,y,z);dummy.rotation.set(rx,ry,rz);dummy.scale.set(sx,sy,sz);dummy.updateMatrix();b.transforms.push(dummy.matrix.clone());}
  const box=(m,x,y,z,w,h,d,ry=0,rz=0,rx=0)=>add(geometries.box,m,x,y,z,w,h,d,ry,rz,rx);
  const cyl=(m,x,y,z,r,h,ry=0)=>add(geometries.cylinder,m,x,y,z,r,h,r,ry);
  const ball=(m,x,y,z,r,s=1)=>add(geometries.sphere,m,x,y,z,r,r*s,r);
@@ -22,6 +32,7 @@ export function createOkumaAuditorium(T) {
  for(const [x,z,w,d] of [[16,11,10,9],[17,-3,8,5],[-21,13,5,7]]){box(trim,x,.22,z,w,.3,d);box(soil,x,.39,z,w-.35,.08,d-.35);box(grass,x,.46,z,w-.6,.06,d-.6);}
  // The auditorium's plain brick face and shallow pointed portals are deliberately
  // different from the open, pale stone belfry. Dimensions are interpretive.
+ owner=architecture;
  const mortar=mat('mortar',0xcbb996),iron=mat('iron',0x444d48),recess=mat('recess',0x29392f);
  box(wall,2,6.9,-5,18,13.3,17);box(stone,2,.65,-5,18.5,.75,17.5);
  box(trim,2,13.7,-5,18.6,.32,17.6);
@@ -62,26 +73,66 @@ export function createOkumaAuditorium(T) {
  for(let y=1.2;y<20.5;y+=.27){box(mortar,tx,y,tz+2.758,5.44,.018,.026);box(mortar,tx+2.758,y,tz,.026,.018,5.44);}
  for(const y of [5,9.1]){box(dark,tx,y+1,tz+2.8,.31,2,.08);box(trim,tx,y-.04,tz+2.91,.57,.13,.24);box(dark,tx+2.8,y+1,tz,.08,2,.31);}
  arch(tx,12.7,tz+2.79,.75,2.8,trim);arch(tx,12.8,tz+2.94,.49,2.56);box(trim,tx,13.98,tz+3.11,.07,2.18,.05);
- cyl(stone,tx,12.42,tz+2.99,.57,.23);add(geometries.cone,stone,tx,11.92,tz+2.99,.55,-.8,.55);
+ cyl(stone,tx,12.42,tz+2.99,.57,.23);add(geometries.cone,stone,tx,11.92,tz+2.99,.55,.8,.55,0,0,Math.PI);
  arch(tx,1.06,tz+2.79,2.58,3.15,trim);arch(tx,1.11,tz+2.93,2.12,2.86);for(let x=-.85;x<.9;x+=.18)box(iron,tx+x,2.06,tz+3.08,.026,1.75,.03);
  for(let i=0;i<6;i++)box(stone,tx,.27+(6-i)*.12,6.0+i*.32,6.2,.2,.9);
  for(const y of [20.55,20.88,21.15])box(trim,tx,y,tz,5.95,.18,5.95);
  for(let i=-2.7;i<2.8;i+=.28){box(trim,tx+i,20.69,tz+2.98,.09,.2,.19);box(trim,tx+2.98,20.69,tz+i,.19,.2,.09);}
- box(trim,tx,23.95,tz,5.4,5.4,5.4);
+ // The clock room below remains a sealed masonry volume. Only the belfry
+ // has real openings: four thick walls with paired pointed windows, a floor,
+ // and a roof. These closed extrusions retain their reveals from every angle.
+ const belfryFace=new T.Shape();
+ belfryFace.moveTo(-2.7,21.25);belfryFace.lineTo(2.7,21.25);
+ belfryFace.lineTo(2.7,26.65);belfryFace.lineTo(-2.7,26.65);belfryFace.closePath();
+ for(const dx of [-1.12,1.12]){
+  const opening=new T.Path();
+  opening.moveTo(dx-.52,23.30);opening.lineTo(dx-.52,25.65);
+  opening.quadraticCurveTo(dx-.52,25.99,dx,26.15);
+  opening.quadraticCurveTo(dx+.52,25.99,dx+.52,25.65);
+  opening.lineTo(dx+.52,23.30);opening.closePath();belfryFace.holes.push(opening);
+ }
+ const belfryWall=new T.ExtrudeGeometry(belfryFace,{depth:.40,bevelEnabled:false,curveSegments:12});
+ belfryWall.name='Belfry wall with paired pointed openings';
+ belfryWall.translate(0,0,2.30);
+ for(let side=0;side<4;side++)add(belfryWall,trim,tx,0,tz,1,1,1,side*Math.PI/2);
+ box(stone,tx,21.39,tz,5.4,.28,5.4);
+ box(roofMat,tx,26.64,tz,5.48,.18,5.48);
+ // The shallow coping sits below the original vertical crown piers.
+ for(const side of [0,1,2,3]){
+  const a=side*Math.PI/2;
+  box(trim,tx+Math.sin(a)*2.64,26.79,tz+Math.cos(a)*2.64,5.45,.15,.36,a);
+  box(trim,tx+Math.sin(a)*2.64,28.35,tz+Math.cos(a)*2.64,5.45,.15,.34,a);
+  for(const dx of [-1.72,-1.12,-.52,.52,1.12,1.72])
+   box(trim,tx+dx*Math.cos(a)+2.64*Math.sin(a),27.58,tz-dx*Math.sin(a)+2.64*Math.cos(a),.08,1.48,.23,a);
+ }
+ // Four bells are visible through the paired openings, as in the University's
+ // clock-tower tour. Their sizes and positions remain an interpretive miniature.
+ const bellMaterial=new T.MeshStandardMaterial({color:0x786446,roughness:.64,metalness:.64});
+ const bellProfile=[[0,.72],[.13,.70],[.20,.52],[.24,.29],[.37,.10],[.39,.06],[.36,0],[.30,.06],[.21,.26],[.16,.48],[.11,.59],[0,.60]].map(p=>new T.Vector2(...p));
+ const bellGeometry=new T.LatheGeometry(bellProfile,28);
+ for(const [dx,dz,scale] of [[-1.08,-.82,1.20],[1.04,-.82,1.04],[-1.08,.87,.88],[1.04,.87,.75]]){
+  add(bellGeometry,bellMaterial,tx+dx,24.55,tz+dz,scale,scale,scale);
+  cyl(iron,tx+dx,25.76,tz+dz,.045,1.06);
+  ball(iron,tx+dx,24.56,tz+dz,.055);
+ }
+ box(iron,tx,26.23,tz,4.80,.17,.17);box(iron,tx,26.23,tz,.17,.17,4.80);
  for(const side of [0,1,2,3]){
   const ang=side*Math.PI/2;
   const front=(dx,y,dz,w,h,d,m)=>{const x=tx+dx*Math.cos(ang)+dz*Math.sin(ang),z=tz-dx*Math.sin(ang)+dz*Math.cos(ang);box(m,x,y,z,w,h,d,ang);};
-  for(const dx of [-1.12,1.12]){front(dx,24.41,2.75,1.04,3.17,.06,dark);front(dx,25.98,2.77,.64,.31,.08,dark);for(const s of [-1,1])front(dx+s*.57,24.75,2.91,.12,3.55,.18,white);front(dx,24.56,2.99,.07,2.65,.09,trim);}
+  for(const dx of [-1.12,1.12]){for(const s of [-1,1])front(dx+s*.57,24.75,2.91,.12,3.55,.18,white);front(dx,24.56,2.99,.07,2.65,.09,trim);}
   for(const dx of [-2.55,0,2.55]){front(dx,25.07,2.94,.28,6.97,.75,trim);front(dx,28.61,2.94,.3,.17,.78,white);}
   front(0,22.51,2.89,5.2,.18,.28,white);front(0,23.16,2.89,5.2,.17,.28,white);
   for(const dx of [-1.7,-.65,.65,1.7]){front(dx,22.84,2.81,.35,.095,.06,dark);front(dx,22.84,2.82,.095,.35,.06,dark);}
   for(let dx=-2;dx<2.1;dx+=.5)front(dx,26.76,2.76,.23,.4,.2,trim);
   // True geometry clock faces stay legible in both WebGL and the light renderer.
-  const cg=new T.Group(),cm=new T.Mesh(new T.CircleGeometry(1.1,40),white);cg.add(cm);
-  const rim=new T.Mesh(new T.TorusGeometry(1.1,.055,5,40),iron);rim.position.z=.03;cg.add(rim);
+  const cg=new T.Group();cg.name=`Clock face ${side+1}`;
+  // A closed, opaque dial has a real edge and rear face at grazing angles.
+  const cm=new T.Mesh(new T.CylinderGeometry(1.1,1.1,.08,64),white);
+  cm.rotation.x=Math.PI/2;cm.position.z=-.015;cg.add(cm);
+  const rim=new T.Mesh(new T.TorusGeometry(1.1,.055,8,64),iron);rim.position.z=.03;cg.add(rim);
   for(let n=0;n<12;n++){const a=n*Math.PI/6;const tick=new T.Mesh(geometries.box,iron);tick.position.set(Math.sin(a)*.92,Math.cos(a)*.92,.07);tick.scale.set(.055,.19,.035);tick.rotation.z=-a;cg.add(tick);}
   for(const [angle,length] of [[-.72,.55],[.66,.78]]){const hand=new T.Mesh(geometries.box,iron);hand.position.set(Math.sin(angle)*length/2,Math.cos(angle)*length/2,.1);hand.scale.set(.065,length,.04);hand.rotation.z=-angle;cg.add(hand);}
-  cg.position.set(tx+Math.sin(ang)*2.805,18.18,tz+Math.cos(ang)*2.805);cg.rotation.y=ang;root.add(cg);
+  cg.position.set(tx+Math.sin(ang)*2.805,18.18,tz+Math.cos(ang)*2.805);cg.rotation.y=ang;architecture.add(cg);
  }
  // Close-view finish follows the existing masonry and roof planes. These are
  // additive details: the original building skin, portals and clock hands stay.
@@ -108,6 +159,18 @@ export function createOkumaAuditorium(T) {
    if(!frontOpening)box(mortar,tx+offset,y,tz+2.776,.013,.18,.026);
    if(!(Math.abs(offset)<.6&&y>4.8&&y<11.3)&&!(Math.abs(offset)<1.25&&y>16.9&&y<19.4))box(mortar,tx+2.776,y,tz+offset,.026,.18,.013);
   }
+ }
+ // Continue the same scratch-brick courses onto the tower's rear elevations;
+ // orbiting the object should never expose an unfinished placeholder surface.
+ for(let y=1.2;y<20.5;y+=.27){
+  box(mortar,tx,y,tz-2.758,5.44,.018,.026);
+  box(mortar,tx-2.758,y,tz,.026,.018,5.44);
+ }
+ for(let row=0;row<70;row++)for(let col=0;col<7;col++){
+  const y=1.29+row*.27,offset=-2.44+col*.75+(row%2)*.32;
+  if(offset>2.5||Math.abs(offset)<1.25&&y>16.9&&y<19.4)continue;
+  box(mortar,tx+offset,y,tz-2.776,.013,.18,.026);
+  box(mortar,tx-2.776,y,tz+offset,.026,.18,.013);
  }
  // Layered stone sills and reveals catch the light beneath the gallery windows.
  for(let z=-11.9;z<3;z+=2.65)for(const y of [3.4,8.1,11.4]){
@@ -141,6 +204,7 @@ export function createOkumaAuditorium(T) {
  }
  for(const x of [-3,2,7])for(const side of [-1,1])for(let y=1.22;y<6.72;y+=.56)
   box(stone,x+side*1.72,y,5.285,.15,.021,.055);
+ owner=surroundings;
  // Context buildings are deliberately quiet, so the auditorium stays legible.
  box(neighbor,18,4.1,-10,9,8,10);box(edge,18,8.2,-10,9.4,.25,10.4);
  for(let x=15;x<22;x+=2)for(let y=2;y<8;y+=2)box(glass,x,y,-4.96,.9,1.1,.05);
@@ -160,10 +224,10 @@ export function createOkumaAuditorium(T) {
  // A few tiny visitors establish scale without adding busy movement.
  const people=[];
  for(const [x,z,color] of [[-5,11,wine],[1,9,mat('ochre',0xc39b4d)],[7,9,dark],[-12,7,white],[6,16,wine],[-1,15,mat('blue',0x627e91)]]){
-  const person=new T.Group();const body=new T.Mesh(new T.CylinderGeometry(.16,.2,.6,7),color);body.position.y=.85;person.add(body);const head=new T.Mesh(new T.IcosahedronGeometry(.15,1),trim);head.position.y=1.31;person.add(head);for(const dx of [-.075,.075]){const leg=new T.Mesh(new T.BoxGeometry(.095,.43,.11),dark);leg.position.set(dx,.34,0);person.add(leg);}person.position.set(x,.1,z);root.add(person);people.push({object:person,x,z,phase:random()*6.28});
+  const person=new T.Group();const body=new T.Mesh(new T.CylinderGeometry(.16,.2,.6,7),color);body.position.y=.85;person.add(body);const head=new T.Mesh(new T.IcosahedronGeometry(.15,1),trim);head.position.y=1.31;person.add(head);for(const dx of [-.075,.075]){const leg=new T.Mesh(new T.BoxGeometry(.095,.43,.11),dark);leg.position.set(dx,.34,0);person.add(leg);}person.position.set(x,.1,z);surroundings.add(person);people.push({object:person,x,z,phase:random()*6.28});
  }
  // All static repeated primitives become instanced draws.
- for(const {g,m,transforms} of batches.values()){const mesh=new T.InstancedMesh(g,m,transforms.length);transforms.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=true;mesh.receiveShadow=true;mesh.computeBoundingSphere();root.add(mesh);}
+ for(const {g,m,owner,transforms} of batches.values()){const mesh=new T.InstancedMesh(g,m,transforms.length);transforms.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.instanceMatrix.needsUpdate=true;mesh.castShadow=true;mesh.receiveShadow=true;mesh.computeBoundingBox();mesh.computeBoundingSphere();owner.add(mesh);}
 
-return {group:root,target:[-.2,7.5,1],halfHeight:26,azimuth:.64,elevation:.48,people};
+return {group:root,architecture,target:[-.2,7.5,1],halfHeight:26,azimuth:.64,elevation:.48,people};
 }

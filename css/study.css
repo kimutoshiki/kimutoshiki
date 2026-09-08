@@ -65,3 +65,13 @@ dialog.reading-sheet{border-left:3px solid #a17b46!important;background:linear-g
   #zoom-level{min-width:35px;font-size:11px}
   .room-footer{gap:10px}
 }
+
+/* Compact orbit tools remain reachable while the camera moves. */
+.inspection-caption{position:fixed;top:105px;left:50%;transform:translateX(-50%);margin:0;padding:8px 18px;border-block:1px solid #bb98644d;color:#efdcba;white-space:nowrap;font:15px 'Yu Mincho',serif;letter-spacing:.1em;pointer-events:none}.is-inspecting .room-intro{visibility:hidden}.is-inspecting .room-pin{visibility:hidden!important;pointer-events:none}.is-inspecting .room-vignette{background:radial-gradient(ellipse at 50% 42%,transparent 25%,#170d0980)}
+.orbit-controls{position:absolute;right:0;bottom:100px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;max-width:360px;padding:9px;background:#2f2016ed;border:1px solid #bd915879;border-radius:5px;box-shadow:0 4px 15px #1b0e0845;color:#f7e3bd;font-size:12px}
+.orbit-controls label{font-size:12px}.orbit-controls select{min-width:146px;max-width:210px;background:#493327;color:#fff0d4;border:1px solid #b08c56;border-radius:3px;padding:7px;font:inherit}.view-presets{display:flex;gap:3px}.view-presets button{font:inherit;min-width:38px;min-height:33px;padding:5px 7px;border:1px solid #bd915860;background:#ffffff08;color:#f7e3bd;border-radius:3px}.view-presets button:hover{background:#743347}.room-intro{max-width:calc(100% - 430px)}
+@media(max-width:1200px) and (min-width:641px){.orbit-controls{bottom:164px}.view-controls{bottom:110px}.room-intro{bottom:228px;max-width:65%}}
+@media(max-width:640px){.room-intro{bottom:auto;top:88px;max-width:calc(100% - 40px)}.room-intro>p:first-child,.room-intro .home-description{display:none}.room-intro h1{font-size:19px}.orbit-controls{right:0;bottom:157px;max-width:265px;padding:6px;gap:5px}.orbit-controls select{min-width:160px;padding:5px}.view-presets{width:100%;justify-content:space-between}.view-presets button{min-width:35px;min-height:31px;padding:4px}.view-controls{bottom:109px;right:0}.footnote{max-width:100%;font-size:11px}.room-dock a{padding:8px 2px}.room-footer{gap:7px}.room-pins .pin-label{font-size:10px}}
+
+.is-inspecting .footnote>span:first-child{display:none}
+@media(max-width:640px){.footnote{position:absolute;right:0;bottom:250px;text-align:right;line-height:1.6}.footnote>span:first-child{display:none}.inspection-caption{top:117px;font-size:13px}}

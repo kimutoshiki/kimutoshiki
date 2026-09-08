@@ -1,4 +1,6 @@
+import { completeRoom } from './room-shell.js';
 import { addRoomDetails } from './room-details.js';
+import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-orbit';
 
 /** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {
@@ -128,7 +130,11 @@ export function createRoom(THREE, assets = {}) {
 
   // Architectural envelope: warm plaster, a deep sill and laid oak floor.
   box(13.2, .14, 12, floorMat, 0, -.1, 3.4);
-  box(13.2, 6.6, .2, palette.wall, 0, 3.24, -1.61);
+  // Opaque rear wall segments leave a real opening behind the existing window.
+  box(.91,6.6,.2,palette.wall,-6.145,3.24,-1.61);
+  box(10.01,6.6,.2,palette.wall,1.595,3.24,-1.61);
+  box(2.28,1.62,.2,palette.wall,-4.55,.75,-1.61);
+  box(2.28,.78,.2,palette.wall,-4.55,6.15,-1.61);
   box(.16, 6.6, 12, mat('#898560', .98), -6.55, 3.24, 3.4);
   box(13.2, .18, .12, palette.darkWood, 0, .12, -1.44, group, .025);
   box(13.2, .075, .1, palette.lightWood, 0, .245, -1.43, group, .015);
@@ -137,8 +143,11 @@ export function createRoom(THREE, assets = {}) {
   const windowGroup = new THREE.Group(); group.add(windowGroup); windowGroup.name = 'Afternoon window';
   const glassMat = new THREE.MeshStandardMaterial({ color: '#b4c5b0', roughness: .52, emissive: '#819486', emissiveIntensity: .22 });
   const wx = -4.55, wy = 3.66, ww = 2.28, wh = 4.2;
-  box(ww + .24, wh + .24, .16, palette.darkWood, wx, wy, -1.37, windowGroup, .03);
-  box(ww, wh, .055, glassMat, wx, wy, -1.265, windowGroup);
+  for (const side of [-1,1]) {
+    box(.12,wh+.24,.16,palette.darkWood,wx+side*(ww+.12)/2,wy,-1.37,windowGroup,.03);
+    box(ww,.12,.16,palette.darkWood,wx,wy+side*(wh+.12)/2,-1.37,windowGroup,.03);
+  }
+  const glass = box(ww, wh, .025, glassMat, wx, wy, -1.265, windowGroup); glass.castShadow=false;
   // Soft, abstract outdoor shapes behind the glazing, entirely mesh geometry.
   const outdoor = mat('#82977d', .96); outdoor.transparent = true; outdoor.opacity = .33;
   for (let i = 0; i < 7; i++) {
@@ -375,93 +384,9 @@ export function createRoom(THREE, assets = {}) {
   throwGeo.computeVertexNormals(); throwMat.side = THREE.DoubleSide;
   const throwMesh = mesh(throwGeo, throwMat, chair); throwMesh.position.set(.34, 1.81, .524); throwMesh.rotation.z = .10;
 
-  // A curled marmalade cat sleeps on a moss-coloured cushion. All anatomy is
-  // original low-poly geometry; the host can apply a tiny breathing scale to pets.
-  const cushionMat = mat('#929274', .99), stitchMat = mat('#c9c39b', 1);
-  const cushion = oval(.49, .090, .40, cushionMat, -.035, 1.23, -.07, chair);
-  const piping = mesh(new THREE.TorusGeometry(1, .018, 5, 36), stitchMat, chair);
-  piping.rotation.x = Math.PI / 2; piping.scale.set(.455, .365, .58); piping.position.set(-.035, 1.237, -.07);
-  const cat = new THREE.Group(); cat.name = 'Sleeping marmalade cat'; cat.position.set(-.065, 1.303, -.115); cat.rotation.y = -.35; chair.add(cat);
-  const fur = mat('#c88b52', .98), lightFur = mat('#e3c596', 1), stripe = mat('#9b5b36', 1), blush = mat('#a57b6c', .99);
-  oval(.335, .185, .235, fur, .040, .159, .025, cat);
-  oval(.19, .14, .205, lightFur, -.115, .124, .047, cat);
-  const head = new THREE.Group(); head.position.set(-.222, .180, .126); head.rotation.z = -.14; head.rotation.y = -.10; cat.add(head);
-  oval(.166, .145, .144, fur, 0, .008, 0, head);
-  for (const side of [-1, 1]) {
-    const ear = mesh(new THREE.ConeGeometry(.077, .166, 3), fur, head); ear.position.set(side * .105, .151, -.021); ear.rotation.z = side * -.23; ear.rotation.y = side * .30;
-    const inner = mesh(new THREE.ConeGeometry(.043, .103, 3), blush, head); inner.position.set(side * .108, .145, .010); inner.rotation.z = side * -.23; inner.rotation.y = side * .30;
-    oval(.060, .048, .043, lightFur, side * .046, -.027, .115, head);
-    curve([[side * .030, .036, .133], [side * .062, .025, .138], [side * .096, .041, .122]], .0045, palette.ink, head, 8);
-    for (const j of [-1, 1]) curve([[side * .064, -.025, .154], [side * .124, -.018 + j * .015, .160], [side * .169, -.010 + j * .030, .143]], .002, lightFur, head, 6);
-  }
-  oval(.019, .013, .012, blush, 0, -.011, .155, head);
-  curve([[0, -.021, .155], [0, -.039, .155], [.019, -.043, .151]], .0027, stripe, head, 6);
-  for (let i = -1; i <= 1; i++) curve([[i * .032, .117, .079], [i * .030, .092, .116], [i * .023, .072, .13]], .008, stripe, head, 8);
-  oval(.079, .044, .095, lightFur, -.163, .029, .195, cat);
-  oval(.074, .040, .085, lightFur, -.015, .026, .19, cat);
-  const tail = curve([[.245, .145, -.078], [.345, .092, .080], [.205, .061, .255], [-.002, .049, .281], [-.091, .061, .235]], .060, fur, cat, 26);
-  oval(.064, .057, .063, lightFur, -.087, .060, .238, cat);
-  for (let i = 0; i < 3; i++) {
-    const x = .065 + i * .069;
-    curve([[x, .29, -.082], [x + .015, .331 - i * .010, -.013], [x + .022, .307 - i * .016, .081]], .016, stripe, cat, 10);
-  }
-  pets.push({ object: cat, baseScale: cat.scale.clone(), phase: .45 });
-
-  // Lush foliage uses a single instanced leaf mesh for each plant.
-  const leafGeometry = new THREE.SphereGeometry(1, 8, 6);
-  function plant(x, y, z, size = 1, hanging = false, fern = false, variety = 'pothos') {
-    const p = new THREE.Group(); p.position.set(x, y, z); p.scale.setScalar(size); group.add(p);
-    p.name = variety === 'pearls' ? 'String of pearls' : hanging ? 'Hanging pothos' : fern ? 'Floor fern' : 'Plant';
-    const potH = hanging ? .30 : .47, potR = hanging ? .23 : .32;
-    cyl(potR, potR * .76, potH, hanging ? palette.terra : palette.potDark, 0, potH / 2, 0, p);
-    cyl(potR * 1.06, potR * 1.06, .045, hanging ? palette.terra : palette.potDark, 0, potH - .016, 0, p);
-    cyl(potR * .89, potR * .89, .018, palette.soil, 0, potH + .005, 0, p);
-    if (hanging) {
-      for (let i = 0; i < 3; i++) {
-        const aa = i / 3 * Math.PI * 2;
-        rod([Math.cos(aa) * potR, .12, Math.sin(aa) * potR], [0, 1.18, 0], .009, cord, p);
-      }
-      rod([0, 1.18, 0], [0, 1.5, 0], .012, palette.darkWood, p);
-    }
-    const leaves = [], colors = [];
-    const stems = fern ? 15 : hanging ? 11 : 9;
-    for (let i = 0; i < stems; i++) {
-      const angle = i / stems * Math.PI * 2 + rnd() * .24, len = .65 + rnd() * .62;
-      if (fern) {
-        const outward = .6 + rnd() * .5, top = .45 + rnd() * .45;
-        const points = [[0, potH, 0], [Math.cos(angle) * outward * .42, potH + top, Math.sin(angle) * outward * .42], [Math.cos(angle) * outward, potH + top * .64, Math.sin(angle) * outward]];
-        curve(points, .006, palette.leafLight, p, 12);
-        for (let j = 1; j < 10; j++) {
-          const t = j / 10, rr = outward * t, yy = potH + top * Math.sin(t * 1.94);
-          for (const side of [-1, 1]) {
-            const reach = Math.sin(t * Math.PI) * .16 + .015;
-            leaves.push({ pos: [Math.cos(angle) * rr + Math.cos(angle + Math.PI / 2) * reach * side, yy, Math.sin(angle) * rr + Math.sin(angle + Math.PI / 2) * reach * side], rot: [0, -angle + side * .56, side * .28], scale: [.035 + (1 - t) * .018, .014, reach * 1.28] }); colors.push(i % 3);
-          }
-        }
-      } else {
-        const outward = hanging ? .4 + rnd() * .4 : .35 + rnd() * .25;
-        const droop = hanging ? len : -.2 - rnd() * .5;
-        const points = [[0, potH, 0], [Math.cos(angle) * outward * .64, potH + .18, Math.sin(angle) * outward * .64], [Math.cos(angle) * outward, potH - droop, Math.sin(angle) * outward]];
-        curve(points, .006, palette.green, p, 13);
-        for (let j = 0; j < 9; j++) {
-          const t = (j + 1) / 9, rr = outward * Math.min(1, t * 1.5), yy = potH + Math.sin(t * Math.PI) * .20 - droop * t * t;
-          const side = j % 2 ? 1 : -1, s = .08 + rnd() * .06;
-          leaves.push({ pos: [Math.cos(angle) * rr + Math.cos(angle + 1.57) * .09 * side, yy, Math.sin(angle) * rr + Math.sin(angle + 1.57) * .09 * side], rot: [rnd() * .7, -angle + side * .7, side * .6], scale: [s * .67, s * .23, s * 1.25] }); colors.push((i + j) % 3);
-        }
-      }
-    }
-    if (variety === 'pearls') leaves.forEach(l => { l.scale = [.032, .034, .032]; });
-    if (variety === 'heart') leaves.forEach(l => { l.scale[0] *= 1.35; l.scale[2] *= .84; });
-    instancedFoliage(p, leaves, colors, variety === 'pearls' ? ['#577b49', '#72915b', '#a0ab76'] : ['#304a29', '#4c6636', '#758145']);
-    if (hanging) animated.push(p); return p;
-  }
-  function instancedFoliage(parent, leaves, colors = [], shades = ['#304a29', '#4c6636', '#758145']) {
-    const leafMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .87 });
-    const inst = new THREE.InstancedMesh(leafGeometry, leafMat, leaves.length); inst.castShadow = true; inst.receiveShadow = true;
-    const leafColors = shades.map(c => new THREE.Color(c));
-    leaves.forEach((l, i) => { temp.position.set(...l.pos); temp.rotation.set(...l.rot); temp.scale.set(...l.scale); temp.updateMatrix(); inst.setMatrixAt(i, temp.matrix); inst.setColorAt(i, leafColors[(colors[i] ?? i) % leafColors.length]); });
-    parent.add(inst); return inst;
-  }
+  // Authored curved foliage and texture-painted sleeping tabby retain their original locations.
+  addSleepingCat(THREE, { chair, pets });
+  const { plant, instancedFoliage } = createNaturalFoliage(THREE, { group, palette, cord, animated });
   plant(-4.00, .02, 1.12, 1.30, false, true);
   plant(-3.02, 4.80, -1.10, .71, true, false, 'heart');
   plant(2.77, 5.05, -1.13, .68, true);
@@ -484,14 +409,14 @@ export function createRoom(THREE, assets = {}) {
     const a = i * Math.PI / 4 + layer * .35, radius = .12 - layer * .03;
     rosette.push({ pos: [Math.cos(a) * radius, .27 + layer * .05, Math.sin(a) * radius], rot: [-.30 + layer * -.14, -a + Math.PI / 2, 0], scale: [.052 - layer * .008, .025, .143 - layer * .023] });
   }
-  instancedFoliage(succulent, rosette, [], ['#6c8b7b', '#8ca28b', '#a5b69b']);
+  instancedFoliage(succulent, rosette, [], ['#6c8b7b', '#8ca28b', '#a5b69b'], 'succulent');
   const snake = smallPot(1.60, 5.483, -1.03, '#d1c49c', .14); snake.name = 'Striped snake plant';
   const blades = [];
   for (let i = 0; i < 7; i++) {
     const a = i * 2.4, h = .135 + (i % 3) * .031;
     blades.push({pos:[Math.cos(a) * .07, .24 + h * .64, Math.sin(a) * .055], rot:[Math.cos(a) * .10, a, Math.sin(a) * .19], scale:[.042, h, .017]});
   }
-  instancedFoliage(snake, blades, [], ['#3d6047', '#81925c', '#b4b47b']);
+  instancedFoliage(snake, blades, [], ['#536d4d', '#76825a', '#929364'], 'snake');
   const flowerpot = smallPot(-5.01, 1.563, -.96, '#b58260', .17); flowerpot.name = 'Window violets';
   const flowerLeaves = [], petals = [];
   for (let i = 0; i < 6; i++) {
@@ -504,7 +429,7 @@ export function createRoom(THREE, assets = {}) {
     }
     oval(.016, .016, .015, palette.brass, x, h, z + .008, flowerpot);
   }
-  instancedFoliage(flowerpot, flowerLeaves); instancedFoliage(flowerpot, petals, [], ['#a18aa1', '#c3a9bb', '#b792a6']);
+  instancedFoliage(flowerpot, flowerLeaves); instancedFoliage(flowerpot, petals, [], ['#a18aa1', '#c3a9bb', '#b792a6'], 'petal');
 
   // A tiny perched songbird, a ceramic mushroom and a family of glazed pots.
   const bird = new THREE.Group(); bird.name = 'Little shelf sparrow'; bird.position.set(-.60, 5.50, -.94); bird.rotation.y = -.35; group.add(bird);
@@ -547,10 +472,11 @@ export function createRoom(THREE, assets = {}) {
   const rugMat = new THREE.MeshStandardMaterial({ map: rugMap, color: '#d1c09e', roughness: 1 });
   box(6.20, .014, 3.14, rugMat, .20, -.014, 1.85, group, .015);
 
+  const envelope = completeRoom(THREE, group, palette);
   const details = addRoomDetails(THREE, {
     group, palette, desk, chair, research, stack, blog, contact, profile, lamp, pot, windowGroup, gallery,
   });
 
   group.updateMatrixWorld(true);
-  return { group, targets, animated, lampLight, pets, details };
+  return { group, targets, animated, lampLight, pets, details, envelope };
 }

@@ -17,8 +17,8 @@ export class StudyCanvasRenderer {
     this.info = { render: { calls: 0, triangles: 0 }, memory: { geometries: 0 } };
     this.ratio = 1;
     this.width = this.height = 1;
-    this.maxWidth = 800;
-    this.maxHeight = 600;
+    this.maxWidth = 1200;
+    this.maxHeight = 900;
     this._scene = null;
     this._draws = null;
     this._textureCache = new WeakMap();
