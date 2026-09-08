@@ -6,6 +6,12 @@
   const status = document.getElementById('room-status');
   const motion = document.getElementById('motion-toggle');
   const nightButton = document.getElementById('night-toggle');
+  const canvas = document.getElementById('study-canvas');
+  const zoomLevel = document.getElementById('zoom-level');
+  canvas.addEventListener('viewchange', event => {
+    const zoom = event.detail?.zoom;
+    if (zoomLevel && Number.isFinite(zoom)) zoomLevel.textContent = zoom.toFixed(1) + '×';
+  });
   let engine, opener, ready = false, markers = true, night = false;
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const panels = {
@@ -21,7 +27,7 @@
     const panel = panels[panelId], template = document.getElementById('panel-' + panelId);
     if (!panel || !template || typeof dialog.showModal !== 'function') return false;
     opener = source || document.activeElement;
-    document.getElementById('reader-number').textContent = panel[0] + ' / MY STUDY';
+    document.getElementById('reader-number').textContent = panel[0] + ' / TOSHIKI KIMURA';
     document.getElementById('reader-title').textContent = panel[1];
     document.getElementById('reader-subtitle').textContent = panel[2];
     document.getElementById('reader-body').replaceChildren(template.content.cloneNode(true));
@@ -44,8 +50,8 @@
   document.getElementById('zoom-in').addEventListener('click',()=>engine?.zoom?.(-.7));
   document.getElementById('zoom-out').addEventListener('click',()=>engine?.zoom?.(.7));
   document.getElementById('view-reset').addEventListener('click',()=>engine?.reset?.());
-  function failed(error) { console.error('Study could not render',error);status.hidden=true;study.classList.add('is-failed');document.getElementById('room-fallback').hidden=false; }
-  import('../scene/study.js?v=20260906-home').then(async ({mountStudy}) => {
+  function failed(error) { console.error('3D scene could not render',error);status.hidden=true;study.classList.add('is-failed');document.getElementById('room-fallback').hidden=false; }
+  import('../scene/study.js?v=20260908-detail').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas:document.getElementById('study-canvas'),pins,onSelect:show,onError:failed,onReady(){ready=true;study.classList.add('is-ready');status.hidden=true;setPinState();}});
     engine?.setPaused?.(paused);engine?.setNight?.(night);
     motion.setAttribute('aria-pressed',String(paused));

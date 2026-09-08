@@ -269,6 +269,58 @@ export function createKaratsuBank(T) {
     cyl(x,5.90,.33,.058,9.32,M.copper,.058,8,p);
     for(const y of [2.12,5.95,9.48])box(x,y,.27,.19,.08,.30,M.black,p);
   }
+  // Close-view craftsmanship is added to the original surfaces. Keep this
+  // architectural section before the perimeter fence used by desk extraction.
+  // Slate end joints alternate between the existing horizontal roof courses.
+  const roofHalfW=14.35,roofHalfD=7.85,roofRidge=roofHalfW-15.7*.36;
+  for(const sign of [-1,1])for(let row=0;row<9;row++) {
+    const t0=(row+.10)/9,t1=(row+.91)/9;
+    const halfSpan=roofHalfW-(roofHalfW-roofRidge)*t1;
+    for(let x=-13.8+(row%2)*.54;x<13.8;x+=1.08)if(Math.abs(x)<halfSpan-.14)
+      beam([x,11.47+2.45*t0+.033,Z+sign*roofHalfD*(1-t0)],
+        [x,11.47+2.45*t1+.033,Z+sign*roofHalfD*(1-t1)],.013,M.copper);
+  }
+  // Continuous eave gutters, small straps and the existing downpipe connections.
+  for(const p of [front,back]) {
+    beam([-13.79,11.43,.43],[13.79,11.43,.43],.075,M.copper,p);
+    for(let x=-13.5;x<13.6;x+=1.06) {
+      box(x,11.42,.44,.062,.19,.17,M.copperEdge,p);
+      box(x,11.32,.32,.075,.16,.25,M.shadowStone,p);
+    }
+    for(const x of [-13,13]) {
+      beam([x,10.55,.33],[x,11.40,.43],.06,M.copper,p);
+      box(x,10.75,.32,.30,.31,.30,M.copper,p);
+      box(x,10.91,.32,.37,.08,.35,M.copperEdge,p);
+    }
+    for(const x of frontWindows) {
+      // Stepped sill edges, carved underside brackets and pane reflections.
+      box(x,1.79,.31,3.24,.068,.37,M.pale,p);
+      for(const dx of [-1.12,1.12]) {
+        box(x+dx,1.64,.18,.19,.22,.24,M.shadowStone,p);
+        box(x+dx,6.02,.23,.20,.19,.30,M.shadowStone,p);
+      }
+      for(const dx of [-.64,.64]) {
+        box(x+dx,3.74,.247,.031,2.86,.018,M.glassLight,p);
+        box(x+dx*.8,7.21,.273,.035,1.19,.018,M.glassLight,p);
+      }
+      for(const dx of [-.19,.19])box(x+dx,3.30,.357,.032,.16,.043,M.black,p);
+    }
+    // Recessed panels in the pale upper frieze follow the existing pilaster bays.
+    for(const x of [-6.1,0,6.1]) {
+      box(x,10.54,.154,2.35,.46,.026,M.shadowStone,p);
+      box(x,10.55,.178,2.18,.32,.026,M.stone,p);
+    }
+  }
+  for(const p of [left,right]) {
+    beam([-7.15,11.43,.43],[7.15,11.43,.43],.075,M.copper,p);
+    for(let x=-6.8;x<7.1;x+=1.05)box(x,11.42,.44,.065,.19,.17,M.copperEdge,p);
+  }
+  // Fine coping joints on the existing granite foundation, including the back.
+  for(const p of [front,back,left,right]) {
+    const width=p===front||p===back?W:D;
+    box(0,.87,.14,width,.017,.025,M.shadowStone,p);
+    for(let x=-width/2+.42;x<width/2;x+=1.05)box(x,.86,.14,.018,.44,.027,M.shadowStone,p);
+  }
   // Black wrought-iron boundary rails stop at the two entrance paths.
   function fence(x1,z1,x2,z2) {
     const len=Math.hypot(x2-x1,z2-z1),n=Math.ceil(len/.57);

@@ -222,6 +222,47 @@ export function createOkumaStatue(T) {
   curve([[-.24,-.436,.439],[0,-.346,.527],[.24,-.436,.439]],.039,M.bronze,16,6,head);
   curve([[-.24,-.57,.394],[0,-.526,.461],[.24,-.57,.394]],.016,M.recess,15,4,head);
   for(let k=0;k<2;k++)curve([[-.36,.47+k*.095,.353],[0,.50+k*.08,.40],[.36,.47+k*.095,.353]],.013,M.recess,20,4,head);
+  // Additive finishing stays before the mortarboard, the last authored object
+  // retained by the tabletop display. No inscription or facial feature is added.
+  // A single compact mesh gives the original tapered granite its quiet mineral
+  // grain. Each fleck follows the actual taper instead of floating on a plane.
+  const grainPositions=[],grainColors=[];
+  const graniteBase=new T.Color(0xa6a6a0),graniteDark=new T.Color(0x7d8580),graniteLight=new T.Color(0xcdcec2);
+  let grainSeed=1932;
+  const grainRandom=()=>{grainSeed=(grainSeed*1664525+1013904223)>>>0;return grainSeed/4294967296;};
+  function stonePoint(side,u,y) {
+    const t=(y-.59)/(6.72-.59),halfW=(4.55-.55*t)/2,halfD=(3.97-.39*t)/2;
+    if(side<2)return [u*halfW,y,(side===0?1:-1)*(halfD+.003)];
+    return [(side===2?1:-1)*(halfW+.003),y,u*halfD];
+  }
+  for(let side=0;side<4;side++)for(let row=0;row<53;row++)for(let col=0;col<22;col++) {
+    const y=.68+(row+.2+grainRandom()*.5)*5.92/53;
+    const u=-.968+(col+.2+grainRandom()*.55)*1.90/22;
+    if(side===0&&Math.abs(u)<.19&&y>1.90&&y<5.70)continue;
+    const radius=.004+grainRandom()*.012,stretch=.6+grainRandom()*.9;
+    const c=graniteBase.clone().lerp(grainRandom()>.47?graniteLight:graniteDark,.22+grainRandom()*.35);
+    for(const [du,dy] of [[-radius,-radius*.35],[radius*.9,-radius*.6],[radius*.3,radius*stretch]]) {
+      grainPositions.push(...stonePoint(side,u+du,y+dy));grainColors.push(c.r,c.g,c.b);
+    }
+  }
+  const grainGeo=new T.BufferGeometry();
+  grainGeo.setAttribute('position',new T.Float32BufferAttribute(grainPositions,3));
+  grainGeo.setAttribute('color',new T.Float32BufferAttribute(grainColors,3));grainGeo.computeVertexNormals();
+  const grain=add(grainGeo,new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.96,side:T.DoubleSide}));
+  grain.name='Granite mineral grain · follows original pedestal taper';
+  // Finely rolled bronze edges remain within the original plinth dimensions.
+  for(const sign of [-1,1]) {
+    box([0,6.865,sign*1.562],[3.39,.027,.020],M.raised);
+    box([sign*1.732,6.865,0],[.020,.027,3.05],M.raised);
+    box([0,7.328,sign*1.562],[3.39,.020,.020],M.recess);
+    box([sign*1.732,7.328,0],[.020,.020,3.05],M.recess);
+  }
+  // Shoe welts sit on the existing ellipsoidal soles, adding a fine highlight.
+  for(const [x,z,rx,rz] of [[-.45,.35,.272,.476],[.48,.22,.277,.525]]) {
+    const sole=[];
+    for(let i=0;i<=26;i++){const a=i/26*Math.PI*2;sole.push([x+rx*Math.cos(a),7.49,z+rz*Math.sin(a)]);}
+    curve(sole,.018,M.raised,28,4);
+  }
   // Mortarboard and soft cylindrical crown, with a long tassel on the wearer's left.
   add(new T.CylinderGeometry(.57,.555,.49,32),M.bronze,[0,16.62,.005]);
   curve([[-.55,16.45,.01],[-.38,16.42,.40],[0,16.43,.55],[.38,16.42,.4],[.55,16.45,.01]],.025,M.raised,26,5);
@@ -231,6 +272,12 @@ export function createOkumaStatue(T) {
   ball([0,.084,0],[.085,.05,.085],M.raised,cap);
   curve([[0,.09,0],[.35,.11,.19],[.85,.08,.32],[.88,-.10,.34],[.9,-.71,.36]],.044,M.raised,20,6,cap);
   for(let i=0;i<5;i++)curve([[.84+i*.028,-.17,.33],[.85+i*.03,-.43,.345],[.89+i*.028,-.72,.36]],.023,i%2?M.bronze:M.raised,10,5,cap);
+  // A narrow stitched edge and tassel collar enrich the existing cap itself.
+  for(const sign of [-1,1]) {
+    box([0,.068,sign*.687],[1.92,.012,.018],M.raised,cap);
+    box([sign*.967,.068,0],[.018,.012,1.35],M.raised,cap);
+  }
+  ball([.91,-.17,.34],[.081,.055,.060],M.recess,cap);
   // Mature trees frame the monument; asymmetric crowns keep sightlines clear.
   function tree(x,z,height,spread,index){
     segment([x,.37,z],[x+.15,height*.64,z-.15],.24,M.trunk);

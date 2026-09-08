@@ -39,6 +39,8 @@ export function createKaratsuCastle(T) {
   const cylinderGeometry = new T.CylinderGeometry(1, 1, 1, 4, 1, true);
   const foliageGeometry = new T.IcosahedronGeometry(1, 1);
   const rockGeometry = new T.IcosahedronGeometry(1, 0);
+  // Shared, flat end tiles add readable eave detail with only ten faces each.
+  const tileEndGeometry = new T.CircleGeometry(1, 10);
   const unitY = new T.Vector3(0, 1, 0);
   const ribbonMaterials = new Map();
   let seed = 216608;
@@ -202,6 +204,24 @@ export function createKaratsuCastle(T) {
           const part=box(.057,wh,.09,wx+(front?offset:sign*.045),wy,wz+(front?sign*.045:offset),m.plasterShade);
           if(!front)part.rotation.y=Math.PI/2;
         }
+        // Narrow recessed frame edges make the existing openings feel carved
+        // into the plaster, especially when the keep is viewed at close range.
+        for(const edge of [-1,1]) {
+          const jamb=box(.075,wh+.17,.105,
+            wx+(front?edge*(ww/2+.08):sign*.016),wy,
+            wz+(front?sign*.016:edge*(ww/2+.08)),m.plasterShade);
+          if(!front)jamb.rotation.y=Math.PI/2;
+        }
+      }
+      // Timber ends sit below the existing overhanging eaves, not on the walls.
+      for(const sign of [-1,1])for(let i=0;i<=Math.floor(span/.76);i++) {
+        const offset=-span/2+.30+i*(span-.60)/Math.floor(span/.76);
+        const fixed=front?d/2:w/2;
+        const corbel=box(.14,.15,.54,front?offset:sign*(fixed+.18),y1-.24,
+          front?sign*(fixed+.18):offset,m.timber);
+        const foot=box(.12,.14,.28,front?offset:sign*(fixed+.095),y1-.37,
+          front?sign*(fixed+.095):offset,m.plasterShade);
+        if(!front){corbel.rotation.y=Math.PI/2;foot.rotation.y=Math.PI/2;}
       }
     }
   }
@@ -253,6 +273,18 @@ export function createKaratsuCastle(T) {
           const u=j/ribs*2-1;
           const rib=[];for(let k=0;k<=4;k++)rib.push(point(side,u,.07+k*.2325,.018));
           tileRib(rib);
+          // Round terminal tiles follow the exact curve of the authored roof.
+          // They sit inside its original fascia height, keeping the silhouette.
+          if(j>0&&j<ribs) {
+            const end=point(side,u,1,.01);
+            const cap=mesh(tileEndGeometry,j%3?m.tile:m.tileLight,roofGroup);
+            cap.position.set(end[0],end[1]-.071,end[2]);
+            if(side===0){cap.position.z+=.023;cap.rotation.y=0;}
+            if(side===1){cap.position.z-=.023;cap.rotation.y=Math.PI;}
+            if(side===2){cap.position.x+=.023;cap.rotation.y=Math.PI/2;}
+            if(side===3){cap.position.x-=.023;cap.rotation.y=-Math.PI/2;}
+            cap.scale.setScalar(.073);
+          }
         }
         for(let k=1;k<4;k++) {
           const v=.18+k*.22;
@@ -262,6 +294,10 @@ export function createKaratsuCastle(T) {
     }
     if(ribVertices.length)mesh(geometry(ribVertices,ribIndices),m.tile,roofGroup);
     beam([-ridge/2,y+rise+.055,0],[ridge/2,y+rise+.055,0],.13,m.tile,roofGroup);
+    // Stacked ridge bedding and regularly spaced caps retain the existing line.
+    box(ridge,.075,.22,0,y+rise-.025,0,m.roofEdge,roofGroup);
+    for(let x=-ridge/2+.19;x<ridge/2;x+=.37)
+      box(.045,.065,.255,x,y+rise+.061,0,m.tileLight,roofGroup);
     for(const sign of [-1,1]) {
       const end=[sign*(ridge/2+.25),y+rise+.45,0];
       beam([sign*(ridge/2-.28),y+rise+.08,0],end,.095,m.tileLight,roofGroup);
@@ -349,6 +385,12 @@ export function createKaratsuCastle(T) {
     for(const offset of [-.42,0,.42]) {
       const o=offset*railSpan;
       box(.14,2.34,.14,front?o:sign*(fixed-.26),21.21,front?sign*(fixed-.26):o,m.plasterLight);
+    }
+    // Small post shoes and squared handrail caps finish the original balcony.
+    for(let i=0;i<=posts;i++) {
+      const offset=(i/posts-.5)*railSpan;
+      box(.17,.105,.17,front?offset:sign*fixed,deckY+.075,front?sign*fixed:offset,m.balconyCap);
+      box(.155,.055,.155,front?offset:sign*fixed,deckY+1.00,front?sign*fixed:offset,m.balconyCap);
     }
   }
   hipRoof(9.95,8.65,22.30,2.24,6.0);

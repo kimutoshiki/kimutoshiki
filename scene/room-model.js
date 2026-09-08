@@ -1,4 +1,6 @@
-/** Original, procedural study scene. No third-party model or geometry dependencies. */
+import { addRoomDetails } from './room-details.js';
+
+/** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {
   const group = new THREE.Group();
   group.name = 'A quiet room for learning';
@@ -43,6 +45,10 @@ export function createRoom(THREE, assets = {}) {
   woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
   palette.wood.map = woodTexture;
   palette.lightWood.map = woodTexture;
+  // A shallow grain reads at close range while preserving the existing wood color.
+  for (const material of [palette.wood, palette.lightWood]) {
+    material.bumpMap = woodTexture; material.bumpScale = .007;
+  }
   const floorTexture = makeCanvas(1024, 1024, (ctx, w, h) => {
     ctx.fillStyle = '#98724f'; ctx.fillRect(0, 0, w, h);
     const bh = 128;
@@ -60,6 +66,7 @@ export function createRoom(THREE, assets = {}) {
   });
   floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; floorTexture.repeat.set(1.8, 2.6);
   const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: .79, color: '#d4c5a7' });
+  floorMat.bumpMap = floorTexture; floorMat.bumpScale = .006;
   const geometryCache = new Map();
   const cube = new THREE.BoxGeometry(1, 1, 1);
   const cylinder = new THREE.CylinderGeometry(1, 1, 1, 16);
@@ -540,6 +547,10 @@ export function createRoom(THREE, assets = {}) {
   const rugMat = new THREE.MeshStandardMaterial({ map: rugMap, color: '#d1c09e', roughness: 1 });
   box(6.20, .014, 3.14, rugMat, .20, -.014, 1.85, group, .015);
 
+  const details = addRoomDetails(THREE, {
+    group, palette, desk, chair, research, stack, blog, contact, profile, lamp, pot, windowGroup, gallery,
+  });
+
   group.updateMatrixWorld(true);
-  return { group, targets, animated, lampLight, pets };
+  return { group, targets, animated, lampLight, pets, details };
 }

@@ -83,6 +83,64 @@ export function createOkumaAuditorium(T) {
   for(const [angle,length] of [[-.72,.55],[.66,.78]]){const hand=new T.Mesh(geometries.box,iron);hand.position.set(Math.sin(angle)*length/2,Math.cos(angle)*length/2,.1);hand.scale.set(.065,length,.04);hand.rotation.z=-angle;cg.add(hand);}
   cg.position.set(tx+Math.sin(ang)*2.805,18.18,tz+Math.cos(ang)*2.805);cg.rotation.y=ang;root.add(cg);
  }
+ // Close-view finish follows the existing masonry and roof planes. These are
+ // additive details: the original building skin, portals and clock hands stay.
+ // Return the brick bond around the quieter rear and west elevations.
+ for(let y=1.3;y<13.4;y+=.27){
+  box(mortar,2,y,-13.514,17.8,.014,.022);
+  box(mortar,-7.014,y,-6.96,.022,.014,12.64);
+ }
+ for(let row=0;row<43;row++){
+  const y=1.39+row*.28;
+  for(let col=0;col<23;col++){
+   const x=-6.7+col*.76+(row%2)*.38;
+   box(mortar,x,y,-13.52,.013,.18,.025);
+  }
+ }
+ // Fine vertical joints finish the already modelled clock-tower courses.
+ for(let row=0;row<70;row++){
+  const y=1.29+row*.27;
+  for(let col=0;col<7;col++){
+   const offset=-2.44+col*.75+(row%2)*.32;
+   if(offset>2.5)continue;
+   // Leave the carved portal, narrow openings, oriel and clocks uninterrupted.
+   const frontOpening=Math.abs(offset)<1.40&&y<4.3 || Math.abs(offset)<.65&&y>4.8&&y<15.8 || Math.abs(offset)<1.25&&y>16.9&&y<19.4;
+   if(!frontOpening)box(mortar,tx+offset,y,tz+2.776,.013,.18,.026);
+   if(!(Math.abs(offset)<.6&&y>4.8&&y<11.3)&&!(Math.abs(offset)<1.25&&y>16.9&&y<19.4))box(mortar,tx+2.776,y,tz+offset,.026,.18,.013);
+  }
+ }
+ // Layered stone sills and reveals catch the light beneath the gallery windows.
+ for(let z=-11.9;z<3;z+=2.65)for(const y of [3.4,8.1,11.4]){
+  box(stone,11.29,y-.97,z+1.2,.24,.12,1.10);
+  box(trim,11.31,y-1.045,z+1.2,.28,.07,1.18);
+  box(iron,11.303,y,z+1.2,.025,.055,.71);
+  for(const dz of [-.42,.42])box(stone,11.25,y,z+1.2+dz,.17,1.84,.065);
+ }
+ // Slate joints are staggered between the existing roof courses.
+ for(let row=0;row<26;row++){
+  const z=-12.85+row*.62;
+  for(let col=0;col<18;col++){
+   const x=-5.25+col*.81+(row%2)*.405;
+   if(x<9.33)box(dark,x,15.18,z,.017,.025,.53);
+  }
+ }
+ for(const x of [-7.27,11.27]){
+  box(iron,x,13.76,-5,.13,.14,17.20);
+  box(trim,x,13.70,-5,.19,.09,17.25);
+  for(let z=-13;z<3.5;z+=1.30)box(stone,x,13.5,z,.17,.32,.12);
+ }
+ for(const x of [-6.43,10.43]){
+  cyl(iron,x,6.92,5.18,.055,12.4);
+  for(const y of [1.7,4.6,7.5,10.4,12.9])box(stone,x,y,5.16,.20,.07,.15);
+ }
+ // The deep cornice has short paired corbels; the portal surrounds gain fine
+ // stone seams at the straight jambs without adding any new opening or signage.
+ for(let x=-6.5;x<11.0;x+=.66){
+  box(stone,x,13.77,5.28,.12,.25,.24);
+  box(trim,x,13.66,5.26,.16,.09,.18);
+ }
+ for(const x of [-3,2,7])for(const side of [-1,1])for(let y=1.22;y<6.72;y+=.56)
+  box(stone,x+side*1.72,y,5.285,.15,.021,.055);
  // Context buildings are deliberately quiet, so the auditorium stays legible.
  box(neighbor,18,4.1,-10,9,8,10);box(edge,18,8.2,-10,9.4,.25,10.4);
  for(let x=15;x<22;x+=2)for(let y=2;y<8;y+=2)box(glass,x,y,-4.96,.9,1.1,.05);

@@ -2,10 +2,10 @@
  * Architecture is retained as authored. Only independently separable scenery is
  * removed; every retained geometry, material and instance transform is original.
  */
-import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js';
-import { createOkumaStatue } from '../js/models/okuma-statue.js';
-import { createKaratsuCastle } from '../js/models/karatsu-castle.js';
-import { createKaratsuBank } from '../js/models/karatsu-bank.js';
+import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260908-detail';
+import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260908-detail';
+import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260908-detail';
+import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260908-detail';
 import { batchStaticMeshes } from '../js/models/model-utils.js';
 
 const TABLE_Y = 2.164;
@@ -147,6 +147,8 @@ export async function createDeskLandmarks(T) {
   const stats = { models: [], geometryPolicy: 'Original geometry and uniform scale; independently separable context removed.' };
   const wood = new T.MeshStandardMaterial({ color: 0x76513a, roughness: .8 });
   const felt = new T.MeshStandardMaterial({ color: 0x29423a, roughness: .97 });
+  const brass = new T.MeshStandardMaterial({ color: 0xb79a5f, roughness: .34, metalness: .72 });
+  const edgeGeometry = new T.BoxGeometry(1, 1, 1);
   const layouts = [
     { key: 'okuma-auditorium', title: '大隈講堂', subtitle: 'OKUMA AUDITORIUM', targetId: 'landmark-okuma-auditorium', x: -1.9, z: -.34, rotation: -.04, height: 1.20, anchor: [-9.25, 18.18, 5.31], factory: createOkumaAuditorium, extract: model => extractAuditorium(T, model) },
     { key: 'okuma-statue', title: '大隈重信像', subtitle: 'OKUMA SHIGENOBU', targetId: 'landmark-okuma-statue', x: -.68, z: -.30, rotation: .02, height: 1.10, anchor: [0, 11.5, .7], factory: createOkumaStatue, extract: extractStatue },
@@ -171,6 +173,10 @@ export async function createDeskLandmarks(T) {
     const top = new T.Mesh(new T.BoxGeometry(DISPLAY_WIDTH - .02, .010, DISPLAY_DEPTH - .02), felt);
     top.position.y = .070;
     display.add(base, top, nameplate(T, layout.title, layout.subtitle));
+    // Inlaid display edges give the original miniatures a finished mount.
+    for (const [x,z,w,d] of [[0,-.346,.838,.008],[0,.346,.838,.008],[-.421,0,.008,.684],[.421,0,.008,.684]]) {
+      const edge = new T.Mesh(edgeGeometry, brass); edge.scale.set(w,.009,d); edge.position.set(x,.054,z); display.add(edge);
+    }
     const turn = new T.Group();
     turn.rotation.y = layout.rotation;
     turn.add(model.group);

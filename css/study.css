@@ -19,3 +19,49 @@ dialog.reading-sheet{position:fixed;inset:0 0 0 auto;margin:0;height:100svh;max-
 @media(max-width:640px){.room-actions{flex-wrap:wrap;justify-content:flex-end;max-width:110px}.room-dock a{min-height:60px}#reader-title{font-size:27px}.room-intro{bottom:184px}.prototype-label{flex-wrap:wrap;justify-content:center}}
 
 .room-intro .home-description{font-size:12px;letter-spacing:.05em;margin:12px 0 0;color:#f4e7d0}
+
+/* Walnut, brass and burgundy details keep the scene and its controls coherent. */
+:root{--primary:#632338;--ring:#b68a50;--border:#c5b08e}
+.study{background:#39271f}
+.room-vignette{background:linear-gradient(180deg,#20140b66 0%,transparent 26%,transparent 63%,#170d09d1 100%),radial-gradient(ellipse at center,transparent 45%,#25150833)}
+.brand-mark{color:#e1bc7c}
+.room-intro{padding-left:18px;border-left:2px solid #c89e63}
+.room-intro h1{letter-spacing:.075em}
+.room-intro>p:first-child{color:#e7c995}
+.tool{background:linear-gradient(145deg,#f6ead4f2,#cfb68ef2);border-color:#e2bf81a6;color:#452e23;box-shadow:inset 0 1px #fff4d880,0 3px 12px #1b0e0840}
+.tool:hover{background:#faecd1}
+.tool[aria-pressed=true]{background:linear-gradient(145deg,#79354a,#502333);border-color:#d0a363;color:#fbe7bd}
+.room-dock{border-color:#c49a6199;background:linear-gradient(145deg,#422c21ef,#241910ed);box-shadow:inset 0 1px #f5d6a324,inset 0 -2px #110a0770,0 8px 30px #130c0959;border-radius:5px}
+.room-dock a{padding:11px 17px}
+.room-dock a:hover{background:#80384b78;color:#fff7df}
+.room-dock a+a:before{background:#d2a96440}
+.room-dock svg{color:#e7bd78}
+.pin-dot{background:linear-gradient(135deg,#f7e7c6,#d7b371);border-color:#ffe6b2;color:#573820;box-shadow:0 0 0 4px #cdaf721c,0 2px 8px #170d0959}
+.pin-label{background:#352216ed;border-color:#c69b656b;box-shadow:inset 0 1px #ffebc212,0 3px 9px #1e120947}
+.desktop-hint,.touch-hint{font-size:12px;color:#f5e3c6}
+.touch-hint{display:none}
+.prototype-label{color:#e8d5b5}
+.view-controls{align-items:center;gap:5px;padding:5px;background:#2f2016ed;border:1px solid #bd915879;border-radius:5px;box-shadow:inset 0 1px #ead09d21,0 4px 15px #1b0e0845}
+.view-controls button{width:36px;height:36px;background:#5c403048;border-color:#c29b635c;color:#f7e3bd}
+.view-controls button:hover{background:#743347;border-color:#dfb974}
+.view-controls #view-reset{display:flex;gap:6px;justify-content:center;width:auto;padding:0 9px;font-size:11px}
+#zoom-level{min-width:42px;text-align:center;color:#e9c993;font-size:12px;font-variant-numeric:tabular-nums}
+dialog.reading-sheet{border-left:3px solid #a17b46!important;background:linear-gradient(110deg,#f1e6d2,#fbf6e9 12%,#f9f1e0)!important}
+.reader-heading{border-bottom:1px solid #bca47b;position:relative}
+.reader-heading:after{content:"";position:absolute;bottom:-2px;left:0;width:40px;height:3px;background:#773047}
+.reader-number{color:#755637}
+.reader-link{color:#69273b;border-bottom-color:#af8c56}
+.gallery-photo img{border-color:#543725;box-shadow:0 0 0 1px #b28a50,0 7px 16px #3e281f26}
+.reader-photo{border:1px solid #b4966b}
+@media(max-width:1200px) and (min-width:641px){.view-controls{bottom:115px}.room-dock a{padding:11px 13px}}
+@media(max-width:640px){
+  .room-intro{left:20px;bottom:240px;padding-left:12px;max-width:calc(100% - 40px)}
+  .room-intro h1{font-size:clamp(20px,5.5vw,25px);letter-spacing:.04em}
+  .room-intro .home-description{font-size:11px}
+  .desktop-hint{display:none}.touch-hint{display:block;font-size:11px}
+  .room-dock a{padding:9px 3px;font-size:11px}
+  .view-controls{bottom:155px;right:0;gap:4px;padding:4px}
+  .view-controls button{height:36px;width:36px}
+  #zoom-level{min-width:35px;font-size:11px}
+  .room-footer{gap:10px}
+}
