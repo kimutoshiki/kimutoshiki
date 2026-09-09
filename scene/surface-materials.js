@@ -11,6 +11,8 @@ export const SURFACES = {
   ginger: { file: 'ginger-fur', tint: '#f3e4ce', roughness: .96 },
   ivory: { file: 'ivory-fur', tint: '#fff3dd', roughness: .98 },
   linen: { file: 'burgundy-linen', tint: '#f3d9cc', roughness: 1 },
+  feather: { file: 'sparrow-feathers', tint: '#ead5b7', roughness: .91 },
+  petal: { file: 'daisy-petal', tint: '#fff2df', roughness: .82 },
 };
 
 export function surface(material, key, options = {}) {
@@ -121,7 +123,11 @@ export function loadSurfaceMaterials(T, root, { onLoad = () => {}, anisotropy = 
         if (material.map) retained.add(material.map);
         material.map = texture;
         material.color.set(tag.tint || spec.tint);
-        material.roughness = spec.roughness;
+        material.roughness = tag.roughness ?? spec.roughness;
+        if(tag.bumpScale){
+          const relief=texture.clone();relief.colorSpace=T.NoColorSpace;relief.needsUpdate=true;textures.add(relief);
+          if(material.bumpMap)retained.add(material.bumpMap);material.bumpMap=relief;material.bumpScale=tag.bumpScale;
+        }
         material.needsUpdate = true;
       }
       onLoad(spec.file);

@@ -53,11 +53,13 @@ const baseline=pixels.slice(center,center+3),cachedGeometry=renderer._draws;
 renderer.setLighting(1.3,[1,1,1]);renderer.render(scene,camera);
 assert.equal(renderer._draws,cachedGeometry);
 for(let channel=0;channel<3;channel++)assert.ok(pixels[center+channel]>=baseline[channel]*1.29,'Daylight gain must reach texture pixels');
-renderer.setLighting(1.18,[1,.93,.82]);renderer.render(scene,camera);
-assert.ok(pixels[center]>baseline[0]&&pixels[center+2]<baseline[2],'Night stays bright with a warmer color');
+renderer.setLighting(.59,[1,.88,.77]);renderer.render(scene,camera);
+assert.ok(pixels[center]<baseline[0]*.61&&pixels[center+2]<baseline[2]*.48,'Night has clearly lower ambient illumination');
+face.material=new T.MeshStandardMaterial({color:'#777777',emissive:'#ffd090',emissiveIntensity:1});renderer.invalidate();renderer.render(scene,camera);
+const lit=pixels[center];face.material.emissiveIntensity=0;renderer.render(scene,camera);assert.ok(lit-pixels[center]>95,'Self-lit lamps remain visible independently of low night gain');
 renderer.setLighting(1,[1,1,1]);
 let bytes=0;
 for(const {file} of Object.values(SURFACES)){const data=await readFile(new URL('../images/materials/'+file+'.webp',import.meta.url));assert.equal(data.toString('ascii',0,4),'RIFF');assert.equal(data.toString('ascii',8,12),'WEBP');bytes+=data.length;}
-assert.ok(bytes<800000,'Generated image transfer budget exceeded');
+assert.ok(bytes<1100000,'Generated image transfer budget exceeded');
 manager.dispose();renderer.dispose();
-console.log(JSON.stringify({result:'PASS',checks:['Instance geometry, colors and physical UV buckets','Placeholder, success, failure and disposal loading states','UV addition preserves custom geometry','Real software pixel rasterization and late texture refresh','Day and night gains reach actual textured pixels without geometry rebuilds','Nine valid WebP assets under 800 kB'],textureBytes:bytes},null,2));
+console.log(JSON.stringify({result:'PASS',checks:['Instance geometry, colors and physical UV buckets','Placeholder, success, failure and disposal loading states','UV addition preserves custom geometry','Real software pixel rasterization and late texture refresh','Contrasting day/night illumination and independent lamp emission','Eleven valid WebP materials under 1.1 MB'],textureBytes:bytes},null,2));

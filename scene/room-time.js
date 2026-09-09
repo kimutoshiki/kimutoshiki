@@ -23,18 +23,18 @@ export function getRoomTime(date = new Date(), mode = 'auto') {
     dateTime: date.toISOString(),
     hourAngle: -Math.PI * 2 * ((hour % 12) + minute / 60) / 12,
     minuteAngle: -Math.PI * 2 * minute / 60,
-    sunIntensity: mix(.12, 3.8, daylight),
-    hemisphereIntensity: mix(1.45, 2.15, daylight),
-    ambientIntensity: mix(1.15, .90, daylight),
-    fillIntensity: mix(1.05, 1.35, daylight),
-    lampIntensity: mix(17, 4, daylight),
-    exposure: mix(1.34, 1.28, daylight),
+    sunIntensity: mix(.035, 3.15, daylight),
+    hemisphereIntensity: mix(.43, 1.50, daylight),
+    ambientIntensity: mix(.23, .66, daylight),
+    fillIntensity: mix(.30, .88, daylight),
+    lampIntensity: mix(21, 3, daylight),
+    exposure: mix(.98, 1.08, daylight),
     // Every direction still enters through the same rear window opening.
     sunPosition: [-4.55 - (1.6 + 2.2 * progress) * 2.8, 4.03 + (.8 + 2.4 * midday) * 2.8, -1.3 - 5 * 2.8],
     sunTarget: [-4.55 + 1.6 + 2.2 * progress, 4.03 - (.8 + 2.4 * midday), 3.7],
-    windowGlow: mix(.10, .50, daylight),
-    softwareGain: mix(1.18, 1.30, daylight),
-    softwareTint: [1, mix(.93, 1, daylight), mix(.82, .98, daylight)],
+    windowGlow: mix(.025, .38, daylight),
+    softwareGain: mix(.59, 1.08, daylight),
+    softwareTint: [1, mix(.88, .98, daylight), mix(.77, .95, daylight)],
   };
 }
 

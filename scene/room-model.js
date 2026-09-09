@@ -1,8 +1,9 @@
-import { surface } from './surface-materials.js';
-import { addCollectedDecor } from './collected-decor.js?v=20260909-decor';
-import { completeRoom } from './room-shell.js';
-import { addRoomDetails } from './room-details.js?v=20260909-clock';
-import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-clock';
+import { surface } from './surface-materials.js?v=20260909-actions';
+import { addCollectedDecor } from './collected-decor.js?v=20260909-actions';
+import { completeRoom } from './room-shell.js?v=20260909-actions';
+import { addRoomDetails } from './room-details.js?v=20260909-actions';
+import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-actions';
+import { createSongbirdFactory } from './natural-props.js?v=20260909-actions';
 
 /** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {
@@ -15,7 +16,7 @@ export function createRoom(THREE, assets = {}) {
   const palette = {
     wood: mat('#805537', .65), lightWood: mat('#ac7546', .61), darkWood: mat('#4b3023', .67),
     brass: mat('#a68b4e', .33, .72), darkBrass: mat('#675a3a', .44, .6),
-    wall: mat('#9e976a', .97), cream: mat('#e5ddbd', .95), paper: mat('#ece6d2', .92),
+    wall: mat('#806148', .97), cream: mat('#e5ddbd', .95), paper: mat('#ece6d2', .92),
     terra: mat('#a9603c', .94), potDark: mat('#594b32', .96), soil: mat('#302e20', 1),
     green: mat('#35512e', .84), leafLight: mat('#657642', .86), leafDark: mat('#233e26', .89),
     burgundy: mat('#6a3133', .79), ink: mat('#34382e', .88), linen: mat('#c6b38e', .95),
@@ -23,7 +24,7 @@ export function createRoom(THREE, assets = {}) {
   surface(palette.wood, 'walnut');
   surface(palette.lightWood, 'walnut', { tint: '#ffe5c3' });
   surface(palette.darkWood, 'walnut', { tint: '#9d8779' });
-  surface(palette.wall, 'plaster', { tint: '#c9c2a5' });
+  surface(palette.wall, 'plaster', { tint: '#9c785a' });
   const textureLoader = new THREE.TextureLoader();
   const makeCanvas = (w, h, draw) => {
     const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
@@ -141,7 +142,7 @@ export function createRoom(THREE, assets = {}) {
   box(10.01,6.6,.2,palette.wall,1.595,3.24,-1.61);
   box(2.28,1.62,.2,palette.wall,-4.55,.75,-1.61);
   box(2.28,.78,.2,palette.wall,-4.55,6.15,-1.61);
-  box(.16, 6.6, 12, surface(mat('#898560', .98), 'plaster', { tint: '#b2b29a' }), -6.55, 3.24, 3.4);
+  box(.16, 6.6, 12, surface(mat('#806148', .98), 'plaster', { tint: '#9c785a' }), -6.55, 3.24, 3.4);
   box(13.2, .18, .12, palette.darkWood, 0, .12, -1.44, group, .025);
   box(13.2, .075, .1, palette.lightWood, 0, .245, -1.43, group, .015);
   box(13.2, .21, .35, palette.darkWood, 0, 6.13, -1.38, group, .025);
@@ -438,15 +439,7 @@ export function createRoom(THREE, assets = {}) {
   instancedFoliage(flowerpot, flowerLeaves); instancedFoliage(flowerpot, petals, [], ['#a18aa1', '#c3a9bb', '#b792a6'], 'petal');
 
   // A tiny perched songbird, a ceramic mushroom and a family of glazed pots.
-  const bird = new THREE.Group(); bird.name = 'Little shelf sparrow'; bird.position.set(-.60, 5.50, -.94); bird.rotation.y = -.35; group.add(bird);
-  const birdBrown = mat('#8d7051', .95), birdCream = mat('#d7c7a1', .96);
-  oval(.115, .128, .095, birdBrown, 0, .145, 0, bird);
-  oval(.080, .093, .047, birdCream, 0, .138, .061, bird);
-  oval(.086, .080, .080, birdBrown, -.006, .269, .013, bird);
-  const beak = mesh(new THREE.ConeGeometry(.025, .071, 5), palette.brass, bird); beak.rotation.x = Math.PI / 2; beak.position.set(-.006, .262, .099);
-  for (const side of [-1, 1]) { oval(.009, .010, .007, palette.ink, side * .041, .286, .077, bird); rod([side * .035,.012,.011],[side * .035,.061,.013],.008,palette.darkWood,bird); }
-  const wing = oval(.034, .093, .067, palette.darkWood, .095, .145, -.006, bird); wing.rotation.x = -.24;
-  const tailFeather = oval(.045, .016, .093, palette.darkWood, .01, .085, -.114, bird); tailFeather.rotation.x = -.27;
+  const bird=createSongbirdFactory(THREE)(group,[-.60,5.486,-.89],.64);bird.name='Little shelf sparrow';bird.rotation.y=-.35;
   const mushroom = new THREE.Group(); mushroom.name = 'Small ceramic mushroom'; mushroom.position.set(.29, 5.486, -.95); group.add(mushroom);
   cyl(.047, .065, .14, palette.cream, 0, .07, 0, mushroom);
   oval(.139, .072, .130, mat('#a65743', .70), 0, .161, 0, mushroom);
@@ -484,6 +477,8 @@ export function createRoom(THREE, assets = {}) {
   });
 
   const decorations = addCollectedDecor(THREE, { group, palette, mainRug, onTextureLoad: assets.onTextureLoad });
+  details.clock.group.userData.roomAction={kind:'detail',label:'現在の時刻の時計'};
+  flowerpot.userData.roomAction={kind:'detail',label:'窓辺の花'};
   group.updateMatrixWorld(true);
   return { group, targets, animated, lampLight, pets, details, decorations, envelope, clock: details.clock, windowMaterial: glassMat };
 }

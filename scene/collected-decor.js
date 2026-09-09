@@ -2,11 +2,12 @@
  * Raster artwork stays on framed print / textile surfaces; all ornaments,
  * vessels, shelves, furniture, foliage and hanging mobiles are real geometry.
  */
-import { surface } from './surface-materials.js';
+import { surface } from './surface-materials.js?v=20260909-actions';
+import { createSongbirdFactory, createPetalGeometry } from './natural-props.js?v=20260909-actions';
 
 export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureLoad = () => {} }) {
   const group = new T.Group(); group.name = 'Collected room: art, ceramics and textiles'; room.add(group);
-  const motions = [], records = [], loadedTextures = new Set();
+  const motions = [], records = [], interactiveRoots = [], loadedTextures = new Set();
   const retiredMaterials = new Set(), retiredTextures = new Set(); let disposed = false;
   const loader = new T.TextureLoader();
   const cube = new T.BufferGeometry().copy(new T.BoxGeometry(1, 1, 1));
@@ -21,14 +22,17 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   const wood = palette.wood, darkWood = palette.darkWood;
   const glow = mat('#fff2d0', .73); glow.emissive.set('#ffdca4'); glow.emissiveIntensity = .32;
   const linen = surface(mat('#ffffff', 1), 'linen');
-  const leafMats = ['#82945c', '#567a4d', '#9ba568'].map(c => surface(mat(c, .69), 'leaf', { tint: c }));
-  function imageMaterial(file, fallback, roughness = 1, repeat = [1, 1]) {
+  const leafMats = ['#9eb878', '#718f58', '#b0bc86'].map(c => surface(mat(c, .46), 'leaf', { tint: c, roughness:.46, bumpScale:.0012 }));
+  const flowerMat=surface(mat('#f6e5d5',.82),'petal',{tint:'#fff2e2',bumpScale:.0006});flowerMat.side=T.DoubleSide;
+  const pinkPetal=surface(mat('#c78f89',.82),'petal',{tint:'#c9918c',bumpScale:.0006});pinkPetal.side=T.DoubleSide;
+  const petalGeo=createPetalGeometry(T),pollenGeo=new T.IcosahedronGeometry(1,0),songbird=createSongbirdFactory(T);
+  function imageMaterial(file, fallback, roughness = 1, repeat = [1, 1], tint = '#ffffff') {
     const material = mat(fallback, roughness);
     loader.load(new URL('../images/decor/' + file + '.webp', import.meta.url).href, texture => {
       if (disposed) { texture.dispose(); return; }
       loadedTextures.add(texture); texture.colorSpace = T.SRGBColorSpace; texture.anisotropy = 4;
       texture.wrapS = texture.wrapT = T.RepeatWrapping; texture.repeat.set(...repeat);
-      material.map = texture; material.color.set('#ffffff'); material.needsUpdate = true;
+      material.map = texture; material.color.set(tint); material.needsUpdate = true;
       onTextureLoad(file);
     }, undefined, () => {});
     return material;
@@ -39,7 +43,8 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   const velvet = imageMaterial('forest-velvet', '#365f48', 1, [2, 2]);
   if (mainRug) {
     retiredMaterials.add(mainRug.material); if(mainRug.material.map)retiredTextures.add(mainRug.material.map);
-    mainRug.material = rugBurgundy; mainRug.name = 'Burgundy botanical desk rug';
+    mainRug.material = rugBurgundy; mainRug.name = 'Burgundy botanical desk rug';mainRug.position.y=-.021;
+    mainRug.userData.roomAction={kind:'detail',label:'臙脂のラグ'};
     // The original beveled box has physical-unit UVs; the new rug is one artwork.
     const uv=mainRug.geometry.attributes.uv,p=mainRug.geometry.attributes.position,n=mainRug.geometry.attributes.normal;
     for(let i=0;i<uv.count;i++)if(Math.abs(n.getY(i))>.5)uv.setXY(i,p.getX(i)/6.2+.5,p.getZ(i)/3.14+.5);
@@ -61,6 +66,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   function node(name, pos, parent = group, rotation = 0) {
     const n = new T.Group(); n.name = name; n.position.set(...pos); n.rotation.y = rotation; parent.add(n); return n;
   }
+  function interact(n,kind,label){n.userData.roomAction={kind,label};interactiveRoots.push(n);return n;}
   function record(n, category) { n.updateWorldMatrix(true, true); const b = new T.Box3().setFromObject(n); records.push({ name: n.name, category, min: b.min.toArray(), max: b.max.toArray() }); }
   function sway(n, amount = .025, speed = .5, axis = 'z') { motions.push({ object: n, base: n.rotation[axis], amount, speed, axis, phase: motions.length * 1.73 }); }
   function lathe(profile) { return new T.LatheGeometry(profile.map(p => new T.Vector2(...p)), 24); }
@@ -85,6 +91,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   }
   function framedArt(parent, pos, size, art, rotation = 0) {
     const n = node('Framed original botanical print '+(art+1),pos,parent,rotation), frameMat = art%2 ? brass : wood;
+    interact(n,'detail',['植物の額絵','小鳥の額絵','月の庭の額絵','花の額絵'][art]);
     box([size+.13,size+.13,.065],[0,0,0],darkWood,n);
     box([size+.077,size+.077,.017],[0,0,.042],frameMat,n);
     box([size+.035,size+.035,.012],[0,0,.054],cream,n);
@@ -93,14 +100,8 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     return n;
   }
   function bird(parent, pos, scale = 1, material = sage) {
-    const n=node('Glazed ceramic songbird',pos,parent);n.scale.setScalar(scale);
-    ball([.18,.18,.24],[0,.20,0],material,n);ball([.125,.12,.135],[0,.38,.095],material,n);
-    for(const side of [-1,1]){
-      const wing=ball([.027,.12,.17],[side*.16,.22,-.015],ceramic,n);wing.rotation.x=-.3;
-      ball([.012,.012,.012],[side*.085,.402,.19],dark,n);rod([side*.06,.01,.02],[side*.06,.065,.015],.014,brass,n);
-    }
-    const beak=mesh(cone,brass,n,false);beak.scale.set(.035,.11,.035);beak.rotation.x=Math.PI/2;beak.position.set(0,.37,.245);
-    const tail=ball([.075,.027,.15],[0,.17,-.27],material,n);tail.rotation.x=.4;
+    const n=songbird(parent,pos,scale);interact(n,'bird','小鳥');
+    n.traverse(o=>{if(o.userData.actionPart)interactiveRoots.push(o);});
     return n;
   }
   const roofShape=new T.Shape();roofShape.moveTo(-.5,0);roofShape.lineTo(0,.65);roofShape.lineTo(.5,0);roofShape.closePath();
@@ -124,8 +125,9 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   function leaf(parent,position,size,rotation,index=0){const m=mesh(leafGeo,leafMats[index%3],parent,false);m.position.set(...position);m.scale.set(...size);m.rotation.set(...rotation);return m;}
   function trailingPlant(parent,pos,size=.6,length=1.1){
     const n=node('Trailing heart-leaf plant',pos,parent);n.scale.setScalar(size);
+    interact(n,'plant','垂れ下がる葉');
     const pot=vase(n,[0,0,0],.7,sage);pot.scale.y*=.62;cyl(.082,.012,[0,.292,0],dark,n);
-    const vines=node('Swaying leaf tendrils',[0,.28,0],n);sway(vines,.028,.55);
+    const vines=node('Swaying leaf tendrils',[0,.28,0],n);vines.userData.actionPart='foliage';sway(vines,.028,.55);
     for(let v=0;v<5;v++){
       const angle=v*2.399,points=[];
       for(let j=0;j<=12;j++){
@@ -139,14 +141,17 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   }
   function bouquet(parent,pos,size=1){
     const n=node('Daisies and meadow flowers',pos,parent);n.scale.setScalar(size);
-    vase(n,[0,0,0],.85,ceramic,true);const flowers=node('Gently moving flower stems',[0,.47,0],n);sway(flowers,.015,.65);
+    interact(n,'plant','野の花');
+    vase(n,[0,0,0],.85,ceramic,true);const flowers=node('Gently moving flower stems',[0,.47,0],n);flowers.userData.actionPart='foliage';sway(flowers,.015,.65);
     for(let i=0;i<9;i++){
       const a=i*2.399,x=Math.cos(a)*(.13+i*.018),z=Math.sin(a)*(.13+i*.018),h=.36+(i%4)*.105;
-      rod([0,0,0],[x,h,z],.009,leafMats[1],flowers);
+      mesh(new T.TubeGeometry(new T.CatmullRomCurve3([new T.Vector3(0,0,0),new T.Vector3(x*.3,h*.56,z*.4),new T.Vector3(x,h,z)]),9,.007,5,false),leafMats[1],flowers,false);
       for(const side of [-1,1])leaf(flowers,[x*.55,h*.48,z*.55],[.045,.04,.13],[-.7,a+side*.8,.3],i);
       const bloom=node('Daisy flower head',[x,h,z],flowers);bloom.rotation.set(.25*Math.cos(a),0,.25*Math.sin(a));
-      for(let petal=0;petal<8;petal++){const b=petal*Math.PI/4,p=ball([.029,.016,.085],[Math.sin(b)*.071,0,Math.cos(b)*.071],i%4===0?rose:ceramic,bloom);p.rotation.y=b;p.castShadow=false;}
-      ball([.04,.026,.04],[0,.015,0],honey,bloom).castShadow=false;
+      for(let petal=0;petal<11;petal++){const b=petal*Math.PI*2/11,p=mesh(petalGeo,i%4===0?pinkPetal:flowerMat,bloom,false);p.position.set(Math.sin(b)*.026,0,Math.cos(b)*.026);p.scale.set(.025,.071,.073+(petal%3)*.005);p.rotation.set((petal%2)*.08,b,0);}
+      ball([.04,.022,.04],[0,.006,0],honey,bloom).castShadow=false;
+      for(let dot=0;dot<13;dot++){const a=dot*2.399,r=.029*Math.sqrt(dot/13),p=mesh(pollenGeo,dot%2?cream:honey,bloom,false);p.scale.set(.005,.007,.005);p.position.set(Math.cos(a)*r,.025,Math.sin(a)*r);}
+      for(let sepal=0;sepal<4;sepal++)leaf(bloom,[0,-.007,0],[.014,.014,.042],[0,sepal*Math.PI/2,0],1);
     }
     return n;
   }
@@ -165,7 +170,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     return n;
   }
   function roundRug(parent,pos,radius,material= rugForest,aspect=1){
-    const n=node('Layered botanical round rug',pos,parent);const rug=mesh(disc,material,n,false);rug.rotation.x=-Math.PI/2; rug.scale.set(radius,radius*aspect,1);
+    const n=node('Botanical round rug',pos,parent);interact(n,'detail','植物模様のラグ');n.userData.rug={radius:radius+.05,aspect};const rug=mesh(disc,material,n,false);rug.rotation.x=-Math.PI/2; rug.scale.set(radius,radius*aspect,1);
     const edge=mesh(new T.TorusGeometry(radius,.013,5,96),cord,n,false);edge.rotation.x=-Math.PI/2;edge.scale.y=aspect;edge.position.y=-.004;
     for(let i=0;i<64;i++){const a=i*Math.PI/32;rod([Math.cos(a)*radius,0,Math.sin(a)*radius*aspect],[Math.cos(a)*(radius+.05),0,Math.sin(a)*(radius+.05)*aspect],.009,cord,n);}
     return n;
@@ -191,14 +196,16 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   }
   function mushroom(parent,pos,size=1){
     const n=node('Warm ceramic mushroom lamp',pos,parent);n.scale.setScalar(size);
+    interact(n,'lamp','きのこのランプ');
     const stem=lathe([[0,0],[.115,0],[.135,.035],[.10,.31],[.07,.38],[0,.38]]);mesh(stem,ceramic,n);
-    const cap=mesh(new T.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2),glow,n);cap.scale.set(.30,.18,.30);cap.position.y=.34;
+    const cap=mesh(new T.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2),glow.clone(),n);cap.scale.set(.30,.18,.30);cap.position.y=.34;
     const underside=mesh(disc,ceramic,n,false);underside.rotation.x=Math.PI/2;underside.scale.setScalar(.30);underside.position.y=.34;
     ring(.292,[0,.343,0],honey,n,true);return n;
   }
   function paperLantern(parent,pos,size=.55){
     const n=node('Pleated warm paper lantern',pos,parent);n.scale.setScalar(size);
-    const body=ball([.51,.67,.51],[0,0,0],glow,n);body.castShadow=false;
+    interact(n,'lamp','プリーツの灯り');
+    const body=ball([.51,.67,.51],[0,0,0],glow.clone(),n);body.castShadow=false;
     for(let i=1;i<16;i++){const y=-.67+i*1.34/16,r=.51*Math.sqrt(Math.max(0,1-y*y/(.67*.67)));ring(r,[0,y,0],cream,n,true);}
     cyl(.12,.05,[0,-.67,0],brass,n);cyl(.12,.05,[0,.67,0],brass,n);return n;
   }
@@ -214,7 +221,8 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   const moonGeo=new T.ExtrudeGeometry(moonShape,{depth:.018,bevelEnabled:true,bevelSize:.008,bevelThickness:.005,bevelSegments:2,curveSegments:24});
   function mobile(parent,pos,size=1){
     const n=node('Swaying moon and leaf mobile',pos,parent);n.scale.setScalar(size);
-    rod([0,0,0],[0,-.21,0],.008,cord,n);const pendulum=node('Hanging brass ornaments',[0,-.21,0],n);sway(pendulum,.095,.43,'y');sway(pendulum,.03,.67,'z');
+    interact(n,'mobile','月と葉のモビール');
+    rod([0,0,0],[0,-.21,0],.008,cord,n);const pendulum=node('Hanging brass ornaments',[0,-.21,0],n);pendulum.userData.actionPart='pendulum';sway(pendulum,.095,.43,'y');sway(pendulum,.03,.67,'z');
     ring(.29,[0,-.30,0],brass,pendulum);const moon=mesh(moonGeo,brass,pendulum,false);moon.position.set(0,-.3,.012);
     for(const [i,x] of [-.26,0,.26].entries()){
       const length=.28+i*.14;rod([x,-.48,0],[x,-.48-length,0],.0045,cord,pendulum);
@@ -240,7 +248,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
 
   // A restrained generated botanical wallcovering fills the wider plaster fields.
   // Each panel is behind the frames and cabinetry, with a real window opening.
-  const wallpaper=imageMaterial('botanical-wallpaper','#ece5ce',.96);
+  const wallpaper=imageMaterial('botanical-wallpaper','#806148',.96,[1,1],'#967150');
   const wallcoverings=node('Fine botanical wallcoverings',[0,0,0]);
   function paperWall(pos,width,height,rotation=0){
     const geo=new T.PlaneGeometry(width,height),uv=geo.attributes.uv;
@@ -256,8 +264,8 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   // First pass: floor collections and a visible right-hand cabinet.
   const leftBasket=basket(group,[-5.73,-.025,.43],.35,.63,true);record(leftBasket,'floor');
   const tea=teaTable(group,[4.95,-.025,1.18],.49,.83);record(tea,'floor');
-  const rightOttoman=ottoman(group,[3.34,-.025,2.14],.53);record(rightOttoman,'floor');
-  roundRug(group,[3.46,.008,2.20],1.11,rugForest,.83);
+  const rightOttoman=ottoman(group,[4.15,-.025,2.14],.53);record(rightOttoman,'floor');
+  roundRug(group,[4.15,-.016,2.20],.73,rugForest,.83);
   const narrow=node('Tall narrow collection cabinet',[5.79,0,-1.08],group);
   for(const x of [-.32,.32])for(const z of [-.13,.13])rod([x,-.025,z],[x,.18,z],.036,wood,narrow);
   box([.76,2.61,.08],[0,1.48,-.15],darkWood,narrow);
@@ -298,8 +306,8 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   rod([0,0,0],[0,-.49,0],.009,cord,pendant);const lantern=paperLantern(pendant,[0,-.92,0],.65);sway(lantern,.018,.35);record(pendant,'ceiling');
 
   // Floor reading corner, still outside the cat and the initial viewing rays.
-  const reading=node('Reading corner with textile layers',[-3.95,0,4.16],group,.10);
-  roundRug(reading,[0,.006,0],1.43,rugForest,.93);
+  const reading=node('Reading corner with textile layers',[-4.48,0,4.90],group,.10);
+  roundRug(reading,[0,-.016,0],1.24,rugForest,.93);
   const seat=ottoman(reading,[0,-.025,0],.61);bookStack(seat,[.04,.69,.0],.49,2);
   const woven=basket(reading,[-1.03,-.025,.37],.37,.58,true);
   teaTable(reading,[1.00,-.025,-.03],.44,.77);
@@ -311,7 +319,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     mushroom(mushroomCorner,[x,i?.42:.65,0],i?.75:1.0);
   }
   bird(mushroomCorner,[-.27,.65,.22],.6,sage);trailingPlant(mushroomCorner,[.57,.02,.19],.84,.17);
-  roundRug(mushroomCorner,[.04,.006,.10],1.11,rugBurgundy,.80);record(mushroomCorner,'floor');
+  roundRug(mushroomCorner,[.04,-.016,.10],1.11,rugBurgundy,.80);record(mushroomCorner,'floor');
   const basketFront=basket(group,[-5.42,-.025,6.55],.45,.79,true);record(basketFront,'floor');
 
   // The fourth wall gets a low cabinet and a broad, asymmetrical print collection.
@@ -329,7 +337,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   framedArt(frontGallery,[-2.30,4.75,0],1.10,0);framedArt(frontGallery,[-.62,4.9,0],1.20,2);framedArt(frontGallery,[1.08,4.77,0],.91,1);
   framedArt(frontGallery,[2.40,4.61,0],.77,3);sunMirror(frontGallery,[.05,3.32,0],.53);
   record(frontGallery,'front-wall');
-  roundRug(group,[.15,.003,5.73],3.45,rugForest,.67);
+  roundRug(group,[.15,-.016,6.05],2.0,rugForest,.65);
 
   // Bake repeated static pieces, retaining small animated groups independently.
   function batch(root, excluded = []) {
@@ -349,7 +357,11 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     }
   }
   const animatedRoots=[...new Set(motions.map(m=>m.object))];
-  for(const n of animatedRoots)batch(n);batch(group,animatedRoots);
+  const independentRoots=[...new Set([...interactiveRoots,...animatedRoots])];
+  // An action owns its actual geometry after batching; picking and wing/leaf
+  // motion must never act on an empty group or all instances in the room.
+  for(const n of independentRoots)batch(n,independentRoots.filter(x=>x!==n));batch(group,independentRoots);
+  const localGlows=[];group.traverse(o=>{if(o.isMesh&&o.material.emissive?.getHex()===glow.emissive.getHex())localGlows.push(o.material);});
   let triangles=0,drawCalls=0,instances=0;
   group.traverse(o=>{if(o.isMesh){const n=o.isInstancedMesh?o.count:1;instances+=n;drawCalls++;triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3*n;}});
   group.userData.decorStats={instances,triangles,drawCalls,animatedGroups:animatedRoots.length,collections:records};
@@ -357,7 +369,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   return {
     group,
     update(time){for(const m of motions)m.object.rotation[m.axis]=m.base+Math.sin(time*m.speed+m.phase)*m.amount;},
-    setDaylight(daylight){glow.emissiveIntensity=.25+(1-daylight)*.55;},
+    setDaylight(daylight){for(const m of localGlows)m.emissiveIntensity=.15+(1-daylight)*.95;},
     dispose(){disposed=true;loadedTextures.forEach(t=>t.dispose());retiredTextures.forEach(t=>t.dispose());retiredMaterials.forEach(m=>m.dispose());},
   };
 }

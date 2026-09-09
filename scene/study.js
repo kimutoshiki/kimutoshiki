@@ -1,10 +1,11 @@
 import * as THREE from '../js/vendor/three.module.min.js';
-import { getRoomTime, updateRoomClock } from './room-time.js?v=20260909-clock';
-import { loadSurfaceMaterials } from './surface-materials.js';
-import { createRoom } from './room-model.js?v=20260909-decor';
+import { getRoomTime, updateRoomClock } from './room-time.js?v=20260909-actions';
+import { loadSurfaceMaterials } from './surface-materials.js?v=20260909-actions';
+import { createRoom } from './room-model.js?v=20260909-actions';
 import { createDeskLandmarks } from './desk-landmarks.js?v=20260909-materials';
-import { createOrbitNavigation } from './orbit-navigation.js';
-import { StudyCanvasRenderer } from './study-software.js?v=20260909-clock';
+import { createOrbitNavigation } from './orbit-navigation.js?v=20260909-actions';
+import { StudyCanvasRenderer } from './study-software.js?v=20260909-actions';
+import { createObjectActions } from './object-actions.js?v=20260909-actions';
 
 export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>new Date()}) {
   let renderer;
@@ -24,6 +25,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   let room;let textureRevision=0;
   try{room=createRoom(THREE,{photo1:'/images/hero-waseda.webp',photo2:'/images/hero-karatsu.webp',photo3:'/images/hero-kyukeisha.webp',photoRatios:[4/3,16/9,16/9],onTextureLoad(){textureRevision++;}});const landmarks=await createDeskLandmarks(THREE);room.group.add(landmarks.group);room.targets.push(...landmarks.targets);scene.add(room.group);}catch(e){renderer.dispose();onError(e);return {dispose(){}};}
   const surfaces=loadSurfaceMaterials(THREE,room.group,{onLoad(){textureRevision++;renderer.invalidate?.();},anisotropy:renderer.capabilities?.getMaxAnisotropy?.()||1});
+  const objectActions=createObjectActions(THREE,room.group);
   const lamp=room.lampLight;
   const roomEffects=new THREE.Group();roomEffects.name='Room atmosphere';scene.add(roomEffects);
   const inspectionRoot=new THREE.Group();inspectionRoot.name='360 degree inspection';inspectionRoot.userData.inspectionRoot=true;inspectionRoot.visible=false;scene.add(inspectionRoot);
@@ -51,7 +53,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   const rayMeshes=[];room.group.traverse(o=>{if(o.isMesh)rayMeshes.push(o);});
   const moveListeners=[];function listen(el,event,handler,options){el.addEventListener(event,handler,options);moveListeners.push(()=>el.removeEventListener(event,handler,options));}
   let width=innerWidth,height=innerHeight,portrait=false,active=null,hover=null,lightingMode='auto',timeKey='',timeRevision=0,paused=software||matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let lastDraw=0,renderState='',pinState='',lastTime=0,animTime=0,raf=0,dead=false,drag=null,lastDown=null,moved=false,visible=!document.hidden,frames=0,slow=0;
+  let lastDraw=0,renderState='',pinState='',lastTime=0,animTime=0,raf=0,dead=false,drag=null,lastDown=null,moved=false,visible=!document.hidden,frames=0,slow=0,focusedAction=null,approach=1;
   const navigation=createOrbitNavigation(THREE,room.envelope.bounds);
   const touchPoints=new Map();let pinchDistance=null,pinchMidpoint=null;
   const navigationCamera=camera.clone(),navigationRay=new THREE.Raycaster();
@@ -65,7 +67,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     const b=canvas.getBoundingClientRect();navigationRay.setFromCamera({x:(x-b.left)/width*2-1,y:-(y-b.top)/height*2+1},navigationCamera);
     return navigationRay.ray.intersectPlane(navigationPlane,out);
   }
-  function announceView(){const view=navigation.update();canvas.dispatchEvent(new CustomEvent('viewchange',{detail:{zoom:view.scale,subject:view.subject}}));}
+  function announceView(){const view=navigation.update();canvas.dispatchEvent(new CustomEvent('viewchange',{detail:{zoom:view.scale,subject:view.subject,action:focusedAction?.id,label:focusedAction?.label}}));}
   function changeZoom(factor,x,y,previousX=x,previousY=y){
     if(active||!Number.isFinite(factor)||factor<=0)return;
     const anchored=Number.isFinite(x)&&Number.isFinite(y)&&pointAt(previousX,previousY,beforeZoom);
@@ -76,6 +78,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   function panPixels(dx,dy){const b=canvas.getBoundingClientRect(),cx=b.left+width/2,cy=b.top+height/2;if(pointAt(cx,cy,beforeZoom)&&pointAt(cx+dx,cy+dy,afterZoom))navigation.pan(beforeZoom.clone().sub(afterZoom));}
   function snapView(){const view=updateDesired();camera.position.copy(view.position);look.copy(view.target);camera.zoom=view.zoom;camera.lookAt(look);camera.updateProjectionMatrix();camera.updateMatrixWorld();}
   function setInspection(id){
+    focusedAction=null;approach=1;objectActions.clear();
     const source=inspectMap.get(id);inspectionRoot.clear();inspectedClone=null;
     const inspecting=id!=='room'&&!!source;
     room.group.visible=roomEffects.visible=!inspecting;inspectionRoot.visible=inspecting;
@@ -93,7 +96,14 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     renderer.invalidate?.();renderer.shadowMap.needsUpdate=true;markHover(null);snapView();announceView();
   }
   function resetView(){active=null;setInspection('room');}
-  function pick(e){if(inspectionRoot.visible)return null;const b=canvas.getBoundingClientRect();raycaster.setFromCamera({x:(e.clientX-b.left)/b.width*2-1,y:-(e.clientY-b.top)/b.height*2+1},camera);const hits=raycaster.intersectObjects(rayMeshes,false);for(const hit of hits){if(hit.object.material?.transparent && hit.object.material.opacity<.2)continue;return hit.object.userData.targetId??null;}return null;}
+  function activateObject(id){
+    const entry=objectActions.entries.get(id);if(!entry)return false;
+    if(inspectionRoot.visible)setInspection('room');active=null;objectActions.restore();objectActions.trigger(id);
+    // Keep the room visible. Repeated taps replay only the object's action.
+    if(focusedAction?.id!==id){focusedAction=entry;navigation.focus(entry.object);approach=paused||software?1:0;snapView();}
+    renderer.invalidate?.();renderer.shadowMap.needsUpdate=true;markHover(null);announceView();return true;
+  }
+  function pick(e){if(inspectionRoot.visible)return null;const b=canvas.getBoundingClientRect();raycaster.setFromCamera({x:(e.clientX-b.left)/b.width*2-1,y:-(e.clientY-b.top)/b.height*2+1},camera);const hits=raycaster.intersectObjects(rayMeshes,false);for(const hit of hits){if(hit.object.material?.transparent && hit.object.material.opacity<.2)continue;return objectActions.identify(hit.object)??hit.object.userData.targetId??null;}return null;}
   function markHover(id){if(id===hover)return;hover=id;canvas.style.cursor=id?'pointer':'grab';pinMap.forEach((p,key)=>p.classList.toggle('is-hovered',key===id));}
   listen(canvas,'pointerdown',e=>{
     if(active||![0,1,2].includes(e.button))return;e.preventDefault();canvas.setPointerCapture(e.pointerId);touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -112,7 +122,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   });
   function endPointer(e,cancelled=false){
     if(!touchPoints.has(e.pointerId))return;touchPoints.delete(e.pointerId);pinchDistance=pinchMidpoint=null;
-    if(e.button===0&&!cancelled&&!moved&&lastDown&&Math.hypot(e.clientX-lastDown.x,e.clientY-lastDown.y)<8){const id=pick(e);if(id)onSelect(id);}
+    if(e.button===0&&!cancelled&&!moved&&lastDown&&Math.hypot(e.clientX-lastDown.x,e.clientY-lastDown.y)<8){const id=pick(e);if(id&&!activateObject(id))onSelect(id);}
     lastDown=null;const remaining=touchPoints.values().next().value;drag=remaining?{...remaining}:null;if(remaining)moved=true;
     canvas.style.cursor=remaining?'grabbing':hover?'pointer':'grab';
   }
@@ -122,7 +132,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   listen(canvas,'lostpointercapture',e=>endPointer(e,true));
   listen(canvas,'pointerleave',()=>{if(!drag){pointer.set(0,0);markHover(null);}});
   listen(canvas,'wheel',e=>{if(active||e.ctrlKey||e.metaKey)return;e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?height:1);changeZoom(Math.exp(-THREE.MathUtils.clamp(delta,-300,300)*.0018),e.clientX,e.clientY);},{passive:false});
-  listen(canvas,'keydown',e=>{if(active||e.ctrlKey||e.metaKey||e.altKey)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','_','Home','0'].includes(e.key)){e.preventDefault();const dx=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,dy=e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0;if(dx||dy){if(e.shiftKey)panPixels(-dx*45,-dy*45);else navigation.rotate(-dx*.16,-dy*.13);}if(e.key==='+'||e.key==='=')changeZoom(1.18);if(e.key==='-'||e.key==='_')changeZoom(1/1.18);if(e.key==='Home'||e.key==='0')resetView();}});
+  listen(canvas,'keydown',e=>{if(active||e.ctrlKey||e.metaKey||e.altKey)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','_','Home','0','Escape','Enter',' '].includes(e.key)){e.preventDefault();const dx=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,dy=e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0;if(dx||dy){if(e.shiftKey)panPixels(-dx*45,-dy*45);else navigation.rotate(-dx*.16,-dy*.13);}if(e.key==='+'||e.key==='=')changeZoom(1.18);if(e.key==='-'||e.key==='_')changeZoom(1/1.18);if(e.key==='Home'||e.key==='0'||e.key==='Escape')resetView();if((e.key==='Enter'||e.key===' ')&&focusedAction)activateObject(focusedAction.id);}});
   listen(window,'resize',resize);
   listen(document,'visibilitychange',()=>{visible=!document.hidden;if(visible){lastTime=0;syncTime();raf=requestAnimationFrame(animate);}else cancelAnimationFrame(raf);});
   listen(canvas,'webglcontextlost',e=>{e.preventDefault();onError(new Error('WebGL context lost'));cancelAnimationFrame(raf);});
@@ -130,7 +140,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   function positionPins(){camera.updateMatrixWorld();for(const t of room.targets){const p=pinMap.get(t.id);if(!p)continue;const v=t.anchor.clone().project(camera);let x=(v.x*.5+.5)*width,y=(-v.y*.5+.5)*height;let off=inspectionRoot.visible||v.z< -1||v.z>1||x<15||x>width-15||y<82||y>height-125;
     if(!off){pinDirection.copy(t.anchor).sub(camera.position);pinRay.set(camera.position,pinDirection.clone().normalize());pinRay.far=Math.max(0,pinDirection.length()-.025);const blocker=pinRay.intersectObjects(rayMeshes,false).find(hit=>!(hit.object.material?.transparent&&hit.object.material.opacity<.2));off=!!blocker&&blocker.object.userData.targetId!==t.id;}
     p.style.visibility=off?'hidden':'visible';p.style.left=Math.max(55,Math.min(width-70,x))+'px';p.style.top=y+'px';}}
-  let roomBackground = '#bcb392';
+  let roomBackground = '#8c7054';
   const dayColor=new THREE.Color('#fff6e5'),eveningColor=new THREE.Color('#ffc783'),nightColor=new THREE.Color('#a9c5ed');
   function syncTime() {
     const time=getRoomTime(now(),lightingMode),key=time.minuteKey+':'+lightingMode;
@@ -145,7 +155,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     renderer.setLighting?.(time.softwareGain,time.softwareTint);
     room.windowMaterial.emissiveIntensity=time.windowGlow;room.decorations?.setDaylight(time.daylight);
     dapple.material.opacity=.26*time.daylight;dust.material.opacity=.15+.18*time.daylight;
-    roomBackground=new THREE.Color('#77736a').lerp(new THREE.Color('#bcb392'),time.daylight).getHex();
+    roomBackground=new THREE.Color('#29241f').lerp(new THREE.Color('#8c7054'),time.daylight).getHex();
     if(!inspectionRoot.visible)scene.background.set(roomBackground);
     // Clock transforms and moving sun shadows must refresh even with motion paused.
     renderer.invalidate?.();renderer.shadowMap.needsUpdate=true;
@@ -154,12 +164,13 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   function animate(ms){if(dead||!visible)return;raf=requestAnimationFrame(animate);if(ms-lastDraw<(software?250:30))return;lastDraw=ms;const delta=lastTime?Math.min((ms-lastTime)/1000,.07):.016;lastTime=ms;if(!paused)animTime+=delta;
     // Orbit coordinates are already continuous with pointer motion. Applying a
     // Cartesian lerp here would cut through models when changing direction.
-    const view=updateDesired();camera.position.copy(desiredPosition);look.copy(desiredLook);camera.lookAt(look);camera.zoom=view.zoom;camera.updateProjectionMatrix();
-    syncTime();dtex.offset.x=Math.sin(animTime*.13)*.015;
+    const view=updateDesired();camera.position.copy(desiredPosition);look.copy(desiredLook);camera.lookAt(look);approach=Math.min(1,approach+delta/ .65);camera.zoom=view.zoom*(.82+.18*(1-Math.pow(1-approach,3)));camera.updateProjectionMatrix();
+    objectActions.restore();syncTime();dtex.offset.x=Math.sin(animTime*.13)*.015;
     if(!software){room.decorations?.update(animTime);room.pets?.forEach(p=>{p.object.scale.y=p.baseScale.y*(1+Math.sin(animTime*1.5+p.phase)*.015);});room.animated.forEach((p,i)=>{p.rotation.z=Math.sin(animTime*.65+i*1.3)*.012;p.rotation.x=Math.sin(animTime*.48+i)*.009;});dust.rotation.y=animTime*.009;dust.position.y=Math.sin(animTime*.22)*.05;}
+    objectActions.update(delta,!paused&&!software);
     const state=view.subject+','+[camera.position.x,camera.position.y,camera.position.z,camera.zoom,look.x,look.y,look.z,width,height,textureRevision,timeRevision].map(n=>n.toFixed(3)).join(',');if(!software||frames<3||state!==renderState){renderer.render(scene,camera);renderState=state;}if(state!==pinState||(!paused&&frames%10===0)){positionPins();pinState=state;}frames++;
     if(frames===2)onReady();if(delta>.047)slow++;if(frames===180&&slow>75){renderer.setPixelRatio(1);renderer.shadowMap.autoUpdate=false;}
   }
   resize();syncTime();raf=requestAnimationFrame(animate);
-  return {software,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){navigation.preset(name);snapView();announceView();},setLightingMode(mode){if(!['auto','day','night'].includes(mode))return;lightingMode=mode;syncTime();},setPaused(v){paused=software||v;},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;room.decorations?.dispose();surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
+  return {software,getActions(){return [...objectActions.entries.values()].map(({id,label,kind})=>({id,label,kind}));},activate:activateObject,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){focusedAction=null;approach=1;objectActions.clear();navigation.preset(name);snapView();announceView();},setLightingMode(mode){if(!['auto','day','night'].includes(mode))return;objectActions.restore();lightingMode=mode;syncTime();},setPaused(v){paused=software||v;if(paused){objectActions.clear();approach=1;}},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;objectActions.clear();room.decorations?.dispose();surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
 }

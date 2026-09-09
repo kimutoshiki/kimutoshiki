@@ -45,7 +45,6 @@ dialog.reading-sheet{position:fixed;inset:0 0 0 auto;margin:0;height:100svh;max-
 .view-controls button{width:36px;height:36px;background:#5c403048;border-color:#c29b635c;color:#f7e3bd}
 .view-controls button:hover{background:#743347;border-color:#dfb974}
 .view-controls #view-reset{display:flex;gap:6px;justify-content:center;width:auto;padding:0 9px;font-size:11px}
-#zoom-level{min-width:42px;text-align:center;color:#e9c993;font-size:12px;font-variant-numeric:tabular-nums}
 dialog.reading-sheet{border-left:3px solid #a17b46!important;background:linear-gradient(110deg,#f1e6d2,#fbf6e9 12%,#f9f1e0)!important}
 .reader-heading{border-bottom:1px solid #bca47b;position:relative}
 .reader-heading:after{content:"";position:absolute;bottom:-2px;left:0;width:40px;height:3px;background:#773047}
@@ -62,7 +61,6 @@ dialog.reading-sheet{border-left:3px solid #a17b46!important;background:linear-g
   .room-dock a{padding:9px 3px;font-size:11px}
   .view-controls{bottom:155px;right:0;gap:4px;padding:4px}
   .view-controls button{height:36px;width:36px}
-  #zoom-level{min-width:35px;font-size:11px}
   .room-footer{gap:10px}
 }
 
@@ -74,4 +72,6 @@ dialog.reading-sheet{border-left:3px solid #a17b46!important;background:linear-g
 @media(max-width:640px){.room-intro{bottom:auto;top:88px;max-width:calc(100% - 40px)}.room-intro>p:first-child,.room-intro .home-description{display:none}.room-intro h1{font-size:19px}.orbit-controls{right:0;bottom:157px;max-width:265px;padding:6px;gap:5px}.orbit-controls select{min-width:160px;padding:5px}.view-presets{width:100%;justify-content:space-between}.view-presets button{min-width:35px;min-height:31px;padding:4px}.view-controls{bottom:109px;right:0}.footnote{max-width:100%;font-size:11px}.room-dock a{padding:8px 2px}.room-footer{gap:7px}.room-pins .pin-label{font-size:10px}}
 
 .is-inspecting .footnote>span:first-child{display:none}
+.is-closeup .room-intro{visibility:hidden}
+.inspection-caption{max-width:calc(100% - 32px);white-space:normal;text-align:center;line-height:1.6}
 @media(max-width:640px){.footnote{position:absolute;right:0;bottom:250px;text-align:right;line-height:1.6}.footnote>span:first-child{display:none}.inspection-caption{top:117px;font-size:13px}}

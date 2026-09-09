@@ -2,7 +2,7 @@
  * Original foliage and sleeping-cat geometry. Authored fallback maps remain
  * visible while shared generated albedos load in the background.
  */
-import { surface } from './surface-materials.js';
+import { surface } from './surface-materials.js?v=20260909-actions';
 function canvasMap(THREE, w, h, paint, color = true) {
   const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
   paint(canvas.getContext('2d'), w, h);
@@ -125,12 +125,13 @@ export function createNaturalFoliage(THREE, { group, palette, cord, animated }) 
     color: '#ffffff', map: leafMap, roughness: .68, bumpMap: leafBump, bumpScale: .0015,
     side: THREE.DoubleSide, emissive: '#243114', emissiveIntensity: .035,
   });
-  surface(leafMaterial, 'leaf', { tint: '#ffffff' });
+  surface(leafMaterial, 'leaf', { tint: '#d8e4b6', roughness:.43 });
   leafMaterial.name = 'Living leaf, veins and waxy cuticle';
   const succulentMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .88, bumpMap: leafBump, bumpScale: .0007, side: THREE.DoubleSide });
   const pearlMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .57, bumpMap: leafBump, bumpScale: .00045 });
   const snakeMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', map: snakeMap, roughness: .73, bumpMap: leafBump, bumpScale: .001, side: THREE.DoubleSide });
   const petalMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .91, bumpMap: leafBump, bumpScale: .0005, side: THREE.DoubleSide });
+  surface(petalMaterial,'petal',{tint:'#fff4e8',roughness:.83,bumpScale:.0005});
   const geometries = Object.fromEntries(['pothos', 'heart', 'fern', 'succulent', 'snake', 'petal'].map(kind => [kind, leafSurface(THREE, kind)]));
   geometries.pearls = new THREE.SphereGeometry(1, 8, 6);
   const materialFor = kind => kind === 'pearls' ? pearlMaterial : kind === 'succulent' ? succulentMaterial : kind === 'snake' ? snakeMaterial : kind === 'petal' ? petalMaterial : leafMaterial;
@@ -182,6 +183,7 @@ export function createNaturalFoliage(THREE, { group, palette, cord, animated }) 
   function plant(x, y, z, size = 1, hanging = false, fern = false, variety = 'pothos') {
     const p = new THREE.Group(); p.position.set(x, y, z); p.scale.setScalar(size); group.add(p);
     p.name = variety === 'pearls' ? 'String of pearls' : hanging ? 'Hanging pothos' : fern ? 'Floor fern' : 'Plant';
+    p.userData.roomAction={kind:'plant',label:fern?'シダ':variety==='pearls'?'グリーンネックレス':'観葉植物'};
     const potH = hanging ? .30 : .47, potR = hanging ? .23 : .32, pottery = hanging ? terra : ceramic;
     cylinder(potR, potR * .76, potH, pottery, 0, potH / 2, 0, p);
     cylinder(potR * 1.045, potR * 1.045, .035, pottery, 0, potH - .006, 0, p);
@@ -226,9 +228,10 @@ export function createNaturalFoliage(THREE, { group, palette, cord, animated }) 
       }
       if (fern) leaves.push(leafAt(path.getPoint(1), path.getTangent(1), .014, .064));
     }
-    mesh(joinGeometry(THREE, stems), palette.green, p);
-    instancedFoliage(p, leaves, colors, variety === 'pearls' ? ['#527447', '#718b58', '#879663'] : fern ? ['#355332', '#526e3f', '#6b7e49'] : ['#42623b', '#5d7847', '#768451'], variety === 'pearls' ? 'pearls' : fern ? 'fern' : variety);
-    if (hanging) animated.push(p); return p;
+    const foliage=new THREE.Group();foliage.position.y=potH;foliage.userData.actionPart='foliage';p.add(foliage);
+    const stemMesh=mesh(joinGeometry(THREE, stems), palette.green, foliage);stemMesh.position.y=-potH;
+    const blades=instancedFoliage(foliage, leaves, colors, variety === 'pearls' ? ['#527447', '#718b58', '#879663'] : fern ? ['#355332', '#526e3f', '#6b7e49'] : ['#42623b', '#5d7847', '#768451'], variety === 'pearls' ? 'pearls' : fern ? 'fern' : variety);blades.position.y=-potH;
+    animated.push(foliage);return p;
   }
   return { plant, instancedFoliage };
 }
@@ -307,7 +310,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
   const cushion = oval([.49, .082, .40], [-.035, 1.23, -.07], cloth, chair); cushion.name = 'Linen cat cushion';
   const piping = mesh(new THREE.TorusGeometry(1, .014, 6, 64), new THREE.MeshStandardMaterial({ color: '#b9b498', roughness: 1 }), chair);
   piping.rotation.x = Math.PI / 2; piping.scale.set(.455, .365, .58); piping.position.set(-.035, 1.237, -.07);
-  const cat = new THREE.Group(); cat.name = 'Sleeping marmalade cat'; cat.position.set(-.065, 1.303, -.115); cat.rotation.y = -.35; chair.add(cat);
+  const cat = new THREE.Group(); cat.name = 'Sleeping marmalade cat';cat.userData.roomAction={kind:'cat',label:'猫'};cat.position.set(-.065, 1.303, -.115); cat.rotation.y = -.35; chair.add(cat);
   const bodyGeometry = new THREE.SphereGeometry(1, 48, 32), bp = bodyGeometry.attributes.position, buv = bodyGeometry.attributes.uv;
   for (let i = 0; i < bp.count; i++) {
     const x = bp.getX(i), y = bp.getY(i), z = bp.getZ(i);
@@ -322,7 +325,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
   const shoulder = oval([.123, .094, .125], [-.142, .102, .082], fur, cat); shoulder.rotation.z = -.31;
   const foldedHaunch = oval([.153, .068, .123], [.162, .070, .120], fur, cat); foldedHaunch.rotation.y = -.23;
   const foreleg = oval([.041, .090, .043], [-.150, .074, .174], fur, cat); foreleg.rotation.set(-.24, 0, -.57);
-  const head = new THREE.Group(); head.position.set(-.228, .111, .174); head.scale.setScalar(.82); head.rotation.set(.30, .32, -.36); cat.add(head); head.name = 'Tucked sleeping head';
+  const head = new THREE.Group();head.userData.actionPart='cat-head';head.position.set(-.228, .111, .174); head.scale.setScalar(.82); head.rotation.set(.30, .32, -.36); cat.add(head); head.name = 'Tucked sleeping head';
   const headGeometry = new THREE.SphereGeometry(1, 48, 32), hp = headGeometry.attributes.position, huv = headGeometry.attributes.uv;
   for (let i = 0; i < hp.count; i++) {
     const x = hp.getX(i), y = hp.getY(i), z = hp.getZ(i);

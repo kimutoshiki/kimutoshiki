@@ -12,9 +12,10 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
   group.updateMatrixWorld(true);
   function detail(shape, material, scale, position, parent = group, rotation = [0, 0, 0]) {
     transform.position.set(...position); transform.rotation.set(...rotation); transform.scale.set(...scale); transform.updateMatrix();
-    const matrix = new THREE.Matrix4().multiplyMatrices(parent.matrixWorld, transform.matrix);
-    const key = `${shape}:${material.uuid}`;
-    if (!batches.has(key)) batches.set(key, { shape, material, matrices: [] });
+    const owner=parent.userData.roomAction?parent:null;
+    const matrix = owner?transform.matrix.clone():new THREE.Matrix4().multiplyMatrices(parent.matrixWorld, transform.matrix);
+    const key = `${shape}:${material.uuid}:${owner?.uuid||''}`;
+    if (!batches.has(key)) batches.set(key, { shape, material, matrices: [], owner });
     batches.get(key).matrices.push(matrix);
   }
   const box = (scale, position, material = palette.brass, parent = group, rotation) => detail('box', material, scale, position, parent, rotation);
@@ -67,10 +68,10 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
   }
   for (const z of [-1.17, 8.90]) box([12.53, .007, .055], [0, -.025, z], palette.darkWood);
   // A bound rug edge and short fringe are one instanced batch per existing material.
-  for (const x of [-2.865, 3.265]) box([.022, .005, 3.04], [x, -.003, 1.85], palette.burgundy);
+  for (const x of [-2.865, 3.265]) box([.022, .005, 3.04], [x, -.013, 1.85], palette.burgundy);
   for (const z of [.322, 3.378]) {
-    box([6.14, .005, .024], [.20, -.003, z], palette.burgundy);
-    for (let i = 0; i < 91; i++) box([.017, .004, .071 + i % 3 * .007], [-2.80 + i * .067, -.005, z + (z < 1 ? -.065 : .065)], palette.linen);
+    box([6.14, .005, .024], [.20, -.013, z], palette.burgundy);
+    for (let i = 0; i < 91; i++) box([.017, .004, .071 + i % 3 * .007], [-2.80 + i * .067, -.020, z + (z < 1 ? -.065 : .065)], palette.linen);
   }
 
   // Flush desk inlay, beaded edging, drawer keyholes and turned leg collars.
@@ -170,7 +171,7 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
   });
 
   // A small brass clock occupies the unused end of the upper shelf.
-  const clock = new THREE.Group(); clock.name = 'Brass shelf clock'; clock.position.set(-2.13, 5.49, -1.015); group.add(clock); clock.updateMatrixWorld(true);
+  const clock = new THREE.Group(); clock.name = 'Brass shelf clock';clock.userData.roomAction={kind:'detail',label:'現在の時刻の時計'};clock.position.set(-2.13, 5.49, -1.015); group.add(clock); clock.updateMatrixWorld(true);
   box([.44, .029, .25], [0, .015, 0], palette.darkWood, clock);
   for (const x of [-.145, .145]) bead([.036, .045, .036], [x, .055, 0], palette.brass, clock);
   disc(.207, .107, [0, .256, 0], palette.darkWood, clock, [Math.PI / 2, 0, 0]);
@@ -193,12 +194,12 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
   // Static matrices are baked once. Decorative pieces do not intercept existing
   // interaction targets, and fine trim does not add shadow-map work each frame.
   let instances = 0;
-  for (const { shape, material, matrices } of batches.values()) {
+  for (const { shape, material, matrices, owner } of batches.values()) {
     const mesh = new THREE.InstancedMesh(geometries[shape], material, matrices.length);
     mesh.name = `Craft detail ${shape}`; mesh.castShadow = false; mesh.receiveShadow = true;
     matrices.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
-    mesh.instanceMatrix.needsUpdate = true; mesh.raycast = () => {};
-    mesh.computeBoundingSphere(); layer.add(mesh); instances += matrices.length;
+    mesh.instanceMatrix.needsUpdate = true;if(!owner)mesh.raycast = () => {};
+    mesh.computeBoundingSphere();(owner||layer).add(mesh);instances += matrices.length;
   }
   layer.userData.detailStats = { instances, drawBatches: batches.size, geometries: Object.keys(geometries).length, newMaterials: 0 };
   group.add(layer);

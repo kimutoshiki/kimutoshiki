@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import * as T from '../js/vendor/three.module.min.js';
 import { getRoomTime } from '../scene/room-time.js';
-import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260909-clock';
+import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260909-actions';
 import { mountStudy } from '../scene/study.js';
 
 const at=(h,m=0)=>new Date(2026,8,9,h,m), near=(a,b)=>assert.ok(Math.abs(a-b)<1e-9);
@@ -12,7 +12,7 @@ const fullDay=Array.from({length:1440},(_,m)=>getRoomTime(at(0,m)));
 for(let m=0;m<1440;m++){
   const a=fullDay[m],b=fullDay[(m+1)%1440];
   for(const n of [a.daylight,a.sunIntensity,a.hemisphereIntensity,a.ambientIntensity,a.exposure,...a.sunPosition,...a.softwareTint])assert.ok(Number.isFinite(n));
-  assert.ok(a.hemisphereIntensity>=1.45&&a.ambientIntensity>=.9&&a.softwareGain>=1.18,'Night retains readable room light');
+  assert.ok(a.hemisphereIntensity>=.43&&a.ambientIntensity>=.23&&a.softwareGain>=.59,'Night retains a deliberate low-light floor');
   assert.ok(Math.abs(a.daylight-b.daylight)<.013,'No abrupt light changes at dawn or midnight');
   assert.ok(a.sunPosition.every((v,i)=>Math.abs(v-b.sunPosition[i])<.052),'No sun/ shadow position jump at midnight');
 }
@@ -56,7 +56,7 @@ near(minute.rotation.z,0);near(hour.rotation.z,-Math.PI*7/6);
 assert.equal(renderer.shadowMap.needsUpdate,true);
 const autoGain=renderer.lightingGain;
 engine.setLightingMode('night');frame();assert.equal(announced.mode,'night');assert.equal(announced.label,'07:00');assert.ok(renderer.lightingGain<autoGain);
-engine.setLightingMode('day');frame();assert.equal(renderer.lightingGain,1.30);
+engine.setLightingMode('day');frame();assert.equal(renderer.lightingGain,1.08);
 engine.setLightingMode('auto');frame();assert.equal(renderer.lightingGain,autoGain);
 // A suspended tab resumes directly at wall-clock time rather than animation time.
 document.hidden=true;document.dispatchEvent(new Event('visibilitychange'));assert.equal(nextFrame,null);

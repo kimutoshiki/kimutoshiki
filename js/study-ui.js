@@ -7,14 +7,13 @@
   const motion = document.getElementById('motion-toggle');
   const nightButton = document.getElementById('night-toggle');
   const canvas = document.getElementById('study-canvas');
-  const zoomLevel = document.getElementById('zoom-level');
   canvas.addEventListener('viewchange', event => {
-    const zoom = event.detail?.zoom;
-    if (zoomLevel && Number.isFinite(zoom)) zoomLevel.textContent = zoom.toFixed(1) + '×';
-    const subject=document.getElementById('view-subject');if(subject&&event.detail.subject)subject.value=event.detail.subject;
+    const subject=document.getElementById('view-subject');if(subject&&event.detail.subject)subject.value=event.detail.action||event.detail.subject;
     const inspecting=event.detail.subject&&event.detail.subject!=='room';study.classList.toggle('is-inspecting',!!inspecting);
-    const caption=document.getElementById('inspection-caption');caption.hidden=!inspecting;
+    study.classList.toggle('is-closeup',!!event.detail.action);
+    const caption=document.getElementById('inspection-caption');caption.hidden=!inspecting&&!event.detail.action;
     if(inspecting)caption.textContent=subject.selectedOptions[0].textContent+' · 360°鑑賞';
+    else if(event.detail.action)caption.textContent=event.detail.label+' · 全体へ戻るには「全体へ」';
   });
   canvas.addEventListener('roomtimechange', event => {
     const time=document.getElementById('local-time');
@@ -65,15 +64,18 @@
     const action=next==='auto'?'端末の時刻に合わせた明かりに戻す':labels[next]+'の明かりに切り替える';
     nightButton.setAttribute('aria-label',nightButton.textContent+'。'+action);nightButton.title=action;
   });
-  document.getElementById('view-subject').addEventListener('change',e=>engine?.inspect?.(e.target.value));
+  document.getElementById('view-subject').addEventListener('change',e=>e.target.value.startsWith('object-')?engine?.activate?.(e.target.value):engine?.inspect?.(e.target.value));
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>engine?.preset?.(button.dataset.view)));
   document.getElementById('zoom-in').addEventListener('click',()=>engine?.zoom?.(-.7));
   document.getElementById('zoom-out').addEventListener('click',()=>engine?.zoom?.(.7));
   document.getElementById('view-reset').addEventListener('click',()=>engine?.reset?.());
   function failed(error) { console.error('3D scene could not render',error);status.hidden=true;study.classList.add('is-failed');document.getElementById('room-fallback').hidden=false; }
-  import('../scene/study.js?v=20260909-decor').then(async ({mountStudy}) => {
+  import('../scene/study.js?v=20260909-actions').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas:document.getElementById('study-canvas'),pins,onSelect:show,onError:failed,onReady(){ready=true;study.classList.add('is-ready');status.hidden=true;setPinState();}});
     engine?.setPaused?.(paused);engine?.setLightingMode?.(lightingMode);
+    const actionOptions=document.createElement('optgroup');actionOptions.label='小物に近づく';
+    const counts=new Map();for(const action of engine?.getActions?.()||[]){const count=(counts.get(action.label)||0)+1;counts.set(action.label,count);const option=document.createElement('option');option.value=action.id;option.textContent=action.label+(count>1?' '+count:'');actionOptions.append(option);}
+    document.getElementById('view-subject').append(actionOptions);
     motion.setAttribute('aria-pressed',String(paused));
     if (engine?.software) {document.getElementById('render-mode').textContent='· シンプル表示';motion.disabled=true;motion.title='この環境では植物や猫の動きを止めています。時計と明かりは時刻に合わせて更新されます';}
   }).catch(failed);

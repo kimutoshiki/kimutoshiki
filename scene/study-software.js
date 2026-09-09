@@ -262,7 +262,7 @@ export class StudyCanvasRenderer {
     const depth = this._depth, packed = this._packed;
     // Apply gain before albedo, but clamp only after it, preserving midtone detail.
     const red = state.r * brightness * this.lightingGain * this.lightingTint[0], green = state.g * brightness * this.lightingGain * this.lightingTint[1], blue = state.b * brightness * this.lightingGain * this.lightingTint[2];
-    const flat = (255 << 24) | ((Math.min(255, blue) + .5) << 16) | ((Math.min(255, green) + .5) << 8) | (Math.min(255, red) + .5);
+    const flat = (255 << 24) | ((Math.min(255, blue+state.eb) + .5) << 16) | ((Math.min(255, green+state.eg) + .5) << 8) | (Math.min(255, red+state.er) + .5);
     const tex = state.texture, texels = tex?.data;
     const tm = state.textureMatrix;
     for (let y = minY; y <= maxY; y++, rowA += aDY, rowB += bDY) {
@@ -303,6 +303,7 @@ export class StudyCanvasRenderer {
           if (alpha <= Math.max(.01, state.alphaTest)) continue;
           r *= texels[k] / 255; g *= texels[k + 1] / 255; bb *= texels[k + 2] / 255;
         }
+        r+=state.er;g+=state.eg;bb+=state.eb;
         if (alpha < .999) {
           const old = packed[pos], inverse = 1 - alpha;
           r = r * alpha + (old & 255) * inverse;
@@ -351,11 +352,13 @@ export class StudyCanvasRenderer {
         const texture = this._readTexture(mat.map);
         if (mat.map?.matrixAutoUpdate) mat.map.updateMatrix();
         const color = (mat.color || new T.Color('white')).clone().convertLinearToSRGB();
+        const emission=(mat.emissive||new T.Color(0)).clone().convertLinearToSRGB().multiplyScalar(Math.min(1.5,mat.emissiveIntensity||0)*110);
         materialState = {
           texture, textureMatrix: mat.map?.matrix.elements,
           wrapS: mat.map?.wrapS, wrapT: mat.map?.wrapT, flipY: mat.map?.flipY,
           side: mat.side ?? T.FrontSide,
           r: color.r * 255, g: color.g * 255, b: color.b * 255,
+          er:emission.r,eg:emission.g,eb:emission.b,
           opacity: mat.opacity ?? 1, alphaTest: mat.alphaTest || 0,
           depthWrite: mat.depthWrite !== false, depthTest: mat.depthTest !== false,
           depthBias: mat.polygonOffset ? (mat.polygonOffsetUnits || mat.polygonOffsetFactor || 0) * 1e-6 : 0,
