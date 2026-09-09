@@ -17,8 +17,11 @@ Nine delivery textures total 705,040 bytes (about 689 KiB). See
 - Sandstone, plaster, brick and slate are explicitly tagged in model factories;
   clock faces, glass, bronze vertex colors and copper stay separate.
 - Leaf veins use the existing curved leaf geometry and instance color variation.
-  Ginger and ivory fur cover the sculpted body, tail and paws. Existing facial
-  markings, nose, eyelids, ears and whiskers are retained.
+  Ginger fur now uses one shared material across the sculpted head, body and
+  tail, with head UVs scaled to match the visible hair density. Ears use the same
+  ginger image with subtle inner-ear vertex color. Ivory paws, the sculpted nose,
+  eyelids and whiskers remain. This fixes the older painted face conflicting with
+  the generated coat.
 - Burgundy woven fabric appears on the chair cushion and throw. The same walnut,
   plaster and linen images appear in photo frames, reading surfaces and footers.
 - Rigid box geometry receives UV coordinates scaled to physical dimensions.
@@ -36,8 +39,31 @@ Nine delivery textures total 705,040 bytes (about 689 KiB). See
 These are albedo improvements, not newly surveyed building geometry or measured
 PBR scans. Existing subtle bump maps remain independent. Slate contains some
 baked overlap shading. Architectural UV projection is an approximation; it does
-not assert exact brick-course counts. The software fallback supports albedo but
-does not reproduce the GPU's bump detail, shadows, animation or metal reflections.
+not assert exact brick-course counts. The software fallback supports albedo and time-based brightness/color but
+does not reproduce the GPU's bump detail, directional shadows, plant/pet
+animation or metal reflections. Both renderers update the clock hands.
+
+## Local time, clock and light correction
+
+`scene/room-time.js` derives lighting and the shelf clock from the same local
+`Date` snapshot. The visible 24-hour clock displays that time too. The default
+is automatic; the light button cycles automatic → day → night → automatic.
+Manual light choices never change the clock. The visitor's device timezone is
+used. The cycle is an artistic civil-time schedule, not geolocated sunrise,
+seasonal astronomy or live weather: dawn ramps from 06:00 to 08:00, daylight
+fades from 17:00 to 20:00, and warm indoor light stays on throughout the night.
+
+Shelf hands are separate pivot meshes, updated once per minute rather than baked
+into static detail instances. A fresh Date is sampled during rendering and when
+the tab becomes visible. This continues with motion paused or reduced motion
+selected. Software rendering refreshes the hands' cached world coordinates and
+its brightness/tint, while WebGL refreshes the light direction and shadow map.
+The sun returns gradually overnight, avoiding a position jump at midnight.
+Geometry is not rebuilt every frame in the software path.
+
+Increased hemisphere, ambient and fill light plus a weaker screen vignette keep
+furniture and the cat readable in day and night modes. Inspection views also
+use a lighter background and edge shading. No new image downloads are needed.
 
 ## Verification
 
@@ -50,6 +76,12 @@ portrait resize and cache transitions.
 transforms and bounds; successful, failed and late-disposed texture requests;
 UV-only changes; actual textured triangle pixels and late image refresh in the
 software renderer; nine WebP signatures and the image transfer budget.
+
+`node scripts/verify-room-time.mjs`: 1,440 local minutes, clock angles, timezone
+and repeated DST hour, manual lighting without clock changes, actual paused
+software scene/cache updates, tab suspension and midnight rollover, shared head
+and body material before/after the generated image arrives. Pixel tests also
+verify day/night gain reaches textured midtones without rebuilding geometry.
 
 No browser screenshot or device-specific GPU visual verification was performed.
 

@@ -47,8 +47,17 @@ const face=new T.Mesh(new T.PlaneGeometry(2,2),new T.MeshBasicMaterial({map:tex}
 const camera=new T.PerspectiveCamera(50,1,.1,10);camera.position.z=3;camera.lookAt(0,0,0);renderer.render(scene,camera);
 const center=(16*32+16)*4;assert.ok(pixels[center]>240&&pixels[center+1]<10,'Texture must color real triangles');
 tex.image.data.set([0,255,0,255]);tex.needsUpdate=true;renderer.render(scene,camera);assert.ok(pixels[center]<10&&pixels[center+1]>240,'Late texture revisions must redraw');
+// Software daylight brightens textured midtones without changing geometry.
+tex.image.data.set([100,80,60,255]);tex.needsUpdate=true;renderer.render(scene,camera);
+const baseline=pixels.slice(center,center+3),cachedGeometry=renderer._draws;
+renderer.setLighting(1.3,[1,1,1]);renderer.render(scene,camera);
+assert.equal(renderer._draws,cachedGeometry);
+for(let channel=0;channel<3;channel++)assert.ok(pixels[center+channel]>=baseline[channel]*1.29,'Daylight gain must reach texture pixels');
+renderer.setLighting(1.18,[1,.93,.82]);renderer.render(scene,camera);
+assert.ok(pixels[center]>baseline[0]&&pixels[center+2]<baseline[2],'Night stays bright with a warmer color');
+renderer.setLighting(1,[1,1,1]);
 let bytes=0;
 for(const {file} of Object.values(SURFACES)){const data=await readFile(new URL('../images/materials/'+file+'.webp',import.meta.url));assert.equal(data.toString('ascii',0,4),'RIFF');assert.equal(data.toString('ascii',8,12),'WEBP');bytes+=data.length;}
 assert.ok(bytes<800000,'Generated image transfer budget exceeded');
 manager.dispose();renderer.dispose();
-console.log(JSON.stringify({result:'PASS',checks:['Instance geometry, colors and physical UV buckets','Placeholder, success, failure and disposal loading states','UV addition preserves custom geometry','Real software pixel rasterization and late texture refresh','Nine valid WebP assets under 800 kB'],textureBytes:bytes},null,2));
+console.log(JSON.stringify({result:'PASS',checks:['Instance geometry, colors and physical UV buckets','Placeholder, success, failure and disposal loading states','UV addition preserves custom geometry','Real software pixel rasterization and late texture refresh','Day and night gains reach actual textured pixels without geometry rebuilds','Nine valid WebP assets under 800 kB'],textureBytes:bytes},null,2));

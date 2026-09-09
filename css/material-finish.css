@@ -32,3 +32,18 @@ dialog.reading-sheet{background-image:linear-gradient(#faf5ecef,#f7f0e5f2),var(-
   .study-detail .heading-photo{padding:7px 7px 0}.study-detail .heading-photo figcaption{padding:7px 0}
 }
 @media(prefers-reduced-motion:reduce){.reader-link,.study-detail .theme-card,.study-detail .activity-card{transition:none}}
+
+/* Brighter room edges leave furniture and the cat visible at every local hour. */
+.room-vignette{background:linear-gradient(180deg,#20140b18,transparent 24%,transparent 72%,#170d0945),radial-gradient(ellipse at center,transparent 55%,#25150814)}
+.is-inspecting .room-vignette{background:radial-gradient(ellipse at 50% 42%,transparent 35%,#170d092e)}
+.room-identity{display:flex;flex-direction:column;gap:12px}
+.room-time{align-self:flex-start;display:flex;align-items:center;gap:12px;padding:7px 11px;background:#30271ee6;border:1px solid #e8ce9c59;border-radius:3px;color:#fff5e2;box-shadow:0 3px 14px #21150914}
+.room-time span{font-size:11px;letter-spacing:.05em;color:#e4d2b8}
+.room-time time{font-size:17px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:.055em}
+.room-actions .lighting-toggle{width:84px;font-size:13px;white-space:nowrap}
+@media(max-width:640px){
+  .room-identity{gap:10px}.room-time{gap:9px;padding:6px 9px}.room-time time{font-size:16px}
+  .room-actions{display:grid;grid-template-columns:repeat(3,34px);max-width:none;gap:4px}
+  .room-actions .lighting-toggle{order:1;grid-column:1/-1;width:100%;height:30px;font-size:12px}
+  .room-intro{top:126px;bottom:auto}.inspection-caption{top:150px}
+}

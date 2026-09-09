@@ -180,8 +180,14 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
     const angle = i * Math.PI / 30, major = i % 5 === 0;
     box([major ? .008 : .003, major ? .028 : .011, .003], [Math.sin(angle) * .145, .256 + Math.cos(angle) * .145, .078], palette.darkBrass, clock, [0, 0, -angle]);
   }
-  rod([0, .256, .084], [-.061, .304, .084], .006, palette.ink, clock);
-  rod([0, .256, .088], [.054, .359, .088], .004, palette.ink, clock);
+  // Hands stay outside the static batches so civil time can rotate them.
+  function hand(name, length, width, z) {
+    const pivot = new THREE.Group(); pivot.name = name; pivot.position.set(0, .256, z);
+    const pointer = new THREE.Mesh(new THREE.BoxGeometry(width, length, .004), palette.ink);
+    pointer.position.y = length / 2; pointer.raycast = () => {};
+    pivot.add(pointer); clock.add(pivot); return pivot;
+  }
+  layer.clock = { group: clock, hour: hand('Shelf hour hand', .085, .011, .084), minute: hand('Shelf minute hand', .122, .007, .089) };
   bead([.011, .011, .006], [0, .256, .091], palette.brass, clock);
 
   // Static matrices are baked once. Decorative pieces do not intercept existing

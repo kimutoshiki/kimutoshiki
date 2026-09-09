@@ -1,7 +1,7 @@
 import { surface } from './surface-materials.js';
 import { completeRoom } from './room-shell.js';
-import { addRoomDetails } from './room-details.js';
-import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-materials';
+import { addRoomDetails } from './room-details.js?v=20260909-clock';
+import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-clock';
 
 /** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {
@@ -483,5 +483,5 @@ export function createRoom(THREE, assets = {}) {
   });
 
   group.updateMatrixWorld(true);
-  return { group, targets, animated, lampLight, pets, details, envelope };
+  return { group, targets, animated, lampLight, pets, details, envelope, clock: details.clock, windowMaterial: glassMat };
 }

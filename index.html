@@ -18,9 +18,9 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="css/study.css?v=20260909-materials">
+<link rel="stylesheet" href="css/study.css?v=20260909-clock">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://kimutoshiki.com/#website", "url": "https://kimutoshiki.com/", "name": "木村紀喜のホームページ", "alternateName": ["木村紀喜", "Toshiki Kimura"], "inLanguage": "ja", "publisher": {"@id": "https://kimutoshiki.com/#person"}}, {"@type": "Person", "@id": "https://kimutoshiki.com/#person", "name": "木村紀喜", "alternateName": ["木村 紀喜", "Toshiki Kimura"], "url": "https://kimutoshiki.com/", "description": "早稲田大学教職大学院で小学校教育、授業づくり、生成AIの教育利用を研究。佐賀県唐津市出身。", "sameAs": ["https://github.com/kimutoshiki"]}]}</script>
-<link rel="stylesheet" href="css/material-finish.css?v=20260909-materials"/>
+<link rel="stylesheet" href="css/material-finish.css?v=20260909-clock"/>
 </head>
 <body data-page="home">
 <main class="study" id="main">
@@ -54,18 +54,17 @@
 </div>
 </div>
 <header class="room-header">
+<div class="room-identity">
 <a href="./" class="brand" aria-label="ホーム：木村紀喜のホームページ">
 <span class="brand-mark">tk.</span>
 <span>木村 紀喜<small>小学校教育・研究・実践</small>
 </span>
 </a>
+<div class="room-time" id="room-time" hidden><span>あなたの時刻</span><time id="local-time"></time></div>
+</div>
 <div class="room-actions">
 <a class="tool translation-link" href="https://translate.google.com/translate?sl=ja&amp;tl=en&amp;u=https%3A%2F%2Fkimutoshiki.com%2F" aria-label="英語に翻訳" lang="en">EN</a>
-<button class="tool" id="night-toggle" aria-label="夜の明かりにする" title="昼と夜を切り替える">
-<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M21 13a9 9 0 0 1-10-10 9 9 0 1 0 10 10Z"/>
-</svg>
-</button>
+<button class="tool lighting-toggle" id="night-toggle" aria-label="光：自動。端末の時刻に合わせています。昼の明かりに切り替える" title="端末の時刻に合わせた明かり。クリックで昼に切り替え">光：自動</button>
 <button class="tool" id="motion-toggle" aria-label="動きを止める" aria-pressed="false" title="動きを止める">
 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
 <path d="M7 5v14M17 5v14"/>
@@ -339,7 +338,7 @@
 <p>子どもたちの「前向きに生きる力」を育てる。小学校教育・授業づくり・生成AI活用の研究と実践を紹介します。</p>
 </section>
 </noscript>
-<script src="js/study-ui.js?v=20260909-materials" defer>
+<script src="js/study-ui.js?v=20260909-clock" defer>
 </script>
 </body>
 </html>

@@ -16,6 +16,8 @@ export class StudyCanvasRenderer {
     this.shadowMap = { enabled: false };
     this.info = { render: { calls: 0, triangles: 0 }, memory: { geometries: 0 } };
     this.ratio = 1;
+    this.lightingGain = 1;
+    this.lightingTint = [1, 1, 1];
     this.width = this.height = 1;
     this.maxWidth = 1200;
     this.maxHeight = 900;
@@ -58,6 +60,7 @@ export class StudyCanvasRenderer {
 
   setClearColor(color, alpha = 1) { this._clear.set(color); this._clearAlpha = alpha; }
   invalidate() { this._draws = null; this._scene = null; }
+  setLighting(gain, tint) { this.lightingGain = gain; this.lightingTint = tint; }
   invalidateTextures() { this._textureCache = new WeakMap(); }
 
   prepare(scene) {
@@ -257,8 +260,9 @@ export class StudyCanvasRenderer {
     const zAC = a[2] - c[2], zBC = b[2] - c[2];
     const perspective = state.texture || state.vertexColors;
     const depth = this._depth, packed = this._packed;
-    const red = Math.min(255, state.r * brightness), green = Math.min(255, state.g * brightness), blue = Math.min(255, state.b * brightness);
-    const flat = (255 << 24) | ((blue + .5) << 16) | ((green + .5) << 8) | (red + .5);
+    // Apply gain before albedo, but clamp only after it, preserving midtone detail.
+    const red = state.r * brightness * this.lightingGain * this.lightingTint[0], green = state.g * brightness * this.lightingGain * this.lightingTint[1], blue = state.b * brightness * this.lightingGain * this.lightingTint[2];
+    const flat = (255 << 24) | ((Math.min(255, blue) + .5) << 16) | ((Math.min(255, green) + .5) << 8) | (Math.min(255, red) + .5);
     const tex = state.texture, texels = tex?.data;
     const tm = state.textureMatrix;
     for (let y = minY; y <= maxY; y++, rowA += aDY, rowB += bDY) {

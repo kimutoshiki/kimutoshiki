@@ -286,38 +286,12 @@ export function addSleepingCat(THREE, { chair, pets }) {
       }
     });
   }
-  const bodyMap = coatMap('body'), tailMap = coatMap('tail');
-  const headMap = canvasMap(THREE, 1024, 512, (ctx, w, h) => {
-    ctx.fillStyle='#b68e62';ctx.fillRect(0,0,w,h);
-    // A warm chin grades into cheeks; the muzzle is sculpted into the head mesh.
-    const cream=ctx.createRadialGradient(w*.25,h*.65,4,w*.25,h*.64,126);
-    cream.addColorStop(0,'#d8c8a8');cream.addColorStop(.38,'#cfbb96');cream.addColorStop(1,'rgba(184,143,94,0)');
-    ctx.fillStyle=cream;ctx.fillRect(0,0,w,h);
-    const foreheadPaths=[];
-    for(const side of[-1,1]){
-      foreheadPaths.push([[w*.25+side*35,h*.20],[w*.25+side*49,h*.29],[w*.25+side*17,h*.37]]);
-      foreheadPaths.push([[w*.25+side*72,h*.23],[w*.25+side*82,h*.35],[w*.25+side*60,h*.44]]);
-      for(let j=0;j<3;j++)foreheadPaths.push([[w*.25+side*75,h*(.47+j*.055)],[w*.25+side*119,h*(.45+j*.052)],[w*.25+side*155,h*(.36+j*.07)]]);
-    }
-    for(const points of foreheadPaths){
-      ctx.save();ctx.filter='blur(7px)';ctx.strokeStyle='rgba(91,59,34,.30)';ctx.lineWidth=19+random()*9;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(...points[0]);ctx.quadraticCurveTo(...points[1],...points[2]);ctx.stroke();ctx.restore();
-      for(let j=0;j<500;j++){
-        const t=random(),q=1-t;const x=q*q*points[0][0]+2*q*t*points[1][0]+t*t*points[2][0]+(random()+random()-1)*13;
-        const y=q*q*points[0][1]+2*q*t*points[1][1]+t*t*points[2][1]+(random()-.5)*8;
-        ctx.strokeStyle=`rgba(93,62,36,${.10+random()*.15})`;ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(x/w-.25)*10,y+3+random()*5);ctx.stroke();
-      }
-    }
-    for(let i=0;i<12000;i++){
-      const x=random()*w,y=random()*h;ctx.strokeStyle=random()>.48?`rgba(234,214,177,${.15+random()*.22})`:`rgba(79,56,33,${.08+random()*.11})`;
-      ctx.lineWidth=.5+random()*.35;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(x/w-.25)*8,y+2+random()*5);ctx.stroke();
-    }
-  });
+  const bodyMap = coatMap('body');
   const furMaterial = (color, map = null) => new THREE.MeshStandardMaterial({ color, map, roughness: .96, bumpMap: furGrain, bumpScale: .00065 });
-  const fur = furMaterial('#ffffff', bodyMap), headFur = furMaterial('#ffffff', headMap), tailFur = furMaterial('#ffffff', tailMap);
+  const fur = furMaterial('#ffffff', bodyMap);
+  fur.name = 'Shared ginger coat: head, body and tail';
   const creamFur = furMaterial('#c7b18b'), earFur = furMaterial('#ad875f');
   surface(fur, 'ginger');
-  surface(tailFur, 'ginger');
   surface(creamFur, 'ivory');
   const skin = new THREE.MeshStandardMaterial({ color: '#947664', roughness: .9 });
   const dark = new THREE.MeshStandardMaterial({ color: '#49382a', roughness: .98 });
@@ -349,7 +323,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
   const foldedHaunch = oval([.153, .068, .123], [.162, .070, .120], fur, cat); foldedHaunch.rotation.y = -.23;
   const foreleg = oval([.041, .090, .043], [-.150, .074, .174], fur, cat); foreleg.rotation.set(-.24, 0, -.57);
   const head = new THREE.Group(); head.position.set(-.228, .111, .174); head.scale.setScalar(.82); head.rotation.set(.30, .32, -.36); cat.add(head); head.name = 'Tucked sleeping head';
-  const headGeometry = new THREE.SphereGeometry(1, 48, 32), hp = headGeometry.attributes.position;
+  const headGeometry = new THREE.SphereGeometry(1, 48, 32), hp = headGeometry.attributes.position, huv = headGeometry.attributes.uv;
   for (let i = 0; i < hp.count; i++) {
     const x = hp.getX(i), y = hp.getY(i), z = hp.getZ(i);
     const front = Math.pow(Math.max(0, z), 5);
@@ -357,18 +331,20 @@ export function addSleepingCat(THREE, { chair, pets }) {
     const muzzle = Math.exp(-Math.pow((y + .36) / .26, 2)) * Math.exp(-Math.pow(x / .62, 4));
     const bridge = Math.exp(-Math.pow((y + .02) / .34, 2)) * Math.exp(-Math.pow(x / .22, 2));
     const brow = Math.exp(-Math.pow((y - .17) / .17, 2)) * (Math.exp(-Math.pow((x - .34) / .21, 2)) + Math.exp(-Math.pow((x + .34) / .21, 2)));
+    // Match the visible hair scale to the larger torso using the same material.
+    huv.setXY(i, .5 + (huv.getX(i) - .5) * .46, .5 + (huv.getY(i) - .5) * .46);
     // Cheeks, brow and muzzle share the same continuous skin surface.
     hp.setXYZ(i, x * .145 * cheek, y * .127, z * .139 + front * (.037 * muzzle + .009 * bridge + .006 * brow));
   }
-  headGeometry.computeVertexNormals(); mesh(headGeometry, headFur, head);
+  headGeometry.computeVertexNormals(); const face = mesh(headGeometry, fur, head); face.name = 'Sculpted ginger head';
   // A thin cupped pinna with a bent rounded tip, instead of an extruded triangle.
   const ep=[],eu=[],ec=[],ei=[],earRows=14,earCols=8;
-  const earOutside=new THREE.Color('#b18d65'),earInside=new THREE.Color('#a58b7c'),earEdge=new THREE.Color('#c0a07b');
+  const earOutside=new THREE.Color('#ffffff'),earInside=new THREE.Color('#ddbeb1'),earEdge=new THREE.Color('#fff4e3');
   for(let back=0;back<2;back++)for(let row=0;row<=earRows;row++)for(let col=0;col<=earCols;col++){
     const t=row/earRows,u=col/earCols*2-1,width=.056*Math.pow(Math.max(.0001,1-t),.68);
     const x=u*width-.028*t,y=.099*t-.019;
     const z=-.011-.038*t*t+.010*(1-u*u)*Math.sin(Math.PI*t)-(back?.006:0);
-    ep.push(x,y,z);eu.push((u+1)/2,t);
+    ep.push(x,y,z);eu.push(.5+u*.11,.35+t*.30);
     const center=Math.pow(Math.max(0,1-u*u),2)*Math.sin(Math.PI*t);
     const color=earOutside.clone().lerp(earInside,back?0:center*.85).lerp(earEdge,(1-center)*.22);
     ec.push(color.r,color.g,color.b);
@@ -384,7 +360,8 @@ export function addSleepingCat(THREE, { chair, pets }) {
   }
   const earGeometry=new THREE.BufferGeometry();earGeometry.setAttribute('position',new THREE.Float32BufferAttribute(ep,3));
   earGeometry.setAttribute('uv',new THREE.Float32BufferAttribute(eu,2));earGeometry.setAttribute('color',new THREE.Float32BufferAttribute(ec,3));earGeometry.setIndex(ei);earGeometry.computeVertexNormals();
-  const pinnaMaterial=new THREE.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.97,bumpMap:furGrain,bumpScale:.0004,side:THREE.DoubleSide});
+  const pinnaMaterial=new THREE.MeshStandardMaterial({color:'#ffffff',map:bodyMap,vertexColors:true,roughness:.96,bumpMap:furGrain,bumpScale:.00065,side:THREE.DoubleSide});
+  surface(pinnaMaterial, 'ginger');
   const strandPositions = [], whiskerPositions = [];
   function lineCurve(points, dest, segments = 10) {
     const path = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)));
@@ -415,7 +392,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
     const paw = oval([.052 - i * .003, .029, .067], point, creamFur, cat); paw.rotation.y = -.38;
     for (const dx of [-.018, .018]) curve([[point[0] + dx, point[1] + .027, point[2] + .038], [point[0] + dx - .001, point[1] + .020, point[2] + .064]], .0009, earFur, cat, 5);
   }
-  // The taper and painted rings follow the entire tail, including its curled tip.
+  // The tail carries the same coat through its curled, tapered tip.
   const tailPath = new THREE.CatmullRomCurve3([[.237, .136, -.102], [.325, .065, .063], [.215, .039, .242], [.024, .034, .263], [-.129, .033, .227]].map(p => new THREE.Vector3(...p)));
   const tailGeometry = new THREE.TubeGeometry(tailPath, 54, 1, 12, false), tp = tailGeometry.attributes.position, tuv = tailGeometry.attributes.uv;
   for (let ring = 0; ring <= 54; ring++) {
@@ -425,7 +402,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
       tp.setXYZ(i, v.x, v.y, v.z); tuv.setXY(i, t, j / 12);
     }
   }
-  tailGeometry.computeVertexNormals(); mesh(tailGeometry, tailFur, cat);
+  tailGeometry.computeVertexNormals(); mesh(tailGeometry, fur, cat);
   oval([.021, .020, .021], [-.129, .033, .227], creamFur, cat);
   function lines(positions, color, parent, name) {
     const geometry = new THREE.BufferGeometry(); geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));

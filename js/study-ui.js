@@ -16,7 +16,13 @@
     const caption=document.getElementById('inspection-caption');caption.hidden=!inspecting;
     if(inspecting)caption.textContent=subject.selectedOptions[0].textContent+' · 360°鑑賞';
   });
-  let engine, opener, ready = false, markers = true, night = false;
+  canvas.addEventListener('roomtimechange', event => {
+    const time=document.getElementById('local-time');
+    time.textContent=event.detail.label;time.dateTime=event.detail.dateTime;
+    document.getElementById('room-time').hidden=false;
+    study.dataset.timePhase=event.detail.phase;
+  });
+  let engine, opener, ready = false, markers = true, lightingMode = 'auto';
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const panels = {
     profile: ['01', 'プロフィール', '机の名札から、これまでの歩みへ。'],
@@ -50,18 +56,26 @@
   function setPinState() { pins.classList.toggle('hidden-pins', !markers); pins.querySelectorAll('a').forEach(a=>a.tabIndex=ready&&markers?0:-1); }
   document.getElementById('markers-toggle').addEventListener('click', e => {markers=!markers;e.currentTarget.setAttribute('aria-pressed',String(markers));setPinState();});
   motion.addEventListener('click', () => {paused=!paused;engine?.setPaused?.(paused);motion.setAttribute('aria-pressed',String(paused));motion.setAttribute('aria-label',paused?'動きを再開する':'動きを止める');});
-  nightButton.addEventListener('click', () => {night=!night;engine?.setNight?.(night);nightButton.setAttribute('aria-pressed',String(night));nightButton.setAttribute('aria-label',night?'昼の明かりにする':'夜の明かりにする');});
+  nightButton.addEventListener('click', () => {
+    const modes=['auto','day','night'],labels={auto:'自動',day:'昼',night:'夜'};
+    lightingMode=modes[(modes.indexOf(lightingMode)+1)%modes.length];
+    const next=modes[(modes.indexOf(lightingMode)+1)%modes.length];
+    engine?.setLightingMode?.(lightingMode);
+    nightButton.textContent='光：'+labels[lightingMode];
+    const action=next==='auto'?'端末の時刻に合わせた明かりに戻す':labels[next]+'の明かりに切り替える';
+    nightButton.setAttribute('aria-label',nightButton.textContent+'。'+action);nightButton.title=action;
+  });
   document.getElementById('view-subject').addEventListener('change',e=>engine?.inspect?.(e.target.value));
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>engine?.preset?.(button.dataset.view)));
   document.getElementById('zoom-in').addEventListener('click',()=>engine?.zoom?.(-.7));
   document.getElementById('zoom-out').addEventListener('click',()=>engine?.zoom?.(.7));
   document.getElementById('view-reset').addEventListener('click',()=>engine?.reset?.());
   function failed(error) { console.error('3D scene could not render',error);status.hidden=true;study.classList.add('is-failed');document.getElementById('room-fallback').hidden=false; }
-  import('../scene/study.js?v=20260909-materials').then(async ({mountStudy}) => {
+  import('../scene/study.js?v=20260909-clock').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas:document.getElementById('study-canvas'),pins,onSelect:show,onError:failed,onReady(){ready=true;study.classList.add('is-ready');status.hidden=true;setPinState();}});
-    engine?.setPaused?.(paused);engine?.setNight?.(night);
+    engine?.setPaused?.(paused);engine?.setLightingMode?.(lightingMode);
     motion.setAttribute('aria-pressed',String(paused));
-    if (engine?.software) {document.getElementById('render-mode').textContent='· シンプル表示';motion.disabled=true;nightButton.disabled=true;motion.title='この環境では静止表示です';nightButton.title='この環境では昼の明かりで表示します';}
+    if (engine?.software) {document.getElementById('render-mode').textContent='· シンプル表示';motion.disabled=true;motion.title='この環境では植物や猫の動きを止めています。時計と明かりは時刻に合わせて更新されます';}
   }).catch(failed);
   window.addEventListener('pagehide', e => {if(!e.persisted)engine?.dispose?.();});
 })();
