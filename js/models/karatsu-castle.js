@@ -10,6 +10,7 @@
  * This represents the present 1966 keep, with interpreted proportions and a
  * deliberately compressed landscape; it is not a measured conservation model.
  */
+import { surface } from '../../scene/surface-materials.js';
 export function createKaratsuCastle(T) {
   const group = new T.Group();
   group.name = 'Karatsu Castle · architectural miniature';
@@ -35,6 +36,9 @@ export function createKaratsuCastle(T) {
     trunk: material('#6a6551'), water: material('#6b9d9d', 0.44),
     shallow: material('#99b9ad', 0.65), foam: material('#cbd8c7'),
   };
+  for(const key of ['plaster','plasterLight','plasterShade'])surface(m[key],'plaster',{tint:key==='plasterShade'?'#dadeda':'#ffffff'});
+  m.stone.forEach((material,i)=>surface(material,'stone',{tint:['#c4c7c0','#d3d4c7','#adb9af','#dddccc','#bac4ba','#a3afaa'][i]}));
+  surface(m.roof,'slate');surface(m.timber,'walnut',{tint:'#b3aea6'});
   const boxGeometry = new T.BoxGeometry(1, 1, 1);
   const cylinderGeometry = new T.CylinderGeometry(1, 1, 1, 4, 1, false);
   const foliageGeometry = new T.IcosahedronGeometry(1, 1);

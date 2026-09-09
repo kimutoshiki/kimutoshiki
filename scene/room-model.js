@@ -1,6 +1,7 @@
+import { surface } from './surface-materials.js';
 import { completeRoom } from './room-shell.js';
 import { addRoomDetails } from './room-details.js';
-import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-orbit';
+import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-materials';
 
 /** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {
@@ -18,6 +19,10 @@ export function createRoom(THREE, assets = {}) {
     green: mat('#35512e', .84), leafLight: mat('#657642', .86), leafDark: mat('#233e26', .89),
     burgundy: mat('#6a3133', .79), ink: mat('#34382e', .88), linen: mat('#c6b38e', .95),
   };
+  surface(palette.wood, 'walnut');
+  surface(palette.lightWood, 'walnut', { tint: '#ffe5c3' });
+  surface(palette.darkWood, 'walnut', { tint: '#9d8779' });
+  surface(palette.wall, 'plaster', { tint: '#c9c2a5' });
   const textureLoader = new THREE.TextureLoader();
   const makeCanvas = (w, h, draw) => {
     const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
@@ -135,7 +140,7 @@ export function createRoom(THREE, assets = {}) {
   box(10.01,6.6,.2,palette.wall,1.595,3.24,-1.61);
   box(2.28,1.62,.2,palette.wall,-4.55,.75,-1.61);
   box(2.28,.78,.2,palette.wall,-4.55,6.15,-1.61);
-  box(.16, 6.6, 12, mat('#898560', .98), -6.55, 3.24, 3.4);
+  box(.16, 6.6, 12, surface(mat('#898560', .98), 'plaster', { tint: '#b2b29a' }), -6.55, 3.24, 3.4);
   box(13.2, .18, .12, palette.darkWood, 0, .12, -1.44, group, .025);
   box(13.2, .075, .1, palette.lightWood, 0, .245, -1.43, group, .015);
   box(13.2, .21, .35, palette.darkWood, 0, 6.13, -1.38, group, .025);
@@ -375,7 +380,7 @@ export function createRoom(THREE, assets = {}) {
     rod([x * .93, 1.15, .365], [x * 1.17, topY, .477], .019, palette.wood, chair, .024);
   }
   // A burgundy throw drapes over one side of the chair in two softly folded panels.
-  const throwMat = mat('#633b36', 1);
+  const throwMat = surface(mat('#633b36', 1), 'linen');
   const throwGeo = new THREE.PlaneGeometry(.36, 1.15, 10, 16);
   const a = throwGeo.attributes.position;
   for (let i = 0; i < a.count; i++) {

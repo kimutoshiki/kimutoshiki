@@ -2,7 +2,8 @@
    Instanced geometry, a single cached shadow, bounded DPR, and a 30fps ceiling.
    The model is an interpretation, not a surveyed campus map. */
 import * as T from './vendor/three.module.min.js';
-import { CampusCanvasRenderer } from './campus-software.js?v=20260905-landmarks';
+import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260909-materials';
+import { loadSurfaceMaterials } from '../scene/surface-materials.js';
 import { batchStaticMeshes } from './models/model-utils.js';
 const canvas=document.querySelector('#campus-canvas');
 const hero=document.querySelector('.campus-hero');
@@ -10,7 +11,7 @@ const region=document.querySelector('.scene-region');
 const status=document.querySelector('.scene-status');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 let renderer;
-try{const context=canvas.getContext('webgl2',{antialias:true,alpha:true,powerPreference:'low-power'});renderer=context?new T.WebGLRenderer({canvas,context,antialias:true,alpha:true}):new CampusCanvasRenderer(canvas);}catch(error){fallback();}
+try{const context=canvas.getContext('webgl2',{antialias:true,alpha:true,powerPreference:'low-power'});renderer=context?new T.WebGLRenderer({canvas,context,antialias:true,alpha:true}):new StudyCanvasRenderer(canvas,T);}catch(error){fallback();}
 function fallback(){status.textContent='下のページ案内をご利用ください。';document.querySelectorAll('[data-scene-action]').forEach(b=>b.disabled=true);canvas.hidden=true;}
 if(renderer)boot().catch(fallback);
 async function boot(){
@@ -36,6 +37,7 @@ async function boot(){
  const initialAngle=model.azimuth;
  let azimuth=initialAngle,elevation=model.elevation,zoom=1,paused=reduced.matches||renderer.software,visible=true,drag=null,last=0,raf=0,settle=0,time=0,flight=null;
  try{paused=paused||localStorage.getItem('campus-motion')==='paused';}catch{}
+ loadSurfaceMaterials(T,root,{onLoad(){renderer.invalidate?.();settle=performance.now()+200;request();},anisotropy:renderer.capabilities?.getMaxAnisotropy?.()||1});
  const motionButton=document.querySelector('[data-scene-action=motion]');
  function syncMotion(){motionButton.textContent=paused?'動きを再開':'動きを停止';motionButton.setAttribute('aria-pressed',String(paused));}
  syncMotion();

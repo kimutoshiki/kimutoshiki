@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 const repo = new URL('../', import.meta.url);
 const fromRepo = path => import(new URL(path, repo));
 const T = await fromRepo('js/vendor/three.module.min.js');
-const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260909-orbit');
+const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260909-materials');
 const ctx=new Proxy({}, {get(o,k){if(k==='createImageData'||k==='getImageData')return (w,h)=>({width:w,height:h,data:new Uint8ClampedArray(w*h*4)});if(k==='createLinearGradient'||k==='createRadialGradient')return()=>({addColorStop(){}});if(k==='measureText')return text=>({width:text.length*10});return o[k]??(()=>{});},set(o,k,v){o[k]=v;return true;}});
 class Canvas extends EventTarget{clientWidth=1280;clientHeight=800;width=1280;height=800;style={};getContext(k){return k==='webgl2'?null:ctx;}getBoundingClientRect(){return{left:0,top:0,width:this.clientWidth,height:this.clientHeight};}setPointerCapture(){}}
 globalThis.document=Object.assign(new EventTarget(),{hidden:false,fonts:{ready:Promise.resolve()},createElement:()=>new Canvas(),createElementNS:()=>Object.assign(new EventTarget(),{style:{},width:1600,height:900})});

@@ -1,9 +1,12 @@
 /** Complete, opaque room envelope. Camera bounds are inset from these surfaces. */
+import { surface } from './surface-materials.js';
 export function completeRoom(T, group, palette) {
   const shell = new T.Group(); shell.name = 'Complete room envelope';
   const cube = new T.BoxGeometry(1,1,1);
   const plaster = new T.MeshStandardMaterial({color:'#beb393',roughness:.94});
   const ceiling = new T.MeshStandardMaterial({color:'#dfd4bd',roughness:.96});
+  surface(plaster, 'plaster', { tint: '#d8d2be' });
+  surface(ceiling, 'plaster', { tint: '#eee7d8' });
   const box = (w,h,d,x,y,z,mat=plaster) => {
     const m = new T.Mesh(cube,mat);m.scale.set(w,h,d);m.position.set(x,y,z);
     m.castShadow=m.receiveShadow=true;shell.add(m);return m;

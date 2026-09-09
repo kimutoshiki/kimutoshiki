@@ -57,7 +57,7 @@
   document.getElementById('zoom-out').addEventListener('click',()=>engine?.zoom?.(.7));
   document.getElementById('view-reset').addEventListener('click',()=>engine?.reset?.());
   function failed(error) { console.error('3D scene could not render',error);status.hidden=true;study.classList.add('is-failed');document.getElementById('room-fallback').hidden=false; }
-  import('../scene/study.js?v=20260909-orbit').then(async ({mountStudy}) => {
+  import('../scene/study.js?v=20260909-materials').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas:document.getElementById('study-canvas'),pins,onSelect:show,onError:failed,onReady(){ready=true;study.classList.add('is-ready');status.hidden=true;setPinState();}});
     engine?.setPaused?.(paused);engine?.setNight?.(night);
     motion.setAttribute('aria-pressed',String(paused));

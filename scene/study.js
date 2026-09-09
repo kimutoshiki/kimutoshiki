@@ -1,8 +1,9 @@
 import * as THREE from '../js/vendor/three.module.min.js';
-import { createRoom } from './room-model.js?v=20260909-orbit';
-import { createDeskLandmarks } from './desk-landmarks.js?v=20260909-orbit';
+import { loadSurfaceMaterials } from './surface-materials.js';
+import { createRoom } from './room-model.js?v=20260909-materials';
+import { createDeskLandmarks } from './desk-landmarks.js?v=20260909-materials';
 import { createOrbitNavigation } from './orbit-navigation.js';
-import { StudyCanvasRenderer } from './study-software.js?v=20260909-orbit';
+import { StudyCanvasRenderer } from './study-software.js?v=20260909-materials';
 
 export async function mountStudy({canvas,pins,onSelect,onReady,onError}) {
   let renderer;
@@ -10,16 +11,17 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError}) {
   const software=!!renderer.software;
   const scene=new THREE.Scene();scene.background=new THREE.Color('#a9a077');
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.65));renderer.outputColorSpace=THREE.SRGBColorSpace;
-  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
   renderer.shadowMap.enabled=true;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const camera=new THREE.PerspectiveCamera(40,1,.025,80);
   const ambient=new THREE.HemisphereLight('#e6eddf','#735438',1.35);scene.add(ambient);
-  const sun=new THREE.DirectionalLight('#ffe5a6',3.7);sun.position.set(-11,8,-9);sun.target.position.set(1,2,3);
+  const sun=new THREE.DirectionalLight('#fff0d2',3.7);sun.position.set(-11,8,-9);sun.target.position.set(1,2,3);
   sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-8,right:8,top:8,bottom:-6,near:.5,far:30});
   sun.shadow.normalBias=.035;sun.shadow.bias=-.00015;sun.shadow.radius=4;scene.add(sun,sun.target);
   const fill=new THREE.DirectionalLight('#e0e6df',.65);fill.position.set(4,3,4);scene.add(fill);
   let room;let textureRevision=0;
   try{room=createRoom(THREE,{photo1:'/images/hero-waseda.webp',photo2:'/images/hero-karatsu.webp',photo3:'/images/hero-kyukeisha.webp',photoRatios:[4/3,16/9,16/9],onTextureLoad(){textureRevision++;}});const landmarks=await createDeskLandmarks(THREE);room.group.add(landmarks.group);room.targets.push(...landmarks.targets);scene.add(room.group);}catch(e){renderer.dispose();onError(e);return {dispose(){}};}
+  const surfaces=loadSurfaceMaterials(THREE,room.group,{onLoad(){textureRevision++;renderer.invalidate?.();},anisotropy:renderer.capabilities?.getMaxAnisotropy?.()||1});
   const lamp=room.lampLight;const lampDay=lamp.intensity;
   const roomEffects=new THREE.Group();roomEffects.name='Room atmosphere';scene.add(roomEffects);
   const inspectionRoot=new THREE.Group();inspectionRoot.name='360 degree inspection';inspectionRoot.userData.inspectionRoot=true;inspectionRoot.visible=false;scene.add(inspectionRoot);
@@ -130,11 +132,11 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError}) {
     // Orbit coordinates are already continuous with pointer motion. Applying a
     // Cartesian lerp here would cut through models when changing direction.
     const view=updateDesired();camera.position.copy(desiredPosition);look.copy(desiredLook);camera.lookAt(look);camera.zoom=view.zoom;camera.updateProjectionMatrix();
-    nightMix=THREE.MathUtils.lerp(nightMix,night?1:0,paused?1:1-Math.exp(-delta*3));sun.intensity=THREE.MathUtils.lerp(3.7,.18,nightMix);sun.color.set(night?'#93b7f0':'#ffe5a6');ambient.intensity=THREE.MathUtils.lerp(1.35,.52,nightMix);fill.intensity=THREE.MathUtils.lerp(.65,.25,nightMix);lamp.intensity=THREE.MathUtils.lerp(lampDay,22,nightMix);renderer.toneMappingExposure=THREE.MathUtils.lerp(1.2,1.15,nightMix);dapple.material.opacity=.6*(1-nightMix);dtex.offset.x=Math.sin(animTime*.13)*.015;
+    nightMix=THREE.MathUtils.lerp(nightMix,night?1:0,paused?1:1-Math.exp(-delta*3));sun.intensity=THREE.MathUtils.lerp(3.7,.18,nightMix);sun.color.set(night?'#93b7f0':'#fff0d2');ambient.intensity=THREE.MathUtils.lerp(1.35,.52,nightMix);fill.intensity=THREE.MathUtils.lerp(.65,.25,nightMix);lamp.intensity=THREE.MathUtils.lerp(lampDay,22,nightMix);renderer.toneMappingExposure=THREE.MathUtils.lerp(1.1,1.15,nightMix);dapple.material.opacity=.6*(1-nightMix);dtex.offset.x=Math.sin(animTime*.13)*.015;
     if(!software){room.pets?.forEach(p=>{p.object.scale.y=p.baseScale.y*(1+Math.sin(animTime*1.5+p.phase)*.015);});room.animated.forEach((p,i)=>{p.rotation.z=Math.sin(animTime*.65+i*1.3)*.012;p.rotation.x=Math.sin(animTime*.48+i)*.009;});dust.rotation.y=animTime*.009;dust.position.y=Math.sin(animTime*.22)*.05;}
     const state=view.subject+','+[camera.position.x,camera.position.y,camera.position.z,camera.zoom,look.x,look.y,look.z,width,height,textureRevision].map(n=>n.toFixed(3)).join(',');if(!software||frames<3||state!==renderState){renderer.render(scene,camera);renderState=state;}if(state!==pinState||(!paused&&frames%10===0)){positionPins();pinState=state;}frames++;
     if(frames===2)onReady();if(delta>.047)slow++;if(frames===180&&slow>75){renderer.setPixelRatio(1);renderer.shadowMap.autoUpdate=false;}
   }
   resize();raf=requestAnimationFrame(animate);
-  return {software,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){navigation.preset(name);snapView();announceView();},setNight(v){night=software?false:v;renderer.shadowMap.needsUpdate=true;},setPaused(v){paused=software||v;},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
+  return {software,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){navigation.preset(name);snapView();announceView();},setNight(v){night=software?false:v;renderer.shadowMap.needsUpdate=true;},setPaused(v){paused=software||v;},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
 }

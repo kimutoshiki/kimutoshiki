@@ -9,6 +9,7 @@
  * The university records a 2.89 m figure and 2.12 m pedestal. The campus planting
  * and rear architecture below are intentionally abbreviated, not a site survey.
  */
+import { surface } from '../../scene/surface-materials.js';
 export function createOkumaStatue(T) {
   const group = new T.Group();
   group.name = 'Okuma Shigenobu — Waseda campus';
@@ -24,6 +25,7 @@ export function createOkumaStatue(T) {
     trunk:mat(0x776957), wall:mat(0xd0cabc), wallShade:mat(0xb4b4a8), glass:mat(0x7f9090,.55,.05),
     rail:mat(0x5e655d,.7,.18), gravel:mat(0x9b9b85),
   };
+  for(const key of ['stone','stoneEdge','stoneShade'])surface(M[key],'stone',{tint:key==='stoneShade'?'#bbc0bb':'#e0e3df'});
   const boxGeo = new T.BoxGeometry(1,1,1);
   const ballGeo = new T.SphereGeometry(1,16,10);
   const smallBallGeo = new T.SphereGeometry(1,12,8);

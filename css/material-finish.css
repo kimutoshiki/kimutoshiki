@@ -1,0 +1,34 @@
+/* The same generated walnut, plaster and linen continue from 3D into the reader. */
+:root{--finish-walnut:url('../images/materials/walnut.webp');--finish-plaster:url('../images/materials/plaster.webp');--finish-linen:url('../images/materials/burgundy-linen.webp')}
+.room-dock{background-image:linear-gradient(#25160eee,#382217e6),var(--finish-walnut);background-size:auto,640px;border-color:#bf9a656b;box-shadow:inset 0 1px #f6d9a82b,0 12px 38px #160b0959}
+.room-dock a{font-size:14px}.room-dock a:focus-visible,.tool:focus-visible,.view-controls button:focus-visible,.view-presets button:focus-visible{outline:2px solid #f5d49a;outline-offset:4px}
+.room-dock a:hover{background:#99516433}.room-dock a+a:before{background:#d4af733d}
+.view-controls,.orbit-controls{background-image:linear-gradient(#21150fea,#382218e8),var(--finish-walnut);background-size:auto,480px}
+.orbit-controls label{font-size:14px}.orbit-controls select,.view-presets button{font-size:14px}.view-presets button{min-height:36px}
+.room-actions .tool{box-shadow:inset 0 1px #f1e1b526,0 3px 10px #150e091a}
+.inspection-caption{background:#201915e8;box-shadow:0 5px 24px #0907043b;border-radius:3px}
+dialog.reading-sheet{background-image:linear-gradient(#faf5ecef,#f7f0e5f2),var(--finish-plaster)!important;background-size:auto,512px!important}
+.reader-photo{height:auto;aspect-ratio:auto;object-fit:contain}
+.reader-heading{padding-bottom:22px}.reader-link{transition:color .2s,background-color .2s}.reader-link:hover{background:#76283c08;color:#53142b}
+.study-detail .site-header{background:#fbf7eff2;box-shadow:0 2px 18px #35211508}
+.study-detail .site-header nav a{font-size:14px}
+.study-detail main>section.study-page-heading{background-image:linear-gradient(110deg,#f5eee4ed,#e7ddcddc),var(--finish-plaster);background-size:auto,512px;border-bottom-color:#bea789;box-shadow:inset 0 -3px #76283c}
+.study-detail .page-description{font-size:16px;line-height:1.85}
+.study-detail .heading-photo{padding:10px 10px 0;border:1px solid #b39565;background:#5a3c28 var(--finish-walnut) center/480px;box-shadow:0 0 0 1px #35291d,0 12px 24px #36201425,0 2px 4px #36201425}
+.study-detail .heading-photo img{outline:1px solid #2c201a75;box-shadow:0 0 0 3px #ebdfc5}
+.study-detail .heading-photo figcaption{color:#f6e7cd;padding:10px 0;font-size:12px;line-height:1.7}
+.study-detail .theme-card,.study-detail .activity-card,.study-detail .contact-card{border:1px solid #d7c9b5;background:linear-gradient(145deg,#fffdf7,#f6f0e5);box-shadow:0 2px 5px #48301e06,0 9px 24px #48301e08;transition:box-shadow .25s,border-color .25s}
+.study-detail .theme-card:hover,.study-detail .activity-card:hover{border-color:#b5a08b;box-shadow:0 5px 20px #48301e12}
+.study-detail .keyword,.study-detail .cat-badge,.study-detail .theme-tag{font-size:14px}
+.study-detail .full-gallery .gallery-photo img{padding:10px;border:1px solid #4c3021;background:#5d3e2a var(--finish-walnut) center/600px;box-shadow:0 0 0 1px #bb9766,0 10px 24px #3b271621}
+.study-detail .return-study{background-image:linear-gradient(#eee4d3ec,#eee4d3ec),var(--finish-plaster)!important;background-size:auto,512px!important}
+.study-detail .return-study p{font-size:14px}
+.study-detail .site-footer{background-image:linear-gradient(#27141cef,#291c20f5),var(--finish-linen);background-size:auto,512px;border-top:3px solid #ad8953}
+.study-detail .footer-bottom{border-color:#ddbf8626}.study-detail .footer-brand p,.study-detail .footer-bottom{color:#ded0c2}
+@media(max-width:640px){
+  .room-dock a{font-size:13px;padding:9px 2px;min-height:48px}
+  .orbit-controls{max-width:300px}.orbit-controls select,.view-presets button{font-size:13px}.view-presets button{min-width:38px;min-height:36px}
+  .room-intro{max-width:calc(100% - 40px)}
+  .study-detail .heading-photo{padding:7px 7px 0}.study-detail .heading-photo figcaption{padding:7px 0}
+}
+@media(prefers-reduced-motion:reduce){.reader-link,.study-detail .theme-card,.study-detail .activity-card{transition:none}}

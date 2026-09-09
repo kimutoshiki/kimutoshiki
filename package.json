@@ -4,6 +4,6 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/preview.mjs",
-    "test": "node scripts/verify-3d.mjs"
+    "test": "node scripts/verify-3d.mjs && node scripts/verify-surfaces.mjs"
   }
 }

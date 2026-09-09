@@ -6,6 +6,7 @@
  * All surfaces are original geometry and procedural material data; photographs
  * are research references only. Dimensions are not a measured conservation survey.
  */
+import { surface } from '../../scene/surface-materials.js';
 export function createKaratsuBank(T) {
   const group = new T.Group();
   group.name = 'Former Karatsu Bank · 1912';
@@ -40,6 +41,9 @@ export function createKaratsuBank(T) {
   for(const key of ['stone','pale','shadowStone']) {M[key].map=stoneGrain;M[key].bumpMap=stoneGrain;M[key].bumpScale=.024;}
   for(const key of ['brick','brickDark','brickLight']) {M[key].map=brickGrain;M[key].bumpMap=brickGrain;M[key].bumpScale=.025;}
   for(const key of ['slate','copper','copperEdge']) {M[key].map=metalGrain;M[key].roughnessMap=metalGrain;M[key].bumpMap=metalGrain;M[key].bumpScale=.018;}
+  surface(M.brick,'brick');
+  for(const key of ['stone','pale','shadowStone'])surface(M[key],'stone',{tint:key==='shadowStone'?'#bebdb6':key==='pale'?'#ffffff':'#e9e7df'});
+  surface(M.slate,'slate');surface(M.wood,'walnut',{tint:'#c8b4a8'});
   const G = { box: new T.BoxGeometry(1, 1, 1), sphere: new T.IcosahedronGeometry(1, 1) };
   const cache = new Map();
   const mesh = (geo, material, x, y, z, sx = 1, sy = 1, sz = 1, parent = group) => {

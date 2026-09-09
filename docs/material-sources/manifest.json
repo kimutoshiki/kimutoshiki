@@ -1,0 +1,94 @@
+{
+  "created": "2026-09-09",
+  "method": "Built-in image generation; originals 1254 × 1254; atlas quadrants extracted and delivery files encoded as WebP. Original raster files are retained in the image-generation conversation; this repository stores delivery assets.",
+  "assets": [
+    {
+      "file": "walnut.webp",
+      "source": "walnut.png",
+      "quadrant": null,
+      "size": 1024,
+      "bytes": 109774
+    },
+    {
+      "file": "sandstone.webp",
+      "source": "architecture.png",
+      "quadrant": [
+        0,
+        0
+      ],
+      "size": 512,
+      "bytes": 98370
+    },
+    {
+      "file": "brick.webp",
+      "source": "architecture.png",
+      "quadrant": [
+        1,
+        0
+      ],
+      "size": 512,
+      "bytes": 86770
+    },
+    {
+      "file": "slate.webp",
+      "source": "architecture.png",
+      "quadrant": [
+        0,
+        1
+      ],
+      "size": 512,
+      "bytes": 48872
+    },
+    {
+      "file": "plaster.webp",
+      "source": "architecture.png",
+      "quadrant": [
+        1,
+        1
+      ],
+      "size": 512,
+      "bytes": 69768
+    },
+    {
+      "file": "leaf.webp",
+      "source": "organic.png",
+      "quadrant": [
+        0,
+        0
+      ],
+      "size": 512,
+      "bytes": 75732
+    },
+    {
+      "file": "ginger-fur.webp",
+      "source": "organic.png",
+      "quadrant": [
+        1,
+        0
+      ],
+      "size": 512,
+      "bytes": 78856
+    },
+    {
+      "file": "ivory-fur.webp",
+      "source": "organic.png",
+      "quadrant": [
+        0,
+        1
+      ],
+      "size": 512,
+      "bytes": 39416
+    },
+    {
+      "file": "burgundy-linen.webp",
+      "source": "organic.png",
+      "quadrant": [
+        1,
+        1
+      ],
+      "size": 512,
+      "bytes": 97482
+    }
+  ],
+  "totalDeliveryBytes": 705040
+}

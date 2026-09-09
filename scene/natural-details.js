@@ -1,7 +1,8 @@
 /**
- * Original authored foliage and sleeping-cat geometry. Textures are drawn locally,
- * shared between instances, and require no network requests or image assets.
+ * Original foliage and sleeping-cat geometry. Authored fallback maps remain
+ * visible while shared generated albedos load in the background.
  */
+import { surface } from './surface-materials.js';
 function canvasMap(THREE, w, h, paint, color = true) {
   const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
   paint(canvas.getContext('2d'), w, h);
@@ -124,6 +125,7 @@ export function createNaturalFoliage(THREE, { group, palette, cord, animated }) 
     color: '#ffffff', map: leafMap, roughness: .68, bumpMap: leafBump, bumpScale: .0015,
     side: THREE.DoubleSide, emissive: '#243114', emissiveIntensity: .035,
   });
+  surface(leafMaterial, 'leaf', { tint: '#ffffff' });
   leafMaterial.name = 'Living leaf, veins and waxy cuticle';
   const succulentMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .88, bumpMap: leafBump, bumpScale: .0007, side: THREE.DoubleSide });
   const pearlMaterial = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .57, bumpMap: leafBump, bumpScale: .00045 });
@@ -153,7 +155,7 @@ export function createNaturalFoliage(THREE, { group, palette, cord, animated }) 
   function instancedFoliage(parent, leaves, colors = [], shades = ['#41623b', '#527448', '#758354'], kind = 'pothos') {
     const inst = new THREE.InstancedMesh(geometries[kind] || geometries.pothos, materialFor(kind), leaves.length);
     inst.name = `${kind}: curved living blades`; inst.castShadow = true; inst.receiveShadow = true;
-    const leafColors = shades.map(c => new THREE.Color(c));
+    const leafColors = shades.map(c => new THREE.Color(c).lerp(new THREE.Color('#d8e3b9'), .42));
     leaves.forEach((leaf, i) => {
       temp.position.set(...leaf.pos);
       if (leaf.quaternion) temp.quaternion.copy(leaf.quaternion); else temp.rotation.set(...leaf.rot);
@@ -241,7 +243,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
   const furGrain = canvasMap(THREE, 512, 512, (ctx, w, h) => {
     ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, w, h);
     ctx.lineCap = 'round';
-    for (let i = 0; i < 27000; i++) {
+    for (let i = 0; i < 6000; i++) {
       const x = random() * w, y = random() * h, light = random() > .5;
       ctx.strokeStyle = light ? 'rgba(234,234,234,.19)' : 'rgba(31,31,31,.15)'; ctx.lineWidth = .6;
       ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 3, y + .5, x + 6 + random() * 5, y + (random() - .5) * 2.6); ctx.stroke();
@@ -264,7 +266,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
         ctx.save(); ctx.filter = 'blur(8px)'; ctx.strokeStyle = 'rgba(95,62,36,.23)';
         ctx.lineWidth = mark.width * 1.3; ctx.lineCap = 'round'; ctx.beginPath();
         for (let y = mark.start; y <= mark.end; y += 5) { const x=centerAt(mark,y); y===mark.start?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.stroke(); ctx.restore();
-        for (let j = 0; j < (kind === 'tail' ? 2350 : 1950); j++) {
+        for (let j = 0; j < (kind === 'tail' ? 600 : 500); j++) {
           const y = mark.start + random() * (mark.end-mark.start);
           const taper = Math.pow(Math.max(.01, Math.sin(Math.PI*(y-mark.start)/(mark.end-mark.start))), .42);
           const offset=(random()+random()+random()-1.5) * mark.width * taper;
@@ -276,7 +278,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
       }
       // Dense agouti-colored shafts break up the markings and make their borders
       // feather into the lighter coat even in the software renderer.
-      for (let i = 0; i < 83000; i++) {
+      for (let i = 0; i < 6000; i++) {
         const x=random()*w,y=random()*h,light=random()>.48;
         ctx.strokeStyle=light?`rgba(231,208,166,${.17+random()*.21})`:`rgba(80,55,33,${.08+random()*.12})`;
         ctx.lineWidth=.5+random()*.45;
@@ -306,7 +308,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
         ctx.strokeStyle=`rgba(93,62,36,${.10+random()*.15})`;ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(x/w-.25)*10,y+3+random()*5);ctx.stroke();
       }
     }
-    for(let i=0;i<66000;i++){
+    for(let i=0;i<12000;i++){
       const x=random()*w,y=random()*h;ctx.strokeStyle=random()>.48?`rgba(234,214,177,${.15+random()*.22})`:`rgba(79,56,33,${.08+random()*.11})`;
       ctx.lineWidth=.5+random()*.35;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+(x/w-.25)*8,y+2+random()*5);ctx.stroke();
     }
@@ -314,6 +316,9 @@ export function addSleepingCat(THREE, { chair, pets }) {
   const furMaterial = (color, map = null) => new THREE.MeshStandardMaterial({ color, map, roughness: .96, bumpMap: furGrain, bumpScale: .00065 });
   const fur = furMaterial('#ffffff', bodyMap), headFur = furMaterial('#ffffff', headMap), tailFur = furMaterial('#ffffff', tailMap);
   const creamFur = furMaterial('#c7b18b'), earFur = furMaterial('#ad875f');
+  surface(fur, 'ginger');
+  surface(tailFur, 'ginger');
+  surface(creamFur, 'ivory');
   const skin = new THREE.MeshStandardMaterial({ color: '#947664', roughness: .9 });
   const dark = new THREE.MeshStandardMaterial({ color: '#49382a', roughness: .98 });
   const clothMap = canvasMap(THREE, 256, 256, (ctx, w, h) => {
@@ -324,6 +329,7 @@ export function addSleepingCat(THREE, { chair, pets }) {
   });
   clothMap.wrapS = clothMap.wrapT = THREE.RepeatWrapping; clothMap.repeat.set(3, 3);
   const cloth = new THREE.MeshStandardMaterial({ color: '#a4a084', map: clothMap, roughness: 1, bumpMap: clothMap, bumpScale: .0012 });
+  surface(cloth, 'linen', { tint: '#e8d9cb', repeat: [2, 2] });
   const cushion = oval([.49, .082, .40], [-.035, 1.23, -.07], cloth, chair); cushion.name = 'Linen cat cushion';
   const piping = mesh(new THREE.TorusGeometry(1, .014, 6, 64), new THREE.MeshStandardMaterial({ color: '#b9b498', roughness: 1 }), chair);
   piping.rotation.x = Math.PI / 2; piping.scale.set(.455, .365, .58); piping.position.set(-.035, 1.237, -.07);

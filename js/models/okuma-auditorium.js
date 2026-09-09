@@ -1,4 +1,5 @@
 /* Original architectural model; official exterior references are listed in docs/campus-scene.md. */
+import { surface } from '../../scene/surface-materials.js';
 export function createOkumaAuditorium(T) {
  const root=new T.Group();
  root.name='Okuma auditorium and surroundings';
@@ -14,6 +15,7 @@ export function createOkumaAuditorium(T) {
  const materials={};
  const mat=(name,color)=>materials[name]??=(new T.MeshStandardMaterial({color,roughness:.9,metalness:0}));
  const stone=mat('stone',0xccb78b),wall=mat('wall',0xb59a66),trim=mat('trim',0xe3ce9d),dark=mat('dark',0x344c46),roofMat=mat('roof',0x696e59),paving=mat('paving',0xd9d5c1),edge=mat('edge',0xc3c9b1),earth=mat('earth',0x7b8b72),grass=mat('grass',0x9bad76),trunk=mat('trunk',0x6f6751),leaf=mat('leaf',0x4d7359),leafLight=mat('leafLight',0x759767),leafDark=mat('leafDark',0x375d4a),white=mat('white',0xf3eee0),wine=mat('wine',0x923b4f),metal=mat('metal',0x48635a),neighbor=mat('neighbor',0xbbc7bf),glass=mat('glass',0x64817a),soil=mat('soil',0x927e5e);
+ surface(stone,'stone',{tint:'#f1dab1'});surface(trim,'stone',{tint:'#fff0cf'});surface(wall,'stone',{tint:'#d6b482'});surface(roofMat,'slate',{tint:'#d9ded0'});
  const geometries={box:new T.BoxGeometry(1,1,1),cylinder:new T.CylinderGeometry(1,1,1,8),cone:new T.ConeGeometry(1,1,8),sphere:new T.IcosahedronGeometry(1,1),circle:new T.CylinderGeometry(1,1,1,32)};
  const batches=new Map(), dummy=new T.Object3D();
  function add(g,m,x,y,z,sx=1,sy=1,sz=1,ry=0,rz=0,rx=0){const id=owner.uuid+':'+g.uuid+':'+m.uuid;let b=batches.get(id);if(!b){b={g,m,owner,transforms:[]};batches.set(id,b);}dummy.position.set(x,y,z);dummy.rotation.set(rx,ry,rz);dummy.scale.set(sx,sy,sz);dummy.updateMatrix();b.transforms.push(dummy.matrix.clone());}

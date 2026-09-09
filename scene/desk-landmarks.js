@@ -2,11 +2,13 @@
  * Architecture is retained as authored. Only independently separable scenery is
  * removed; every retained geometry, material and instance transform is original.
  */
-import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260909-orbit';
-import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260909-orbit';
-import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260909-orbit';
-import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260909-orbit';
+import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260909-materials';
+import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260909-materials';
+import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260909-materials';
+import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260909-materials';
 import { batchStaticMeshes } from '../js/models/model-utils.js';
+
+import { surface } from './surface-materials.js';
 
 const TABLE_Y = 2.164;
 const DISPLAY_WIDTH = .85;
@@ -77,6 +79,7 @@ export async function createDeskLandmarks(T) {
   const targets = [];
   const stats = { models: [], geometryPolicy: 'Original geometry and uniform scale; independently separable context removed.' };
   const wood = new T.MeshStandardMaterial({ color: 0x76513a, roughness: .8 });
+  surface(wood, 'walnut');
   const felt = new T.MeshStandardMaterial({ color: 0x29423a, roughness: .97 });
   const brass = new T.MeshStandardMaterial({ color: 0xb79a5f, roughness: .34, metalness: .72 });
   const edgeGeometry = new T.BoxGeometry(1, 1, 1);
