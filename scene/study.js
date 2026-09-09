@@ -1,7 +1,7 @@
 import * as THREE from '../js/vendor/three.module.min.js';
 import { getRoomTime, updateRoomClock } from './room-time.js?v=20260909-clock';
 import { loadSurfaceMaterials } from './surface-materials.js';
-import { createRoom } from './room-model.js?v=20260909-clock';
+import { createRoom } from './room-model.js?v=20260909-decor';
 import { createDeskLandmarks } from './desk-landmarks.js?v=20260909-materials';
 import { createOrbitNavigation } from './orbit-navigation.js';
 import { StudyCanvasRenderer } from './study-software.js?v=20260909-clock';
@@ -143,7 +143,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     fill.intensity=time.fillIntensity;lamp.intensity=time.lampIntensity;
     renderer.toneMappingExposure=time.exposure;
     renderer.setLighting?.(time.softwareGain,time.softwareTint);
-    room.windowMaterial.emissiveIntensity=time.windowGlow;
+    room.windowMaterial.emissiveIntensity=time.windowGlow;room.decorations?.setDaylight(time.daylight);
     dapple.material.opacity=.26*time.daylight;dust.material.opacity=.15+.18*time.daylight;
     roomBackground=new THREE.Color('#77736a').lerp(new THREE.Color('#bcb392'),time.daylight).getHex();
     if(!inspectionRoot.visible)scene.background.set(roomBackground);
@@ -156,10 +156,10 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     // Cartesian lerp here would cut through models when changing direction.
     const view=updateDesired();camera.position.copy(desiredPosition);look.copy(desiredLook);camera.lookAt(look);camera.zoom=view.zoom;camera.updateProjectionMatrix();
     syncTime();dtex.offset.x=Math.sin(animTime*.13)*.015;
-    if(!software){room.pets?.forEach(p=>{p.object.scale.y=p.baseScale.y*(1+Math.sin(animTime*1.5+p.phase)*.015);});room.animated.forEach((p,i)=>{p.rotation.z=Math.sin(animTime*.65+i*1.3)*.012;p.rotation.x=Math.sin(animTime*.48+i)*.009;});dust.rotation.y=animTime*.009;dust.position.y=Math.sin(animTime*.22)*.05;}
+    if(!software){room.decorations?.update(animTime);room.pets?.forEach(p=>{p.object.scale.y=p.baseScale.y*(1+Math.sin(animTime*1.5+p.phase)*.015);});room.animated.forEach((p,i)=>{p.rotation.z=Math.sin(animTime*.65+i*1.3)*.012;p.rotation.x=Math.sin(animTime*.48+i)*.009;});dust.rotation.y=animTime*.009;dust.position.y=Math.sin(animTime*.22)*.05;}
     const state=view.subject+','+[camera.position.x,camera.position.y,camera.position.z,camera.zoom,look.x,look.y,look.z,width,height,textureRevision,timeRevision].map(n=>n.toFixed(3)).join(',');if(!software||frames<3||state!==renderState){renderer.render(scene,camera);renderState=state;}if(state!==pinState||(!paused&&frames%10===0)){positionPins();pinState=state;}frames++;
     if(frames===2)onReady();if(delta>.047)slow++;if(frames===180&&slow>75){renderer.setPixelRatio(1);renderer.shadowMap.autoUpdate=false;}
   }
   resize();syncTime();raf=requestAnimationFrame(animate);
-  return {software,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){navigation.preset(name);snapView();announceView();},setLightingMode(mode){if(!['auto','day','night'].includes(mode))return;lightingMode=mode;syncTime();},setPaused(v){paused=software||v;},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
+  return {software,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){navigation.preset(name);snapView();announceView();},setLightingMode(mode){if(!['auto','day','night'].includes(mode))return;lightingMode=mode;syncTime();},setPaused(v){paused=software||v;},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;room.decorations?.dispose();surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
 }

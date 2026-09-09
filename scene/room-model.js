@@ -1,4 +1,5 @@
 import { surface } from './surface-materials.js';
+import { addCollectedDecor } from './collected-decor.js?v=20260909-decor';
 import { completeRoom } from './room-shell.js';
 import { addRoomDetails } from './room-details.js?v=20260909-clock';
 import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-clock';
@@ -475,13 +476,14 @@ export function createRoom(THREE, assets = {}) {
   });
   rugMap.wrapS = rugMap.wrapT = THREE.RepeatWrapping; rugMap.repeat.set(6, 4);
   const rugMat = new THREE.MeshStandardMaterial({ map: rugMap, color: '#d1c09e', roughness: 1 });
-  box(6.20, .014, 3.14, rugMat, .20, -.014, 1.85, group, .015);
+  const mainRug = box(6.20, .014, 3.14, rugMat, .20, -.014, 1.85, group, .015);
 
   const envelope = completeRoom(THREE, group, palette);
   const details = addRoomDetails(THREE, {
     group, palette, desk, chair, research, stack, blog, contact, profile, lamp, pot, windowGroup, gallery,
   });
 
+  const decorations = addCollectedDecor(THREE, { group, palette, mainRug, onTextureLoad: assets.onTextureLoad });
   group.updateMatrixWorld(true);
-  return { group, targets, animated, lampLight, pets, details, envelope, clock: details.clock, windowMaterial: glassMat };
+  return { group, targets, animated, lampLight, pets, details, decorations, envelope, clock: details.clock, windowMaterial: glassMat };
 }
