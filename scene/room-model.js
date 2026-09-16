@@ -1,9 +1,10 @@
-import { surface } from './surface-materials.js?v=20260909-actions';
-import { addCollectedDecor } from './collected-decor.js?v=20260909-actions';
-import { completeRoom } from './room-shell.js?v=20260909-actions';
-import { addRoomDetails } from './room-details.js?v=20260909-actions';
-import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260909-actions';
-import { createSongbirdFactory } from './natural-props.js?v=20260909-actions';
+import { surface } from './surface-materials.js?v=20260916-room';
+import { addCollectedDecor } from './collected-decor.js?v=20260916-room';
+import { completeRoom } from './room-shell.js?v=20260916-room';
+import { addRoomDetails } from './room-details.js?v=20260916-room';
+import { addSleepingCat, createNaturalFoliage } from './natural-details.js?v=20260916-room';
+import { createSongbirdFactory } from './natural-props.js?v=20260916-room';
+import { createPhotoWall, addWorldMap } from './photo-wall.js?v=20260916-room';
 
 /** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {
@@ -16,7 +17,7 @@ export function createRoom(THREE, assets = {}) {
   const palette = {
     wood: mat('#805537', .65), lightWood: mat('#ac7546', .61), darkWood: mat('#4b3023', .67),
     brass: mat('#a68b4e', .33, .72), darkBrass: mat('#675a3a', .44, .6),
-    wall: mat('#806148', .97), cream: mat('#e5ddbd', .95), paper: mat('#ece6d2', .92),
+    wall: mat('#ded8ca', .97), cream: mat('#e5ddbd', .95), paper: mat('#ece6d2', .92),
     terra: mat('#a9603c', .94), potDark: mat('#594b32', .96), soil: mat('#302e20', 1),
     green: mat('#35512e', .84), leafLight: mat('#657642', .86), leafDark: mat('#233e26', .89),
     burgundy: mat('#6a3133', .79), ink: mat('#34382e', .88), linen: mat('#c6b38e', .95),
@@ -24,7 +25,7 @@ export function createRoom(THREE, assets = {}) {
   surface(palette.wood, 'walnut');
   surface(palette.lightWood, 'walnut', { tint: '#ffe5c3' });
   surface(palette.darkWood, 'walnut', { tint: '#9d8779' });
-  surface(palette.wall, 'plaster', { tint: '#9c785a' });
+  surface(palette.wall, 'plaster', { tint: '#ece7da', bumpScale: .012 });
   const textureLoader = new THREE.TextureLoader();
   const makeCanvas = (w, h, draw) => {
     const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
@@ -142,7 +143,7 @@ export function createRoom(THREE, assets = {}) {
   box(10.01,6.6,.2,palette.wall,1.595,3.24,-1.61);
   box(2.28,1.62,.2,palette.wall,-4.55,.75,-1.61);
   box(2.28,.78,.2,palette.wall,-4.55,6.15,-1.61);
-  box(.16, 6.6, 12, surface(mat('#806148', .98), 'plaster', { tint: '#9c785a' }), -6.55, 3.24, 3.4);
+  box(.16, 6.6, 12, palette.wall, -6.55, 3.24, 3.4);
   box(13.2, .18, .12, palette.darkWood, 0, .12, -1.44, group, .025);
   box(13.2, .075, .1, palette.lightWood, 0, .245, -1.43, group, .015);
   box(13.2, .21, .35, palette.darkWood, 0, 6.13, -1.38, group, .025);
@@ -189,44 +190,55 @@ export function createRoom(THREE, assets = {}) {
     box(.095, .34, 1.4, palette.wood, x, 1.70, -.04, desk, .017);
   }
   box(5.72, .31, .095, palette.wood, 0, 1.71, -.73, desk, .018);
-  for (const x of [-1.46, 1.46]) {
-    box(2.74, .385, .18, palette.wood, x, 1.696, .667, desk, .025);
-    box(2.46, .245, .043, palette.lightWood, x, 1.696, .772, desk, .023);
+  const drawers = [];
+  for (const [index, x] of [-1.46, 1.46].entries()) {
+    const drawer = new THREE.Group(); drawer.name = index ? 'Travel drawer' : 'Writing drawer';
+    drawer.position.set(x, 1.696, 0); drawer.userData.roomAction = { kind: 'drawer', label: index ? '旅の引き出し' : '文具の引き出し', travel: 1.20 };
+    desk.add(drawer); drawers.push(drawer);
+    // All parts, including hardware and contents, belong to this sliding tray.
+    box(2.74, .385, .18, palette.wood, 0, 0, .667, drawer, .025);
+    box(2.46, .245, .043, palette.lightWood, 0, 0, .772, drawer, .023);
+    box(2.59, .048, 1.26, palette.darkWood, 0, -.151, -.021, drawer, .01);
+    box(2.48, .060, 1.15, palette.darkWood, 0, -.024, -.021, drawer, .008);
+    box(2.45, .010, 1.12, palette.linen, 0, .008, -.021, drawer);
+    for (const side of [-1, 1]) box(.055, .255, 1.27, palette.lightWood, side * 1.28, -.025, -.021, drawer, .008);
+    box(2.60, .255, .055, palette.lightWood, 0, -.025, -.654, drawer, .008);
     for (const dx of [-.34, .34]) {
-      const mount = cyl(.045, .045, .035, palette.brass, x + dx, 1.7, .811, desk); mount.rotation.x = Math.PI / 2;
-      rod([x + dx, 1.7, .825], [x + dx, 1.64, .867], .018, palette.brass, desk);
+      const mount = cyl(.045, .045, .035, palette.brass, dx, .004, .811, drawer); mount.rotation.x = Math.PI / 2;
+      rod([dx, .004, .825], [dx, -.056, .867], .018, palette.brass, drawer);
     }
-    rod([x - .34, 1.64, .867], [x + .34, 1.64, .867], .022, palette.brass, desk);
+    rod([-.34, -.056, .867], [.34, -.056, .867], .022, palette.brass, drawer);
+    const contents = new THREE.Group(); contents.name = index ? 'Travel journal and tickets' : 'Letters and pencils';
+    contents.position.set(0, .115, -.18); drawer.add(contents);
+    if (!index) {
+      for (let page = 0; page < 5; page++) box(.94, .008, .65, palette.paper, -.42 + page * .008, -.104 + page * .009, .09, contents, .006);
+      const letter = mesh(new THREE.PlaneGeometry(.87, .60), new THREE.MeshStandardMaterial({ map: paperTexture('小さな発見'), roughness: 1 }), contents, false);
+      letter.rotation.x = -Math.PI / 2; letter.position.set(-.40, -.057, .09);
+      for (let pencil = 0; pencil < 3; pencil++) {
+        const px = .52 + pencil * .095;
+        rod([px, -.083, -.34], [px + .035, -.083, .31], .018, [palette.burgundy, palette.darkWood, palette.brass][pencil], contents);
+        rod([px + .035, -.083, .31], [px + .041, -.083, .39], .014, palette.cream, contents, .001);
+      }
+      box(.22, .070, .115, palette.paper, .95, -.076, .27, contents, .012);
+    } else {
+      const journal = new THREE.Group(); journal.position.set(-.38, -.05, .06); journal.rotation.y = -.09; contents.add(journal);
+      box(.80, .080, .99, palette.paper, 0, 0, 0, journal, .012);
+      for (const y of [-.047, .047]) box(.84, .017, 1.035, palette.burgundy, 0, y, 0, journal, .012);
+      box(.057, .110, 1.03, palette.burgundy, -.407, 0, 0, journal, .012);
+      box(.025, .006, 1.025, palette.brass, .21, .060, 0, journal);
+      const journalLabel = mesh(new THREE.PlaneGeometry(.59, .70), new THREE.MeshStandardMaterial({ map: paperTexture('旅の記録', 'plain'), roughness: 1 }), journal, false);
+      journalLabel.rotation.x = -Math.PI / 2; journalLabel.position.set(-.04, .059, 0);
+      for (let ticket = 0; ticket < 3; ticket++) {
+        const paper = box(.62, .008, .25, palette.paper, .66, -.09 + ticket * .01, -.21 + ticket * .18, contents, .006); paper.rotation.y = (ticket - 1) * .07;
+        for (let line = 0; line < 4; line++) box(.16, .002, .008, palette.ink, .49, -.082 + ticket * .01, -.28 + ticket * .18 + line * .034, contents);
+      }
+    }
   }
 
-  // Framed photographs; passed-in textures remain replaceable by the host.
-  function photoFrame(url, w, h, parent) {
-    box(w + .14, h + .14, .10, palette.darkWood, 0, 0, 0, parent, .018);
-    box(w + .077, h + .077, .018, palette.brass, 0, 0, .058, parent, .006);
-    box(w + .04, h + .04, .024, palette.cream, 0, 0, .073, parent);
-    let m = mat('#969c85', .87);
-    if (url) {
-      const map = textureLoader.load(url, () => assets.onTextureLoad?.()); map.colorSpace = THREE.SRGBColorSpace;
-      m = new THREE.MeshStandardMaterial({ map, roughness: .81 });
-    }
-    const p = mesh(new THREE.PlaneGeometry(w * .83, h * .83), m, parent, false); p.position.z = .09;
-    return p;
-  }
-  const gallery = new THREE.Group(); gallery.name = 'Three places, three photographs'; group.add(gallery);
-  const photoRatios = assets.photoRatios || [4 / 3, 16 / 9, 16 / 9];
-  const photoWidths = [1.50, 1.66, 1.49];
-  const photoPositions = [[-1.94, 3.97, -1.365], [-.05, 4.61, -1.365], [.83, 3.40, -1.365]];
-  [assets.photo1, assets.photo2, assets.photo3].forEach((url, i) => {
-    const frame = new THREE.Group(); frame.position.set(...photoPositions[i]); frame.rotation.z = [.016, -.024, .018][i]; gallery.add(frame);
-    const ratio = Number.isFinite(photoRatios[i]) && photoRatios[i] > 0 ? photoRatios[i] : 4 / 3;
-    // The image plane and inner mat share the source aspect ratio. Default plane UVs
-    // show every image edge: no texture offset, repeat adjustment or cover crop.
-    photoFrame(url, photoWidths[i], photoWidths[i] / ratio, frame);
-    const top = photoWidths[i] / ratio / 2 + .09;
-    curve([[-.21, top, 0], [0, top + .17, -.014], [.21, top, 0]], .005, palette.darkWood, frame, 12);
-    const nail = cyl(.014, .014, .025, palette.brass, 0, top + .17, .01, frame); nail.rotation.x = Math.PI / 2;
-  });
-  target('gallery', gallery, [-.72, 4.0, -1.21]);
+  // The photographic collection uses the actual source aspect ratios.
+  const photoWall = createPhotoWall(THREE, { room: group, palette, targets, onTextureLoad: assets.onTextureLoad });
+  const gallery = photoWall.group;
+  addWorldMap(THREE, group, palette);
 
   // The owner's name is a distinct small desk object, separate from the photographs.
   const profile = new THREE.Group(); profile.position.set(-2.12, 2.183, .48); profile.rotation.y = -.09; group.add(profile);
@@ -242,12 +254,6 @@ export function createRoom(THREE, assets = {}) {
   nameFace.position.set(0, .188, -.030); nameFace.rotation.x = -.16;
   for (const x of [-.34, .34]) oval(.009, .009, .004, palette.brass, x, .187, -.008, profile);
   target('profile', profile, [-2.12, 2.40, .54]);
-
-  // A small linen memo pinned beside the frames.
-  const noteMap = paperTexture('小さな発見', 'plain');
-  const memo = mesh(new THREE.PlaneGeometry(.42, .51), new THREE.MeshStandardMaterial({ map: noteMap, side: THREE.DoubleSide, roughness: .97 }));
-  memo.position.set(1.86, 3.89, -1.465); memo.rotation.z = -.10;
-  const pin = mesh(new THREE.SphereGeometry(.028, 10, 8), palette.brass); pin.position.set(1.83, 4.10, -1.43);
 
   // Books grouped for the research interaction.
   const research = new THREE.Group(); research.position.set(3.19, 3.175, -.96); group.add(research);
@@ -327,7 +333,7 @@ export function createRoom(THREE, assets = {}) {
     return s;
   }
   wallShelf(3.84, 3.11, 3.00);
-  wallShelf(-.26, 5.43, 4.48);
+  // The upper plaster stays clear for the inset navigation plaque.
 
   // Green-shaded task lamp, ceramic cup and an old pencil pot.
   const lamp = new THREE.Group(); lamp.position.set(2.82, 2.18, -.46); lamp.scale.y = 1.16; group.add(lamp);
@@ -395,11 +401,6 @@ export function createRoom(THREE, assets = {}) {
   addSleepingCat(THREE, { chair, pets });
   const { plant, instancedFoliage } = createNaturalFoliage(THREE, { group, palette, cord, animated });
   plant(-4.00, .02, 1.12, 1.30, false, true);
-  plant(-3.02, 4.80, -1.10, .71, true, false, 'heart');
-  plant(2.77, 5.05, -1.13, .68, true);
-  plant(4.08, 5.07, -1.07, .63, true, false, 'pearls');
-  plant(5.14, 4.87, -.95, .75, true, false, 'heart');
-
   // A compact rosette, an upright snake plant, and tiny flowering stems add
   // distinct silhouettes rather than repeating the same hanging plant.
   function smallPot(x, y, z, color, radius = .14) {
@@ -410,20 +411,6 @@ export function createRoom(THREE, assets = {}) {
     cyl(radius * .90, radius * .90, .012, palette.soil, 0, .228, 0, p);
     return p;
   }
-  const succulent = smallPot(-1.42, 5.483, -.99, '#b78064', .16); succulent.name = 'Blue-green rosette succulent';
-  const rosette = [];
-  for (let layer = 0; layer < 3; layer++) for (let i = 0; i < 8; i++) {
-    const a = i * Math.PI / 4 + layer * .35, radius = .12 - layer * .03;
-    rosette.push({ pos: [Math.cos(a) * radius, .27 + layer * .05, Math.sin(a) * radius], rot: [-.30 + layer * -.14, -a + Math.PI / 2, 0], scale: [.052 - layer * .008, .025, .143 - layer * .023] });
-  }
-  instancedFoliage(succulent, rosette, [], ['#6c8b7b', '#8ca28b', '#a5b69b'], 'succulent');
-  const snake = smallPot(1.60, 5.483, -1.03, '#d1c49c', .14); snake.name = 'Striped snake plant';
-  const blades = [];
-  for (let i = 0; i < 7; i++) {
-    const a = i * 2.4, h = .135 + (i % 3) * .031;
-    blades.push({pos:[Math.cos(a) * .07, .24 + h * .64, Math.sin(a) * .055], rot:[Math.cos(a) * .10, a, Math.sin(a) * .19], scale:[.042, h, .017]});
-  }
-  instancedFoliage(snake, blades, [], ['#536d4d', '#76825a', '#929364'], 'snake');
   const flowerpot = smallPot(-5.01, 1.563, -.96, '#b58260', .17); flowerpot.name = 'Window violets';
   const flowerLeaves = [], petals = [];
   for (let i = 0; i < 6; i++) {
@@ -437,20 +424,6 @@ export function createRoom(THREE, assets = {}) {
     oval(.016, .016, .015, palette.brass, x, h, z + .008, flowerpot);
   }
   instancedFoliage(flowerpot, flowerLeaves); instancedFoliage(flowerpot, petals, [], ['#a18aa1', '#c3a9bb', '#b792a6'], 'petal');
-
-  // A tiny perched songbird, a ceramic mushroom and a family of glazed pots.
-  const bird=createSongbirdFactory(THREE)(group,[-.60,5.486,-.89],.64);bird.name='Little shelf sparrow';bird.rotation.y=-.35;
-  const mushroom = new THREE.Group(); mushroom.name = 'Small ceramic mushroom'; mushroom.position.set(.29, 5.486, -.95); group.add(mushroom);
-  cyl(.047, .065, .14, palette.cream, 0, .07, 0, mushroom);
-  oval(.139, .072, .130, mat('#a65743', .70), 0, .161, 0, mushroom);
-  for (let i = 0; i < 5; i++) { const a = i * 2.4; oval(.018, .007, .016, palette.cream, Math.cos(a) * .083, .220 - (i % 2) * .014, Math.sin(a) * .077, mushroom); }
-  const jarGreen = mat('#70857b', .48), jarCream = mat('#c6b493', .48);
-  for (const [x, h, material] of [[.79,.28,jarGreen],[1.15,.19,jarCream]]) {
-    const j = new THREE.Group(); j.position.set(x,5.486,-1.04); group.add(j); j.name = 'Glazed ceramic jar';
-    oval(.115,h * .47,.105,material,0,h * .43,0,j);
-    cyl(.058,.078,h * .22,material,0,h * .88,0,j);
-    cyl(.061,.061,.012,palette.darkWood,0,h * .998,0,j);
-  }
 
   // A low side stool and secondary leafy plant balance the right-hand edge.
   const stool = new THREE.Group(); stool.position.set(4.28, 0, -.30); group.add(stool);
@@ -473,12 +446,12 @@ export function createRoom(THREE, assets = {}) {
 
   const envelope = completeRoom(THREE, group, palette);
   const details = addRoomDetails(THREE, {
-    group, palette, desk, chair, research, stack, blog, contact, profile, lamp, pot, windowGroup, gallery,
+    group, palette, desk, chair, research, stack, blog, contact, profile, lamp, pot, windowGroup, gallery, drawers,
   });
 
   const decorations = addCollectedDecor(THREE, { group, palette, mainRug, onTextureLoad: assets.onTextureLoad });
   details.clock.group.userData.roomAction={kind:'detail',label:'現在の時刻の時計'};
   flowerpot.userData.roomAction={kind:'detail',label:'窓辺の花'};
   group.updateMatrixWorld(true);
-  return { group, targets, animated, lampLight, pets, details, decorations, envelope, clock: details.clock, windowMaterial: glassMat };
+  return { group, targets, animated, lampLight, pets, details, decorations, envelope, photoWall, drawers, clock: details.clock, windowMaterial: glassMat };
 }

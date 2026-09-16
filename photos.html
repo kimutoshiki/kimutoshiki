@@ -5,27 +5,28 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>写真 | 木村紀喜のホームページ</title>
-<meta content="木村紀喜が紹介する、唐津と早稲田の写真。元の縦横比でご覧いただけます。" name="description"/>
+<meta content="木村紀喜の写真集。旅先や日々の風景を、元の縦横比のままご覧いただけます。" name="description"/>
 <meta content="#39271f" name="theme-color"/>
 <meta content="写真 | 木村紀喜のホームページ" property="og:title"/>
-<meta content="ふるさと唐津と、学びの場・早稲田の風景をご覧いただけます。" property="og:description"/>
+<meta content="旅先や日々の風景を集めた写真集です。" property="og:description"/>
 <meta content="website" property="og:type"/>
 <meta content="https://kimutoshiki.com/photos.html" property="og:url"/>
 <meta content="https://kimutoshiki.com/images/og-portfolio.jpg" property="og:image"/>
 <meta content="1200" property="og:image:width"/>
 <meta content="630" property="og:image:height"/>
 <meta content="本と鉛筆を紙細工で表したポートフォリオサイトのビジュアル" property="og:image:alt"/>
-<link href="favicon.png" rel="icon" type="image/png"/>
-<link href="apple-touch-icon.png" rel="apple-touch-icon"/>
+<link href="favicon.svg?v=20260916-room" rel="icon" type="image/svg+xml"/>
+<link href="apple-touch-icon.png?v=20260916-room" rel="apple-touch-icon"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
 <link href="css/campus.css?v=20260905-landmarks" rel="stylesheet"/>
-<link href="css/study-pages.css?v=20260909-materials" rel="stylesheet"/>
+<link href="css/study-pages.css?v=20260916-room" rel="stylesheet"/>
 <link rel="canonical" href="https://kimutoshiki.com/photos.html"/>
 <meta name="robots" content="index,follow,max-image-preview:large"/>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "木村紀喜のホームページ", "item": "https://kimutoshiki.com/"}, {"@type": "ListItem", "position": 2, "name": "写真", "item": "https://kimutoshiki.com/photos.html"}]}</script>
-<link rel="stylesheet" href="css/material-finish.css?v=20260909-materials"/>
+<link rel="stylesheet" href="css/material-finish.css?v=20260916-room"/>
+<link rel="stylesheet" href="css/photo-gallery.css?v=20260916-room"/>
 </head>
 <body class="study-detail" data-page="photos">
 <a class="skip-link" href="#main">メインコンテンツへ</a>
@@ -82,42 +83,11 @@
 </nav>
 <p class="page-kicker">木村紀喜のホームページ</p>
 <h1>写真</h1>
-<p class="page-description">ふるさと唐津と、学びの場・早稲田。</p>
+<p class="page-description">旅先と、日々の風景。</p>
 </div>
 </div>
 </section>
-<section class="full-gallery">
-<div>
-<p>ふるさと唐津と、学びの場・早稲田。</p>
-<figure class="gallery-photo">
-<a href="images/hero-waseda.webp" target="_blank" rel="noopener">
-<img src="images/hero-waseda.webp" alt="大隈講堂と大隈重信像" width="1920" height="1440" loading="lazy"/>
-</a>
-<figcaption>
-<strong>大隈講堂と大隈重信像</strong>
-<span>東京都新宿区・早稲田大学</span>
-</figcaption>
-</figure>
-<figure class="gallery-photo">
-<a href="images/hero-karatsu.webp" target="_blank" rel="noopener">
-<img src="images/hero-karatsu.webp" alt="唐津城" width="1920" height="1080" loading="lazy"/>
-</a>
-<figcaption>
-<strong>唐津城</strong>
-<span>佐賀県唐津市</span>
-</figcaption>
-</figure>
-<figure class="gallery-photo">
-<a href="images/hero-kyukeisha.webp" target="_blank" rel="noopener">
-<img src="images/hero-kyukeisha.webp" alt="ふるさとの祭り" width="1920" height="1080" loading="lazy"/>
-</a>
-<figcaption>
-<strong>ふるさとの祭り</strong>
-<span>佐賀県唐津市</span>
-</figcaption>
-</figure>
-</div>
-</section>
+<section class="full-gallery" aria-label="写真集"><div class="photo-grid" id="photo-collection"><p class="gallery-status" role="status">写真を読み込んでいます。</p></div></section>
 <div class="return-study">
 <a href="./">← ホームに戻る</a>
 </div>
@@ -169,5 +139,6 @@
 </footer>
 <script defer="" src="js/campus-ui.js?v=20260905">
 </script>
+<script type="module">import {populateGallery} from './js/photo-gallery.js?v=20260916-room';populateGallery(document.getElementById('photo-collection'));</script>
 </body>
 </html>

@@ -16,21 +16,21 @@
 <meta property="og:url" content="https://kimutoshiki.com/">
 <meta property="og:image" content="https://kimutoshiki.com/images/og-portfolio.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="favicon.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="css/study.css?v=20260909-actions">
+<link rel="icon" href="favicon.svg?v=20260916-room" type="image/svg+xml">
+<link rel="alternate icon" href="favicon.png?v=20260916-room" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260916-room">
+<link rel="stylesheet" href="css/study.css?v=20260916-room">
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://kimutoshiki.com/#website", "url": "https://kimutoshiki.com/", "name": "木村紀喜のホームページ", "alternateName": ["木村紀喜", "Toshiki Kimura"], "inLanguage": "ja", "publisher": {"@id": "https://kimutoshiki.com/#person"}}, {"@type": "Person", "@id": "https://kimutoshiki.com/#person", "name": "木村紀喜", "alternateName": ["木村 紀喜", "Toshiki Kimura"], "url": "https://kimutoshiki.com/", "description": "早稲田大学教職大学院で小学校教育、授業づくり、生成AIの教育利用を研究。佐賀県唐津市出身。", "sameAs": ["https://github.com/kimutoshiki"]}]}</script>
-<link rel="stylesheet" href="css/material-finish.css?v=20260909-actions"/>
+<link rel="stylesheet" href="css/material-finish.css?v=20260916-room"/>
+<link rel="stylesheet" href="css/photo-gallery.css?v=20260916-room">
 </head>
 <body data-page="home">
 <main class="study" id="main">
 <a href="#room-navigation" class="skip-link">コンテンツを選ぶ</a>
 <div class="room-stage">
-<canvas id="study-canvas" tabindex="0" aria-label="木村紀喜のホームページ。左右のドラッグで部屋を回転。上下の移動は小さく制限されています。ホイールや2本指で拡大・縮小。小鳥や植物、額絵などを押すと動いたり、近くから見たりできます。下のメニューからも内容を開けます。">
-</canvas>
-<div class="room-vignette" aria-hidden="true">
-</div>
-<div class="room-pins" aria-label="ホームページのコンテンツ">
+<canvas id="study-canvas" tabindex="0" aria-label="木村紀喜の書斎。机の前から少し目線を動かせます。写真や引き出しを選んで楽しめます。自由な移動は右上の設定から切り替えられます。"></canvas>
+<div class="room-vignette" aria-hidden="true"></div>
+<div class="room-pins hidden-pins" aria-label="ホームページのコンテンツ">
 <a href="profile.html" data-pin="profile" data-room-open="profile" class="room-pin" aria-label="机の名札：プロフィールを開く" tabindex="-1">
 <span class="pin-dot" aria-hidden="true">＋</span>
 <span class="pin-label">プロフィール</span>
@@ -54,46 +54,8 @@
 </div>
 </div>
 <header class="room-header">
-<div class="room-identity">
-<a href="./" class="brand" aria-label="ホーム：木村紀喜のホームページ">
-<span class="brand-mark">tk.</span>
-<span>木村 紀喜<small>小学校教育・研究・実践</small>
-</span>
-</a>
-<div class="room-time" id="room-time" hidden><span>現在の時刻</span><time id="local-time"></time></div>
-</div>
-<div class="room-actions">
-<a class="tool translation-link" href="https://translate.google.com/translate?sl=ja&amp;tl=en&amp;u=https%3A%2F%2Fkimutoshiki.com%2F" aria-label="英語に翻訳" lang="en">EN</a>
-<button class="tool lighting-toggle" id="night-toggle" aria-label="光：自動。端末の時刻に合わせています。昼の明かりに切り替える" title="端末の時刻に合わせた明かり。クリックで昼に切り替え">光：自動</button>
-<button class="tool" id="motion-toggle" aria-label="動きを止める" aria-pressed="false" title="動きを止める">
-<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M7 5v14M17 5v14"/>
-</svg>
-</button>
-<button class="tool" id="markers-toggle" aria-label="案内の表示を切り替える" aria-pressed="true" title="案内の表示">
-<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5"/>
-</svg>
-</button>
-</div>
-</header>
-<div class="loading-note" role="status" id="room-status">
-<span class="loading-orbit">
-</span>ホームページを読み込んでいます</div>
-<div class="fallback-message" hidden id="room-fallback">
-<p>3Dを表示できませんでした。下のメニューから内容をお読みいただけます。</p>
-</div>
-<div class="room-intro">
-<p>小学校教育・授業づくり・教育研究</p>
-<h1>木村紀喜のホームページ</h1>
-<p class="home-description">授業づくり・教育研究と、日々の記録。</p>
-</div>
-<footer class="room-footer">
-<div class="footnote">
-<span>気になるものを選んで、詳しく見る</span>
-<span class="desktop-hint">左右にドラッグで回転 · ホイールで拡大 · 小物を押すと動きます</span>
-<span class="touch-hint">左右にスワイプで回転 · 2本指で拡大 · 小物をタップ</span>
-</div>
+<div class="wall-plaque">
+<a href="./" class="brand" aria-label="ホーム：木村紀喜のホームページ"><span class="brand-mark" aria-hidden="true">tk.</span><span class="brand-copy"><span class="brand-eyebrow" lang="en">TOSHIKI KIMURA</span><h1>木村紀喜のホームページ</h1></span></a>
 <nav class="room-dock" id="room-navigation" aria-label="コンテンツを選ぶ">
 <a href="profile.html" data-room-open="profile" aria-label="プロフィールを開く">
 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -130,31 +92,39 @@
 <span>お問い合わせ</span>
 </a>
 </nav>
-<p id="inspection-caption" class="inspection-caption" role="status" hidden></p>
-<div class="orbit-controls" aria-label="3Dの視点">
-<label for="view-subject">見るもの</label>
-<select id="view-subject" aria-label="詳しく見るもの">
-<option value="room">部屋全体</option><option value="landmark-okuma-auditorium">大隈講堂</option><option value="landmark-okuma-statue">大隈重信像</option><option value="landmark-karatsu-castle">唐津城</option><option value="landmark-karatsu-bank">旧唐津銀行</option><option value="cat">猫</option>
-</select>
-<div class="view-presets" role="group" aria-label="見る方向">
-<button data-view="front">正面</button><button data-view="left">左</button><button data-view="right">右</button><button data-view="back">後ろ</button>
-</div></div>
-<div class="view-controls">
-<button id="zoom-in" aria-label="拡大する" title="拡大する">＋</button>
-<button id="zoom-out" aria-label="縮小する" title="縮小する">−</button>
-<button id="view-reset" aria-label="最初の視点に戻る" title="全体が見える最初の視点へ戻す">
-<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M3 4v6h6M3 10a9 9 0 1 1 0 6"/>
-</svg><span>全体へ</span>
-</button>
 </div>
-<p class="prototype-label">© 木村紀喜 <span>·</span>
-<a href="profile.html" data-room-open="profile">このサイトについて</a>
-<span id="render-mode">
-</span>
-</p>
-</footer>
+<button class="settings-trigger" id="settings-toggle" type="button" aria-label="設定を開く" aria-controls="room-settings" aria-expanded="false" title="設定">
+<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9.4 3-.5 2-1.7 1-2-.6-2.3 4 1.5 1.4v2.1L2.9 14l2.3 4 2-.6 1.7 1 .5 2h4.7l.5-2 1.8-1 1.9.6 2.3-4-1.5-1.2v-2.1l1.5-1.4-2.3-4-1.9.6-1.8-1-.5-2z"/><circle cx="11.8" cy="12" r="3.1"/></svg>
+</button>
+</header>
+<div class="loading-note" id="room-status" role="status" aria-live="polite">
+<div class="loading-monogram" aria-hidden="true">tk<span>.</span></div>
+<span class="loading-rule" aria-hidden="true"><span></span></span>
+<p id="loading-intro">木村紀喜。佐賀県唐津市出身。</p>
+<span class="loading-index" id="loading-index" aria-hidden="true">01 / 04</span>
+</div>
+<div class="fallback-message" hidden id="room-fallback"><p>上のメニューからご覧いただけます。</p></div>
+<footer class="room-footer"><p class="prototype-label">© 木村紀喜</p></footer>
 </main>
+<dialog id="room-settings" class="settings-panel" aria-labelledby="settings-title">
+<div class="settings-heading"><div><span lang="en">THE STUDY</span><h2 id="settings-title">設定</h2></div><button class="settings-close" id="settings-close" aria-label="設定を閉じる">×</button></div>
+<div class="settings-section room-actions">
+<a class="setting-row translation-link" href="https://translate.google.com/translate?sl=ja&amp;tl=en&amp;u=https%3A%2F%2Fkimutoshiki.com%2F" aria-label="英語に翻訳"><span>表示言語</span><span lang="en">English ↗</span></a>
+<button class="setting-row" id="night-toggle" aria-label="光：自動。昼の明かりに切り替える"><span>光</span><span id="lighting-label">自動</span></button>
+<button class="setting-row" id="motion-toggle" aria-label="動きを止める" aria-pressed="false"><span>小物の動き</span><span id="motion-label">再生中</span></button>
+<button class="setting-row" id="markers-toggle" aria-label="案内を表示する" aria-pressed="false"><span>案内マーク</span><span id="markers-label">非表示</span></button>
+</div>
+<div class="settings-section">
+<label class="movement-toggle" for="free-movement"><span>自由に移動する<small>通常は机の前で、目線だけ。</small></span><input id="free-movement" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"></span></label>
+<fieldset id="movement-controls" disabled>
+<legend class="visually-hidden">自由移動の操作</legend>
+<div class="orbit-controls"><label for="view-subject">見るもの</label><select id="view-subject" aria-label="詳しく見るもの"><option value="room">書斎全体</option><option value="landmark-okuma-auditorium">大隈講堂</option><option value="landmark-okuma-statue">大隈重信像</option><option value="landmark-karatsu-castle">唐津城</option><option value="landmark-karatsu-bank">旧唐津銀行</option><option value="cat">猫</option></select><div class="view-presets" role="group" aria-label="見る方向"><button data-view="front">正面</button><button data-view="left">左</button><button data-view="right">右</button><button data-view="back">後ろ</button></div></div>
+<div class="view-controls"><button id="zoom-out" aria-label="縮小する">−</button><button id="zoom-in" aria-label="拡大する">＋</button><button id="view-reset">視点を戻す <span aria-hidden="true">↺</span></button></div>
+</fieldset>
+<p id="inspection-caption" class="inspection-caption" role="status" hidden></p>
+</div>
+<div class="settings-foot"><div class="room-time" id="room-time" hidden><span>LOCAL TIME</span><time id="local-time"></time></div><span id="render-mode"></span></div>
+</dialog>
 <dialog id="reader" class="reading-sheet" aria-labelledby="reader-title" aria-describedby="reader-subtitle">
 <div class="reader-top">
 <button class="back-button" data-close-reader>
@@ -276,40 +246,7 @@
 </svg>
 </a>
 </template>
-<template id="panel-gallery">
-<p>ふるさと唐津と、学びの場・早稲田。</p>
-<figure class="gallery-photo">
-<a href="images/hero-waseda.webp" target="_blank" rel="noopener">
-<img src="images/hero-waseda.webp" alt="大隈講堂と大隈重信像" width="1920" height="1440" loading="lazy"/>
-</a>
-<figcaption>
-<strong>大隈講堂と大隈重信像</strong>
-<span>東京都新宿区・早稲田大学</span>
-</figcaption>
-</figure>
-<figure class="gallery-photo">
-<a href="images/hero-karatsu.webp" target="_blank" rel="noopener">
-<img src="images/hero-karatsu.webp" alt="唐津城" width="1920" height="1080" loading="lazy"/>
-</a>
-<figcaption>
-<strong>唐津城</strong>
-<span>佐賀県唐津市</span>
-</figcaption>
-</figure>
-<figure class="gallery-photo">
-<a href="images/hero-kyukeisha.webp" target="_blank" rel="noopener">
-<img src="images/hero-kyukeisha.webp" alt="ふるさとの祭り" width="1920" height="1080" loading="lazy"/>
-</a>
-<figcaption>
-<strong>ふるさとの祭り</strong>
-<span>佐賀県唐津市</span>
-</figcaption>
-</figure>
-<a class="reader-link" href="photos.html">写真を大きく見る <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M7 17 17 7M7 7h10v10"/>
-</svg>
-</a>
-</template>
+<template id="panel-gallery"><div class="photo-grid" data-photo-gallery></div><a class="reader-link" href="photos.html">すべての写真を見る <span aria-hidden="true">↗</span></a></template>
 <template id="panel-contact">
 <div class="letter-heading">
 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -337,7 +274,7 @@
 <p>子どもたちの「前向きに生きる力」を育てる。小学校教育・授業づくり・生成AI活用の研究と実践を紹介します。</p>
 </section>
 </noscript>
-<script src="js/study-ui.js?v=20260909-actions" defer>
+<script src="js/study-ui.js?v=20260916-room" defer>
 </script>
 </body>
 </html>

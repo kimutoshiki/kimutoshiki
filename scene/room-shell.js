@@ -1,12 +1,12 @@
 /** Complete, opaque room envelope. Camera bounds are inset from these surfaces. */
-import { surface } from './surface-materials.js?v=20260909-actions';
+import { surface } from './surface-materials.js?v=20260916-room';
 export function completeRoom(T, group, palette) {
   const shell = new T.Group(); shell.name = 'Complete room envelope';
   const cube = new T.BoxGeometry(1,1,1);
-  const plaster = new T.MeshStandardMaterial({color:'#806148',roughness:.94});
-  const ceiling = new T.MeshStandardMaterial({color:'#a88e70',roughness:.96});
-  surface(plaster, 'plaster', { tint: '#9c785a' });
-  surface(ceiling, 'plaster', { tint: '#c7af8e' });
+  const plaster = new T.MeshStandardMaterial({color:'#ded8ca',roughness:.94});
+  const ceiling = new T.MeshStandardMaterial({color:'#d0c6b5',roughness:.96});
+  surface(plaster, 'plaster', { tint: '#ece7da', bumpScale: .012 });
+  surface(ceiling, 'plaster', { tint: '#e5ded1' });
   const box = (w,h,d,x,y,z,mat=plaster) => {
     const m = new T.Mesh(cube,mat);m.scale.set(w,h,d);m.position.set(x,y,z);
     m.castShadow=m.receiveShadow=true;shell.add(m);return m;
@@ -38,7 +38,7 @@ export function completeRoom(T, group, palette) {
   box(.045,.32,.045,-2.94,1.79,9.09,palette.brass);
   // Brass-backed front-wall sconces; self-lit glass does not add shadow passes.
   const glow=new T.MeshStandardMaterial({color:'#ead5a6',emissive:'#ffe1a6',emissiveIntensity:.35,roughness:.38});
-  for(const x of [-.5,4.1]) {
+  for(const x of [-5.45,5.75]) {
     box(.24,.48,.07,x,3.35,9.22,palette.brass);
     box(.29,.41,.16,x,3.37,9.10,glow);
     for(const y of [3.14,3.60])box(.33,.035,.20,x,y,9.08,palette.darkBrass);

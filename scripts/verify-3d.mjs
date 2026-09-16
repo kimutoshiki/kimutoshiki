@@ -5,12 +5,12 @@ import assert from 'node:assert/strict';
 const repo = new URL('../', import.meta.url);
 const fromRepo = path => import(new URL(path, repo));
 const T = await fromRepo('js/vendor/three.module.min.js');
-const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260909-actions');
+const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260916-room');
 const ctx=new Proxy({}, {get(o,k){if(k==='createImageData'||k==='getImageData')return (w,h)=>({width:w,height:h,data:new Uint8ClampedArray(w*h*4)});if(k==='createLinearGradient'||k==='createRadialGradient')return()=>({addColorStop(){}});if(k==='measureText')return text=>({width:text.length*10});return o[k]??(()=>{});},set(o,k,v){o[k]=v;return true;}});
 class Canvas extends EventTarget{clientWidth=1280;clientHeight=800;width=1280;height=800;style={};getContext(k){return k==='webgl2'?null:ctx;}getBoundingClientRect(){return{left:0,top:0,width:this.clientWidth,height:this.clientHeight};}setPointerCapture(){}}
 globalThis.document=Object.assign(new EventTarget(),{hidden:false,fonts:{ready:Promise.resolve()},createElement:()=>new Canvas(),createElementNS:()=>Object.assign(new EventTarget(),{style:{},width:1600,height:900})});
 globalThis.innerWidth=1280;globalThis.innerHeight=800;globalThis.devicePixelRatio=1;globalThis.window=new EventTarget();globalThis.matchMedia=()=>({matches:false});
-T.TextureLoader.prototype.load=function(){return new T.Texture();};
+T.TextureLoader.prototype.load=function(url,onLoad){const texture=new T.Texture();queueMicrotask(()=>onLoad?.(texture));return texture;};
 // Exercise the actual unpaused animation/lerp branch without providing a fake WebGL API.
 Object.defineProperty(StudyCanvasRenderer.prototype,'software',{get(){return false;},set(){}});
 let nextFrame,scene,camera,cachedDraws,invalidations=0,ms=0,selected=[],ready=0;const originalInvalidate=StudyCanvasRenderer.prototype.invalidate;StudyCanvasRenderer.prototype.invalidate=function(){invalidations++;return originalInvalidate.call(this);};
@@ -30,7 +30,16 @@ function isWithin(o,parent){for(let p=o;p;p=p.parent)if(p===parent)return true;r
 function geometryStats(root){let primitives=0,triangles=0;const geos=new Set(),mats=new Set();root.traverse(o=>{if(o.isMesh){const n=o.isInstancedMesh?o.count:1;primitives+=n;triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3*n;geos.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])mats.add(m);}});return{primitives,triangles,geos,mats};}
 const report={checks:[],bugs:[],subjectViews:[],roomPins:[],clicks:[],geometry:[],totalCheckedFrames:0};
 const check=(condition,message,data)=>{if(!condition)report.bugs.push({message,...data});};
-frame(2);assert.equal(ready,1);const room=scene.getObjectByName('A quiet room for learning');assert.ok(room,'Original room group not found');const bounds={min:new T.Vector3(-6.22,.22,-1.19),max:new T.Vector3(6.22,6.25,9.12)};
+await new Promise(resolve=>setImmediate(resolve));frame(2);assert.equal(ready,1);
+// The default seat must survive every accidental navigation gesture.
+assert.equal(engine.getFreeMovement(),false);
+const seated=camera.position.clone(),initialZoom=camera.zoom;
+send('pointerdown');send('pointermove',{clientX:880,clientY:500});send('pointerup');frame();
+assert.ok(camera.position.distanceTo(seated)<1e-8);
+assert.equal(send('wheel',{deltaY:-100}).defaultPrevented,false);
+engine.zoom(-100);engine.inspect('cat');engine.preset('back');frame();
+assert.ok(camera.position.distanceTo(seated)<1e-8);assert.equal(camera.zoom,initialZoom);
+engine.setFreeMovement(true);frame();const room=scene.getObjectByName('A quiet room for learning');assert.ok(room,'Original room group not found');const bounds={min:new T.Vector3(-6.22,.22,-1.19),max:new T.Vector3(6.22,6.25,9.12)};
 const ids=['landmark-okuma-auditorium','landmark-okuma-statue','landmark-karatsu-castle','landmark-karatsu-bank','cat'];const originals=new Map();
 for(const id of ids){if(id==='cat'){let found;room.traverse(o=>{if(o.isGroup&&/cat/i.test(o.name)&&!found)found=o;});originals.set(id,found);}else{let found;room.traverse(o=>{if(o.isGroup&&o.userData.targetId===id&&!found)found=o;});originals.set(id,found?.children.find(child=>child.userData.inspectionSource)||found);}}
 // These named complete architecture groups are the extraction contract: a
@@ -90,7 +99,7 @@ engine.reset();frame();send('pointerdown',{pointerId:1,clientX:550,clientY:400})
 check(!send('wheel',{ctrlKey:true,deltaY:-100}).defaultPrevented,'Ctrl+wheel browser zoom blocked',{});
 engine.inspect(ids[0]);frame();engine.zoom(-100);frame();canvas.clientWidth=390;canvas.clientHeight=844;window.dispatchEvent(new Event('resize'));frame();check(near(reported.zoom,6),'Resize loses inspection relative zoom',{});const portraitMaximum=camera.zoom;engine.inspect(ids[0]);frame();check(near(portraitMaximum/camera.zoom,6),'Portrait inspection does not preserve sixfold relative zoom',{maximum:portraitMaximum,base:camera.zoom});engine.reset();frame();check(reported.subject==='room','Reset fails to exit inspection',{});finiteCamera();
 report.checks=['Complete named architecture, four opaque clock sides, room closure surfaces','Actual software prepare/cache invalidation verified across every inspection switch and room return','Five subjects × four horizontal presets with single visible clone, original geometry counts, hidden pins and complete room return','Normal animation branch confirms no preset camera enters subject, plus yaw sweeps and .65×–6× zoom','Actual room pin styles checked against real geometry rays and camera frustum','Real pointer normal-click, drag, cancellation, pinch continuation and browser zoom behavior','Portrait resize preserves inspection zoom and reset exits inspection'];
-const {createOrbitNavigation}=await fromRepo('scene/orbit-navigation.js');const nav=createOrbitNavigation(T,bounds);
+const {createOrbitNavigation}=await fromRepo('scene/orbit-navigation.js');const nav=createOrbitNavigation(T,bounds);nav.setFreeMovement(true);
 for (const corner of [[-100,-100,-100],[100,100,100],[-100,100,100],[100,-100,-100]]) {
   nav.reset();nav.pan(new T.Vector3(...corner));
   for (const [yaw,pitch] of [[0,100],[Math.PI,-100],[Math.PI/2,0],[-Math.PI/2,0]]) {
@@ -122,4 +131,5 @@ check(visible(room)&&reported.action===smallBird.id,'Object selector cannot retu
 engine.reset();frame();canvas.removeEventListener('viewchange',counted);
 report.checks.push('Actual bird tap, drag/cancel distinction, paused action, Escape return and inspector-to-object switch');
 
+engine.setFreeMovement(false);frame();assert.equal(engine.getFreeMovement(),false);assert.ok(camera.position.distanceTo(seated)<1e-8);assert.equal(reported.subject,'room');
 engine.dispose();process.exitCode=report.bugs.length?1:0;console.log(JSON.stringify({result:report.bugs.length?'ISSUES':'PASS',checks:report.checks,totalCheckedFrames:report.totalCheckedFrames,invalidations,bugs:report.bugs,geometry:report.geometry},null,2));

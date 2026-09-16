@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import * as T from '../js/vendor/three.module.min.js';
 import { getRoomTime } from '../scene/room-time.js';
-import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260909-actions';
+import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260916-room';
 import { mountStudy } from '../scene/study.js';
 
 const at=(h,m=0)=>new Date(2026,8,9,h,m), near=(a,b)=>assert.ok(Math.abs(a-b)<1e-9);
@@ -45,7 +45,7 @@ assert.equal(engine.software,true);engine.setPaused(true);
 function frame(n=1){for(let i=0;i<n;i++){ms+=300;assert.ok(nextFrame);nextFrame(ms);}}
 frame(4);
 assert.equal(announced.label,'06:59');
-const minute=scene.getObjectByName('Shelf minute hand'),hour=scene.getObjectByName('Shelf hour hand');
+const minute=scene.getObjectByName('Wall minute hand'),hour=scene.getObjectByName('Wall hour hand');
 assert.ok(minute&&hour);near(minute.rotation.z,getRoomTime(date).minuteAngle);
 const cachedHand=()=>renderer._draws.find(draw=>draw.geo.object===minute.children[0]).geo.p.slice();
 const initialHand=cachedHand(),count=draws;

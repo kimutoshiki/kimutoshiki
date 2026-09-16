@@ -2,8 +2,8 @@
  * Raster artwork stays on framed print / textile surfaces; all ornaments,
  * vessels, shelves, furniture, foliage and hanging mobiles are real geometry.
  */
-import { surface } from './surface-materials.js?v=20260909-actions';
-import { createSongbirdFactory, createPetalGeometry } from './natural-props.js?v=20260909-actions';
+import { surface } from './surface-materials.js?v=20260916-room';
+import { createSongbirdFactory, createPetalGeometry } from './natural-props.js?v=20260916-room';
 
 export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureLoad = () => {} }) {
   const group = new T.Group(); group.name = 'Collected room: art, ceramics and textiles'; room.add(group);
@@ -37,7 +37,6 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     }, undefined, () => {});
     return material;
   }
-  const prints = ['botanical-berries', 'songbird-print', 'moon-garden', 'pear-blossom'].map((name, i) => imageMaterial(name, ['#e1d4b0', '#733b3e', '#294b4b', '#e8d9b9'][i]));
   const rugBurgundy = imageMaterial('burgundy-rug', '#894c49'), rugForest = imageMaterial('forest-rug', '#547054');
   const wicker = imageMaterial('honey-wicker', '#bc8e53', .94, [2, 1]);
   const velvet = imageMaterial('forest-velvet', '#365f48', 1, [2, 2]);
@@ -87,16 +86,6 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
       for (const y of [.008,.083]) box([width+.028,.014,width*.73],[0,y,0],cover,b);
       box([.026,.095,width*.73],[-width/2, .048,0],cover,b);
     }
-    return n;
-  }
-  function framedArt(parent, pos, size, art, rotation = 0) {
-    const n = node('Framed original botanical print '+(art+1),pos,parent,rotation), frameMat = art%2 ? brass : wood;
-    interact(n,'detail',['植物の額絵','小鳥の額絵','月の庭の額絵','花の額絵'][art]);
-    box([size+.13,size+.13,.065],[0,0,0],darkWood,n);
-    box([size+.077,size+.077,.017],[0,0,.042],frameMat,n);
-    box([size+.035,size+.035,.012],[0,0,.054],cream,n);
-    const face=mesh(plane,prints[art],n,false);face.scale.set(size*.90,size*.90,1);face.position.z=.065;
-    const hanger=ring(.027,[0,size/2+.105,-.01],brass,n);hanger.scale.y*=1.35;
     return n;
   }
   function bird(parent, pos, scale = 1, material = sage) {
@@ -246,20 +235,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     return n;
   }
 
-  // A restrained generated botanical wallcovering fills the wider plaster fields.
-  // Each panel is behind the frames and cabinetry, with a real window opening.
-  const wallpaper=imageMaterial('botanical-wallpaper','#806148',.96,[1,1],'#967150');
-  const wallcoverings=node('Fine botanical wallcoverings',[0,0,0]);
-  function paperWall(pos,width,height,rotation=0){
-    const geo=new T.PlaneGeometry(width,height),uv=geo.attributes.uv;
-    for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*width/3.1,uv.getY(i)*height/3.1);
-    const panel=mesh(geo,wallpaper,wallcoverings,false);panel.position.set(...pos);panel.rotation.y=rotation;
-  }
-  paperWall([1.51,3.72,-1.492],9.74,4.56);
-  paperWall([-6.10,3.72,-1.492],.65,4.56);
-  paperWall([-6.455,3.72,3.86],10.72,4.56,Math.PI/2);
-  paperWall([6.445,3.72,3.86],10.72,4.56,-Math.PI/2);
-  paperWall([0,3.72,9.355],12.86,4.56,Math.PI);
+  // The room uses quiet plaster and an original atlas inlay.
 
   // First pass: floor collections and a visible right-hand cabinet.
   const leftBasket=basket(group,[-5.73,-.025,.43],.35,.63,true);record(leftBasket,'floor');
@@ -278,33 +254,9 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     if(i===3)bird(narrow,[0,y+.029,0],.81,ceramic);
   }
   bouquet(narrow,[0,2.82,0],.57);record(narrow,'rear');
-  const mirror=sunMirror(group,[1.72,4.52,-1.35],.40);record(mirror,'rear');
-  framedArt(group,[-.61,3.39,-1.35],.49,0);
-  framedArt(group,[5.88,4.28,-1.35],.51,1);
-  const rearGarland=node('Rear shelf trailing greenery',[-1.00,5.49,-.97],group);trailingPlant(rearGarland,[0,0,0],.36,.82);record(rearGarland,'rear');
-
-  // Second pass: both side walls become galleries and miniature display shelves.
-  const leftShelf=displayShelf(group,[-6.18,3.16,2.60],2.55,1.70,Math.PI/2);record(leftShelf,'left-wall');
-  trailingPlant(group,[-5.98,4.05,1.58],.62,1.3);
-  trailingPlant(group,[-6.00,4.05,3.52],.53,1.25);
-  const rightShelf=displayShelf(group,[6.18,3.21,2.87],3.05,1.76,-Math.PI/2);record(rightShelf,'right-wall');
-  trailingPlant(group,[5.98,4.13,1.58],.62,1.25);
-  trailingPlant(group,[5.98,4.13,4.02],.55,1.45);
-  for(const side of [-1,1]){
-    const wall=node(side<0?'Left collected art gallery':'Right collected art gallery',[side*6.35,0,6.55],group,-side*Math.PI/2);
-    framedArt(wall,[-1.33,4.95,0],.88,side<0?0:2);
-    framedArt(wall,[0,5.16,0],1.07,side<0?2:3);
-    framedArt(wall,[1.38,4.91,0],.93,side<0?3:1);
-    framedArt(wall,[-.74,3.64,0],.65,1);framedArt(wall,[.45,3.70,0],.72,0);
-    box([3.95,.08,.48],[0,2.94,.21],wood,wall);
-    vase(wall,[-1.62,2.99,.27],.72,blue,true);house(wall,[-.82,2.99,.27],.8,0);bird(wall,[.13,2.99,.27],.73,sage);vase(wall,[.86,2.99,.27],.72,rose);house(wall,[1.58,2.99,.27],.73,2);
-    record(wall,side<0?'left-wall':'right-wall');
-  }
+  // Small mobiles remain at the edges, leaving the central navigation clear.
   const leftMobile=mobile(group,[-3.95,6.36,1.55],1.10);record(leftMobile,'ceiling');
   const rightMobile=mobile(group,[4.96,6.36,2.05],.82);record(rightMobile,'ceiling');
-  const pendant=node('Hanging pleated paper light',[.15,6.40,2.20],group);
-  rod([0,0,0],[0,-.49,0],.009,cord,pendant);const lantern=paperLantern(pendant,[0,-.92,0],.65);sway(lantern,.018,.35);record(pendant,'ceiling');
-
   // Floor reading corner, still outside the cat and the initial viewing rays.
   const reading=node('Reading corner with textile layers',[-4.48,0,4.90],group,.10);
   roundRug(reading,[0,-.016,0],1.24,rugForest,.93);
@@ -333,10 +285,6 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   bouquet(console,[-1.40,1.354,.04],.88);bookStack(console,[.61,1.354,0],.7,3);
   bird(console,[-.54,1.354,.1],.86,sage);vase(console,[.12,1.354,.04],.64,blue);
   const tableLamp=paperLantern(console,[1.36,1.354+.49,0],.64);cyl(.18,.10,[1.36,1.405,0],brass,console);record(console,'front-wall');
-  const frontGallery=node('Entrance wall original art',[2.0,0,9.245],group,Math.PI);
-  framedArt(frontGallery,[-2.30,4.75,0],1.10,0);framedArt(frontGallery,[-.62,4.9,0],1.20,2);framedArt(frontGallery,[1.08,4.77,0],.91,1);
-  framedArt(frontGallery,[2.40,4.61,0],.77,3);sunMirror(frontGallery,[.05,3.32,0],.53);
-  record(frontGallery,'front-wall');
   roundRug(group,[.15,-.016,6.05],2.0,rugForest,.65);
 
   // Bake repeated static pieces, retaining small animated groups independently.

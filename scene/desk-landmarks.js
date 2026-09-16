@@ -2,10 +2,10 @@
  * Architecture is retained as authored. Only independently separable scenery is
  * removed; every retained geometry, material and instance transform is original.
  */
-import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260909-materials';
-import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260909-materials';
-import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260909-materials';
-import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260909-materials';
+import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260916-room';
+import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260916-room';
+import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260916-room';
+import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260916-room';
 import { batchStaticMeshes } from '../js/models/model-utils.js';
 
 import { surface } from './surface-materials.js';

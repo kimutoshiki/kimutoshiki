@@ -2,11 +2,11 @@
  * blocks the first frame; a failed image keeps the existing authored material.
  * See docs/generated-materials.md for provenance and exact generation prompts. */
 export const SURFACES = {
-  walnut: { file: 'walnut', tint: '#ffffff', roughness: .56, span: 1.4 },
-  stone: { file: 'sandstone', tint: '#f2f0e8', roughness: .88, span: 2 },
-  brick: { file: 'brick', tint: '#fff5ec', roughness: .86, span: 2.6 },
-  slate: { file: 'slate', tint: '#d6e1e2', roughness: .79, span: 3 },
-  plaster: { file: 'plaster', tint: '#ffffff', roughness: .95, span: 3 },
+  walnut: { file: 'walnut', tint: '#ffffff', roughness: .56, span: 1.4, bumpScale: .009 },
+  stone: { file: 'sandstone', tint: '#f2f0e8', roughness: .88, span: 2, bumpScale: .012 },
+  brick: { file: 'brick', tint: '#fff5ec', roughness: .86, span: 2.6, bumpScale: .018 },
+  slate: { file: 'slate', tint: '#d6e1e2', roughness: .79, span: 3, bumpScale: .008 },
+  plaster: { file: 'plaster', tint: '#ffffff', roughness: .95, span: 3, bumpScale: .014 },
   leaf: { file: 'leaf', tint: '#ffffff', roughness: .53 },
   ginger: { file: 'ginger-fur', tint: '#f3e4ce', roughness: .96 },
   ivory: { file: 'ivory-fur', tint: '#fff3dd', roughness: .98 },
@@ -124,9 +124,10 @@ export function loadSurfaceMaterials(T, root, { onLoad = () => {}, anisotropy = 
         material.map = texture;
         material.color.set(tag.tint || spec.tint);
         material.roughness = tag.roughness ?? spec.roughness;
-        if(tag.bumpScale){
+        const bumpScale=tag.bumpScale??spec.bumpScale;
+        if(bumpScale){
           const relief=texture.clone();relief.colorSpace=T.NoColorSpace;relief.needsUpdate=true;textures.add(relief);
-          if(material.bumpMap)retained.add(material.bumpMap);material.bumpMap=relief;material.bumpScale=tag.bumpScale;
+          if(material.bumpMap)retained.add(material.bumpMap);material.bumpMap=relief;material.bumpScale=bumpScale;
         }
         material.needsUpdate = true;
       }

@@ -1,15 +1,6 @@
-/* The same generated walnut, plaster and linen continue from 3D into the reader. */
+/* Paper, walnut and brass carry from the room into its reading pages. */
 :root{--finish-walnut:url('../images/materials/walnut.webp');--finish-plaster:url('../images/materials/plaster.webp');--finish-linen:url('../images/materials/burgundy-linen.webp')}
-.room-dock{background-image:linear-gradient(#25160eee,#382217e6),var(--finish-walnut);background-size:auto,640px;border-color:#bf9a656b;box-shadow:inset 0 1px #f6d9a82b,0 12px 38px #160b0959}
-.room-dock a{font-size:14px}.room-dock a:focus-visible,.tool:focus-visible,.view-controls button:focus-visible,.view-presets button:focus-visible{outline:2px solid #f5d49a;outline-offset:4px}
-.room-dock a:hover{background:#99516433}.room-dock a+a:before{background:#d4af733d}
-.view-controls,.orbit-controls{background-image:linear-gradient(#21150fea,#382218e8),var(--finish-walnut);background-size:auto,480px}
-.orbit-controls label{font-size:14px}.orbit-controls select,.view-presets button{font-size:14px}.view-presets button{min-height:36px}
-.room-actions .tool{box-shadow:inset 0 1px #f1e1b526,0 3px 10px #150e091a}
-.inspection-caption{background:#201915e8;box-shadow:0 5px 24px #0907043b;border-radius:3px}
-dialog.reading-sheet{background-image:linear-gradient(#faf5ecef,#f7f0e5f2),var(--finish-plaster)!important;background-size:auto,512px!important}
-.reader-photo{height:auto;aspect-ratio:auto;object-fit:contain}
-.reader-heading{padding-bottom:22px}.reader-link{transition:color .2s,background-color .2s}.reader-link:hover{background:#76283c08;color:#53142b}
+dialog.reading-sheet{background-image:linear-gradient(#faf5eced,#f7f0e5f0),var(--finish-plaster);background-size:auto,512px}
 .study-detail .site-header{background:#fbf7eff2;box-shadow:0 2px 18px #35211508}
 .study-detail .site-header nav a{font-size:14px}
 .study-detail main>section.study-page-heading{background-image:linear-gradient(110deg,#f5eee4ed,#e7ddcddc),var(--finish-plaster);background-size:auto,512px;border-bottom-color:#bea789;box-shadow:inset 0 -3px #76283c}
@@ -25,25 +16,5 @@ dialog.reading-sheet{background-image:linear-gradient(#faf5ecef,#f7f0e5f2),var(-
 .study-detail .return-study p{font-size:14px}
 .study-detail .site-footer{background-image:linear-gradient(#27141cef,#291c20f5),var(--finish-linen);background-size:auto,512px;border-top:3px solid #ad8953}
 .study-detail .footer-bottom{border-color:#ddbf8626}.study-detail .footer-brand p,.study-detail .footer-bottom{color:#ded0c2}
-@media(max-width:640px){
-  .room-dock a{font-size:13px;padding:9px 2px;min-height:48px}
-  .orbit-controls{max-width:300px}.orbit-controls select,.view-presets button{font-size:13px}.view-presets button{min-width:38px;min-height:36px}
-  .room-intro{max-width:calc(100% - 40px)}
-  .study-detail .heading-photo{padding:7px 7px 0}.study-detail .heading-photo figcaption{padding:7px 0}
-}
-@media(prefers-reduced-motion:reduce){.reader-link,.study-detail .theme-card,.study-detail .activity-card{transition:none}}
-
-/* Brighter room edges leave furniture and the cat visible at every local hour. */
-.room-vignette{background:linear-gradient(180deg,#20140b18,transparent 24%,transparent 72%,#170d0945),radial-gradient(ellipse at center,transparent 55%,#25150814)}
-.is-inspecting .room-vignette{background:radial-gradient(ellipse at 50% 42%,transparent 35%,#170d092e)}
-.room-identity{display:flex;flex-direction:column;gap:12px}
-.room-time{align-self:flex-start;display:flex;align-items:center;gap:12px;padding:7px 11px;background:#30271ee6;border:1px solid #e8ce9c59;border-radius:3px;color:#fff5e2;box-shadow:0 3px 14px #21150914}
-.room-time span{font-size:11px;letter-spacing:.05em;color:#e4d2b8}
-.room-time time{font-size:17px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:.055em}
-.room-actions .lighting-toggle{width:84px;font-size:13px;white-space:nowrap}
-@media(max-width:640px){
-  .room-identity{gap:10px}.room-time{gap:9px;padding:6px 9px}.room-time time{font-size:16px}
-  .room-actions{display:grid;grid-template-columns:repeat(3,34px);max-width:none;gap:4px}
-  .room-actions .lighting-toggle{order:1;grid-column:1/-1;width:100%;height:30px;font-size:12px}
-  .room-intro{top:126px;bottom:auto}.inspection-caption{top:150px}
-}
+@media(max-width:640px){.study-detail .heading-photo{padding:7px 7px 0}.study-detail .heading-photo figcaption{padding:7px 0}}
+@media(prefers-reduced-motion:reduce){.study-detail .theme-card,.study-detail .activity-card{transition:none}}

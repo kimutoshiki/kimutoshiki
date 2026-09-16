@@ -1,5 +1,5 @@
 /** Additive, static craftsmanship details. Shared geometry is batched by material. */
-export function addRoomDetails(THREE, { group, palette, desk, chair, research, stack, blog, contact, profile, lamp, pot, windowGroup, gallery }) {
+export function addRoomDetails(THREE, { group, palette, desk, chair, research, stack, blog, contact, profile, lamp, pot, windowGroup, gallery, drawers = [] }) {
   const layer = new THREE.Group();
   layer.name = 'Handcrafted room details';
   const geometries = {
@@ -52,7 +52,7 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
   ]) box([13.04, height, depth], [0, y, -1.375], material);
   for (let i = 0; i < 59; i++) box([.10, .078, .055], [-6.38 + i * .22, 6.216, -1.179], palette.lightWood);
   // Slim fluted pilasters divide the envelope without entering the photo area.
-  for (const x of [-6.12, 2.21, 6.04]) {
+  for (const x of [-6.12, 6.04]) {
     box([.19, 4.53, .07], [x, 3.68, -1.446], palette.wood);
     for (const dx of [-.058, 0, .058]) box([.018, 4.26, .014], [x + dx, 3.67, -1.401], palette.lightWood);
     for (const y of [1.455, 5.897]) {
@@ -78,14 +78,14 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
   for (const z of [-.800, .720]) box([5.96, .003, .008], [0, 2.167, z], palette.brass, desk);
   for (const x of [-2.98, 2.98]) box([.008, .003, 1.525], [x, 2.167, -.04], palette.brass, desk);
   for (const z of [-.863, .781]) box([6.14, .015, .012], [0, 2.090, z], palette.lightWood, desk);
-  for (const x of [-1.46, 1.46]) {
-    frame(x, 1.696, 2.34, .187, .799, palette.darkWood, .011, desk);
-    bead([.024, .032, .007], [x, 1.705, .802], palette.brass, desk);
-    bead([.006, .008, .008], [x, 1.713, .810], palette.ink, desk);
-    box([.005, .015, .005], [x, 1.701, .816], palette.ink, desk);
+  for (const drawer of drawers) {
+    frame(0, 0, 2.34, .187, .799, palette.darkWood, .011, drawer);
+    bead([.024, .032, .007], [0, .009, .802], palette.brass, drawer);
+    bead([.006, .008, .008], [0, .017, .810], palette.ink, drawer);
+    box([.005, .015, .005], [0, .005, .816], palette.ink, drawer);
     for (const dx of [-1.21, 1.21]) for (const dy of [-.11, .11]) {
-      bead([.009, .009, .003], [x + dx, 1.696 + dy, .799], palette.brass, desk);
-      box([.009, .002, .002], [x + dx, 1.696 + dy, .803], palette.darkBrass, desk);
+      bead([.009, .009, .003], [dx, dy, .799], palette.brass, drawer);
+      box([.009, .002, .002], [dx, dy, .803], palette.darkBrass, drawer);
     }
   }
   for (const x of [-2.82, 2.82]) for (const z of [-.69, .64]) {
@@ -159,37 +159,42 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
     box([.030, .091, .023], [x, 3.225, -1.080], palette.darkBrass, windowGroup);
     rod([x, 3.235, -1.056], [x + .044, 3.235, -1.056], .009, palette.brass, windowGroup);
   }
-  for (const [x, y, width] of [[3.84, 3.11, 3.00], [-.26, 5.43, 4.48]]) {
+  for (const [x, y, width] of [[3.84, 3.11, 3.00]]) {
     box([width - .08, .017, .014], [x, y + .011, -.704], palette.brass);
     for (const side of [-1, 1]) bead([.015, .015, .005], [x + side * width * .33, y - .33, -1.387], palette.brass);
   }
-  gallery.children.filter(child => child.isGroup).forEach(frameGroup => {
-    const photo = frameGroup.children.find(child => child.geometry?.type === 'PlaneGeometry');
-    if (!photo) return;
-    const { width, height } = photo.geometry.parameters;
-    frame(0, 0, width + .014, height + .014, .095, palette.darkBrass, .006, frameGroup);
-  });
-
-  // A small brass clock occupies the unused end of the upper shelf.
-  const clock = new THREE.Group(); clock.name = 'Brass shelf clock';clock.userData.roomAction={kind:'detail',label:'現在の時刻の時計'};clock.position.set(-2.13, 5.49, -1.015); group.add(clock); clock.updateMatrixWorld(true);
-  box([.44, .029, .25], [0, .015, 0], palette.darkWood, clock);
-  for (const x of [-.145, .145]) bead([.036, .045, .036], [x, .055, 0], palette.brass, clock);
-  disc(.207, .107, [0, .256, 0], palette.darkWood, clock, [Math.PI / 2, 0, 0]);
-  disc(.185, .015, [0, .256, .061], palette.brass, clock, [Math.PI / 2, 0, 0]);
-  disc(.165, .005, [0, .256, .073], palette.paper, clock, [Math.PI / 2, 0, 0]);
+  // A substantial wall clock: walnut case, brushed brass bezel and a cream dial.
+  const clock = new THREE.Group(); clock.name = 'Large brass wall clock';
+  clock.userData.roomAction = {kind:'detail',label:'掛け時計'};
+  clock.position.set(3.40, 4.83, -1.325); group.add(clock); clock.updateMatrixWorld(true);
+  const caseMesh = new THREE.Mesh(new THREE.CylinderGeometry(.835, .835, .15, 64), palette.darkWood);
+  caseMesh.rotation.x = Math.PI / 2; caseMesh.castShadow = caseMesh.receiveShadow = true; clock.add(caseMesh);
+  const bezel = new THREE.Mesh(new THREE.TorusGeometry(.778, .045, 8, 64), palette.brass);
+  bezel.position.z = .097; bezel.castShadow = bezel.receiveShadow = true; clock.add(bezel);
+  disc(.746, .022, [0, 0, .091], palette.paper, clock, [Math.PI / 2, 0, 0]);
+  const dialCanvas = document.createElement('canvas'); dialCanvas.width = dialCanvas.height = 1024;
+  const dial = dialCanvas.getContext('2d'); dial.fillStyle = '#f0eadb'; dial.fillRect(0, 0, 1024, 1024);
+  dial.textAlign = 'center'; dial.textBaseline = 'middle'; dial.fillStyle = '#41473e'; dial.font = '70px Georgia, serif';
+  for (let hour = 1; hour <= 12; hour++) {
+    const angle = hour * Math.PI / 6; dial.fillText(String(hour), 512 + Math.sin(angle) * 337, 516 - Math.cos(angle) * 337);
+  }
+  dial.fillStyle = '#9a8259'; dial.font = '19px Georgia, serif'; dial.fillText('KIMURA · TOKYO', 512, 646);
+  const dialMap = new THREE.CanvasTexture(dialCanvas); dialMap.colorSpace = THREE.SRGBColorSpace; dialMap.anisotropy = 4;
+  const dialFace = new THREE.Mesh(new THREE.CircleGeometry(.729, 64), new THREE.MeshStandardMaterial({ map: dialMap, roughness: .92 }));
+  dialFace.position.z = .107; clock.add(dialFace);
   for (let i = 0; i < 60; i++) {
     const angle = i * Math.PI / 30, major = i % 5 === 0;
-    box([major ? .008 : .003, major ? .028 : .011, .003], [Math.sin(angle) * .145, .256 + Math.cos(angle) * .145, .078], palette.darkBrass, clock, [0, 0, -angle]);
+    box([major ? .019 : .006, major ? .068 : .025, .007], [Math.sin(angle) * .661, Math.cos(angle) * .661, .116], palette.darkBrass, clock, [0, 0, -angle]);
   }
   // Hands stay outside the static batches so civil time can rotate them.
   function hand(name, length, width, z) {
-    const pivot = new THREE.Group(); pivot.name = name; pivot.position.set(0, .256, z);
-    const pointer = new THREE.Mesh(new THREE.BoxGeometry(width, length, .004), palette.ink);
+    const pivot = new THREE.Group(); pivot.name = name; pivot.position.set(0, 0, z);
+    const pointer = new THREE.Mesh(new THREE.BoxGeometry(width, length, .012), palette.ink);
     pointer.position.y = length / 2; pointer.raycast = () => {};
     pivot.add(pointer); clock.add(pivot); return pivot;
   }
-  layer.clock = { group: clock, hour: hand('Shelf hour hand', .085, .011, .084), minute: hand('Shelf minute hand', .122, .007, .089) };
-  bead([.011, .011, .006], [0, .256, .091], palette.brass, clock);
+  layer.clock = { group: clock, hour: hand('Wall hour hand', .357, .035, .141), minute: hand('Wall minute hand', .528, .021, .160) };
+  bead([.048, .048, .021], [0, 0, .175], palette.brass, clock);
 
   // Static matrices are baked once. Decorative pieces do not intercept existing
   // interaction targets, and fine trim does not add shadow-map work each frame.
