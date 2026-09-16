@@ -1,13 +1,13 @@
-import { surface } from './surface-materials.js?v=20260916-cat3';
-import { addCollectedDecor } from './collected-decor.js?v=20260916-cat3';
-import { completeRoom } from './room-shell.js?v=20260916-cat3';
-import { addRoomDetails } from './room-details.js?v=20260916-cat3';
-import { createNaturalFoliage } from './natural-details.js?v=20260916-cat3';
-import { createSongbirdFactory } from './natural-props.js?v=20260916-cat3';
-import { createPhotoWall } from './photo-wall.js?v=20260916-cat3';
-import { createRoomCat } from './cat-life.js?v=20260916-cat3';
-import { createWindowBlinds } from './window-blinds.js?v=20260916-cat3';
-import { addWorkshopDetails } from './workshop-details.js?v=20260916-cat3';
+import { surface } from './surface-materials.js?v=20260916-perf1';
+import { addCollectedDecor } from './collected-decor.js?v=20260916-perf1';
+import { completeRoom } from './room-shell.js?v=20260916-perf1';
+import { addRoomDetails } from './room-details.js?v=20260916-perf1';
+import { createNaturalFoliage } from './natural-details.js?v=20260916-perf1';
+import { createSongbirdFactory } from './natural-props.js?v=20260916-perf1';
+import { createPhotoWall } from './photo-wall.js?v=20260916-perf1';
+import { createRoomCat } from './cat-life.js?v=20260916-perf1';
+import { createWindowBlinds } from './window-blinds.js?v=20260916-perf1';
+import { addWorkshopDetails } from './workshop-details.js?v=20260916-perf1';
 
 /** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {

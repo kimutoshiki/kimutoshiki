@@ -1,5 +1,5 @@
-import { PHOTO_CATALOG } from './photo-catalog.js?v=20260916-cat3';
-import { createWallAtlas } from './wall-atlas.js?v=20260916-cat3';
+import { PHOTO_CATALOG } from './photo-catalog.js?v=20260916-perf1';
+import { createWallAtlas } from './wall-atlas.js?v=20260916-perf1';
 
 /** A balanced world collection and European collection preserve all thirty photographs. */
 export const PHOTO_WALL_COLLECTIONS = Object.freeze({
@@ -27,7 +27,7 @@ export function createPhotoWall(T, { room, palette, targets, onTextureLoad = () 
   const labelMap = new T.CanvasTexture(labelCanvas); labelMap.colorSpace = T.SRGBColorSpace; labelMap.anisotropy = 8;
   const labelMaterial = new T.MeshStandardMaterial({ map: labelMap, roughness: .96 });
   const loader = new T.TextureLoader(), frames = [], queue = [], textures = new Set();
-  let disposed = false, activeLoads = 0;
+  let disposed = false, activeLoads = 0, queuedCount = 0;
   const catalog = new Map(PHOTO_CATALOG.map(photo => [photo.id, photo]));
   const assignments = Object.entries(PHOTO_WALL_COLLECTIONS).flatMap(([wall, ids]) => ids.map((id, slot) => ({ photo: catalog.get(id), wall, slot })));
   const assignedIds = assignments.map(({ photo }) => photo?.id);
@@ -55,7 +55,7 @@ export function createPhotoWall(T, { room, palette, targets, onTextureLoad = () 
       }, undefined, () => { activeLoads--; frame.failed = true; settle(frame); if (!disposed) pump(); });
     }
   }
-  function enqueue(frame) { if (frame.queued) return; frame.queued = true; queue.push(frame); }
+  function enqueue(frame) { if (frame.queued) return; frame.queued = true; queuedCount++; queue.push(frame); }
   assignments.forEach(({ photo, wall, slot }) => {
     const frame = new T.Group(); frame.name = photo.location; group.add(frame);
     const sideWall = wall === 'europe' || wall === 'world';
@@ -87,28 +87,41 @@ export function createPhotoWall(T, { room, palette, targets, onTextureLoad = () 
     frame.userData.targetId = id; frame.traverse(o => { if (o.isMesh) o.userData.targetId = id; });
     frame.userData.photo = { id: photo.id, wall, width, height, originalWidth: photo.width, originalHeight: photo.height };
     targets.push({ id, object: frame, anchor: frame.position.clone() });
-    const record = { photo, wall, frame, image, priority: wall === 'karatsu', loaded: false, queued: false }; frames.push(record);
+    const record = { photo, wall, frame, image, priority: wall === 'karatsu', loaded: false, queued: false, center: new T.Vector3(), normal: new T.Vector3(), bounds: new T.Sphere() }; frames.push(record);
     if (record.priority) enqueue(record);
   });
   pump();
-  const frustum = new T.Frustum(), projection = new T.Matrix4(), point = new T.Vector3(), normal = new T.Vector3(), toCamera = new T.Vector3();
-  const previousCamera = new T.Matrix4(); let previousProjection = '';
+  const frustum = new T.Frustum(), projection = new T.Matrix4(), toCamera = new T.Vector3();
+  const previousCamera = new T.Matrix4(), previousProjection = new T.Matrix4(), previousWorld = new T.Matrix4();
+  let worldReady = false, viewReady = false;
+  // The frames are fixed to the room. Cache their world-space guards once,
+  // and refresh only if the containing room has moved.
+  function cacheWorldBounds() {
+    group.updateWorldMatrix(true, true);
+    previousWorld.copy(group.matrixWorld); worldReady = true;
+    for (const record of frames) {
+      record.center.setFromMatrixPosition(record.frame.matrixWorld);
+      record.normal.set(0, 0, 1).transformDirection(record.frame.matrixWorld);
+      if (!record.image.geometry.boundingSphere) record.image.geometry.computeBoundingSphere();
+      record.bounds.copy(record.image.geometry.boundingSphere).applyMatrix4(record.image.matrixWorld);
+    }
+  }
   return {
     group, frames, atlas, ready,
     get photosLoaded() { return frames.filter(frame => frame.loaded).length; },
     get frontProgress() { return (frontSettled + atlas.frontProgress) / (frontCount + 1); },
     update(camera) {
-      if (disposed) return;
-      const projectionKey = camera.projectionMatrix.elements.join(',');
-      if (previousCamera.equals(camera.matrixWorld) && previousProjection === projectionKey) return;
-      previousCamera.copy(camera.matrixWorld); previousProjection = projectionKey;
+      if (disposed || (queuedCount === frames.length && atlas.allQueued)) return;
+      const worldChanged = !worldReady || !previousWorld.equals(group.matrixWorld);
+      if (!worldChanged && viewReady && previousCamera.equals(camera.matrixWorld) && previousProjection.equals(camera.projectionMatrix)) return;
+      if (worldChanged) cacheWorldBounds();
+      previousCamera.copy(camera.matrixWorld); previousProjection.copy(camera.projectionMatrix); viewReady = true;
       frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
       atlas.update(camera, frustum);
       for (const frame of frames) {
         if (frame.queued) continue;
-        frame.frame.getWorldPosition(point); normal.set(0, 0, 1).transformDirection(frame.frame.matrixWorld);
-        toCamera.copy(camera.position).sub(point);
-        if (normal.dot(toCamera) > 0 && frustum.intersectsObject(frame.image)) enqueue(frame);
+        toCamera.copy(camera.position).sub(frame.center);
+        if (frame.normal.dot(toCamera) > 0 && frustum.intersectsSphere(frame.bounds)) enqueue(frame);
       }
       pump();
     },

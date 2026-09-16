@@ -1,4 +1,4 @@
-import { disposeCatAsset } from './cat-asset.js?v=20260916-cat3';
+import { disposeCatAsset } from './cat-asset.js?v=20260916-perf1';
 
 /** The supplied cat's actual skeleton and authored clips, on a quiet room route. */
 export function createRoomCat(T, { group: parent, floorY = .01, route, asset, loadDetail, onAssetChange } = {}) {

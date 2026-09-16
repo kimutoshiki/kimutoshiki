@@ -67,25 +67,52 @@ export function createWallNavigation(T, {room, onTextureLoad=()=>{}}={}) {
     if(disposed)return;
     title.userData.wallTitle.state='failed';title.visible=false;settle();onTextureLoad('title');
   });
-  const projected=new T.Vector3(),worldNormal=new T.Vector3(),direction=new T.Vector3();
-  const lastCamera=new T.Matrix4(),lastProjection=new T.Matrix4();
-  let lastWidth=0,lastHeight=0,lastHidden,lastSettled=-1;
+  const projected=new T.Vector3(),direction=new T.Vector3(),viewProjection=new T.Matrix4();
+  const lastCamera=new T.Matrix4(),lastProjection=new T.Matrix4(),lastWorld=new T.Matrix4();
+  let lastWidth=0,lastHeight=0,lastHidden,lastSettled=-1,lastContainer,worldReady=false;
+  // The paper never moves independently of the wall. Reuse its world outline,
+  // projection buffers and actual HTML anchors throughout camera movement.
+  const projections=targets.map(target=>({target,center:new T.Vector3(),normal:new T.Vector3(),
+    corners:target.corners.map(corner=>corner.clone()),screen:new Float64Array(target.corners.length*2),parts:new Array(target.corners.length),link:null}));
+  function cacheWorldOutline() {
+    group.updateWorldMatrix(true,true);lastWorld.copy(group.matrixWorld);worldReady=true;
+    for(const entry of projections) {
+      const matrix=entry.target.object.matrixWorld;
+      entry.center.setFromMatrixPosition(matrix);entry.normal.set(0,0,1).transformDirection(matrix);
+      entry.corners.forEach((corner,index)=>corner.copy(entry.target.corners[index]).applyMatrix4(matrix));
+    }
+  }
+  function showLink(link,visible) {
+    const visibility=visible?'visible':'hidden',tabIndex=visible?0:-1;
+    if(link.style.visibility!==visibility)link.style.visibility=visibility;
+    if(link.tabIndex!==tabIndex)link.tabIndex=tabIndex;
+  }
   function update(camera,container,width,height,{hidden=false}={}) {
     if(disposed||!container)return;
-    if(width===lastWidth&&height===lastHeight&&hidden===lastHidden&&settled===lastSettled&&lastCamera.equals(camera.matrixWorld)&&lastProjection.equals(camera.projectionMatrix))return;
+    const containerChanged=container!==lastContainer,worldChanged=!worldReady||!lastWorld.equals(group.matrixWorld);
+    if(!containerChanged&&!worldChanged&&width===lastWidth&&height===lastHeight&&hidden===lastHidden&&settled===lastSettled&&lastCamera.equals(camera.matrixWorld)&&lastProjection.equals(camera.projectionMatrix))return;
+    if(containerChanged){lastContainer=container;for(const entry of projections)entry.link=container.querySelector(`[data-wall-link="${entry.target.key}"]`);}
+    if(worldChanged)cacheWorldOutline();
     lastCamera.copy(camera.matrixWorld);lastProjection.copy(camera.projectionMatrix);lastWidth=width;lastHeight=height;lastHidden=hidden;lastSettled=settled;
-    group.updateWorldMatrix(true,true);
-    for(const target of targets) {
-      const link=container.querySelector(`[data-wall-link="${target.key}"]`);if(!link)continue;
-      target.object.getWorldPosition(projected);direction.copy(camera.position).sub(projected);worldNormal.set(0,0,1).transformDirection(target.object.matrixWorld);
-      const points=target.corners.map(corner=>{projected.copy(corner).applyMatrix4(target.object.matrixWorld).project(camera);return{x:(projected.x*.5+.5)*width,y:(-.5*projected.y+.5)*height,z:projected.z};});
-      const minX=Math.min(...points.map(p=>p.x)),maxX=Math.max(...points.map(p=>p.x)),minY=Math.min(...points.map(p=>p.y)),maxY=Math.max(...points.map(p=>p.y));
-      const off=hidden||worldNormal.dot(direction)<=0||points.every(p=>p.z< -1||p.z>1)||maxX<0||minX>width||maxY<0||minY>height;
-      link.style.visibility=off?'hidden':'visible';link.tabIndex=off?-1:0;
+    if(!hidden)viewProjection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);
+    for(const entry of projections) {
+      const {target,link,corners,screen,parts}=entry;if(!link)continue;
+      if(hidden||entry.normal.dot(direction.copy(camera.position).sub(entry.center))<=0){showLink(link,false);continue;}
+      let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,inDepth=false;
+      for(let i=0;i<corners.length;i++) {
+        projected.copy(corners[i]).applyMatrix4(viewProjection);
+        const x=(projected.x*.5+.5)*width,y=(-.5*projected.y+.5)*height;
+        screen[i*2]=x;screen[i*2+1]=y;
+        minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
+        if(projected.z>=-1&&projected.z<=1)inDepth=true;
+      }
+      const off=!inDepth||maxX<0||minX>width||maxY<0||minY>height;
+      showLink(link,!off);
       if(off)continue;
       const w=Math.max(1,maxX-minX),h=Math.max(1,maxY-minY);
       link.style.left=minX+'px';link.style.top=minY+'px';link.style.width=w+'px';link.style.height=h+'px';
-      link.style.clipPath='polygon('+points.map(p=>`${(p.x-minX)/w*100}% ${(p.y-minY)/h*100}%`).join(',')+')';
+      for(let i=0;i<corners.length;i++)parts[i]=`${(screen[i*2]-minX)/w*100}% ${(screen[i*2+1]-minY)/h*100}%`;
+      link.style.clipPath='polygon('+parts.join(',')+')';
       link.classList.toggle('texture-failed',!!target.object.userData.textureFailed);
     }
   }

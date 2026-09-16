@@ -2,7 +2,7 @@
  * Original foliage and sleeping-cat geometry. Authored fallback maps remain
  * visible while shared generated albedos load in the background.
  */
-import { surface } from './surface-materials.js?v=20260916-cat3';
+import { surface } from './surface-materials.js?v=20260916-perf1';
 function canvasMap(THREE, w, h, paint, color = true) {
   const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
   paint(canvas.getContext('2d'), w, h);

@@ -15,18 +15,10 @@
   let engine, opener, ready = false, markers = false, lightingMode = 'auto';
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let galleryModule;
-  const gallery = () => galleryModule ||= import('./photo-gallery.js?v=20260916-cat3');
-  const intros = ['木村紀喜。佐賀県唐津市出身。', '早稲田大学教職大学院で学んでいます。', '子どもたちの「前向きに生きる力」を育てたい。', '授業づくりと、教育研究に取り組んでいます。'];
-  let introIndex = 0;
-  const introTimer = setInterval(() => {
-    if (status.hidden) return;
-    introIndex = (introIndex + 1) % intros.length;
-    const line = document.getElementById('loading-intro');
-    line.textContent = intros[introIndex];
-    document.getElementById('loading-index').textContent = String(introIndex + 1).padStart(2, '0') + ' / 04';
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) line.animate([{opacity:0, transform:'translateY(5px)'},{opacity:1, transform:'translateY(0)'}], {duration:450});
-  }, 3000);
-  function finishLoading() { clearInterval(introTimer); clearTimeout(slowTimer); status.hidden = true; }
+  const gallery = () => galleryModule ||= import('./photo-gallery.js?v=20260916-perf1');
+  const loadingProgress = status.querySelector('.loading-rule > span');
+  let lastProgress = 0;
+  function finishLoading() { clearTimeout(slowTimer); status.hidden = true; }
   // A delayed renderer must never obscure the working navigation indefinitely.
   const slowTimer = setTimeout(() => { finishLoading(); document.getElementById('room-fallback').hidden = false; }, 18000);
   const panels = {
@@ -134,13 +126,16 @@
   });
   canvas.addEventListener('roomloadprogress', event => {
     const progress = Number(event.detail?.progress);
-    if (Number.isFinite(progress)) status.querySelector('.loading-rule > span').style.transform = `scaleX(${Math.max(.04, Math.min(1, progress))})`;
+    if (!status.hidden && Number.isFinite(progress) && progress !== lastProgress) {
+      lastProgress = progress;
+      loadingProgress.style.transform = `scaleX(${Math.max(.04, Math.min(1, progress))})`;
+    }
   });
   function failed(error) {
     console.error('3D scene could not render', error);
     finishLoading(); study.classList.add('is-failed'); document.getElementById('room-fallback').hidden = false;
   }
-  import('../scene/study.js?v=20260916-cat3').then(async ({mountStudy}) => {
+  import('../scene/study.js?v=20260916-perf1').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas,pins,onSelect:show,onError:failed,onReady() {
       ready = true; study.classList.add('is-ready'); finishLoading(); document.getElementById('room-fallback').hidden = true; setPinState();
     }});
@@ -154,5 +149,5 @@
     if (actionOptions.children.length) subject.append(actionOptions);
     if (engine?.software) {document.getElementById('render-mode').textContent = 'シンプル表示';motion.disabled = true;}
   }).catch(failed);
-  window.addEventListener('pagehide', event => {if(!event.persisted){engine?.dispose?.();clearInterval(introTimer);clearTimeout(slowTimer);}});
+  window.addEventListener('pagehide', event => {if(!event.persisted){engine?.dispose?.();clearTimeout(slowTimer);}});
 })();

@@ -6,7 +6,7 @@ import { loadTabbyFixture } from './helpers/load-tabby-fixture.mjs';
 const repo = new URL('../', import.meta.url);
 const fromRepo = path => import(new URL(path, repo));
 const T = await fromRepo('js/vendor/three.module.min.js');
-const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260916-cat3');
+const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260916-perf1');
 const ctx=new Proxy({}, {get(o,k){if(k==='createImageData'||k==='getImageData')return (w,h)=>({width:w,height:h,data:new Uint8ClampedArray(w*h*4)});if(k==='createLinearGradient'||k==='createRadialGradient')return()=>({addColorStop(){}});if(k==='measureText')return text=>({width:text.length*10});return o[k]??(()=>{});},set(o,k,v){o[k]=v;return true;}});
 class Canvas extends EventTarget{clientWidth=1280;clientHeight=800;width=1280;height=800;style={};getContext(k){return k==='webgl2'?null:ctx;}getBoundingClientRect(){return{left:0,top:0,width:this.clientWidth,height:this.clientHeight};}setPointerCapture(){}}
 globalThis.document=Object.assign(new EventTarget(),{hidden:false,fonts:{ready:Promise.resolve()},createElement:()=>new Canvas(),createElementNS:()=>Object.assign(new EventTarget(),{style:{},width:1600,height:900})});
@@ -14,14 +14,18 @@ globalThis.innerWidth=1280;globalThis.innerHeight=800;globalThis.devicePixelRati
 T.TextureLoader.prototype.load=function(url,onLoad){const texture=new T.Texture();queueMicrotask(()=>onLoad?.(texture));return texture;};
 // Exercise the actual unpaused animation/lerp branch without providing a fake WebGL API.
 Object.defineProperty(StudyCanvasRenderer.prototype,'software',{get(){return false;},set(){}});
-let nextFrame,scene,camera,cachedDraws,invalidations=0,ms=0,selected=[],ready=0;const originalInvalidate=StudyCanvasRenderer.prototype.invalidate;StudyCanvasRenderer.prototype.invalidate=function(){invalidations++;return originalInvalidate.call(this);};
+let nextFrame,scene,camera,cachedDraws,invalidations=0,renderCalls=0,ms=0,selected=[],ready=0;const originalInvalidate=StudyCanvasRenderer.prototype.invalidate;StudyCanvasRenderer.prototype.invalidate=function(){invalidations++;return originalInvalidate.call(this);};
 globalThis.requestAnimationFrame=fn=>(nextFrame=fn,1);globalThis.cancelAnimationFrame=()=>nextFrame=null;
-StudyCanvasRenderer.prototype.render=function(s,c){scene=s;camera=c.clone();camera.updateMatrixWorld();scene.updateMatrixWorld(true);if(!this._draws||this._scene!==s)this.prepare(s);cachedDraws=this._draws;};
+StudyCanvasRenderer.prototype.render=function(s,c){renderCalls++;scene=s;camera=c.clone();camera.updateMatrixWorld();scene.updateMatrixWorld(true);if(!this._draws||this._scene!==s)this.prepare(s);cachedDraws=this._draws;};
 const {mountStudy}=await fromRepo('scene/study.js');
 const pinIds=['profile','research','blog','gallery','contact'];const pinEls=pinIds.map(id=>({dataset:{pin:id},style:{},classList:{toggle(){}}}));
 const canvas=new Canvas();let reported={};canvas.addEventListener('viewchange',e=>reported=e.detail);
 const catAsset=await loadTabbyFixture(new URL('../models/tabby-cat-room.glb',import.meta.url));
-const engine=await mountStudy({canvas,catAsset,pins:{querySelectorAll:()=>pinEls},onSelect:id=>selected.push(id),onReady(){ready++;},onError(e){throw e;}});
+let sourceCatMixer;const nativeMixerUpdate=T.AnimationMixer.prototype.update;
+T.AnimationMixer.prototype.update=function(delta){if(this.getRoot()===catAsset.scene)sourceCatMixer=this;return nativeMixerUpdate.call(this,delta);};
+// Clock behavior has its own time tests. Hold local time fixed so minute changes
+// cannot masquerade as unnecessary redraws during the stationary-frame checks.
+const engine=await mountStudy({canvas,catAsset,now:()=>new Date('2026-09-16T12:00:00+09:00'),pins:{querySelectorAll:()=>pinEls},onSelect:id=>selected.push(id),onReady(){ready++;},onError(e){throw e;}});
 function frame(n=1){for(let i=0;i<n;i++){ms+=33;assert.ok(nextFrame);nextFrame(ms);}}
 function send(type,values={}){const e=new Event(type,{cancelable:true});Object.assign(e,{button:0,pointerId:1,clientX:640,clientY:400,deltaMode:0,deltaY:0,ctrlKey:false,metaKey:false,altKey:false,shiftKey:false,...values});canvas.dispatchEvent(e);return e;}
 const near=(a,b,tol=1e-6)=>Math.abs(a-b)<=tol;
@@ -139,5 +143,57 @@ check(visible(room)&&reported.action===smallBird.id,'Object selector cannot retu
 engine.reset();frame();canvas.removeEventListener('viewchange',counted);
 report.checks.push('Actual bird tap, drag/cancel distinction, paused action, Escape return and inspector-to-object switch');
 
+// An unpaused but isolated static model should not spend work on its hidden
+// source room. Inspect transforms and the real authored cat mixer independently
+// of the mock renderer, so stopping draws alone cannot satisfy the test.
+const roomPose=()=>{const pose=[];room.traverse(object=>pose.push(...object.position,...object.quaternion,...object.scale));return pose;};
+assert.ok(sourceCatMixer,'The supplied cat has a real animation mixer');
+engine.setPaused(false);engine.inspect('landmark-okuma-auditorium');frame(3);
+const hiddenPose=roomPose(),hiddenCatTime=sourceCatMixer.time,inspectionDraws=renderCalls;
+frame(30);
+assert.equal(renderCalls,inspectionDraws,'Thirty unchanged inspection frames perform no additional render');
+assert.equal(sourceCatMixer.time,hiddenCatTime,'Hidden room cat animation time does not advance');
+assert.deepEqual(roomPose(),hiddenPose,'Hidden room bones, plants, birds and other animated transforms stay fixed');
+engine.inspect('room');frame(10);
+assert.ok(visible(room)&&sourceCatMixer.time>hiddenCatTime,'Returning to the room resumes its cat animation');
+assert.notDeepEqual(roomPose(),hiddenPose,'Returning to the room resumes actual animated transforms');
+assert.ok(renderCalls>inspectionDraws,'Visible unpaused room motion draws again');
+engine.setPaused(true);frame(3);
+const pausedPose=roomPose(),pausedCatTime=sourceCatMixer.time,pausedDraws=renderCalls;
+frame(30);
+assert.equal(renderCalls,pausedDraws,'An unchanged paused room performs no additional render');
+assert.equal(sourceCatMixer.time,pausedCatTime,'Pause freezes the actual cat mixer');
+assert.deepEqual(roomPose(),pausedPose,'Pause freezes every animated room transform');
+const pausedZoom=camera.zoom;engine.zoom(-.7);frame();
+assert.ok(renderCalls>pausedDraws&&camera.zoom>pausedZoom,'Lens zoom still redraws while motion is paused');
+assert.equal(sourceCatMixer.time,pausedCatTime,'Paused zoom never advances the cat animation');
+report.checks.push('Thirty static unpaused inspection frames and thirty paused room frames produce zero renders; hidden transforms and cat time stop; room motion and paused zoom resume correctly');
+
+// Count the actual pick-ray setup at the public pointer-event boundary. Pins
+// use Raycaster.set, so they cannot inflate this count; no fake picker is used.
+engine.reset();frame(3);
+const nativeSetFromCamera=T.Raycaster.prototype.setFromCamera,hoverRays=[];
+T.Raycaster.prototype.setFromCamera=function(point,view){hoverRays.push({x:point.x,y:point.y});return nativeSetFromCamera.call(this,point,view);};
+const hoverPoint=knownAnchors.profile.clone().project(camera),hoverXY={clientX:(hoverPoint.x+1)*640,clientY:(1-hoverPoint.y)*400};
+for(let i=0;i<24;i++)send('pointermove',{clientX:20+i*9,clientY:30+i*4});
+send('pointermove',hoverXY);
+assert.equal(hoverRays.length,0,'Pointermove bursts defer expensive hover picking until a frame');
+frame();assert.equal(hoverRays.length,1,'A pointermove burst runs exactly one hover query');
+closeHover(hoverRays[0],hoverPoint);
+assert.equal(canvas.style.cursor,'pointer','Coalesced hover uses the final event and identifies its visible target');
+frame(5);assert.equal(hoverRays.length,1,'A stationary pointer does not repeat hover queries');
+send('pointermove',hoverXY);send('pointerleave');frame();
+assert.equal(hoverRays.length,1,'Pointerleave cancels the queued hover query');
+assert.equal(canvas.style.cursor,'grab','Leaving clears the hover cursor');
+// A click must remain immediate, even with a pending move before the next frame.
+const selectedBeforeHoverClick=selected.length;
+send('pointermove',hoverXY);send('pointerdown',hoverXY);send('pointerup',hoverXY);
+assert.equal(selected.length,selectedBeforeHoverClick+1);assert.equal(selected.at(-1),'profile','Click selection is immediate, not coalesced with hover');
+const afterImmediateClick=hoverRays.length;frame();
+assert.equal(hoverRays.length,afterImmediateClick,'An immediate click clears its obsolete queued hover');
+T.Raycaster.prototype.setFromCamera=nativeSetFromCamera;
+function closeHover(actual,expected){assert.ok(Math.abs(actual.x-expected.x)<1e-10&&Math.abs(actual.y-expected.y)<1e-10,'Hover ray uses the last pointer position');}
+report.checks.push('Twenty-five pointermoves coalesce to one real pick ray per frame; latest target, pointerleave cancellation and immediate clicks remain correct');
+
 engine.setFreeMovement(false);frame();assert.equal(engine.getFreeMovement(),false);assert.ok(camera.position.distanceTo(seated)<1e-8);assert.equal(reported.subject,'room');
-engine.dispose();process.exitCode=report.bugs.length?1:0;console.log(JSON.stringify({result:report.bugs.length?'ISSUES':'PASS',checks:report.checks,totalCheckedFrames:report.totalCheckedFrames,invalidations,bugs:report.bugs,geometry:report.geometry},null,2));
+engine.dispose();T.AnimationMixer.prototype.update=nativeMixerUpdate;process.exitCode=report.bugs.length?1:0;console.log(JSON.stringify({result:report.bugs.length?'ISSUES':'PASS',checks:report.checks,totalCheckedFrames:report.totalCheckedFrames,invalidations,renderCalls,bugs:report.bugs,geometry:report.geometry},null,2));

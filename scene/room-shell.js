@@ -1,5 +1,5 @@
 /** Complete, opaque room envelope. Camera bounds are inset from these surfaces. */
-import { surface } from './surface-materials.js?v=20260916-cat3';
+import { surface } from './surface-materials.js?v=20260916-perf1';
 export function completeRoom(T, group, palette) {
   const shell = new T.Group(); shell.name = 'Complete room envelope';
   const cube = new T.BoxGeometry(1,1,1);

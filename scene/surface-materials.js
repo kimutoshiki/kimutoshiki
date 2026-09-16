@@ -41,7 +41,7 @@ export function ensureSurfaceUV(T, geometry, span = 1) {
 // Instance matrices, colors, triangle counts and structural groups stay intact.
 export function prepareBoxSurfaceUVs(T, root) {
   const meshes = [], cache = new Map(), transform = new T.Matrix4(), scale = new T.Vector3();
-  root.traverse(o => { if (o.isMesh && o.geometry.type === 'BoxGeometry' && !Array.isArray(o.material) && SURFACES[o.material.userData.surface?.key]?.span) meshes.push(o); });
+  root.traverse(o => { if (o.isMesh && !o.geometry.userData.surfaceUVPrepared && o.geometry.type === 'BoxGeometry' && !Array.isArray(o.material) && SURFACES[o.material.userData.surface?.key]?.span) meshes.push(o); });
   function scaledGeometry(source, size, span) {
     const key = source.uuid + ':' + size.toArray().map(n => n.toFixed(4)).join(',') + ':' + span;
     if (cache.has(key)) return cache.get(key);
@@ -118,6 +118,9 @@ export function loadSurfaceMaterials(T, root, { onLoad = () => {}, anisotropy = 
       texture.anisotropy = Math.min(4, Math.max(1, anisotropy));
       texture.minFilter = T.LinearMipmapLinearFilter;
       texture.magFilter = T.LinearFilter;
+      // Color and relief need distinct color spaces, but all materials using
+      // this image/repeat can share the same relief sampler and GPU upload.
+      let relief;
       for (const material of targets) {
         const tag = material.userData.surface;
         if (material.map) retained.add(material.map);
@@ -126,7 +129,7 @@ export function loadSurfaceMaterials(T, root, { onLoad = () => {}, anisotropy = 
         material.roughness = tag.roughness ?? spec.roughness;
         const bumpScale=tag.bumpScale??spec.bumpScale;
         if(bumpScale){
-          const relief=texture.clone();relief.colorSpace=T.NoColorSpace;relief.needsUpdate=true;textures.add(relief);
+          if(!relief){relief=texture.clone();relief.colorSpace=T.NoColorSpace;relief.needsUpdate=true;textures.add(relief);}
           if(material.bumpMap)retained.add(material.bumpMap);material.bumpMap=relief;material.bumpScale=bumpScale;
         }
         material.needsUpdate = true;

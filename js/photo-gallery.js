@@ -1,5 +1,5 @@
 let catalogPromise;
-const catalog = () => catalogPromise ||= import('../scene/photo-catalog.js?v=20260916-cat3').then(module => module.PHOTO_CATALOG);
+const catalog = () => catalogPromise ||= import('../scene/photo-catalog.js?v=20260916-perf1').then(module => module.PHOTO_CATALOG);
 let viewer, activePhoto, allPhotos, previousFocus;
 function makeViewer() {
   if (viewer) return viewer;

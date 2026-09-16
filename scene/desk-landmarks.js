@@ -2,13 +2,14 @@
  * Architecture is retained as authored. Only independently separable scenery is
  * removed; every retained geometry, material and instance transform is original.
  */
-import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260916-cat3';
-import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260916-cat3';
-import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260916-cat3';
-import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260916-cat3';
+import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260916-perf1';
+import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260916-perf1';
+import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260916-perf1';
+import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260916-perf1';
 import { batchStaticMeshes } from '../js/models/model-utils.js';
 
-import { surface } from './surface-materials.js';
+import { surface, prepareBoxSurfaceUVs, ensureSurfaceUV, SURFACES } from './surface-materials.js';
+import { mergeStaticDraws, cacheStaticLocalMatrices, staticDrawStats } from './static-batching.js';
 
 const TABLE_Y = 2.164;
 const DISPLAY_WIDTH = .85;
@@ -72,7 +73,7 @@ function nameplate(T, title, subtitle) {
 }
 
 /** Return a standalone tabletop group and the room's standard target records. */
-export async function createDeskLandmarks(T) {
+export async function createDeskLandmarks(T, { optimize = true } = {}) {
   if (typeof document !== 'undefined' && document.fonts?.ready) await document.fonts.ready;
   const group = new T.Group();
   group.name = 'Original Waseda and Karatsu desk miniatures';
@@ -145,6 +146,32 @@ export async function createDeskLandmarks(T) {
     });
   }
   group.updateMatrixWorld(true);
+  // Project the original box/custom UVs before combining different sizes. The
+  // room-wide material loader respects this flag and cannot rescale them twice.
+  prepareBoxSurfaceUVs(T, group);
+  group.traverse(object => {
+    if (!object.isMesh) return;
+    for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
+      const spec = SURFACES[material.userData.surface?.key];
+      if (spec) ensureSurfaceUV(T, object.geometry, spec.span);
+    }
+    object.geometry.userData.surfaceUVPrepared = true;
+  });
+  stats.performance = { before: staticDrawStats(group), models: [] };
+  if (optimize) {
+    for (const display of group.children) {
+      const mount = display.children.find(child => child.userData.inspectionSource);
+      const architecture = mount.children[0].children[0];
+      const clocks = new Set();
+      architecture.traverse(object => { if (/^Clock face [1-4]$/.test(object.name)) clocks.add(object); });
+      stats.performance.models.push({ assetId: display.userData.landmarkId,
+        architecture: mergeStaticDraws(T, architecture, { byParent: false, preserveGroups: clocks }),
+        display: mergeStaticDraws(T, display, { skipRoots: new Set([mount]) }),
+      });
+    }
+    cacheStaticLocalMatrices(group);
+  }
+  stats.performance.after = staticDrawStats(group);
   stats.total = countGeometry(group);
   group.userData.landmarkStats = stats;
   return { group, targets, stats };

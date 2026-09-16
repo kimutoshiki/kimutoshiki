@@ -2,8 +2,8 @@
  * Raster artwork stays on framed print / textile surfaces; all ornaments,
  * vessels, shelves, furniture, foliage and hanging mobiles are real geometry.
  */
-import { surface } from './surface-materials.js?v=20260916-cat3';
-import { createSongbirdFactory, createPetalGeometry } from './natural-props.js?v=20260916-cat3';
+import { surface } from './surface-materials.js?v=20260916-perf1';
+import { createSongbirdFactory, createPetalGeometry } from './natural-props.js?v=20260916-perf1';
 
 export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureLoad = () => {} }) {
   const group = new T.Group(); group.name = 'Collected room: art, ceramics and textiles'; room.add(group);
