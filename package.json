@@ -4,6 +4,6 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/preview.mjs",
-    "test": "node scripts/verify-3d.mjs && node scripts/verify-surfaces.mjs && node scripts/verify-room-time.mjs && node scripts/verify-decor.mjs && node scripts/verify-room-actions.mjs && node scripts/verify-room-life.mjs && node scripts/verify-photo-atlas.mjs && node scripts/verify-wall-navigation.mjs"
+    "test": "node scripts/verify-3d.mjs && node scripts/verify-surfaces.mjs && node scripts/verify-room-time.mjs && node scripts/verify-decor.mjs && node scripts/verify-room-actions.mjs && node scripts/verify-room-life.mjs && node scripts/verify-cat-picking.mjs && node scripts/verify-photo-atlas.mjs && node scripts/verify-wall-navigation.mjs"
   }
 }

@@ -15,7 +15,7 @@
   let engine, opener, ready = false, markers = false, lightingMode = 'auto';
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let galleryModule;
-  const gallery = () => galleryModule ||= import('./photo-gallery.js?v=20260916-atlas2');
+  const gallery = () => galleryModule ||= import('./photo-gallery.js?v=20260916-cat3');
   const intros = ['木村紀喜。佐賀県唐津市出身。', '早稲田大学教職大学院で学んでいます。', '子どもたちの「前向きに生きる力」を育てたい。', '授業づくりと、教育研究に取り組んでいます。'];
   let introIndex = 0;
   const introTimer = setInterval(() => {
@@ -140,7 +140,7 @@
     console.error('3D scene could not render', error);
     finishLoading(); study.classList.add('is-failed'); document.getElementById('room-fallback').hidden = false;
   }
-  import('../scene/study.js?v=20260916-atlas2').then(async ({mountStudy}) => {
+  import('../scene/study.js?v=20260916-cat3').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas,pins,onSelect:show,onError:failed,onReady() {
       ready = true; study.classList.add('is-ready'); finishLoading(); document.getElementById('room-fallback').hidden = true; setPinState();
     }});

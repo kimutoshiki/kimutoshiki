@@ -21,10 +21,12 @@ const wall = createPhotoWall(T, { room, palette, targets, onTextureLoad: id => n
 room.updateMatrixWorld(true);
 assert.equal(wall.frames.length, 30); assert.equal(PHOTO_CATALOG.length, 30);
 assert.equal(new Set(wall.frames.map(frame => frame.photo.id)).size, 30);
-assert.deepEqual(Object.fromEntries(Object.entries(PHOTO_WALL_COLLECTIONS).map(([key, ids]) => [key, ids.length])), { karatsu: 4, world: 4, japan: 4, europe: 18 });
+assert.deepEqual(Object.fromEntries(Object.entries(PHOTO_WALL_COLLECTIONS).map(([key, ids]) => [key, ids.length])), { karatsu: 4, world: 11, japan: 4, europe: 11 });
 const frameBounds = [];
 for (const { photo, frame, image, wall: region } of wall.frames) {
   assert.ok(PHOTO_WALL_COLLECTIONS[region].includes(photo.id));
+  assert.ok(photo.location && photo.location.split('・').every(part=>photo.originalName.includes(part)), 'Location is supported by the supplied filename');
+  assert.equal(photo.title, photo.location); assert.equal(photo.subtitle, '', 'Only the place is displayed');
   assert.equal(image.userData.targetId, 'photo-' + photo.id);
   assert.ok(targets.some(target => target.id === image.userData.targetId));
   assert.ok(Math.abs(image.scale.x / image.scale.y - photo.width / photo.height) < 1e-9, 'Photo ratio: ' + photo.id);
@@ -32,6 +34,7 @@ for (const { photo, frame, image, wall: region } of wall.frames) {
   const bounds = new T.Box3().setFromObject(frame); frameBounds.push({ bounds, id: photo.id });
   assert.ok(bounds.min.x > -6.48 && bounds.max.x < 6.48 && bounds.min.z > -1.50 && bounds.max.z < 9.35);
   if (region === 'karatsu') assert.ok(bounds.max.y < 4.14, 'Keep sticker navigation clear');
+  if (region === 'world' || region === 'europe') assert.ok(bounds.max.y < 3.50 || bounds.min.y > 4.60, 'Keep the middle of the map visible');
 }
 for (let i = 0; i < frameBounds.length; i++) for (let j = i + 1; j < frameBounds.length; j++) assert.ok(!frameBounds[i].bounds.intersectsBox(frameBounds[j].bounds), 'Frame overlap: ' + frameBounds[i].id + '/' + frameBounds[j].id);
 const expectedNormals = { karatsu: [0, 0, 1], world: [-1, 0, 0], japan: [0, 0, -1], europe: [1, 0, 0] };
@@ -69,4 +72,4 @@ wall.dispose();
 const lastCount = notifications.length, late = new T.Texture(); let releases = 0;
 late.addEventListener('dispose', () => releases++); requests[0].onLoad(late);
 assert.equal(notifications.length, lastCount); assert.equal(releases, 1);
-console.log(JSON.stringify({ result: 'PASS', photos: 30, walls: { front: 'karatsu', right: 'world', back: 'japan', left: 'europe' }, initialPhotos: 4, maxConcurrentPhotos: maxActivePhotos, maxConcurrentMaps: maxActiveMaps, checks: ['Geographic groups retain every original photograph exactly once', 'Small uncropped frames have no intersections and clear sticker navigation', 'All supplied maps preserve full UVs and source aspect ratio', 'Map orientation and shadow-receiving paper material', 'Visibility loads new walls, no duplicate requests, render callbacks and safe disposal'] }, null, 2));
+console.log(JSON.stringify({ result: 'PASS', photos: 30, walls: { front: 'karatsu: 4', right: 'world: 11', back: 'japan: 4', left: 'europe: 11' }, initialPhotos: 4, maxConcurrentPhotos: maxActivePhotos, maxConcurrentMaps: maxActiveMaps, checks: ['Balanced world and Europe walls retain every original photograph exactly once', 'All labels contain only places supported by original filenames', 'Small uncropped frames have no intersections and clear sticker navigation', 'Side photos leave the middle of each map visible', 'All supplied maps preserve full UVs and source aspect ratio', 'Map orientation and shadow-receiving paper material', 'Visibility loads new walls, no duplicate requests, render callbacks and safe disposal'] }, null, 2));

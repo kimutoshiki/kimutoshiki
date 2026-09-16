@@ -2,7 +2,7 @@
    Instanced geometry, a single cached shadow, bounded DPR, and a 30fps ceiling.
    The model is an interpretation, not a surveyed campus map. */
 import * as T from './vendor/three.module.min.js';
-import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260916-atlas2';
+import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260916-cat3';
 import { loadSurfaceMaterials } from '../scene/surface-materials.js';
 import { batchStaticMeshes } from './models/model-utils.js';
 const canvas=document.querySelector('#campus-canvas');

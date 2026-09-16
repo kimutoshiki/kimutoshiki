@@ -24,11 +24,13 @@ room.group.traverse(o=>assert.ok(!/Framed original botanical print|Fine botanica
 assert.ok(!requests.some(r=>/botanical-wallpaper|botanical-berries|songbird-print|moon-garden|pear-blossom/.test(r.url)),'Retired art is never requested');
 
 const photos=room.photoWall.frames;
+assert.deepEqual(Object.fromEntries(['karatsu','world','japan','europe'].map(wall=>[wall,photos.filter(photo=>photo.wall===wall).length])),{karatsu:4,world:11,japan:4,europe:11},'World and Europe have balanced collections');
 assert.equal(PHOTO_CATALOG.length,30,'Every supplied photograph, including the raw photograph, is catalogued');
 assert.equal(photos.length,PHOTO_CATALOG.length);
 assert.equal(new Set(photos.map(p=>p.photo.id)).size,PHOTO_CATALOG.length);
 const frameBounds=[];
 for(const {photo,frame,image} of photos){
+  assert.equal(photo.title,photo.location);assert.equal(photo.subtitle,'','Captions display the place alone');
   assert.ok(Math.abs(image.scale.x/image.scale.y-photo.width/photo.height)<1e-9,'Source aspect ratio must be preserved: '+photo.id);
   assert.equal(image.userData.targetId,'photo-'+photo.id);
   assert.ok(room.targets.some(target=>target.id===image.userData.targetId&&target.object===frame));
@@ -77,4 +79,4 @@ assert.ok(bytes<700000,'Remaining decor transfer stays modest');
 const beforeDispose=refreshed;dispose();room.photoWall.dispose();
 const late=new T.Texture();let released=0;late.addEventListener('dispose',()=>released++);decorRequests[0].onLoad(late);
 assert.equal(refreshed,beforeDispose);assert.equal(released,1,'Late texture responses are released after leaving the page');
-console.log(JSON.stringify({result:'PASS',photos:photos.length,initialPhotoRequests:4,triangles:stats.triangles,drawCalls:stats.drawCalls,decorImageBytes:bytes,checks:['Thirty real uncropped photographs and individually selectable titled frames','No frame intersections, all inside room; four hometown photos have clear seated sightlines','Front photographs first, two concurrent loads, other walls only as revealed','Four supplied atlas wallpapers, no filler frames or central pendant','Batched ornaments, paused motion, limited textile downloads and late-response disposal']},null,2));
+console.log(JSON.stringify({result:'PASS',photos:photos.length,initialPhotoRequests:4,triangles:stats.triangles,drawCalls:stats.drawCalls,decorImageBytes:bytes,checks:['Thirty real uncropped photographs with place-only labels','Balanced 11-photo world and Europe walls','No frame intersections, all inside room; four hometown photos have clear seated sightlines','Front photographs first, two concurrent loads, other walls only as revealed','Four supplied atlas wallpapers, no filler frames or central pendant','Batched ornaments, paused motion, limited textile downloads and late-response disposal']},null,2));

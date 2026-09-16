@@ -1,4 +1,4 @@
-import { surface } from './surface-materials.js?v=20260916-atlas2';
+import { surface } from './surface-materials.js?v=20260916-cat3';
 
 /** Joinery and surface wear inspired by the supplied working-room references. */
 export function addWorkshopDetails(T, { group, palette }) {

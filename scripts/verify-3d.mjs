@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
+import { loadTabbyFixture } from './helpers/load-tabby-fixture.mjs';
 // Run from any working directory with: node scripts/verify-3d.mjs
 // Uses the real scene, geometry, raycasts, controls and CPU geometry cache.
 // Only DOM/canvas painting and final pixel rasterization are replaced.
 const repo = new URL('../', import.meta.url);
 const fromRepo = path => import(new URL(path, repo));
 const T = await fromRepo('js/vendor/three.module.min.js');
-const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260916-atlas2');
+const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260916-cat3');
 const ctx=new Proxy({}, {get(o,k){if(k==='createImageData'||k==='getImageData')return (w,h)=>({width:w,height:h,data:new Uint8ClampedArray(w*h*4)});if(k==='createLinearGradient'||k==='createRadialGradient')return()=>({addColorStop(){}});if(k==='measureText')return text=>({width:text.length*10});return o[k]??(()=>{});},set(o,k,v){o[k]=v;return true;}});
 class Canvas extends EventTarget{clientWidth=1280;clientHeight=800;width=1280;height=800;style={};getContext(k){return k==='webgl2'?null:ctx;}getBoundingClientRect(){return{left:0,top:0,width:this.clientWidth,height:this.clientHeight};}setPointerCapture(){}}
 globalThis.document=Object.assign(new EventTarget(),{hidden:false,fonts:{ready:Promise.resolve()},createElement:()=>new Canvas(),createElementNS:()=>Object.assign(new EventTarget(),{style:{},width:1600,height:900})});
@@ -19,7 +20,8 @@ StudyCanvasRenderer.prototype.render=function(s,c){scene=s;camera=c.clone();came
 const {mountStudy}=await fromRepo('scene/study.js');
 const pinIds=['profile','research','blog','gallery','contact'];const pinEls=pinIds.map(id=>({dataset:{pin:id},style:{},classList:{toggle(){}}}));
 const canvas=new Canvas();let reported={};canvas.addEventListener('viewchange',e=>reported=e.detail);
-const engine=await mountStudy({canvas,pins:{querySelectorAll:()=>pinEls},onSelect:id=>selected.push(id),onReady(){ready++;},onError(e){throw e;}});
+const catAsset=await loadTabbyFixture(new URL('../models/tabby-cat-room.glb',import.meta.url));
+const engine=await mountStudy({canvas,catAsset,pins:{querySelectorAll:()=>pinEls},onSelect:id=>selected.push(id),onReady(){ready++;},onError(e){throw e;}});
 function frame(n=1){for(let i=0;i<n;i++){ms+=33;assert.ok(nextFrame);nextFrame(ms);}}
 function send(type,values={}){const e=new Event(type,{cancelable:true});Object.assign(e,{button:0,pointerId:1,clientX:640,clientY:400,deltaMode:0,deltaY:0,ctrlKey:false,metaKey:false,altKey:false,shiftKey:false,...values});canvas.dispatchEvent(e);return e;}
 const near=(a,b,tol=1e-6)=>Math.abs(a-b)<=tol;

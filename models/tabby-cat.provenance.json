@@ -1,0 +1,634 @@
+{
+  "source": {
+    "filename": "Tabby_Cat_Animated_v2.blend",
+    "bytes": 47446251,
+    "sha256": "690b38b88838e0bc150a8e2d0bfefc93c898d2a58cca3e0b79a17ea87a4b3c9e",
+    "providedBy": "Website owner",
+    "sourceModified": false,
+    "sourceRights": "User-provided asset; no new third-party license or authorship claim is introduced by this conversion."
+  },
+  "conversion": {
+    "blender": "5.2.1 LTS",
+    "sourceUnitMeters": 1,
+    "sourceUp": "+Z",
+    "sourceForward": "-Y",
+    "gltfUp": "+Y",
+    "gltfForward": "+Z",
+    "sourceRigBones": 37,
+    "skinInfluences": 4,
+    "frameRate": 30,
+    "geometryCompression": "KHR_draco_mesh_compression",
+    "positionBits": 18,
+    "normalBits": 12,
+    "uvBits": 14,
+    "colorBits": 12,
+    "weightBits": 16,
+    "referencePhotosExcluded": true,
+    "studioGeometryExcluded": true
+  },
+  "assets": {
+    "room": {
+      "file": "tabby-cat-room.glb",
+      "bytes": 3340500,
+      "sha256": "ebe9b7e9f7d9301532c4226f7dcc3719eae14821605220b704e43a265c579d8f",
+      "meshCount": 15,
+      "primitiveCount": 16,
+      "triangles": 213534,
+      "idleBoundsMeters": {
+        "min": [
+          -0.1327759325504303,
+          0.0014130587223917246,
+          -0.4552001357078552
+        ],
+        "max": [
+          0.1363808512687683,
+          0.48689618706703186,
+          0.38196781277656555
+        ],
+        "dimensions": [
+          0.2691567838191986,
+          0.4854831397533417,
+          0.8371679782867432
+        ]
+      },
+      "meshes": [
+        {
+          "object": "Cat • continuous anatomical surface",
+          "triangles": 99338,
+          "materials": [
+            {
+              "name": "Tabby • original coat baked for room distance",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Muzzle | lip seam -1",
+          "triangles": 192,
+          "materials": [
+            {
+              "name": "Dark",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Brow whisker -1 | 0",
+          "triangles": 3008,
+          "materials": [
+            {
+              "name": "Whisker",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Ear L | guard hair 00",
+          "triangles": 8576,
+          "materials": [
+            {
+              "name": "Cat | ear pale hairs",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Ear L | soft fur edge",
+          "triangles": 4608,
+          "materials": [
+            {
+              "name": "Cat | ear edge taupe fur",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Muzzle | philtrum",
+          "triangles": 2112,
+          "materials": [
+            {
+              "name": "Dark",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Cat • thick ringed tail",
+          "triangles": 10532,
+          "materials": [
+            {
+              "name": "Tabby • individualized coat",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Ear L | warm inner membrane",
+          "triangles": 2736,
+          "materials": [
+            {
+              "name": "Cat | inner ear muted pink brown",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Eye L | inset corneal iris",
+          "triangles": 5600,
+          "materials": [
+            {
+              "name": "Cat | olive iris radial fibres",
+              "alphaMode": "OPAQUE"
+            },
+            {
+              "name": "Dark",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Eye L | vertical pupil",
+          "triangles": 128,
+          "materials": [
+            {
+              "name": "Pupil",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Groom • body",
+          "triangles": 58584,
+          "materials": [
+            {
+              "name": "Groom • root to tip variation",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Nose | nostril -1",
+          "triangles": 1440,
+          "materials": [
+            {
+              "name": "Dark",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Nose | rounded leather triangle",
+          "triangles": 960,
+          "materials": [
+            {
+              "name": "Cat | mottled leather nose",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Paw • central pad",
+          "triangles": 11040,
+          "materials": [
+            {
+              "name": "Paw pads • mottled rose brown",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Whisker follicle -1 | 00",
+          "triangles": 4680,
+          "materials": [
+            {
+              "name": "Cat | whisker follicles",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        }
+      ],
+      "clips": [
+        {
+          "name": "Idle",
+          "startSeconds": 0,
+          "durationSeconds": 4,
+          "tracks": 111
+        },
+        {
+          "name": "Jump",
+          "startSeconds": 0,
+          "durationSeconds": 2.5,
+          "tracks": 111
+        },
+        {
+          "name": "Lie_Roll_Rest",
+          "startSeconds": 0,
+          "durationSeconds": 7.4,
+          "tracks": 111
+        },
+        {
+          "name": "Run",
+          "startSeconds": 0,
+          "durationSeconds": 0.7333333333333333,
+          "tracks": 111
+        },
+        {
+          "name": "Stretch",
+          "startSeconds": 0,
+          "durationSeconds": 4.1,
+          "tracks": 111
+        },
+        {
+          "name": "Walk",
+          "startSeconds": 0,
+          "durationSeconds": 1.3333333333333333,
+          "tracks": 111
+        }
+      ],
+      "imageCount": 3,
+      "sheenCorrections": [
+        {
+          "material": "Tabby • original coat baked for room distance",
+          "sourceSheenWeight": 0.04500000178813934,
+          "exportedSheenColorFactor": [
+            0.04500000178813934,
+            0.04500000178813934,
+            0.04500000178813934
+          ]
+        },
+        {
+          "material": "Tabby • individualized coat",
+          "sourceSheenWeight": 0.04500000178813934,
+          "exportedSheenColorFactor": [
+            0.04500000178813934,
+            0.04500000178813934,
+            0.04500000178813934
+          ]
+        },
+        {
+          "material": "Groom • root to tip variation",
+          "sourceSheenWeight": 0.06499999761581421,
+          "exportedSheenColorFactor": [
+            0.06499999761581421,
+            0.06499999761581421,
+            0.06499999761581421
+          ]
+        }
+      ]
+    },
+    "high": {
+      "file": "tabby-cat.glb",
+      "bytes": 8813840,
+      "sha256": "ecfae2230e33b5405fd5faed5849374849d349b74bf9105904be1e6588493558",
+      "meshCount": 14,
+      "primitiveCount": 15,
+      "triangles": 1509248,
+      "idleBoundsMeters": {
+        "min": [
+          -0.1327759325504303,
+          0.0012126739602535963,
+          -0.45628654956817627
+        ],
+        "max": [
+          0.1363808512687683,
+          0.48996755480766296,
+          0.38196781277656555
+        ],
+        "dimensions": [
+          0.2691567838191986,
+          0.48875486850738525,
+          0.8382543325424194
+        ]
+      },
+      "meshes": [
+        {
+          "object": "Cat • continuous anatomical surface",
+          "triangles": 407888,
+          "materials": [
+            {
+              "name": "Tabby • individualized coat",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Muzzle | lip seam -1",
+          "triangles": 1152,
+          "materials": [
+            {
+              "name": "Dark",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Brow whisker -1 | 0",
+          "triangles": 18048,
+          "materials": [
+            {
+              "name": "Whisker",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Ear L | guard hair 00",
+          "triangles": 51456,
+          "materials": [
+            {
+              "name": "Cat | ear pale hairs",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Ear L | soft fur edge",
+          "triangles": 27648,
+          "materials": [
+            {
+              "name": "Cat | ear edge taupe fur",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Muzzle | philtrum",
+          "triangles": 12672,
+          "materials": [
+            {
+              "name": "Dark",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Ear L | warm inner membrane",
+          "triangles": 2736,
+          "materials": [
+            {
+              "name": "Cat | inner ear muted pink brown",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Eye L | inset corneal iris",
+          "triangles": 5600,
+          "materials": [
+            {
+              "name": "Cat | olive iris radial fibres",
+              "alphaMode": "OPAQUE"
+            },
+            {
+              "name": "Dark",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Eye L | vertical pupil",
+          "triangles": 128,
+          "materials": [
+            {
+              "name": "Pupil",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Groom • body",
+          "triangles": 924000,
+          "materials": [
+            {
+              "name": "Groom • root to tip variation",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Nose | nostril -1",
+          "triangles": 1440,
+          "materials": [
+            {
+              "name": "Dark",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Nose | rounded leather triangle",
+          "triangles": 960,
+          "materials": [
+            {
+              "name": "Cat | mottled leather nose",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Paw • central pad",
+          "triangles": 36800,
+          "materials": [
+            {
+              "name": "Paw pads • mottled rose brown",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        },
+        {
+          "object": "Whisker follicle -1 | 00",
+          "triangles": 18720,
+          "materials": [
+            {
+              "name": "Cat | whisker follicles",
+              "alphaMode": "OPAQUE"
+            }
+          ]
+        }
+      ],
+      "clips": [
+        {
+          "name": "Idle",
+          "startSeconds": 0,
+          "durationSeconds": 4,
+          "tracks": 111
+        },
+        {
+          "name": "Jump",
+          "startSeconds": 0,
+          "durationSeconds": 2.5,
+          "tracks": 111
+        },
+        {
+          "name": "Lie_Roll_Rest",
+          "startSeconds": 0,
+          "durationSeconds": 7.4,
+          "tracks": 111
+        },
+        {
+          "name": "Run",
+          "startSeconds": 0,
+          "durationSeconds": 0.7333333333333333,
+          "tracks": 111
+        },
+        {
+          "name": "Stretch",
+          "startSeconds": 0,
+          "durationSeconds": 4.1,
+          "tracks": 111
+        },
+        {
+          "name": "Walk",
+          "startSeconds": 0,
+          "durationSeconds": 1.3333333333333333,
+          "tracks": 111
+        }
+      ],
+      "imageCount": 2,
+      "sheenCorrections": [
+        {
+          "material": "Tabby • individualized coat",
+          "sourceSheenWeight": 0.04500000178813934,
+          "exportedSheenColorFactor": [
+            0.04500000178813934,
+            0.04500000178813934,
+            0.04500000178813934
+          ]
+        },
+        {
+          "material": "Groom • root to tip variation",
+          "sourceSheenWeight": 0.06499999761581421,
+          "exportedSheenColorFactor": [
+            0.06499999761581421,
+            0.06499999761581421,
+            0.06499999761581421
+          ]
+        }
+      ]
+    }
+  },
+  "roomOptimization": {
+    "surface": {
+      "sourceVertices": 198680,
+      "exportVertices": 56786,
+      "sampleCount": 10457,
+      "maximumErrorMeters": 0.00009609580592950806,
+      "p99ErrorMeters": 0.00004129436449147762,
+      "meanErrorMeters": 0.000014521446580964801
+    },
+    "groom": {
+      "sourceStrands": 38500,
+      "retainedStrands": 2441,
+      "triangles": 58584,
+      "method": "Stable integer hash chooses complete original strands; retained positions, painted colors and rig weights stay attached."
+    },
+    "bodyTriangles": 99338,
+    "coatTexture": {
+      "dimensions": [
+        2048,
+        2048
+      ],
+      "format": "JPEG",
+      "quality": 95,
+      "chromaSubsampling": "4:4:4",
+      "source": "Original full-density vertex color baked before simplification"
+    },
+    "smallDetailTextures": [
+      {
+        "material": "Iris",
+        "dimensions": [
+          512,
+          512
+        ],
+        "format": "PNG"
+      },
+      {
+        "material": "Nose",
+        "dimensions": [
+          256,
+          256
+        ],
+        "format": "PNG"
+      }
+    ],
+    "curves": {
+      "sourceResolution": 12,
+      "roomResolution": 4,
+      "sourceBevelResolution": 2,
+      "roomBevelResolution": 0,
+      "whiskersRetained": true
+    }
+  },
+  "motion": {
+    "planarRootMotionPerCycleMeters": 0,
+    "walkCycleSeconds": 1.3333333333333333,
+    "walkFootForeAftExcursionMeters": {
+      "left": 0.1236058920621872,
+      "right": 0.12409153580665588
+    },
+    "nominalWalkSpeedAtUnitScaleMetersPerSecond": 0.142,
+    "walkRootVerticalBobbingMeters": 0.007,
+    "bones": {
+      "root": "root",
+      "master": "MASTER",
+      "head": "head",
+      "frontFeet": [
+        "foot.F.L",
+        "foot.F.R"
+      ],
+      "hindFeet": [
+        "foot.H.L",
+        "foot.H.R"
+      ]
+    },
+    "restPose": "Authored standing quadruped; paws down, tail raised. Walk and Run animate in place. Lie_Roll_Rest and Jump include original local body displacement."
+  },
+  "limitations": {
+    "skinWeights": "Original body and groom have up to seven influences; standard four-influence glTF retains the strongest four and renormalizes. Nine source poses per clip were compared on every body vertex.",
+    "skinErrorByClip": [
+      {
+        "clip": "Idle",
+        "sampledPoses": 9,
+        "maxMeters": 0.0012671611038967967,
+        "p99MaximumAcrossSamplesMeters": 0.0003956845903303474
+      },
+      {
+        "clip": "Walk",
+        "sampledPoses": 9,
+        "maxMeters": 0.009676891379058361,
+        "p99MaximumAcrossSamplesMeters": 0.002999762538820505
+      },
+      {
+        "clip": "Run",
+        "sampledPoses": 9,
+        "maxMeters": 0.01779189519584179,
+        "p99MaximumAcrossSamplesMeters": 0.006177540868520737
+      },
+      {
+        "clip": "Jump",
+        "sampledPoses": 9,
+        "maxMeters": 0.014219542033970356,
+        "p99MaximumAcrossSamplesMeters": 0.004362295847386122
+      },
+      {
+        "clip": "Lie_Roll_Rest",
+        "sampledPoses": 9,
+        "maxMeters": 0.02356370911002159,
+        "p99MaximumAcrossSamplesMeters": 0.009777416475117207
+      },
+      {
+        "clip": "Stretch",
+        "sampledPoses": 9,
+        "maxMeters": 0.004685929510742426,
+        "p99MaximumAcrossSamplesMeters": 0.001794516108930111
+      }
+    ],
+    "shader": "Generated subpixel coat and nose microbump is not part of standard glTF; original coarse shading, painted coat, physical groom, baked iris and nose colors remain."
+  },
+  "validation": {
+    "sourceHashUnchanged": true,
+    "roundtrip": "Final high and room files re-imported with Blender Draco decoder and rendered in the source studio at Idle and Walk poses.",
+    "threeRuntime": "Both files decoded by the repository GLTFLoader and bundled Draco WASM. Finite geometry, 37 bones, normalized weights, all six AnimationMixer clips, real skin bounds, 180-second walking and high/room swapping pass.",
+    "maximumSkinWeightSumError": 4.8429e-8
+  }
+}

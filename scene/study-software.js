@@ -97,7 +97,7 @@ export class StudyCanvasRenderer {
             const orientation = world.determinant() < 0 ? -1 : 1;
             const p = new Float32Array(position.count * 3);
             for (let i = 0; i < position.count; i++) {
-              v.fromBufferAttribute(position, i).applyMatrix4(world);
+              object.getVertexPosition(i, v).applyMatrix4(world);
               p[i * 3] = v.x; p[i * 3 + 1] = v.y; p[i * 3 + 2] = v.z;
             }
             const geo = {

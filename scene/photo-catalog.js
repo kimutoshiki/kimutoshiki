@@ -1,334 +1,365 @@
 // User-supplied photographs; original framing and orientation preserved.
+// Locations come from the supplied filenames; title mirrors location for existing consumers.
 // Load thumb in grids, src on walls, and full only when a photograph is opened.
 export const PHOTO_CATALOG = [
   {
     "id": "hirano-memories",
-    "title": "兜と、町の記憶",
-    "subtitle": "Hirano · 75th Anniversary",
+    "title": "平野町",
+    "subtitle": "",
     "src": "/images/journeys/hirano-memories.webp",
     "thumb": "/images/journeys/hirano-memories-thumb.webp",
     "full": "/images/journeys/hirano-memories-full.webp",
     "width": 1080,
     "height": 754,
-    "originalName": "上杉謙信の兜75周年＠平野町.JPG"
+    "originalName": "上杉謙信の兜75周年＠平野町.JPG",
+    "location": "平野町"
   },
   {
     "id": "watford-magic",
-    "title": "魔法を育む空間",
-    "subtitle": "Watford · Harry Potter",
+    "title": "ワトフォード",
+    "subtitle": "",
     "src": "/images/journeys/watford-magic.webp",
     "thumb": "/images/journeys/watford-magic-thumb.webp",
     "full": "/images/journeys/watford-magic-full.webp",
     "width": 4536,
     "height": 6060,
-    "originalName": "ハリーポッターミュージアム＠英・ワトフォード.jpg"
+    "originalName": "ハリーポッターミュージアム＠英・ワトフォード.jpg",
+    "location": "ワトフォード"
   },
   {
     "id": "london-time",
-    "title": "テムズを刻む時",
-    "subtitle": "London · Big Ben",
+    "title": "ロンドン",
+    "subtitle": "",
     "src": "/images/journeys/london-time.webp",
     "thumb": "/images/journeys/london-time-thumb.webp",
     "full": "/images/journeys/london-time-full.webp",
     "width": 2268,
     "height": 2763,
-    "originalName": "ビッグベン＠英・ロンドン.jpg"
+    "originalName": "ビッグベン＠英・ロンドン.jpg",
+    "location": "ロンドン"
   },
   {
     "id": "yonezawa-stillness",
-    "title": "静寂の参道",
-    "subtitle": "Yonezawa · Uesugi Shrine",
+    "title": "山形・米沢",
+    "subtitle": "",
     "src": "/images/journeys/yonezawa-stillness.webp",
     "thumb": "/images/journeys/yonezawa-stillness-thumb.webp",
     "full": "/images/journeys/yonezawa-stillness-full.webp",
     "width": 3024,
     "height": 3188,
-    "originalName": "上杉神社＠山形・米沢.jpg"
+    "originalName": "上杉神社＠山形・米沢.jpg",
+    "location": "山形・米沢"
   },
   {
     "id": "seoul-lights",
-    "title": "ソウル、光の海",
-    "subtitle": "Seoul · Nightscape",
+    "title": "ソウル",
+    "subtitle": "",
     "src": "/images/journeys/seoul-lights.webp",
     "thumb": "/images/journeys/seoul-lights-thumb.webp",
     "full": "/images/journeys/seoul-lights-full.webp",
     "width": 2268,
     "height": 2444,
-    "originalName": "ソウルの夜景＠韓国.jpg"
+    "originalName": "ソウルの夜景＠韓国.jpg",
+    "location": "ソウル"
   },
   {
     "id": "milton-keynes-racing",
-    "title": "速さの生まれる場所",
-    "subtitle": "Milton Keynes · Red Bull Racing",
+    "title": "ミルトンキーンズ",
+    "subtitle": "",
     "src": "/images/journeys/milton-keynes-racing.webp",
     "thumb": "/images/journeys/milton-keynes-racing-thumb.webp",
     "full": "/images/journeys/milton-keynes-racing-full.webp",
     "width": 5662,
     "height": 3814,
-    "originalName": "レッドブルレーシング＠英・ミルトンキーンズ.jpg"
+    "originalName": "レッドブルレーシング＠英・ミルトンキーンズ.jpg",
+    "location": "ミルトンキーンズ"
   },
   {
     "id": "liverpool-four",
-    "title": "四人と歩く街",
-    "subtitle": "Liverpool · The Beatles",
+    "title": "リヴァプール",
+    "subtitle": "",
     "src": "/images/journeys/liverpool-four.webp",
     "thumb": "/images/journeys/liverpool-four-thumb.webp",
     "full": "/images/journeys/liverpool-four-full.webp",
     "width": 4536,
     "height": 5963,
-    "originalName": "ビートルズ像＠英・リヴァプール.jpg"
+    "originalName": "ビートルズ像＠英・リヴァプール.jpg",
+    "location": "リヴァプール"
   },
   {
     "id": "manchester-seventeen",
-    "title": "空色の背番号17",
-    "subtitle": "Manchester · De Bruyne",
+    "title": "マンチェスター",
+    "subtitle": "",
     "src": "/images/journeys/manchester-seventeen.webp",
     "thumb": "/images/journeys/manchester-seventeen-thumb.webp",
     "full": "/images/journeys/manchester-seventeen-full.webp",
     "width": 4536,
     "height": 6964,
-    "originalName": "デブライネ＠英・マンチェスター.jpg"
+    "originalName": "デブライネ＠英・マンチェスター.jpg",
+    "location": "マンチェスター"
   },
   {
     "id": "bracknell-first-page",
-    "title": "物語はこの家から",
-    "subtitle": "Bracknell · Harry’s First Home",
+    "title": "ブラックネル",
+    "subtitle": "",
     "src": "/images/journeys/bracknell-first-page.webp",
     "thumb": "/images/journeys/bracknell-first-page-thumb.webp",
     "full": "/images/journeys/bracknell-first-page-full.webp",
     "width": 5987,
     "height": 3616,
-    "originalName": "ハリーの最初の家＠英・ブラックネル.JPG"
+    "originalName": "ハリーの最初の家＠英・ブラックネル.JPG",
+    "location": "ブラックネル"
   },
   {
     "id": "suzuka-spring",
-    "title": "桜と、鈴鹿の鼓動",
-    "subtitle": "Suzuka · Japanese Grand Prix",
+    "title": "三重・鈴鹿",
+    "subtitle": "",
     "src": "/images/journeys/suzuka-spring.webp",
     "thumb": "/images/journeys/suzuka-spring-thumb.webp",
     "full": "/images/journeys/suzuka-spring-full.webp",
     "width": 4536,
     "height": 4320,
-    "originalName": "F1日本GP＠三重・鈴鹿.jpg"
+    "originalName": "F1日本GP＠三重・鈴鹿.jpg",
+    "location": "三重・鈴鹿"
   },
   {
     "id": "jingu-cheers",
-    "title": "神宮、歓声の記憶",
-    "subtitle": "Jingu · Waseda vs. Keio",
+    "title": "神宮",
+    "subtitle": "",
     "src": "/images/journeys/jingu-cheers.webp",
     "thumb": "/images/journeys/jingu-cheers-thumb.webp",
     "full": "/images/journeys/jingu-cheers-full.webp",
     "width": 8064,
     "height": 4536,
-    "originalName": "早慶戦天覧試合＠神宮.jpg"
+    "originalName": "早慶戦天覧試合＠神宮.jpg",
+    "location": "神宮"
   },
   {
     "id": "kyukeisha-karatsu",
-    "title": "東京に響く唐津",
-    "subtitle": "Kyukeisha · Tokyo Karatsu Kunchi",
+    "title": "久敬社",
+    "subtitle": "",
     "src": "/images/journeys/kyukeisha-karatsu.webp",
     "thumb": "/images/journeys/kyukeisha-karatsu-thumb.webp",
     "full": "/images/journeys/kyukeisha-karatsu-full.webp",
     "width": 4032,
     "height": 2268,
-    "originalName": "東京唐津くんち＠久敬社.jpg"
+    "originalName": "東京唐津くんち＠久敬社.jpg",
+    "location": "久敬社"
   },
   {
     "id": "gloucester-cloisters",
-    "title": "魔法の回廊",
-    "subtitle": "Gloucester · Harry Potter",
+    "title": "グロスター",
+    "subtitle": "",
     "src": "/images/journeys/gloucester-cloisters.webp",
     "thumb": "/images/journeys/gloucester-cloisters-thumb.webp",
     "full": "/images/journeys/gloucester-cloisters-full.webp",
     "width": 4032,
     "height": 2268,
-    "originalName": "ハリーポッターの廊下＠英・グロスター.jpg"
+    "originalName": "ハリーポッターの廊下＠英・グロスター.jpg",
+    "location": "グロスター"
   },
   {
     "id": "richmond-stories",
-    "title": "リッチモンドの物語",
-    "subtitle": "Richmond · Ted Lasso",
+    "title": "リッチモンド",
+    "subtitle": "",
     "src": "/images/journeys/richmond-stories.webp",
     "thumb": "/images/journeys/richmond-stories-thumb.webp",
     "full": "/images/journeys/richmond-stories-full.webp",
     "width": 8064,
     "height": 4536,
-    "originalName": "テッドラッソ＠英・リッチモンド.jpg"
+    "originalName": "テッドラッソ＠英・リッチモンド.jpg",
+    "location": "リッチモンド"
   },
   {
     "id": "manchester-matchday",
-    "title": "蒼と赤の一戦",
-    "subtitle": "Manchester · City vs. Arsenal",
+    "title": "マンチェスター",
+    "subtitle": "",
     "src": "/images/journeys/manchester-matchday.webp",
     "thumb": "/images/journeys/manchester-matchday-thumb.webp",
     "full": "/images/journeys/manchester-matchday-full.webp",
     "width": 3840,
     "height": 2160,
-    "originalName": "シティvsアーセナル＠英・マンチェスター.JPG"
+    "originalName": "シティvsアーセナル＠英・マンチェスター.JPG",
+    "location": "マンチェスター"
   },
   {
     "id": "edinburgh-beginnings",
-    "title": "魔法のはじまり",
-    "subtitle": "Edinburgh · Harry Potter",
+    "title": "エディンバラ",
+    "subtitle": "",
     "src": "/images/journeys/edinburgh-beginnings.webp",
     "thumb": "/images/journeys/edinburgh-beginnings-thumb.webp",
     "full": "/images/journeys/edinburgh-beginnings-full.webp",
     "width": 4536,
     "height": 8064,
-    "originalName": "ハリーポッターの生誕地＠英・エディンバラ.jpg"
+    "originalName": "ハリーポッターの生誕地＠英・エディンバラ.jpg",
+    "location": "エディンバラ"
   },
   {
     "id": "oxford-courtyard",
-    "title": "物語を囲む中庭",
-    "subtitle": "Oxford · Harry Potter",
+    "title": "オックスフォード",
+    "subtitle": "",
     "src": "/images/journeys/oxford-courtyard.webp",
     "thumb": "/images/journeys/oxford-courtyard-thumb.webp",
     "full": "/images/journeys/oxford-courtyard-full.webp",
     "width": 4032,
     "height": 2268,
-    "originalName": "ハリーポッターの中庭＠英・オックスフォード.jpg"
+    "originalName": "ハリーポッターの中庭＠英・オックスフォード.jpg",
+    "location": "オックスフォード"
   },
   {
     "id": "paris-blue-hour",
-    "title": "パリ、青の時間",
-    "subtitle": "Paris · From the Eiffel Tower",
+    "title": "パリ",
+    "subtitle": "",
     "src": "/images/journeys/paris-blue-hour.webp",
     "thumb": "/images/journeys/paris-blue-hour-thumb.webp",
     "full": "/images/journeys/paris-blue-hour-full.webp",
     "width": 8064,
     "height": 4536,
-    "originalName": "エッフェル塔からの夜景＠仏・パリ.jpg"
+    "originalName": "エッフェル塔からの夜景＠仏・パリ.jpg",
+    "location": "パリ"
   },
   {
     "id": "versailles-reflections",
-    "title": "光を重ねる鏡",
-    "subtitle": "Versailles · Hall of Mirrors",
+    "title": "ヴェルサイユ",
+    "subtitle": "",
     "src": "/images/journeys/versailles-reflections.webp",
     "thumb": "/images/journeys/versailles-reflections-thumb.webp",
     "full": "/images/journeys/versailles-reflections-full.webp",
     "width": 8064,
     "height": 4536,
-    "originalName": "鏡の間＠仏・ヴェルサイユ.jpg"
+    "originalName": "鏡の間＠仏・ヴェルサイユ.jpg",
+    "location": "ヴェルサイユ"
   },
   {
     "id": "monaco-curves",
-    "title": "モナコ、曲線の記憶",
-    "subtitle": "Monaco · The Hairpin",
+    "title": "モナコ",
+    "subtitle": "",
     "src": "/images/journeys/monaco-curves.webp",
     "thumb": "/images/journeys/monaco-curves-thumb.webp",
     "full": "/images/journeys/monaco-curves-full.webp",
     "width": 8064,
     "height": 4536,
-    "originalName": "ヘアピンカーブ＠モナコ.jpg"
+    "originalName": "ヘアピンカーブ＠モナコ.jpg",
+    "location": "モナコ"
   },
   {
     "id": "nice-afternoon",
-    "title": "ニース、広場の午後",
-    "subtitle": "Nice · City Square",
+    "title": "ニース",
+    "subtitle": "",
     "src": "/images/journeys/nice-afternoon.webp",
     "thumb": "/images/journeys/nice-afternoon-thumb.webp",
     "full": "/images/journeys/nice-afternoon-full.webp",
     "width": 8064,
     "height": 4536,
-    "originalName": "メセナ広場＠仏・ニース.jpg"
+    "originalName": "メセナ広場＠仏・ニース.jpg",
+    "location": "ニース"
   },
   {
     "id": "paris-chopin",
-    "title": "ショパンに捧ぐ",
-    "subtitle": "Paris · Chopin",
+    "title": "パリ",
+    "subtitle": "",
     "src": "/images/journeys/paris-chopin.webp",
     "thumb": "/images/journeys/paris-chopin-thumb.webp",
     "full": "/images/journeys/paris-chopin-full.webp",
     "width": 4536,
     "height": 8064,
-    "originalName": "ショパンのお墓＠仏・パリ.jpg"
+    "originalName": "ショパンのお墓＠仏・パリ.jpg",
+    "location": "パリ"
   },
   {
     "id": "greenwich-zero",
-    "title": "世界を分ける一歩",
-    "subtitle": "Greenwich · Prime Meridian",
+    "title": "グリニッジ",
+    "subtitle": "",
     "src": "/images/journeys/greenwich-zero.webp",
     "thumb": "/images/journeys/greenwich-zero-thumb.webp",
     "full": "/images/journeys/greenwich-zero-full.webp",
     "width": 4536,
     "height": 8064,
-    "originalName": "本初子午線＠英・グリニッジ.jpg"
+    "originalName": "本初子午線＠英・グリニッジ.jpg",
+    "location": "グリニッジ"
   },
   {
     "id": "wembley-night",
-    "title": "ウェンブリーの夜",
-    "subtitle": "Wembley · England vs. Brazil",
+    "title": "ウェンブリー",
+    "subtitle": "",
     "src": "/images/journeys/wembley-night.webp",
     "thumb": "/images/journeys/wembley-night-thumb.webp",
     "full": "/images/journeys/wembley-night-full.webp",
     "width": 8064,
     "height": 4536,
-    "originalName": "イングランドvsブラジル＠英・ウェンブリー.jpg"
+    "originalName": "イングランドvsブラジル＠英・ウェンブリー.jpg",
+    "location": "ウェンブリー"
   },
   {
     "id": "singapore-waterfront",
-    "title": "水辺に立つ獅子",
-    "subtitle": "Singapore · Merlion",
+    "title": "シンガポール",
+    "subtitle": "",
     "src": "/images/journeys/singapore-waterfront.webp",
     "thumb": "/images/journeys/singapore-waterfront-thumb.webp",
     "full": "/images/journeys/singapore-waterfront-full.webp",
     "width": 8064,
     "height": 4536,
-    "originalName": "マーライオン＠シンガポール.jpg"
+    "originalName": "マーライオン＠シンガポール.jpg",
+    "location": "シンガポール"
   },
   {
     "id": "taj-mahal-marble",
-    "title": "白亜の余韻",
-    "subtitle": "India · Taj Mahal",
+    "title": "インド",
+    "subtitle": "",
     "src": "/images/journeys/taj-mahal-marble.webp",
     "thumb": "/images/journeys/taj-mahal-marble-thumb.webp",
     "full": "/images/journeys/taj-mahal-marble-full.webp",
     "width": 4032,
     "height": 3024,
-    "originalName": "タージマハル＠インド.jpg"
+    "originalName": "タージマハル＠インド.jpg",
+    "location": "インド"
   },
   {
     "id": "saga-aspiration",
-    "title": "志、ここにはじまる",
-    "subtitle": "Saga · Young Okuma",
+    "title": "佐賀市",
+    "subtitle": "",
     "src": "/images/journeys/saga-aspiration.webp",
     "thumb": "/images/journeys/saga-aspiration-thumb.webp",
     "full": "/images/journeys/saga-aspiration-full.webp",
     "width": 6048,
     "height": 8064,
-    "originalName": "若き日の大隈像＠佐賀市.jpg"
+    "originalName": "若き日の大隈像＠佐賀市.jpg",
+    "location": "佐賀市"
   },
   {
     "id": "okawa-remembrance",
-    "title": "大川、記憶をつなぐ",
-    "subtitle": "Ishinomaki · Okawa Elementary School",
+    "title": "宮城・石巻",
+    "subtitle": "",
     "src": "/images/journeys/okawa-remembrance.webp",
     "thumb": "/images/journeys/okawa-remembrance-thumb.webp",
     "full": "/images/journeys/okawa-remembrance-full.webp",
     "width": 3024,
     "height": 4032,
-    "originalName": "震災遺構大川小学校＠宮城・石巻.jpg"
+    "originalName": "震災遺構大川小学校＠宮城・石巻.jpg",
+    "location": "宮城・石巻"
   },
   {
     "id": "taipei-time",
-    "title": "台北、時を重ねて",
-    "subtitle": "Taipei · Historic Architecture",
+    "title": "台湾",
+    "subtitle": "",
     "src": "/images/journeys/taipei-time.webp",
     "thumb": "/images/journeys/taipei-time-thumb.webp",
     "full": "/images/journeys/taipei-time-full.webp",
     "width": 4032,
     "height": 2268,
-    "originalName": "台湾総督府＠台湾.jpg"
+    "originalName": "台湾総督府＠台湾.jpg",
+    "location": "台湾"
   },
   {
     "id": "waseda-night",
-    "title": "夜に灯る早稲田",
-    "subtitle": "Waseda · Okuma Auditorium",
+    "title": "早稲田",
+    "subtitle": "",
     "src": "/images/journeys/waseda-night.webp",
     "thumb": "/images/journeys/waseda-night-thumb.webp",
     "full": "/images/journeys/waseda-night-full.webp",
     "width": 4032,
     "height": 3024,
-    "originalName": "大隈講堂と大隈像＠早稲田.DNG"
+    "originalName": "大隈講堂と大隈像＠早稲田.DNG",
+    "location": "早稲田"
   }
 ];

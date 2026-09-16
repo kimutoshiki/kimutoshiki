@@ -3,6 +3,7 @@
 const clamp = x => Math.max(0, Math.min(1, x));
 const smooth = (a, b, value) => { const t = clamp((value - a) / (b - a)); return t * t * (3 - 2 * t); };
 const mix = (a, b, t) => a + (b - a) * t;
+const mixColor = (a, b, t) => a.map((channel, i) => mix(channel, b[i], t));
 
 export function getRoomTime(date = new Date(), mode = 'auto') {
   if (!Number.isFinite(date.getTime())) throw new TypeError('A valid local Date is required');
@@ -12,6 +13,18 @@ export function getRoomTime(date = new Date(), mode = 'auto') {
   const daylight = smooth(6, 8, lightHour) * (1 - smooth(17, 20, lightHour));
   const midday = Math.max(0, Math.sin(Math.PI * clamp((lightHour - 6) / 14)));
   const warmth = daylight * (1 - midday);
+  // Civil-time dawn and dusk ease into the same garden image. These broad
+  // envelopes describe a local daily rhythm, not forecast or sunrise data.
+  const dawn = smooth(5.25, 6.75, lightHour) * (1 - smooth(7.5, 9, lightHour));
+  const dusk = smooth(15.75, 17.75, lightHour) * (1 - smooth(18.5, 20.5, lightHour));
+  const twilight = Math.max(dawn, dusk);
+  const windowBrightness = mix(.20, 1, daylight) + .11 * twilight * (1 - daylight);
+  let windowTint = mixColor([.46, .60, .92], [1, 1, 1], daylight);
+  windowTint = mixColor(windowTint, [1, .78, .50], dawn * .72);
+  windowTint = mixColor(windowTint, [1, .70, .40], dusk * .78);
+  let windowEmissionTint = mixColor([.30, .45, .76], [1, 1, 1], daylight);
+  windowEmissionTint = mixColor(windowEmissionTint, [1, .70, .40], dawn * .78);
+  windowEmissionTint = mixColor(windowEmissionTint, [1, .54, .25], dusk * .83);
   const phase = daylight < .02 ? 'night' : lightHour < 10 ? 'morning' : lightHour < 17 ? 'day' : 'evening';
   // Return the sun smoothly overnight, including across local midnight.
   const progress = lightHour >= 6 && lightHour <= 20 ? (lightHour - 6) / 14
@@ -32,7 +45,8 @@ export function getRoomTime(date = new Date(), mode = 'auto') {
     // Every direction still enters through the same rear window opening.
     sunPosition: [-4.55 - (1.6 + 2.2 * progress) * 2.8, 4.03 + (.8 + 2.4 * midday) * 2.8, -1.3 - 5 * 2.8],
     sunTarget: [-4.55 + 1.6 + 2.2 * progress, 4.03 - (.8 + 2.4 * midday), 3.7],
-    windowGlow: mix(.025, .38, daylight),
+    windowTint, windowEmissionTint, windowBrightness,
+    windowGlow: mix(.025, .38, daylight) + .065 * twilight * (1 - daylight),
     softwareGain: mix(.59, 1.08, daylight),
     softwareTint: [1, mix(.88, .98, daylight), mix(.77, .95, daylight)],
   };

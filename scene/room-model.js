@@ -1,13 +1,13 @@
-import { surface } from './surface-materials.js?v=20260916-atlas2';
-import { addCollectedDecor } from './collected-decor.js?v=20260916-atlas2';
-import { completeRoom } from './room-shell.js?v=20260916-atlas2';
-import { addRoomDetails } from './room-details.js?v=20260916-atlas2';
-import { createNaturalFoliage } from './natural-details.js?v=20260916-atlas2';
-import { createSongbirdFactory } from './natural-props.js?v=20260916-atlas2';
-import { createPhotoWall } from './photo-wall.js?v=20260916-atlas2';
-import { createRoomCat } from './cat-life.js?v=20260916-atlas2';
-import { createWindowBlinds } from './window-blinds.js?v=20260916-atlas2';
-import { addWorkshopDetails } from './workshop-details.js?v=20260916-atlas2';
+import { surface } from './surface-materials.js?v=20260916-cat3';
+import { addCollectedDecor } from './collected-decor.js?v=20260916-cat3';
+import { completeRoom } from './room-shell.js?v=20260916-cat3';
+import { addRoomDetails } from './room-details.js?v=20260916-cat3';
+import { createNaturalFoliage } from './natural-details.js?v=20260916-cat3';
+import { createSongbirdFactory } from './natural-props.js?v=20260916-cat3';
+import { createPhotoWall } from './photo-wall.js?v=20260916-cat3';
+import { createRoomCat } from './cat-life.js?v=20260916-cat3';
+import { createWindowBlinds } from './window-blinds.js?v=20260916-cat3';
+import { addWorkshopDetails } from './workshop-details.js?v=20260916-cat3';
 
 /** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {
@@ -404,7 +404,7 @@ export function createRoom(THREE, assets = {}) {
   throwGeo.computeVertexNormals(); throwMat.side = THREE.DoubleSide;
   const throwMesh = mesh(throwGeo, throwMat, chair); throwMesh.position.set(.34, 1.81, .524); throwMesh.rotation.z = .10;
 
-  const cat = createRoomCat(THREE, { group, floorY:.01 });
+  const cat = createRoomCat(THREE, { group, floorY:.01, asset:assets.catAsset, loadDetail:assets.loadDetailedCat, onAssetChange:assets.onCatChange });
   const { plant, instancedFoliage } = createNaturalFoliage(THREE, { group, palette, cord, animated });
   plant(-5.66, .02, 3.20, 1.30, false, true);
   // A compact rosette, an upright snake plant, and tiny flowering stems add

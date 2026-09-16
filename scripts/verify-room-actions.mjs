@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {loadTabbyFixture} from './helpers/load-tabby-fixture.mjs';
 import {readFile} from 'node:fs/promises';
 import * as T from '../js/vendor/three.module.min.js';
 import {createRoom} from '../scene/room-model.js';
@@ -10,7 +11,7 @@ import {getRoomTime} from '../scene/room-time.js';
 const ctx=new Proxy({}, {get(o,k){if(k==='createImageData'||k==='getImageData')return(w,h)=>({width:w,height:h,data:new Uint8ClampedArray(w*h*4)});if(k==='createLinearGradient'||k==='createRadialGradient')return()=>({addColorStop(){}});if(k==='measureText')return text=>({width:text.length*10});return o[k]??(()=>{});},set(o,k,v){o[k]=v;return true;}});
 globalThis.document={fonts:{ready:Promise.resolve()},createElement:()=>({width:1280,height:800,getContext:()=>ctx})};
 const requests=[];T.TextureLoader.prototype.load=function(url,onLoad){requests.push({url,onLoad});return new T.Texture();};
-const room=createRoom(T);loadSurfaceMaterials(T,room.group);const actions=createObjectActions(T,room.group),nav=createOrbitNavigation(T,room.envelope.bounds);
+const room=createRoom(T,{catAsset:await loadTabbyFixture()});loadSurfaceMaterials(T,room.group);const actions=createObjectActions(T,room.group),nav=createOrbitNavigation(T,room.envelope.bounds);
 room.group.updateMatrixWorld(true);
 const sceneMeshes=[];room.group.traverse(o=>{if(o.isMesh)sceneMeshes.push(o);});
 const seat=new T.Vector3(0,3.48,8.24);

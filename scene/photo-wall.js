@@ -1,12 +1,12 @@
-import { PHOTO_CATALOG } from './photo-catalog.js?v=20260916-atlas2';
-import { createWallAtlas } from './wall-atlas.js?v=20260916-atlas2';
+import { PHOTO_CATALOG } from './photo-catalog.js?v=20260916-cat3';
+import { createWallAtlas } from './wall-atlas.js?v=20260916-cat3';
 
-/** Geography determines the wall; all thirty original photographs remain present. */
+/** A balanced world collection and European collection preserve all thirty photographs. */
 export const PHOTO_WALL_COLLECTIONS = Object.freeze({
   karatsu: ['hirano-memories', 'kyukeisha-karatsu', 'waseda-night', 'saga-aspiration'],
-  world: ['seoul-lights', 'taipei-time', 'singapore-waterfront', 'taj-mahal-marble'],
+  world: ['seoul-lights', 'taipei-time', 'singapore-waterfront', 'taj-mahal-marble', 'greenwich-zero', 'paris-blue-hour', 'milton-keynes-racing', 'manchester-seventeen', 'manchester-matchday', 'wembley-night', 'monaco-curves'],
   japan: ['yonezawa-stillness', 'okawa-remembrance', 'jingu-cheers', 'suzuka-spring'],
-  europe: ['edinburgh-beginnings', 'liverpool-four', 'manchester-seventeen', 'manchester-matchday', 'milton-keynes-racing', 'watford-magic', 'london-time', 'greenwich-zero', 'wembley-night', 'richmond-stories', 'bracknell-first-page', 'oxford-courtyard', 'gloucester-cloisters', 'paris-blue-hour', 'paris-chopin', 'versailles-reflections', 'nice-afternoon', 'monaco-curves'],
+  europe: ['edinburgh-beginnings', 'liverpool-four', 'watford-magic', 'london-time', 'richmond-stories', 'bracknell-first-page', 'oxford-courtyard', 'gloucester-cloisters', 'paris-chopin', 'versailles-reflections', 'nice-afternoon'],
 });
 
 /** Uncropped photographs, slim physical frames, and one shared caption atlas. */
@@ -21,8 +21,8 @@ export function createPhotoWall(T, { room, palette, targets, onTextureLoad = () 
   PHOTO_CATALOG.forEach((photo, i) => {
     const y = i * rowHeight;
     ctx.textAlign = 'center'; ctx.fillStyle = '#383b30';
-    ctx.font = '500 32px "Noto Serif JP", "Yu Mincho", serif'; ctx.fillText(photo.title, 384, y + 32, 738);
-    ctx.fillStyle = '#816744'; ctx.font = '16px Georgia, serif'; ctx.fillText(photo.subtitle || '', 384, y + 54, 738);
+    ctx.textBaseline = 'middle';
+    ctx.font = '500 38px "Noto Serif JP", "Yu Mincho", serif'; ctx.fillText(photo.location, 384, y + 33, 720);
   });
   const labelMap = new T.CanvasTexture(labelCanvas); labelMap.colorSpace = T.SRGBColorSpace; labelMap.anisotropy = 8;
   const labelMaterial = new T.MeshStandardMaterial({ map: labelMap, roughness: .96 });
@@ -57,25 +57,32 @@ export function createPhotoWall(T, { room, palette, targets, onTextureLoad = () 
   }
   function enqueue(frame) { if (frame.queued) return; frame.queued = true; queue.push(frame); }
   assignments.forEach(({ photo, wall, slot }) => {
-    const frame = new T.Group(); frame.name = photo.title; group.add(frame);
-    const ratio = photo.width / photo.height, maxW = wall === 'europe' ? .98 : 1.04, maxH = wall === 'europe' ? .73 : .76;
+    const frame = new T.Group(); frame.name = photo.location; group.add(frame);
+    const sideWall = wall === 'europe' || wall === 'world';
+    const ratio = photo.width / photo.height, maxW = sideWall ? .94 : 1.04, maxH = sideWall ? .70 : .76;
     const width = Math.min(maxW, maxH * ratio), height = width / ratio;
     // The visible photograph and frame aperture share the exact source ratio.
     box(width + .070, height + .070, .054, 0, 0, 0, palette.darkWood, frame);
     box(width + .030, height + .030, .010, 0, 0, .032, palette.brass, frame);
     const image = new T.Mesh(plane, new T.MeshStandardMaterial({ color: '#c7bba2', roughness: .82 }));
     image.scale.set(width, height, 1); image.position.z = .040; image.receiveShadow = true; frame.add(image);
-    const labelWidth = Math.max(.78, width + .035), labelHeight = .108;
-    const labelY = -height / 2 - .109;
+    const labelWidth = Math.max(.70, width + .035), labelHeight = .085;
+    const labelY = -height / 2 - .092;
     const plaque = box(labelWidth + .018, labelHeight + .012, .009, 0, labelY, .022, paper, frame); plaque.castShadow = false;
     const captionGeo = new T.PlaneGeometry(labelWidth, labelHeight), uv = captionGeo.attributes.uv;
     const captionIndex = PHOTO_CATALOG.indexOf(photo);
     for (let v = 0; v < uv.count; v++) uv.setY(v, 1 - (captionIndex * rowHeight + (1 - uv.getY(v)) * rowHeight) / 2048);
     const caption = new T.Mesh(captionGeo, labelMaterial); caption.position.set(0, labelY, .028); frame.add(caption);
     if (wall === 'karatsu') frame.position.set([-2.13, -.86, .45, 1.68][slot], 3.69, -1.367);
-    else if (wall === 'world') { frame.position.set(6.325, 3.04, 1.10 + slot * 1.97); frame.rotation.y = -Math.PI / 2; }
     else if (wall === 'japan') { frame.position.set(-1.60 + slot * 1.84, 4.73, 9.235); frame.rotation.y = Math.PI; }
-    else { frame.position.set(-6.325, [5.15, 4.03, 2.91][Math.floor(slot / 6)], 7.47 - slot % 6 * 1.34); frame.rotation.y = Math.PI / 2; }
+    else {
+      // Six above and five below leave the middle of each map open to read.
+      const topRow = slot < 6, column = topRow ? slot : slot - 6;
+      const horizontal = (column - (topRow ? 2.5 : 2)) * 1.28;
+      const side = wall === 'world' ? 1 : -1;
+      frame.position.set(side * 6.325, topRow ? 5.12 : 2.93, 4.12 + side * horizontal);
+      frame.rotation.y = -side * Math.PI / 2;
+    }
     const id = 'photo-' + photo.id;
     frame.userData.targetId = id; frame.traverse(o => { if (o.isMesh) o.userData.targetId = id; });
     frame.userData.photo = { id: photo.id, wall, width, height, originalWidth: photo.width, originalHeight: photo.height };
