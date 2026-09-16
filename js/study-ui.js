@@ -15,7 +15,7 @@
   let engine, opener, ready = false, markers = false, lightingMode = 'auto';
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let galleryModule;
-  const gallery = () => galleryModule ||= import('./photo-gallery.js?v=20260916-room');
+  const gallery = () => galleryModule ||= import('./photo-gallery.js?v=20260916-atlas2');
   const intros = ['木村紀喜。佐賀県唐津市出身。', '早稲田大学教職大学院で学んでいます。', '子どもたちの「前向きに生きる力」を育てたい。', '授業づくりと、教育研究に取り組んでいます。'];
   let introIndex = 0;
   const introTimer = setInterval(() => {
@@ -35,6 +35,10 @@
   };
   const landmarkPanels = {'landmark-okuma-auditorium':'profile','landmark-okuma-statue':'research','landmark-karatsu-castle':'gallery','landmark-karatsu-bank':'blog'};
   function show(id, source) {
+    if (id.startsWith('nav-')) {
+      const href = {profile:'profile.html',research:'research.html',blog:'blog.html',gallery:'photos.html',contact:'contact.html'}[id.slice(4)];
+      if (href) {location.assign(href);return true;}
+    }
     if (id.startsWith('photo-')) {
       gallery().then(module => module.openPhotoById(id.slice(6), source)).catch(() => { location.href = 'photos.html'; });
       return true;
@@ -112,8 +116,8 @@
     event.target.value.startsWith('object-') ? engine?.activate?.(event.target.value) : engine?.inspect?.(event.target.value);
   });
   document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => {if (movement.checked) engine?.preset?.(button.dataset.view);}));
-  document.getElementById('zoom-in').addEventListener('click', () => {if(movement.checked) engine?.zoom?.(-.7);});
-  document.getElementById('zoom-out').addEventListener('click', () => {if(movement.checked) engine?.zoom?.(.7);});
+  document.getElementById('zoom-in').addEventListener('click', () => engine?.zoom?.(-.7));
+  document.getElementById('zoom-out').addEventListener('click', () => engine?.zoom?.(.7));
   document.getElementById('view-reset').addEventListener('click', () => engine?.reset?.());
   canvas.addEventListener('viewchange', event => {
     const value = event.detail.action || event.detail.subject;
@@ -136,7 +140,7 @@
     console.error('3D scene could not render', error);
     finishLoading(); study.classList.add('is-failed'); document.getElementById('room-fallback').hidden = false;
   }
-  import('../scene/study.js?v=20260916-room').then(async ({mountStudy}) => {
+  import('../scene/study.js?v=20260916-atlas2').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas,pins,onSelect:show,onError:failed,onReady() {
       ready = true; study.classList.add('is-ready'); finishLoading(); document.getElementById('room-fallback').hidden = true; setPinState();
     }});

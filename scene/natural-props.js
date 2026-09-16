@@ -1,4 +1,4 @@
-import { surface } from './surface-materials.js?v=20260916-room';
+import { surface } from './surface-materials.js?v=20260916-atlas2';
 
 // One curved, pointed blade: a petal or an individual feather, not a thick oval.
 export function createPetalGeometry(T, feather=false){

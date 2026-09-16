@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import * as T from '../js/vendor/three.module.min.js';
 import { getRoomTime } from '../scene/room-time.js';
-import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260916-room';
+import { StudyCanvasRenderer } from '../scene/study-software.js?v=20260916-atlas2';
 import { mountStudy } from '../scene/study.js';
 
 const at=(h,m=0)=>new Date(2026,8,9,h,m), near=(a,b)=>assert.ok(Math.abs(a-b)<1e-9);

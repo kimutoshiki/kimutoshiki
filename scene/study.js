@@ -1,11 +1,12 @@
 import * as THREE from '../js/vendor/three.module.min.js';
-import { getRoomTime, updateRoomClock } from './room-time.js?v=20260916-room';
-import { loadSurfaceMaterials } from './surface-materials.js?v=20260916-room';
-import { createRoom } from './room-model.js?v=20260916-room';
-import { createDeskLandmarks } from './desk-landmarks.js?v=20260916-room';
-import { createOrbitNavigation } from './orbit-navigation.js?v=20260916-room';
-import { StudyCanvasRenderer } from './study-software.js?v=20260916-room';
-import { createObjectActions } from './object-actions.js?v=20260916-room';
+import { getRoomTime, updateRoomClock } from './room-time.js?v=20260916-atlas2';
+import { loadSurfaceMaterials } from './surface-materials.js?v=20260916-atlas2';
+import { createRoom } from './room-model.js?v=20260916-atlas2';
+import { createDeskLandmarks } from './desk-landmarks.js?v=20260916-atlas2';
+import { createOrbitNavigation } from './orbit-navigation.js?v=20260916-atlas2';
+import { StudyCanvasRenderer } from './study-software.js?v=20260916-atlas2';
+import { createObjectActions } from './object-actions.js?v=20260916-atlas2';
+import { createWallNavigation } from './wall-navigation.js?v=20260916-atlas2';
 
 export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>new Date()}) {
   let renderer;
@@ -27,16 +28,19 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   // resolution, is the performance budget for this mostly stationary room.
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
-  renderer.shadowMap.enabled=true;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const camera=new THREE.PerspectiveCamera(40,1,.025,80);
   const ambient=new THREE.HemisphereLight('#e6eddf','#735438',1.35);scene.add(ambient);
   const sun=new THREE.DirectionalLight('#fff0d2',3.7);sun.position.set(-11,8,-9);sun.target.position.set(1,2,3);
-  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-8,right:8,top:8,bottom:-6,near:.5,far:30});
-  sun.shadow.normalBias=.035;sun.shadow.bias=-.00015;sun.shadow.radius=4;scene.add(sun,sun.target);
+  sun.castShadow=true;const shadowResolution=Math.min(4096,renderer.capabilities?.maxTextureSize||2048);sun.shadow.mapSize.set(shadowResolution,shadowResolution);Object.assign(sun.shadow.camera,{left:-7.4,right:7.4,top:7,bottom:-6,near:.5,far:36});
+  sun.shadow.normalBias=.016;sun.shadow.bias=-.00006;sun.shadow.radius=3;scene.add(sun,sun.target);
   const bounce=new THREE.AmbientLight('#fff2df',1);scene.add(bounce);
   const fill=new THREE.DirectionalLight('#e0e6df',.65);fill.position.set(-3.8,5.9,4.2);scene.add(fill);
   let room;let textureRevision=0;
   try{room=createRoom(THREE,{onTextureLoad(){textureRevision++;}});const landmarks=await createDeskLandmarks(THREE);room.group.add(landmarks.group);room.targets.push(...landmarks.targets);scene.add(room.group);}catch(e){renderer.dispose();onError(e);return {dispose(){}};}
+  const wallNavigation=createWallNavigation(THREE,{room:room.group,onTextureLoad(){textureRevision++;renderer.invalidate?.();}});
+  room.targets.push(...wallNavigation.targets);
+  const wallLinks=document.getElementById?.('room-navigation');
   const surfaces=loadSurfaceMaterials(THREE,room.group,{onLoad(){textureRevision++;renderer.invalidate?.();},anisotropy:renderer.capabilities?.getMaxAnisotropy?.()||1});
   const objectActions=createObjectActions(THREE,room.group);
   const lamp=room.lampLight;
@@ -54,12 +58,16 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');const grad=ctx.createRadialGradient(64,64,0,64,64,64);grad.addColorStop(0,'rgba(26,15,5,.46)');grad.addColorStop(.45,'rgba(26,15,5,.23)');grad.addColorStop(1,'rgba(26,15,5,0)');ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
   const shadowTex=new THREE.CanvasTexture(c);
   for(const [x,z,w,h] of [[0,.2,7,3.4],[1.2,2.3,2.8,2.6],[-4,1,2.7,2.4]]){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,.012,z);roomEffects.add(m);}
-  // A subtly moving light mask makes the daylight feel filtered through leaves.
-  const d=document.createElement('canvas');d.width=d.height=512;const dc=d.getContext('2d');
+  // Tiny contact shadows remain under the desk objects in diffuse daylight.
+  // Their world footprints come from the real bases, not oversized click areas.
+  for(const target of room.targets.filter(t=>t.id.startsWith('landmark-'))){
+    const bounds=new THREE.Box3().setFromObject(target.object),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+    const contact=new THREE.Mesh(new THREE.PlaneGeometry(size.x*1.06,size.z*1.06),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false,opacity:.55}));
+    contact.rotation.x=-Math.PI/2;contact.position.set(center.x,2.171,center.z);contact.raycast=()=>{};roomEffects.add(contact);
+  }
+  // Light enters through the real window aperture and moving blind slats. The
+  // map wall has no painted-on leaf shadow that could disagree with the sun.
   let seed=98;const rand=()=>{seed=seed*16807%2147483647;return(seed-1)/2147483646;};
-  for(let i=0;i<72;i++){let x=rand()*512,y=rand()*512;dc.save();dc.translate(x,y);dc.rotate(rand()*Math.PI);dc.scale(1,.42);const g=dc.createRadialGradient(0,0,1,0,0,20+rand()*30);g.addColorStop(0,'rgba(20,30,9,.17)');g.addColorStop(.5,'rgba(20,30,9,.12)');g.addColorStop(1,'rgba(20,30,9,0)');dc.fillStyle=g;dc.fillRect(-60,-60,120,120);dc.restore();}
-  const dtex=new THREE.CanvasTexture(d);dtex.wrapS=dtex.wrapT=THREE.RepeatWrapping;dtex.repeat.set(1.5,1);
-  const dapple=new THREE.Mesh(new THREE.PlaneGeometry(15,8),new THREE.MeshBasicMaterial({map:dtex,transparent:true,depthWrite:false,opacity:.6}));dapple.position.set(0,3.5,-1.375);roomEffects.add(dapple);
   const dustGeometry=new THREE.BufferGeometry();const dustPositions=new Float32Array(96*3);
   for(let i=0;i<dustPositions.length;i+=3){dustPositions[i]=(rand()-.5)*10;dustPositions[i+1]=rand()*6;dustPositions[i+2]=rand()*4;}
   dustGeometry.setAttribute('position',new THREE.BufferAttribute(dustPositions,3));
@@ -68,7 +76,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   const pointer=new THREE.Vector2(),raycaster=new THREE.Raycaster();
   const targetMap=new Map(room.targets.map(t=>[t.id,t]));
   const inspectMap=new Map(room.targets.map(t=>[t.id,t.object.children.find(o=>o.userData.inspectionSource)||t.object]));
-  if(room.pets?.[0])inspectMap.set('cat',room.pets[0].object);
+  if(room.cat)inspectMap.set('cat',room.cat.group);
   const pinMap=new Map([...pins.querySelectorAll('[data-pin]')].map(p=>[p.dataset.pin,p]));
   const rayMeshes=[];room.group.traverse(o=>{if(o.isMesh)rayMeshes.push(o);});
   const moveListeners=[];function listen(el,event,handler,options){el.addEventListener(event,handler,options);moveListeners.push(()=>el.removeEventListener(event,handler,options));}
@@ -90,7 +98,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   }
   function announceView(){const view=navigation.update();canvas.dispatchEvent(new CustomEvent('viewchange',{detail:{zoom:view.scale,subject:view.subject,action:focusedAction?.id,label:focusedAction?.label}}));}
   function changeZoom(factor,x,y,previousX=x,previousY=y){
-    if(active||!navigation.getFreeMovement()||!Number.isFinite(factor)||factor<=0)return;
+    if(active||!Number.isFinite(factor)||factor<=0)return;
     const anchored=Number.isFinite(x)&&Number.isFinite(y)&&pointAt(previousX,previousY,beforeZoom);
     navigation.zoom(factor);
     if(anchored&&pointAt(x,y,afterZoom))navigation.pan(beforeZoom.clone().sub(afterZoom));
@@ -122,7 +130,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     const entry=objectActions.entries.get(id);if(!entry)return false;
     if(inspectionRoot.visible)setInspection('room');active=null;objectActions.restore();objectActions.trigger(id);
     // Keep the room visible. Repeated taps replay only the object's action.
-    if(navigation.getFreeMovement()&&entry.kind!=='drawer'&&focusedAction?.id!==id){focusedAction=entry;navigation.focus(entry.object);approach=paused||software?1:0;snapView();}
+    if(navigation.getFreeMovement()&&!['drawer','blinds','cat-life'].includes(entry.kind)&&focusedAction?.id!==id){focusedAction=entry;navigation.focus(entry.object);approach=paused||software?1:0;snapView();}
     renderer.invalidate?.();textureRevision++;renderer.shadowMap.needsUpdate=true;markHover(null);announceView();return true;
   }
   function pick(e){if(inspectionRoot.visible)return null;const b=canvas.getBoundingClientRect();raycaster.setFromCamera({x:(e.clientX-b.left)/b.width*2-1,y:-(e.clientY-b.top)/b.height*2+1},camera);const hits=raycaster.intersectObjects(rayMeshes,false);for(const hit of hits){if(hit.object.material?.transparent && hit.object.material.opacity<.2)continue;return objectActions.identify(hit.object)??hit.object.userData.targetId??null;}return null;}
@@ -153,7 +161,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   listen(canvas,'pointercancel',e=>endPointer(e,true));
   listen(canvas,'lostpointercapture',e=>endPointer(e,true));
   listen(canvas,'pointerleave',()=>{if(!drag){pointer.set(0,0);markHover(null);}});
-  listen(canvas,'wheel',e=>{if(active||!navigation.getFreeMovement()||e.ctrlKey||e.metaKey)return;e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?height:1);changeZoom(Math.exp(-THREE.MathUtils.clamp(delta,-300,300)*.0018),e.clientX,e.clientY);},{passive:false});
+  listen(canvas,'wheel',e=>{if(active||e.ctrlKey||e.metaKey)return;e.preventDefault();const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?height:1);changeZoom(Math.exp(-THREE.MathUtils.clamp(delta,-300,300)*.0018),e.clientX,e.clientY);},{passive:false});
   listen(canvas,'keydown',e=>{if(active||e.ctrlKey||e.metaKey||e.altKey)return;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','_','Home','0','Escape','Enter',' '].includes(e.key)){e.preventDefault();const dx=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0,dy=e.key==='ArrowUp'?-1:e.key==='ArrowDown'?1:0;if(dx||dy){if(e.shiftKey)panPixels(-dx*45,-dy*45);else navigation.rotate(-dx*.16,-dy*.13);}if(e.key==='+'||e.key==='=')changeZoom(1.18);if(e.key==='-'||e.key==='_')changeZoom(1/1.18);if(e.key==='Home'||e.key==='0'||e.key==='Escape')resetView();if((e.key==='Enter'||e.key===' ')&&focusedAction)activateObject(focusedAction.id);}});
   listen(window,'resize',resize);
   listen(document,'visibilitychange',()=>{visible=!document.hidden;if(visible){lastTime=0;syncTime();raf=requestAnimationFrame(animate);}else cancelAnimationFrame(raf);});
@@ -171,14 +179,16 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     updateRoomClock(room.clock,time);
     sun.intensity=time.sunIntensity;sun.position.fromArray(time.sunPosition);sun.target.position.fromArray(time.sunTarget);
     sun.color.copy(dayColor).lerp(eveningColor,time.warmth*.8).lerp(nightColor,1-time.daylight);
-    ambient.intensity=time.hemisphereIntensity*.82;bounce.intensity=time.ambientIntensity*.62;
-    scene.environmentIntensity=.12+time.daylight*.16;
-    fill.intensity=time.fillIntensity;lamp.intensity=time.lampIntensity*.65;
+    ambient.intensity=time.hemisphereIntensity*.72;bounce.intensity=time.ambientIntensity*.42;
+    scene.environmentIntensity=.15+time.daylight*.23;
+    fill.intensity=time.fillIntensity*.78;lamp.intensity=time.lampIntensity*.65;
     taskLight.intensity=2.5+(1-time.daylight)*10;
     renderer.toneMappingExposure=time.exposure;
     renderer.setLighting?.(time.softwareGain,time.softwareTint);
     room.windowMaterial.emissiveIntensity=time.windowGlow;room.decorations?.setDaylight(time.daylight);
-    dapple.material.opacity=.26*time.daylight;dust.material.opacity=.15+.18*time.daylight;
+    room.windowMaterial.color.setRGB(.10+.90*time.daylight,.14+.86*time.daylight,.23+.77*time.daylight);
+    room.windowMaterial.emissive.setRGB(.30+.70*time.daylight,.45+.55*time.daylight,.72+.28*time.daylight);
+    dust.material.opacity=.10+.15*time.daylight;
     roomBackground=new THREE.Color('#29241f').lerp(new THREE.Color('#8c7054'),time.daylight).getHex();
     if(!inspectionRoot.visible)scene.background.set(roomBackground);
     // Clock transforms and moving sun shadows must refresh even with motion paused.
@@ -189,19 +199,23 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     // Orbit coordinates are already continuous with pointer motion. Applying a
     // Cartesian lerp here would cut through models when changing direction.
     const view=updateDesired();camera.position.copy(desiredPosition);look.copy(desiredLook);camera.lookAt(look);approach=Math.min(1,approach+delta/ .65);camera.zoom=view.zoom*(.82+.18*(1-Math.pow(1-approach,3)));camera.updateProjectionMatrix();
-    objectActions.restore();syncTime();dtex.offset.x=Math.sin(animTime*.13)*.015;
+    objectActions.restore();syncTime();
     if(!software){room.decorations?.update(animTime);room.pets?.forEach(p=>{p.object.scale.y=p.baseScale.y*(1+Math.sin(animTime*1.5+p.phase)*.015);});room.animated.forEach((p,i)=>{p.rotation.z=Math.sin(animTime*.65+i*1.3)*.012;p.rotation.x=Math.sin(animTime*.48+i)*.009;});dust.rotation.y=animTime*.009;dust.position.y=Math.sin(animTime*.22)*.05;}
     objectActions.update(delta,!paused&&!software);
+    const catMoved=room.cat?.update(delta,!paused&&!software&&!inspectionRoot.visible);
+    const blindsMoved=room.blinds?.update(delta,!paused&&!software);
+    if(catMoved||blindsMoved){renderer.invalidate?.();if(paused||software)textureRevision++;}
     room.photoWall?.update(camera);
-    if(!software&&(!paused&&ms-lastShadow>180)){renderer.shadowMap.needsUpdate=true;lastShadow=ms;}
+    if(!software&&(!paused&&ms-lastShadow>100)){renderer.shadowMap.needsUpdate=true;lastShadow=ms;}
+    wallNavigation.update(camera,wallLinks,width,height,{hidden:inspectionRoot.visible});
     const state=String(paused)+','+view.subject+','+[camera.position.x,camera.position.y,camera.position.z,camera.zoom,look.x,look.y,look.z,width,height,textureRevision,timeRevision].map(n=>n.toFixed(3)).join(',');if((!software&&!paused)||frames<3||state!==renderState){renderer.render(scene,camera);renderState=state;}if(state!==pinState||(!paused&&frames%10===0)){positionPins();pinState=state;}frames++;
     if(!readySent){
       if(!readinessStarted)readinessStarted=ms;
-      const progress=room.photoWall?.frontProgress??1;
+      const progress=Math.min(room.photoWall?.frontProgress??1,wallNavigation.progress);
       canvas.dispatchEvent(new CustomEvent('roomloadprogress',{detail:{progress:Math.min(1,.2+.8*progress)}}));
       if(frames>=2&&(progress>=1||ms-readinessStarted>10000)){readySent=true;onReady();}
     }
   }
   resize();syncTime();raf=requestAnimationFrame(animate);
-  return {software,setFreeMovement(value){navigation.setFreeMovement(value);active=null;setInspection('room');canvas.dispatchEvent(new CustomEvent('movementchange',{detail:{freeMovement:navigation.getFreeMovement()}}));},getFreeMovement(){return navigation.getFreeMovement();},getActions(){return [...objectActions.entries.values()].map(({id,label,kind})=>({id,label,kind}));},activate:activateObject,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){focusedAction=null;approach=1;objectActions.clear();navigation.preset(name);snapView();announceView();},setLightingMode(mode){if(!['auto','day','night'].includes(mode))return;objectActions.restore();lightingMode=mode;syncTime();},setPaused(v){paused=software||v;if(paused){objectActions.clear();approach=1;}},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;reflectionMap.dispose();objectActions.clear();room.decorations?.dispose();room.photoWall?.dispose();surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
+  return {software,setFreeMovement(value){navigation.setFreeMovement(value);active=null;setInspection('room');canvas.dispatchEvent(new CustomEvent('movementchange',{detail:{freeMovement:navigation.getFreeMovement()}}));},getFreeMovement(){return navigation.getFreeMovement();},getActions(){return [...objectActions.entries.values()].map(({id,label,kind})=>({id,label,kind}));},activate:activateObject,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){focusedAction=null;approach=1;objectActions.clear();navigation.preset(name);snapView();announceView();},setLightingMode(mode){if(!['auto','day','night'].includes(mode))return;objectActions.restore();lightingMode=mode;syncTime();},setPaused(v){paused=software||v;if(paused){objectActions.clear();approach=1;}},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;room.dispose?.();wallNavigation.dispose();room.cat?.dispose();room.blinds?.dispose();reflectionMap.dispose();objectActions.clear();room.decorations?.dispose();room.photoWall?.dispose();surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
 }

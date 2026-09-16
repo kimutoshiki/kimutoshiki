@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 const repo = new URL('../', import.meta.url);
 const fromRepo = path => import(new URL(path, repo));
 const T = await fromRepo('js/vendor/three.module.min.js');
-const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260916-room');
+const { StudyCanvasRenderer } = await fromRepo('scene/study-software.js?v=20260916-atlas2');
 const ctx=new Proxy({}, {get(o,k){if(k==='createImageData'||k==='getImageData')return (w,h)=>({width:w,height:h,data:new Uint8ClampedArray(w*h*4)});if(k==='createLinearGradient'||k==='createRadialGradient')return()=>({addColorStop(){}});if(k==='measureText')return text=>({width:text.length*10});return o[k]??(()=>{});},set(o,k,v){o[k]=v;return true;}});
 class Canvas extends EventTarget{clientWidth=1280;clientHeight=800;width=1280;height=800;style={};getContext(k){return k==='webgl2'?null:ctx;}getBoundingClientRect(){return{left:0,top:0,width:this.clientWidth,height:this.clientHeight};}setPointerCapture(){}}
 globalThis.document=Object.assign(new EventTarget(),{hidden:false,fonts:{ready:Promise.resolve()},createElement:()=>new Canvas(),createElementNS:()=>Object.assign(new EventTarget(),{style:{},width:1600,height:900})});
@@ -36,9 +36,11 @@ assert.equal(engine.getFreeMovement(),false);
 const seated=camera.position.clone(),initialZoom=camera.zoom;
 send('pointerdown');send('pointermove',{clientX:880,clientY:500});send('pointerup');frame();
 assert.ok(camera.position.distanceTo(seated)<1e-8);
-assert.equal(send('wheel',{deltaY:-100}).defaultPrevented,false);
+assert.equal(send('wheel',{deltaY:-100}).defaultPrevented,true);frame();
+assert.ok(camera.zoom>initialZoom,'Default fixed seat must allow lens zoom');
 engine.zoom(-100);engine.inspect('cat');engine.preset('back');frame();
-assert.ok(camera.position.distanceTo(seated)<1e-8);assert.equal(camera.zoom,initialZoom);
+assert.ok(camera.position.distanceTo(seated)<1e-8);assert.equal(camera.zoom,6);
+engine.reset();frame();assert.equal(camera.zoom,initialZoom);
 engine.setFreeMovement(true);frame();const room=scene.getObjectByName('A quiet room for learning');assert.ok(room,'Original room group not found');const bounds={min:new T.Vector3(-6.22,.22,-1.19),max:new T.Vector3(6.22,6.25,9.12)};
 const ids=['landmark-okuma-auditorium','landmark-okuma-statue','landmark-karatsu-castle','landmark-karatsu-bank','cat'];const originals=new Map();
 for(const id of ids){if(id==='cat'){let found;room.traverse(o=>{if(o.isGroup&&/cat/i.test(o.name)&&!found)found=o;});originals.set(id,found);}else{let found;room.traverse(o=>{if(o.isGroup&&o.userData.targetId===id&&!found)found=o;});originals.set(id,found?.children.find(child=>child.userData.inspectionSource)||found);}}
@@ -89,6 +91,10 @@ engine.preset('front');frame();engine.setPaused(false);engine.preset('back');for
 // Parent room must return completely, and every clone must be cleared/replaced.
 engine.inspect('room');frame();check(visible(room),'Room does not return after inspection',{id});check(cachedDraws?.every(draw=>visible(draw.geo.object)&&!isWithin(draw.geo.object,root)),'Software geometry cache retains inspection clone on return',{id});check(reported.subject==='room','Subject selection does not return to room',{id,reported});const duplicates=allVisibleMeshes().filter(o=>o.parent===scene&&/inspection/i.test(o.name));check(!duplicates.length,'Inspection objects retained on room return',{id});}
 // Room presets remain bounded and on-screen pin occlusion uses actual styles and scene raycasts.
+for(const [preset,axis,sign] of [['front','z',-1],['left','x',-1],['right','x',1],['back','z',1]]){
+  engine.preset(preset);frame();const facing=camera.getWorldDirection(new T.Vector3());
+  assert.ok(facing[axis]*sign>.9,'Room preset must face the named wall: '+preset);
+}
 const knownAnchors={profile:new T.Vector3(-2.12,2.40,.54),research:new T.Vector3(3.19,3.83,-.57),blog:new T.Vector3(-.72,2.245,.60),gallery:new T.Vector3(-.72,4.0,-1.21),contact:new T.Vector3(.63,2.213,.59)};
 for(const preset of ['front','left','right','back']){engine.preset(preset);frame();for(const a of ['x','y','z'])check(camera.position[a]>=bounds.min[a]-1e-8&&camera.position[a]<=bounds.max[a]+1e-8,'Room camera exits wall',{preset,axis:a,position:camera.position.toArray()});const meshes=allVisibleMeshes().filter(o=>o.isMesh);for(const pin of pinEls){if(pin.style.visibility!=='visible')continue;const target=knownAnchors[pin.dataset.pin],projected=target.clone().project(camera);check(projected.z>=-1&&projected.z<=1,'Pin appears behind camera/near plane',{preset,pin:pin.dataset.pin,z:projected.z});const ray=new T.Raycaster(camera.position,target.clone().sub(camera.position).normalize(),0,camera.position.distanceTo(target)-.002);const blocker=ray.intersectObjects(meshes,false).find(h=>!(h.object.material?.transparent&&h.object.material.opacity<.2));if(blocker&&blocker.object.userData.targetId!==pin.dataset.pin)report.bugs.push({message:'Visible room pin through unrelated geometry',preset,pin:pin.dataset.pin,blocking:blocker.object.name||blocker.object.parent?.name});report.roomPins.push({preset,pin:pin.dataset.pin,visible:true});}}
 engine.reset();frame();const baseline=camera.position.clone();engine.zoom(-100);frame();check(near(reported.zoom,6),'Room 6× zoom not retained',{});check(baseline.distanceTo(camera.position)<1e-5,'Room zoom changes camera position',{});engine.reset();frame();

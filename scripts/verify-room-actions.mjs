@@ -13,22 +13,31 @@ const requests=[];T.TextureLoader.prototype.load=function(url,onLoad){requests.p
 const room=createRoom(T);loadSurfaceMaterials(T,room.group);const actions=createObjectActions(T,room.group),nav=createOrbitNavigation(T,room.envelope.bounds);
 room.group.updateMatrixWorld(true);
 const sceneMeshes=[];room.group.traverse(o=>{if(o.isMesh)sceneMeshes.push(o);});
+const seat=new T.Vector3(0,3.48,8.24);
+for(const point of [[-2.65,2.170,.62],[-1.9,2.170,.60],[0,2.170,.64],[2.7,2.170,.60]]){
+  const ray=new T.Raycaster(seat,new T.Vector3(...point).sub(seat).normalize());
+  const hit=ray.intersectObjects(sceneMeshes,false)[0];
+  assert.notEqual(hit?.object.name,'Subtle desk patina','Wear must not intercept desk clicks');
+  assert.notEqual(actions.entries.get(actions.identify(hit?.object))?.label,'窓辺の作業机','Main desk must not activate the window workbench');
+}
+const workbenchBounds=new T.Box3().setFromObject(room.group.getObjectByName('Oak and iron window workbench'));
+assert.ok(workbenchBounds.max.x< -3,'Workbench inspection bounds exclude main-desk patina');
 assert.ok(actions.entries.size>0,'Real objects retain their owned interactions');
 nav.setFreeMovement(true);
-for(const kind of ['detail','bird','plant','lamp','mobile','cat','drawer'])assert.ok([...actions.entries.values()].some(e=>e.kind===kind),'Missing action '+kind);
+for(const kind of ['detail','bird','plant','lamp','mobile','cat-life','blinds','drawer'])assert.ok([...actions.entries.values()].some(e=>e.kind===kind),'Missing action '+kind);
 let tested=0,focusChecks=0;
 for(const entry of actions.entries.values()){
   const meshes=[];entry.object.traverse(o=>{if(o.isMesh)meshes.push(o);});assert.ok(meshes.length,'Action is left with no geometry after batching: '+entry.label);
   for(const mesh of meshes)assert.ok(actions.identify(mesh),'No picking ancestor for '+entry.label);
   const before=JSON.stringify(meshes.map(m=>m.matrixWorld.elements));
-  if(entry.kind!=='detail'&&entry.kind!=='drawer'){
+  if(entry.kind!=='detail'&&entry.kind!=='drawer'&&!entry.onActivate){
     const rotations=Object.values(entry.parts).map(o=>o.quaternion.clone()),glow=[...entry.materials].map(m=>m.emissiveIntensity);
     actions.trigger(entry.id);actions.update(.35);entry.object.updateWorldMatrix(true,true);
     assert.ok(JSON.stringify(meshes.map(m=>m.matrixWorld.elements))!==before||[...entry.materials].some((m,i)=>m.emissiveIntensity!==glow[i]),'Action makes no visible change: '+entry.label);
     actions.restore();entry.object.updateWorldMatrix(true,true);assert.equal(JSON.stringify(meshes.map(m=>m.matrixWorld.elements)),before,'Action leaves cumulative transform drift: '+entry.label);
     actions.clear();tested++;
   }
-  if(entry.kind==='drawer')continue; // A drawer opens in place, without a camera inspection.
+  if(entry.kind==='drawer'||entry.onActivate)continue; // Persistent mechanisms and the moving cat react in place.
   for(const aspect of [1.6,.462]){
     nav.reset();nav.resize(aspect<.85,aspect);const view=nav.focus(entry.object);
     for(const axis of ['x','y','z'])assert.ok(view.position[axis]>=room.envelope.bounds.min[axis]-1e-8&&view.position[axis]<=room.envelope.bounds.max[axis]+1e-8,'Close-up crosses room shell: '+entry.label);

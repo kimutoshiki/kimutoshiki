@@ -16,6 +16,7 @@ export function createObjectActions(T, root){
     entries,identify,restore,
     trigger(id){
       const entry=entries.get(id);if(!entry)return null;
+      if(typeof entry.onActivate==='function'){entry.onActivate();return entry;}
       if(drawers.has(id)){
         const drawer=drawers.get(id);drawer.open=!drawer.open;entry.open=drawer.open;
         drawer.target=drawer.closed+(drawer.open?(entry.travel||1.2):0);

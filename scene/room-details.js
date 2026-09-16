@@ -37,12 +37,12 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
   }
 
   // Low paneling stays below the existing photographs, window and shelving.
-  box([12.90, 1.12, .035], [0, .77, -1.481], palette.darkWood);
+  box([12.90, 1.12, .035], [0, .77, -1.481], palette.paint);
   for (let i = 0; i < 10; i++) {
     const x = -5.77 + i * 1.282;
     frame(x, .77, 1.11, .82, -1.448, palette.wood, .045);
     frame(x, .77, 1.00, .71, -1.429, palette.lightWood, .012);
-    box([.91, .62, .009], [x, .77, -1.453], palette.wood);
+    box([.91, .62, .009], [x, .77, -1.453], palette.paint);
   }
   for (const [y, height, depth, material] of [
     [.305, .044, .12, palette.wood], [1.335, .070, .16, palette.wood],
@@ -164,9 +164,9 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
     for (const side of [-1, 1]) bead([.015, .015, .005], [x + side * width * .33, y - .33, -1.387], palette.brass);
   }
   // A substantial wall clock: walnut case, brushed brass bezel and a cream dial.
-  const clock = new THREE.Group(); clock.name = 'Large brass wall clock';
+  const clock = new THREE.Group(); clock.name = 'Brass wall clock';
   clock.userData.roomAction = {kind:'detail',label:'掛け時計'};
-  clock.position.set(3.40, 4.83, -1.325); group.add(clock); clock.updateMatrixWorld(true);
+  clock.position.set(4.72, 5.38, -1.325); clock.scale.setScalar(.68); group.add(clock); clock.updateMatrixWorld(true);
   const caseMesh = new THREE.Mesh(new THREE.CylinderGeometry(.835, .835, .15, 64), palette.darkWood);
   caseMesh.rotation.x = Math.PI / 2; caseMesh.castShadow = caseMesh.receiveShadow = true; clock.add(caseMesh);
   const bezel = new THREE.Mesh(new THREE.TorusGeometry(.778, .045, 8, 64), palette.brass);

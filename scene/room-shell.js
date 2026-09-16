@@ -1,5 +1,5 @@
 /** Complete, opaque room envelope. Camera bounds are inset from these surfaces. */
-import { surface } from './surface-materials.js?v=20260916-room';
+import { surface } from './surface-materials.js?v=20260916-atlas2';
 export function completeRoom(T, group, palette) {
   const shell = new T.Group(); shell.name = 'Complete room envelope';
   const cube = new T.BoxGeometry(1,1,1);
@@ -19,12 +19,12 @@ export function completeRoom(T, group, palette) {
     box(.12,.20,10.96,x,6.14,3.92,palette.darkWood);
     box(.14,.035,10.96,x,6.29,3.92,palette.lightWood);
     box(.09,.18,10.96,x,.12,3.92,palette.darkWood);
-    box(.035,1.04,10.9,x,.78,3.92,palette.wood);
+    box(.035,1.04,10.9,x,.78,3.92,palette.paint);
     box(.10,.07,10.96,x,1.34,3.92,palette.lightWood);
     for(let z=-.9;z<9.3;z+=1.28)box(.075,.86,.028,x-Math.sign(x)*.026,.78,z,palette.darkWood);
   }
   for(const y of [.12,1.34,6.14])box(13.0,.12,.13,0,y,9.29,palette.darkWood);
-  box(12.98,1.04,.045,0,.78,9.33,palette.wood);
+  box(12.98,1.04,.045,0,.78,9.33,palette.paint);
   // Flush coffer panels with shallow oak cross beams, supported by the ceiling.
   for(const x of [-4.28,0,4.28])box(.11,.095,10.9,x,6.39,3.88,palette.wood);
   for(const z of [1.5,5.3])box(12.96,.095,.11,0,6.39,z,palette.wood);

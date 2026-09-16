@@ -2,14 +2,14 @@
 export function createOrbitNavigation(T, bounds) {
   const center=new T.Vector3(0,2.7,.65),offset=new T.Vector3(),direction=new T.Vector3();
   const position=new T.Vector3(),target=center.clone();
-  const seat=new T.Vector3(0,3.55,8.95),seatedLook=new T.Vector3(0,2.98,-.35);
+  const seat=new T.Vector3(0,3.48,8.24),seatedLook=new T.Vector3(0,2.98,-.35);
   let freeMovement=false,gazeX=0,gazeY=0;
   let yaw=.015,pitch=.105,radius=8.5,subjectHeight=1,subjectWidth=1,aspect=.46,zoom=1,subject='room',portrait=false,focused=false,focusYaw=0;
   const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
   function update(){
     if(!freeMovement){
       position.copy(seat);target.copy(seatedLook);target.x+=gazeX;target.y+=gazeY;
-      return {position,target,zoom:portrait?Math.max(.30,Math.min(.70,aspect*1.06)):1,scale:1,yaw:0,pitch:0,subject:'room',freeMovement:false};
+      return {position,target,zoom:zoom*(portrait?Math.max(.30,Math.min(.70,aspect*1.06)):1),scale:zoom,yaw:0,pitch:0,subject:'room',freeMovement:false};
     }
     target.copy(center).add(offset);if(subject==='room'&&!focused)target.clamp(bounds.min,bounds.max);
     direction.set(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch));
@@ -34,8 +34,12 @@ export function createOrbitNavigation(T, bounds) {
     pan(delta){if(!freeMovement)return update();offset.x+=delta.x;offset.z+=delta.z;offset.y=0;
       if(subject==='room'&&!focused){offset.x=clamp(offset.x,-1.6,1.6);offset.z=clamp(offset.z,-1.1,1.1);const t=center.clone().add(offset).clamp(bounds.min.clone().addScalar(.2),bounds.max.clone().addScalar(-.2));offset.copy(t).sub(center);}
       else offset.clampLength(0,focused?.16:radius*.18);return update();},
-    zoom(factor){if(!freeMovement)return update();if(Number.isFinite(factor)&&factor>0)zoom=clamp(zoom*factor,.65,6);return update();},
-    preset(name){if(!freeMovement)return update();const presets={front:[0,.105],left:[-Math.PI/2,.15],right:[Math.PI/2,.15],back:[Math.PI,.15]};if(presets[name]){if(focused)reset();[yaw,pitch]=presets[name];offset.set(0,0,0);}return update();},
+    zoom(factor){if(Number.isFinite(factor)&&factor>0)zoom=clamp(zoom*factor,.65,6);return update();},
+    preset(name){if(!freeMovement)return update();if(focused)reset();
+      // Room directions name the wall being viewed; standalone objects retain
+      // the conventional camera-side inspection directions.
+      const presets={front:[0,.105],left:[subject==='room'?Math.PI/2:-Math.PI/2,.15],right:[subject==='room'?-Math.PI/2:Math.PI/2,.15],back:[Math.PI,.15]};
+      if(presets[name]){[yaw,pitch]=presets[name];offset.set(0,0,0);if(subject==='room')center.set(0,name==='front'?2.7:3.25,name==='front'?.65:3.85);}return update();},
     focus(object){
       if(!freeMovement)return update();
       object.updateWorldMatrix(true,true);const box=new T.Box3().setFromObject(object),size=box.getSize(new T.Vector3()),previous=update().position.clone();

@@ -125,3 +125,17 @@ Style/medium: photoreal natural surface textures with a quiet elegant sage green
 Composition/framing: perfectly front-on orthographic flat, surfaces fill their quadrants edge-to-edge, boundaries exactly at half width and half height.
 Lighting/mood: uniform flat albedo illumination, no lighting gradients, no baked cast shadows, no highlights.
 Constraints: no scene, interface, sample cards, gaps, text, labels, numbers, watermarks, perspective, outer border or decorative framing. Render only the four material textures.
+
+
+### Study garden — September 2026
+
+Asset: images/decor/window-garden.webp. Built-in ImageGen, one generation. Original 1024 × 1536 resolution retained, WebP quality 92, 292,408 bytes. Displayed only beyond the physical window; the room and its light/shadows remain 3D geometry.
+
+Mode: built-in image_gen; one generation, selected without further edits.
+
+Use case: photorealistic-natural.
+Asset type: one portrait background texture for the outdoor view beyond a cozy study window in a realistic 3D website.
+Primary request: a beautiful quiet leafy garden in soft warm daylight, seen at eye level from several meters away. Natural layered green foliage, a light canopy of delicate leaves, subtle pale blue and warm cream sky glimpses through the upper canopy, softly lit shrubs and a little low garden greenery in the lower area. No dominant object. The foliage should read as a real lush garden with depth and gentle natural variation.
+Style: high-quality natural photographic realism, softly out of focus with optical depth of field and delicate irregular bokeh, rich fine tonal gradation, restrained contrast, realistic warm sunlight filtering from upper left, sage/olive fresh greens and subtle golden highlights. The image is an atmospheric background, softly blurred optically rather than a flat pattern or digitally smeared image. Avoid strong blown-out highlights and dark hard silhouettes.
+Composition: vertical portrait, approximately 2:3 aspect ratio, preferably 1024 by 1536 pixels. Scene fills the entire image edge to edge; garden canopy above, middle-distance leafy layers through center and lower portion. Calm and spatially believable, not an illustration, not a render, not a collage.
+Constraints: exactly one image; no people, animals, buildings, furniture, interior, window, frame, glass reflections, curtains, geometric circles, hard outlines, text, letters, watermark, or logos.
