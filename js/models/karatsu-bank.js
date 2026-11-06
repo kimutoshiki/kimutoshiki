@@ -14,8 +14,8 @@ export function createKaratsuBank(T) {
   const M = {
     brick: mat('#9c553b'), brickDark: mat('#724332'), brickLight: mat('#af6646'),
     stone: mat('#c7c2b1'), pale: mat('#e2dfcf'), shadowStone: mat('#a3a593'),
-    slate: mat('#3b584e', 0.87), copper: mat('#376450', 0.62, 0.28), copperEdge: mat('#799983', 0.7, 0.16),
-    glass: mat('#263d41', 0.38, 0.16), glassLight: mat('#45605b', 0.4, 0.1),
+    slate: mat('#3b584e', .69), copper: mat('#376450', .50, .48), copperEdge: mat('#799983', .41, .58),
+    glass: mat('#263d41', .23, .12), glassLight: mat('#45605b', .28, .1),
     wood: mat('#704330'), black: mat('#243430', 0.65, 0.12), dark: mat('#1c2826'),
     pavement: mat('#c0b8a4'), paver: mat('#d0c7b4'), road: mat('#6f746e'), curb: mat('#d9d3c4'),
     soil: mat('#645e42'), plant: mat('#5c734c'), plantLight: mat('#829461'), grass: mat('#879269'),
@@ -42,8 +42,8 @@ export function createKaratsuBank(T) {
   for(const key of ['brick','brickDark','brickLight']) {M[key].map=brickGrain;M[key].bumpMap=brickGrain;M[key].bumpScale=.025;}
   for(const key of ['slate','copper','copperEdge']) {M[key].map=metalGrain;M[key].roughnessMap=metalGrain;M[key].bumpMap=metalGrain;M[key].bumpScale=.018;}
   surface(M.brick,'brick');
-  for(const key of ['stone','pale','shadowStone'])surface(M[key],'stone',{tint:key==='shadowStone'?'#bebdb6':key==='pale'?'#ffffff':'#e9e7df'});
-  surface(M.slate,'slate');surface(M.wood,'walnut',{tint:'#c8b4a8'});
+  for(const key of ['stone','pale','shadowStone'])surface(M[key],'stone',{tint:key==='shadowStone'?'#bebdb6':key==='pale'?'#ffffff':'#e9e7df',roughness:key==='pale'?.79:.86,bumpScale:.010});
+  surface(M.slate,'slate',{roughness:.68,bumpScale:.006});surface(M.wood,'walnut',{tint:'#c8b4a8',roughness:.54,bumpScale:.006});
   const G = { box: new T.BoxGeometry(1, 1, 1), sphere: new T.IcosahedronGeometry(1, 1) };
   const cache = new Map();
   const mesh = (geo, material, x, y, z, sx = 1, sy = 1, sz = 1, parent = group) => {

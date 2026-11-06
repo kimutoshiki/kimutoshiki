@@ -2,8 +2,8 @@
  * Raster artwork stays on framed print / textile surfaces; all ornaments,
  * vessels, shelves, furniture, foliage and hanging mobiles are real geometry.
  */
-import { surface } from './surface-materials.js?v=20260916-perf1';
-import { createSongbirdFactory, createPetalGeometry } from './natural-props.js?v=20260916-perf1';
+import { surface } from './surface-materials.js?v=20261106-craft1';
+import { createSongbirdFactory, createPetalGeometry } from './natural-props.js?v=20261106-craft1';
 
 export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureLoad = () => {} }) {
   const group = new T.Group(); group.name = 'Collected room: art, ceramics and textiles'; room.add(group);
@@ -13,12 +13,12 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   const cube = new T.BufferGeometry().copy(new T.BoxGeometry(1, 1, 1));
   const sphere = new T.SphereGeometry(1, 20, 12), smallSphere = new T.SphereGeometry(1, 10, 7), cylinder = new T.CylinderGeometry(1, 1, 1, 20);
   const rodGeo = new T.CylinderGeometry(1, 1, 1, 7), ringGeo = new T.TorusGeometry(1, .045, 6, 36);
-  const plane = new T.PlaneGeometry(1, 1), disc = new T.CircleGeometry(1, 48);
+  const disc = new T.CircleGeometry(1, 48);
   const cone = new T.ConeGeometry(1, 1, 12);
   const mat = (color, roughness = .7, metalness = 0) => new T.MeshStandardMaterial({ color, roughness, metalness });
-  const ceramic = mat('#f3e4ce', .35), sage = mat('#8ba092', .42), blue = mat('#376967', .42);
-  const honey = mat('#c39355', .63), rose = mat('#b77662', .48), dark = mat('#29332b', .9);
-  const cream = mat('#e8d6ac', .95), brass = mat('#c5a062', .3, .68), cord = mat('#c6ae86', 1);
+  const ceramic = mat('#ddd5c4', .28), sage = mat('#6c7b69', .36), blue = mat('#31514c', .33);
+  const honey = mat('#9d7b48', .57), rose = mat('#996d58', .42), dark = mat('#29332b', .9);
+  const cream = mat('#ded3b9', .95), brass = palette.brass, cord = mat('#b7a382', 1);
   const wood = palette.wood, darkWood = palette.darkWood;
   const glow = mat('#fff2d0', .73); glow.emissive.set('#ffdca4'); glow.emissiveIntensity = .32;
   const linen = surface(mat('#ffffff', 1), 'linen');
@@ -71,7 +71,6 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   function lathe(profile) { return new T.LatheGeometry(profile.map(p => new T.Vector2(...p)), 24); }
   const vaseGeo = lathe([[.0,0],[.19,0],[.23,.06],[.26,.20],[.23,.35],[.115,.49],[.105,.63],[.125,.655],[.125,.68],[.087,.68],[.086,.61],[.091,.51],[.205,.34],[.235,.20],[.202,.07],[0,.065]]);
   const jugGeo = lathe([[0,0],[.21,0],[.265,.09],[.30,.28],[.24,.49],[.15,.56],[.15,.67],[.115,.67],[.115,.57],[.207,.47],[.262,.28],[.23,.1],[0,.055]]);
-  const bowlGeo = lathe([[0,.015],[.18,.015],[.24,.07],[.34,.22],[.34,.25],[.30,.25],[.21,.095],[.16,.06],[0,.06]]);
   function vase(parent, pos, scale = 1, material = ceramic, jug = false) {
     const v = node(jug ? 'Handled ceramic pitcher' : 'Glazed bud vase', pos, parent); v.scale.setScalar(scale);
     mesh(jug ? jugGeo : vaseGeo, material, v);
@@ -91,15 +90,6 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   function bird(parent, pos, scale = 1, material = sage) {
     const n=songbird(parent,pos,scale);interact(n,'bird','小鳥');
     n.traverse(o=>{if(o.userData.actionPart)interactiveRoots.push(o);});
-    return n;
-  }
-  const roofShape=new T.Shape();roofShape.moveTo(-.5,0);roofShape.lineTo(0,.65);roofShape.lineTo(.5,0);roofShape.closePath();
-  const roofGeo=new T.ExtrudeGeometry(roofShape,{depth:1,bevelEnabled:false});roofGeo.translate(0,0,-.5);
-  function house(parent,pos,scale=1,index=0){
-    const n=node('Little ceramic house',pos,parent);n.scale.setScalar(scale);
-    box([.38,.48,.32],[0,.24,0],ceramic,n);const roof=mesh(roofGeo,[rose,blue,sage][index%3],n);roof.scale.set(.45,.35,.40);roof.position.y=.48;
-    for(const x of [-.105,.105])for(const y of [.20,.37]){box([.074,.091,.012],[x,y,.165],honey,n);box([.048,.064,.012],[x,y,.173],glow,n);box([.006,.066,.006],[x,y,.183],ceramic,n);}
-    box([.07,.125,.012],[0,.067,.166],dark,n);box([.055,.18,.075],[.13,.6,-.03],ceramic,n);
     return n;
   }
   // Cupped leaf surfaces, shared across vines and bouquets.
@@ -184,12 +174,16 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     return n;
   }
   function mushroom(parent,pos,size=1){
-    const n=node('Warm ceramic mushroom lamp',pos,parent);n.scale.setScalar(size);
-    interact(n,'lamp','きのこのランプ');
-    const stem=lathe([[0,0],[.115,0],[.135,.035],[.10,.31],[.07,.38],[0,.38]]);mesh(stem,ceramic,n);
-    const cap=mesh(new T.SphereGeometry(1,24,12,0,Math.PI*2,0,Math.PI/2),glow.clone(),n);cap.scale.set(.30,.18,.30);cap.position.y=.34;
-    const underside=mesh(disc,ceramic,n,false);underside.rotation.x=Math.PI/2;underside.scale.setScalar(.30);underside.position.y=.34;
-    ring(.292,[0,.343,0],honey,n,true);return n;
+    // A turned brass stem and solid enamel shade replace the toy-like silhouette.
+    // The lit underside uses emission and needs no extra real-time light.
+    const n=node('Brass-stemmed reading lamp',pos,parent);n.scale.setScalar(size);
+    interact(n,'lamp','真鍮の読書灯');
+    mesh(lathe([[0,0],[.16,0],[.17,.022],[.16,.045],[.09,.063],[.045,.10],[.027,.40],[.055,.425],[0,.425]]),brass,n);
+    const shade=mesh(lathe([[.075,.385],[.25,.36],[.29,.333],[.30,.32],[.30,.307],[.278,.307],[.235,.334],[.071,.36]]),blue,n);
+    shade.name='Spun enamel reading shade';
+    const underside=mesh(disc,glow.clone(),n,false);underside.rotation.x=Math.PI/2;underside.scale.setScalar(.276);underside.position.y=.313;
+    ring(.292,[0,.312,0],brass,n,true);
+    ball([.035,.023,.035],[0,.433,0],brass,n);return n;
   }
   function paperLantern(parent,pos,size=.55){
     const n=node('Pleated warm paper lantern',pos,parent);n.scale.setScalar(size);
@@ -197,14 +191,6 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     const body=ball([.51,.67,.51],[0,0,0],glow.clone(),n);body.castShadow=false;
     for(let i=1;i<16;i++){const y=-.67+i*1.34/16,r=.51*Math.sqrt(Math.max(0,1-y*y/(.67*.67)));ring(r,[0,y,0],cream,n,true);}
     cyl(.12,.05,[0,-.67,0],brass,n);cyl(.12,.05,[0,.67,0],brass,n);return n;
-  }
-  function sunMirror(parent,pos,r=.42,rotation=0){
-    const n=node('Brass sunburst wall mirror',pos,parent,rotation);
-    // Subtle opaque silver-blue glass: never pretend a painted view is a live reflection.
-    const mirrorMat=mat('#bdd0c5',.22,.68);const face=mesh(disc,mirrorMat,n,false);face.scale.setScalar(r*.66);face.position.z=.013;
-    ring(r*.68,[0,0,.021],brass,n);ring(r*.73,[0,0,0],wood,n);
-    for(let i=0;i<32;i++){const a=i*Math.PI/16,outer=r*(i%2?.92:1.10);rod([Math.sin(a)*r*.73,Math.cos(a)*r*.73,0],[Math.sin(a)*outer,Math.cos(a)*outer,.016],.013,brass,n);}
-    return n;
   }
   const moonShape=new T.Shape();moonShape.absarc(0,0,.22,Math.PI*.28,Math.PI*1.72,false);moonShape.quadraticCurveTo(-.12,0,Math.cos(Math.PI*.28)*.22,Math.sin(Math.PI*.28)*.22);
   const moonGeo=new T.ExtrudeGeometry(moonShape,{depth:.018,bevelEnabled:true,bevelSize:.008,bevelThickness:.005,bevelSegments:2,curveSegments:24});
@@ -219,22 +205,6 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
     }
     return n;
   }
-  function displayShelf(parent,pos,width=2.5,height=1.75,rotation=0){
-    const n=node('Walnut cubby cabinet with ceramic collection',pos,parent,rotation),depth=.34;
-    box([width,height,.035],[0,0,-depth*.5],darkWood,n);
-    for(const x of [-width/2,width/2])box([.065,height,.41],[x,0,0],wood,n);
-    for(const y of [-height/2,0,height/2])box([width+.07,.065,.41],[0,y,0],wood,n);
-    for(const x of [-width/6,width/6])box([.038,height,.36],[x,0,0],wood,n);
-    for(let row=0;row<2;row++)for(let col=0;col<3;col++){
-      const x=(col-1)*width/3,y=-height/2+row*height/2+.033,z=.015,i=row*3+col;
-      if(i===0||i===5)house(n,[x,y,z],.69,i);
-      else if(i===1||i===3)vase(n,[x,y,z],.65,[ceramic,sage,blue][col],i===3);
-      else if(i===2)bird(n,[x,y,z],.62,rose);
-      else bookStack(n,[x,y,z],width*.23,3);
-    }
-    return n;
-  }
-
   // The room uses quiet plaster and an original atlas inlay.
 
   // First pass: floor collections and a visible right-hand cabinet.
@@ -249,7 +219,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   for(const [i,y] of [.17,.79,1.45,2.10,2.79].entries()){
     box([.84,.055,.45],[0,y,0],wood,narrow);
     if(i===0)bookStack(narrow,[0,y+.029,0],.49,4);
-    if(i===1)house(narrow,[0,y+.029,0],.72,1);
+    if(i===1)bookStack(narrow,[0,y+.029,0],.47,3);
     if(i===2)vase(narrow,[0,y+.029,0],.78,sage,true);
     if(i===3)bird(narrow,[0,y+.029,0],.81,ceramic);
   }
@@ -264,7 +234,7 @@ export function addCollectedDecor(T, { group: room, palette, mainRug, onTextureL
   const woven=basket(reading,[-1.03,-.025,.37],.37,.58,true);
   teaTable(reading,[1.00,-.025,-.03],.44,.77);
   bouquet(reading,[1.0,.79,-.03],.40);record(reading,'floor');
-  const mushroomCorner=node('Mushroom lights and small forest collection',[5.15,0,4.24],group);
+  const mushroomCorner=node('Quiet reading lights and stoneware collection',[5.15,0,4.24],group);
   for(const [i,x] of [-.35,.22].entries()){
     const stump=cyl(i?.27:.36,i?.40:.62,[x,i?.20:.31,0],wood,mushroomCorner);
     ring(i?.25:.34,[x,i?.408:.628,0],brass,mushroomCorner,true);

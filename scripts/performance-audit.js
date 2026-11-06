@@ -44,4 +44,4 @@ setInterval(()=>{
   while(frames.length>120)frames.shift();while(gpu.length>120)gpu.shift();
   panel.textContent=JSON.stringify({samples:frames.length,frameCPUms:+avg(frames,'cpu').toFixed(2),frameIntervalMs:+avg(frames,'interval').toFixed(2),GPUms:gpu.length?+avg(gpu).toFixed(2):null,drawCalls:+avg(frames,'calls').toFixed(1),triangles:Math.round(avg(frames,'triangles')),textures,programs},null,2);
 },1000);
-await import('../js/study-ui.js?v=20260916-perf1');
+await import('../js/study-ui.js?v=20261106-craft1');

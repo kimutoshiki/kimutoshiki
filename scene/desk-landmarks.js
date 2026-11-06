@@ -1,11 +1,12 @@
 /* Desk displays made from the site's four original procedural landmark models.
  * Architecture is retained as authored. Only independently separable scenery is
- * removed; every retained geometry, material and instance transform is original.
+ * removed. The complete architecture retains its proportions; layered display
+ * mounts and controlled material finishes make it readable at desk scale.
  */
-import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20260916-perf1';
-import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20260916-perf1';
-import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20260916-perf1';
-import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20260916-perf1';
+import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20261106-craft1';
+import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20261106-craft1';
+import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20261106-craft1';
+import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20261106-craft1';
 import { batchStaticMeshes } from '../js/models/model-utils.js';
 
 import { surface, prepareBoxSurfaceUVs, ensureSurfaceUV, SURFACES } from './surface-materials.js';
@@ -45,12 +46,26 @@ function extractBank(model) { retainArchitecture(model, 'Landmark architecture')
 function extractCastle(model) { retainArchitecture(model, 'Five-tier keep'); }
 function extractAuditorium(T, model) { retainArchitecture(model, 'Okuma auditorium architecture'); }
 
-function nameplate(T, title, subtitle) {
+function beveledMount(T, width, height, depth, bevel) {
+  const outline = new T.Shape();
+  const x = width / 2 - bevel, z = depth / 2 - bevel;
+  outline.moveTo(-x, -z); outline.lineTo(x, -z); outline.lineTo(x, z);
+  outline.lineTo(-x, z); outline.closePath();
+  const geometry = new T.ExtrudeGeometry(outline, {
+    depth: height - bevel * 2, steps: 1, bevelEnabled: true,
+    bevelSize: bevel, bevelThickness: bevel, bevelSegments: 1, curveSegments: 1,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(0, bevel, 0);
+  return geometry;
+}
+
+function nameplate(T, title, subtitle, brass, edgeGeometry, screwGeometry) {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 128;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#29423a';
+  ctx.fillStyle = '#19352e';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = '#bca577';
   ctx.lineWidth = 2;
@@ -65,11 +80,20 @@ function nameplate(T, title, subtitle) {
   ctx.fillText(subtitle, canvas.width / 2, 94);
   const texture = new T.CanvasTexture(canvas);
   texture.colorSpace = T.SRGBColorSpace;
-  const plate = new T.Mesh(new T.PlaneGeometry(.75, .09375), new T.MeshStandardMaterial({ map: texture, roughness: .75 }));
+  const backing = new T.Mesh(edgeGeometry, brass);
+  backing.scale.set(.772, .102, .008);
+  backing.position.set(0, .051, DISPLAY_DEPTH / 2 + .004);
+  const plate = new T.Mesh(new T.PlaneGeometry(.75, .09375), new T.MeshStandardMaterial({ map: texture, roughness: .46, metalness: .12 }));
   plate.name = `${title} · nameplate`;
-  plate.position.set(0, .047, DISPLAY_DEPTH / 2 + .0015);
-  // Lower edge rests on the table, and the top extends just beyond the thin base.
-  return plate;
+  plate.position.set(0, .051, DISPLAY_DEPTH / 2 + .0085);
+  const plaque = [backing, plate];
+  for (const x of [-.358, .358]) {
+    const screw = new T.Mesh(screwGeometry, brass);
+    screw.rotation.x = Math.PI / 2;
+    screw.position.set(x, .051, DISPLAY_DEPTH / 2 + .0095);
+    plaque.push(screw);
+  }
+  return plaque;
 }
 
 /** Return a standalone tabletop group and the room's standard target records. */
@@ -79,11 +103,14 @@ export async function createDeskLandmarks(T, { optimize = true } = {}) {
   group.name = 'Original Waseda and Karatsu desk miniatures';
   const targets = [];
   const stats = { models: [], geometryPolicy: 'Original geometry and uniform scale; independently separable context removed.' };
-  const wood = new T.MeshStandardMaterial({ color: 0x76513a, roughness: .8 });
-  surface(wood, 'walnut');
-  const felt = new T.MeshStandardMaterial({ color: 0x29423a, roughness: .97 });
-  const brass = new T.MeshStandardMaterial({ color: 0xb79a5f, roughness: .34, metalness: .72 });
+  const wood = new T.MeshStandardMaterial({ color: 0x513725, roughness: .43 });
+  surface(wood, 'walnut', { tint: '#a58e75', roughness: .43, bumpScale: .004 });
+  const felt = new T.MeshStandardMaterial({ color: 0x203c31, roughness: .98 });
+  const brass = new T.MeshStandardMaterial({ color: 0xb79a5f, roughness: .29, metalness: .82 });
   const edgeGeometry = new T.BoxGeometry(1, 1, 1);
+  const baseGeometry = beveledMount(T, DISPLAY_WIDTH, .065, DISPLAY_DEPTH, .009);
+  const topGeometry = beveledMount(T, DISPLAY_WIDTH - .02, .010, DISPLAY_DEPTH - .02, .003);
+  const screwGeometry = new T.CylinderGeometry(.004, .004, .002, 8);
   const layouts = [
     { key: 'okuma-auditorium', title: '大隈講堂', subtitle: 'OKUMA AUDITORIUM', targetId: 'landmark-okuma-auditorium', x: -1.9, z: -.34, rotation: -.04, height: 1.20, anchor: [-9.25, 18.18, 5.31], factory: createOkumaAuditorium, extract: model => extractAuditorium(T, model) },
     { key: 'okuma-statue', title: '大隈重信像', subtitle: 'OKUMA SHIGENOBU', targetId: 'landmark-okuma-statue', x: -.68, z: -.30, rotation: .02, height: 1.10, anchor: [0, 11.5, .7], factory: createOkumaStatue, extract: extractStatue },
@@ -103,11 +130,10 @@ export async function createDeskLandmarks(T, { optimize = true } = {}) {
     display.position.set(layout.x, TABLE_Y, layout.z);
     display.userData = { targetId: layout.targetId, landmarkId: layout.key, title: layout.title };
     group.add(display);
-    const base = new T.Mesh(new T.BoxGeometry(DISPLAY_WIDTH, .065, DISPLAY_DEPTH), wood);
-    base.position.y = .0325;
-    const top = new T.Mesh(new T.BoxGeometry(DISPLAY_WIDTH - .02, .010, DISPLAY_DEPTH - .02), felt);
-    top.position.y = .070;
-    display.add(base, top, nameplate(T, layout.title, layout.subtitle));
+    const base = new T.Mesh(baseGeometry, wood);
+    const top = new T.Mesh(topGeometry, felt);
+    top.position.y = .065;
+    display.add(base, top, ...nameplate(T, layout.title, layout.subtitle, brass, edgeGeometry, screwGeometry));
     // Inlaid display edges give the original miniatures a finished mount.
     for (const [x,z,w,d] of [[0,-.346,.838,.008],[0,.346,.838,.008],[-.421,0,.008,.684],[.421,0,.008,.684]]) {
       const edge = new T.Mesh(edgeGeometry, brass); edge.scale.set(w,.009,d); edge.position.set(x,.054,z); display.add(edge);

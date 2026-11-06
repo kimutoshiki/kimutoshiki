@@ -24,9 +24,9 @@ export function createKaratsuCastle(T) {
   const m = {
     plaster: material('#eeeae0'), plasterLight: material('#fffaf0'),
     plasterShade: material('#d1d1c8'), roof: material('#344044', .77),
-    tile: material('#56646a', .69), tileLight: material('#738084', .74),
+    tile: material('#56646a', .53), tileLight: material('#738084', .62),
     roofEdge: material('#737e7e'), timber: material('#5b5148'),
-    dark: material('#242e2e'), window: material('#354543', 0.6),
+    dark: material('#242e2e'), window: material('#354543', .25),
     balcony: material('#aa5e42'), balconyCap: material('#9d583a'),
     gravel: material('#c8bea4'), path: material('#ddd0b5'),
     earth: material('#64665b'), soil: material('#828272'),
@@ -38,7 +38,8 @@ export function createKaratsuCastle(T) {
   };
   for(const key of ['plaster','plasterLight','plasterShade'])surface(m[key],'plaster',{tint:key==='plasterShade'?'#dadeda':'#ffffff'});
   m.stone.forEach((material,i)=>surface(material,'stone',{tint:['#c4c7c0','#d3d4c7','#adb9af','#dddccc','#bac4ba','#a3afaa'][i]}));
-  surface(m.roof,'slate');surface(m.timber,'walnut',{tint:'#b3aea6'});
+  surface(m.roof,'slate',{roughness:.66,bumpScale:.006});surface(m.timber,'walnut',{tint:'#b3aea6',roughness:.64,bumpScale:.005});
+  m.window.metalness=.08;
   const boxGeometry = new T.BoxGeometry(1, 1, 1);
   const cylinderGeometry = new T.CylinderGeometry(1, 1, 1, 4, 1, false);
   const foliageGeometry = new T.IcosahedronGeometry(1, 1);

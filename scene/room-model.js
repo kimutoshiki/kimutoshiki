@@ -1,13 +1,13 @@
-import { surface } from './surface-materials.js?v=20260916-perf1';
-import { addCollectedDecor } from './collected-decor.js?v=20260916-perf1';
-import { completeRoom } from './room-shell.js?v=20260916-perf1';
-import { addRoomDetails } from './room-details.js?v=20260916-perf1';
-import { createNaturalFoliage } from './natural-details.js?v=20260916-perf1';
-import { createSongbirdFactory } from './natural-props.js?v=20260916-perf1';
-import { createPhotoWall } from './photo-wall.js?v=20260916-perf1';
-import { createRoomCat } from './cat-life.js?v=20260916-perf1';
-import { createWindowBlinds } from './window-blinds.js?v=20260916-perf1';
-import { addWorkshopDetails } from './workshop-details.js?v=20260916-perf1';
+import { surface } from './surface-materials.js?v=20261106-craft1';
+import { addCollectedDecor } from './collected-decor.js?v=20261106-craft1';
+import { completeRoom } from './room-shell.js?v=20261106-craft1';
+import { addRoomDetails } from './room-details.js?v=20261106-craft1';
+import { createNaturalFoliage } from './natural-details.js?v=20261106-craft1';
+import { createSongbirdFactory } from './natural-props.js?v=20261106-craft1';
+import { createPhotoWall } from './photo-wall.js?v=20261106-craft1';
+import { createRoomCat } from './cat-life.js?v=20261106-craft1';
+import { createWindowBlinds } from './window-blinds.js?v=20261106-craft1';
+import { addWorkshopDetails } from './workshop-details.js?v=20261106-craft1';
 
 /** Original, procedural room scene. No third-party model or geometry dependencies. */
 export function createRoom(THREE, assets = {}) {
@@ -18,18 +18,18 @@ export function createRoom(THREE, assets = {}) {
   const pets = [];
   const mat = (color, roughness = .75, metalness = 0) => new THREE.MeshStandardMaterial({ color, roughness, metalness });
   const palette = {
-    wood: mat('#805537', .65), lightWood: mat('#ac7546', .61), darkWood: mat('#4b3023', .67),
-    brass: mat('#a68b4e', .33, .72), darkBrass: mat('#675a3a', .44, .6),
-    wall: mat('#ded8ca', .97), paint: mat('#74816a',.88), cream: mat('#e5ddbd', .95), paper: mat('#ece6d2', .92),
+    wood: mat('#62432f', .48), lightWood: mat('#936a43', .44), darkWood: mat('#34251d', .54),
+    brass: mat('#aa8c53', .36, .78), darkBrass: mat('#62533c', .46, .70),
+    wall: mat('#d0c5b2', .96), paint: mat('#424d3e',.76), cream: mat('#dcd3bc', .92), paper: mat('#e8e1cf', .92),
     terra: mat('#a9603c', .94), potDark: mat('#594b32', .96), soil: mat('#302e20', 1),
     green: mat('#35512e', .84), leafLight: mat('#657642', .86), leafDark: mat('#233e26', .89),
     burgundy: mat('#6a3133', .79), ink: mat('#34382e', .88), linen: mat('#c6b38e', .95),
   };
-  surface(palette.wood, 'walnut', { tint: '#d5cbbb', roughness:.61 });
-  surface(palette.lightWood, 'walnut', { tint: '#e6d9c2', roughness:.58 });
-  surface(palette.darkWood, 'walnut', { tint: '#9d8779' });
-  surface(palette.wall, 'plaster', { tint: '#ece7da', bumpScale: .012 });
-  surface(palette.paint, 'plaster', { tint: '#89937e', bumpScale:.004, roughness:.85 });
+  surface(palette.wood, 'walnut', { tint: '#b9a58e', roughness:.48, bumpScale:.005 });
+  surface(palette.lightWood, 'walnut', { tint: '#d7c09b', roughness:.44, bumpScale:.004 });
+  surface(palette.darkWood, 'walnut', { tint: '#796452', roughness:.54, bumpScale:.004 });
+  surface(palette.wall, 'plaster', { tint: '#d7cbb6', bumpScale: .007 });
+  surface(palette.paint, 'plaster', { tint: '#58634e', bumpScale:.002, roughness:.76 });
   const textureLoader = new THREE.TextureLoader();
   let roomDisposed = false, gardenTexture;
   const makeCanvas = (w, h, draw) => {
@@ -64,24 +64,35 @@ export function createRoom(THREE, assets = {}) {
   for (const material of [palette.wood, palette.lightWood]) {
     material.bumpMap = woodTexture; material.bumpScale = .007;
   }
+  // Alternating quarter-sawn parquet uses the same single 1K floor upload.
+  // Each block has fine directional grain; the seams remain shallow and narrow.
   const floorTexture = makeCanvas(1024, 1024, (ctx, w, h) => {
-    ctx.fillStyle = '#98724f'; ctx.fillRect(0, 0, w, h);
-    const bh = 128;
-    for (let row = 0; row < 8; row++) {
-      ctx.fillStyle = ['#997650', '#a07b55', '#9c7650', '#92704e'][row % 4];
-      ctx.fillRect(0, row * bh, w, bh);
-      for (let i = 0; i < 80; i++) {
-        ctx.strokeStyle = `rgba(66,43,24,${.025 + rnd() * .09})`;
-        const y = row * bh + rnd() * bh; ctx.lineWidth = rnd() + .4;
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.bezierCurveTo(300, y + 8, 700, y - 5, 1024, y + 2); ctx.stroke();
+    ctx.fillStyle = '#46352a'; ctx.fillRect(0, 0, w, h);
+    const block = w / 4, strip = block / 4;
+    const tones = ['#876444', '#906c49', '#805f42', '#98734e', '#886749'];
+    for (let row = 0; row < 4; row++) for (let col = 0; col < 4; col++) {
+      ctx.save(); ctx.translate(col * block + block / 2, row * block + block / 2);
+      if ((row + col) % 2) ctx.rotate(Math.PI / 2);
+      for (let slat = 0; slat < 4; slat++) {
+        const y = -block / 2 + slat * strip;
+        ctx.fillStyle = tones[(row * 3 + col + slat) % tones.length];
+        ctx.fillRect(-block / 2 + 1, y + 1, block - 2, strip - 2);
+        for (let grain = 0; grain < 28; grain++) {
+          const gy = y + 3 + rnd() * (strip - 6);
+          ctx.strokeStyle = grain % 3 ? 'rgba(46,28,16,.11)' : 'rgba(218,176,117,.12)';
+          ctx.lineWidth = .3 + rnd() * .8; ctx.beginPath();
+          ctx.moveTo(-block / 2 + 2, gy);
+          ctx.bezierCurveTo(-block * .18, gy + rnd() * 3, block * .2, gy - rnd() * 3, block / 2 - 2, gy + .5);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(236,198,142,.13)'; ctx.fillRect(-block / 2 + 2, y + 1, block - 4, 1);
       }
-      ctx.fillStyle = '#665339'; ctx.fillRect(0, row * bh, w, 2);
-      const joint = (row % 3) * 310 + 120; ctx.fillRect(joint, row * bh, 2, bh);
+      ctx.restore();
     }
   });
-  floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; floorTexture.repeat.set(1.8, 2.6);
-  const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: .79, color: '#d4c5a7' });
-  floorMat.bumpMap = floorTexture; floorMat.bumpScale = .006;
+  floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; floorTexture.repeat.set(2, 2);
+  const floorMat = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: .56, color: '#cbbda4' });
+  floorMat.bumpMap = floorTexture; floorMat.bumpScale = .003;
   const geometryCache = new Map();
   const cube = new THREE.BoxGeometry(1, 1, 1);
   const cylinder = new THREE.CylinderGeometry(1, 1, 1, 16);
@@ -180,6 +191,21 @@ export function createRoom(THREE, assets = {}) {
   const desk = new THREE.Group(); desk.name = 'Writing desk'; group.add(desk);
   box(6.35, .19, 1.83, palette.wood, 0, 2.035, -.04, desk, .055);
   box(6.13, .052, 1.66, palette.lightWood, 0, 2.139, -.04, desk, .018);
+  // A fine-grained olive leather inset separates the writing/display surface
+  // from the polished walnut surround without adding another texture request.
+  const leatherGrain = makeCanvas(128, 128, (ctx, w, h) => {
+    ctx.fillStyle = '#b8b8b8'; ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 900; i++) {
+      const v = 144 + Math.floor(rnd() * 70); ctx.fillStyle = `rgb(${v},${v},${v})`;
+      ctx.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * h), 1, 1);
+    }
+  });
+  leatherGrain.colorSpace = THREE.NoColorSpace;
+  leatherGrain.wrapS = leatherGrain.wrapT = THREE.RepeatWrapping; leatherGrain.repeat.set(8, 2);
+  const deskLeather = new THREE.MeshStandardMaterial({color:'#4b5540',roughness:.79,bumpMap:leatherGrain,bumpScale:.0008,roughnessMap:leatherGrain});
+  const inset = box(5.87, .003, 1.40, deskLeather, 0, 2.1655, -.04, desk, .001);
+  inset.name = 'Olive leather writing inset';
+
   box(5.97, .12, 1.49, palette.darkWood, 0, 1.895, -.07, desk, .025);
   for (const x of [-2.82, 2.82]) {
     for (const z of [-.69, .64]) {

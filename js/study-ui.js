@@ -10,14 +10,37 @@
   const movement = document.getElementById('free-movement');
   const movementControls = document.getElementById('movement-controls');
   const subject = document.getElementById('view-subject');
+  const catOption = subject.querySelector('option[value="cat"]');
   const motion = document.getElementById('motion-toggle');
   const nightButton = document.getElementById('night-toggle');
   let engine, opener, ready = false, markers = false, lightingMode = 'auto';
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let galleryModule;
-  const gallery = () => galleryModule ||= import('./photo-gallery.js?v=20260916-perf1');
+  const gallery = () => galleryModule ||= import('./photo-gallery.js?v=20261106-craft1');
   const loadingProgress = status.querySelector('.loading-rule > span');
   let lastProgress = 0;
+  function syncCatControls(available = engine?.getCatState?.().ready || false) {
+    if (catOption) catOption.disabled = !available;
+    if (!available && subject.value === 'cat') subject.value = 'room';
+  }
+  function refreshActionOptions() {
+    const selected = subject.value;
+    const actionOptions = document.createElement('optgroup'); actionOptions.label = '小物';
+    actionOptions.dataset.roomActions = '';
+    const counts = new Map();
+    for (const action of engine?.getActions?.() || []) {
+      const count = (counts.get(action.label) || 0) + 1; counts.set(action.label, count);
+      const option = document.createElement('option'); option.value = action.id; option.textContent = action.label + (count > 1 ? ' ' + count : ''); actionOptions.append(option);
+    }
+    subject.querySelector('optgroup[data-room-actions]')?.remove();
+    if (actionOptions.children.length) subject.append(actionOptions);
+    if ([...subject.options].some(option => option.value === selected)) subject.value = selected;
+  }
+  syncCatControls();
+  canvas.addEventListener('roomcatchange', event => {
+    syncCatControls(!!event.detail?.ready);
+    if (engine) refreshActionOptions();
+  });
   function finishLoading() { clearTimeout(slowTimer); status.hidden = true; }
   // A delayed renderer must never obscure the working navigation indefinitely.
   const slowTimer = setTimeout(() => { finishLoading(); document.getElementById('room-fallback').hidden = false; }, 18000);
@@ -26,6 +49,9 @@
     gallery: ['04', '写真', '旅先と、日々の風景。'], contact: ['05', 'お問い合わせ', '']
   };
   const landmarkPanels = {'landmark-okuma-auditorium':'profile','landmark-okuma-statue':'research','landmark-karatsu-castle':'gallery','landmark-karatsu-bank':'blog'};
+  // The reading sheet covers the room. Keep the visitor's motion preference,
+  // but stop its decorative animation while the text has their attention.
+  function syncMotion() { engine?.setPaused?.(paused || reader.open); }
   function show(id, source) {
     if (id.startsWith('nav-')) {
       const href = {profile:'profile.html',research:'research.html',blog:'blog.html',gallery:'photos.html',contact:'contact.html'}[id.slice(4)];
@@ -48,6 +74,7 @@
     if (panelId === 'gallery') gallery().then(module => module.populateGallery(body.querySelector('[data-photo-gallery]'))).catch(() => {});
     if (settings.open) settings.close();
     if (!reader.open) reader.showModal();
+    syncMotion();
     reader.scrollTop = 0;
     return true;
   }
@@ -56,7 +83,7 @@
     if (show(link.dataset.roomOpen, link)) event.preventDefault();
   }));
   document.querySelectorAll('[data-close-reader]').forEach(button => button.addEventListener('click', () => reader.close()));
-  reader.addEventListener('close', () => { opener?.focus?.({preventScroll:true}); });
+  reader.addEventListener('close', () => { syncMotion(); opener?.focus?.({preventScroll:true}); });
   function closeOnBackdrop(dialog) {
     dialog.addEventListener('click', event => {
       if (event.target !== dialog) return;
@@ -87,7 +114,7 @@
     motion.setAttribute('aria-label', paused ? '動きを再開する' : '動きを止める');
     document.getElementById('motion-label').textContent = paused ? '停止中' : '再生中';
   }
-  motion.addEventListener('click', () => {paused = !paused;engine?.setPaused?.(paused);updateMotion();});
+  motion.addEventListener('click', () => {paused = !paused;syncMotion();updateMotion();});
   updateMotion();
   nightButton.addEventListener('click', () => {
     const modes = ['auto','day','night'], labels = {auto:'自動',day:'昼',night:'夜'};
@@ -135,18 +162,12 @@
     console.error('3D scene could not render', error);
     finishLoading(); study.classList.add('is-failed'); document.getElementById('room-fallback').hidden = false;
   }
-  import('../scene/study.js?v=20260916-perf1').then(async ({mountStudy}) => {
+  import('../scene/study.js?v=20261106-craft1').then(async ({mountStudy}) => {
     engine = await mountStudy({canvas,pins,onSelect:show,onError:failed,onReady() {
       ready = true; study.classList.add('is-ready'); finishLoading(); document.getElementById('room-fallback').hidden = true; setPinState();
     }});
-    engine?.setPaused?.(paused); engine?.setLightingMode?.(lightingMode); engine?.setFreeMovement?.(movement.checked);
-    const actionOptions = document.createElement('optgroup'); actionOptions.label = '小物';
-    const counts = new Map();
-    for (const action of engine?.getActions?.() || []) {
-      const count = (counts.get(action.label) || 0) + 1; counts.set(action.label, count);
-      const option = document.createElement('option'); option.value = action.id; option.textContent = action.label + (count > 1 ? ' ' + count : ''); actionOptions.append(option);
-    }
-    if (actionOptions.children.length) subject.append(actionOptions);
+    syncMotion(); engine?.setLightingMode?.(lightingMode); engine?.setFreeMovement?.(movement.checked);
+    syncCatControls(); refreshActionOptions();
     if (engine?.software) {document.getElementById('render-mode').textContent = 'シンプル表示';motion.disabled = true;}
   }).catch(failed);
   window.addEventListener('pagehide', event => {if(!event.persisted){engine?.dispose?.();clearTimeout(slowTimer);}});
