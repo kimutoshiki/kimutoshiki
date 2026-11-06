@@ -94,5 +94,8 @@ Desktop and portrait posters were reviewed using actual geometry and a Blender
 96-sample shadowed render. This is offline render evidence. Browser/WebGL tools
 were unavailable, so no actual WebGL visual test, device FPS, GPU timing or
 browser loading-time measurement is claimed. No skill gate is represented as
-approved by this report. Publication is handled by the task owner under the
-user's explicit instruction to complete and publish the work.
+approved by this report. Implementation and review preparation are complete.
+Automatic approval review rejected merging this substantially redesigned version
+into main because the previous publication approval covered the earlier release.
+PR #6 remains reviewable, and explicit authorization to publish this version is
+the remaining step. The production site is still the preceding study release.
