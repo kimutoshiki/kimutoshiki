@@ -12,8 +12,9 @@ from pathlib import Path
 from mathutils import Matrix, Vector
 parser = argparse.ArgumentParser(description='Render the exported world snapshot in Blender 4.3.2.')
 parser.add_argument('--input-dir', type=Path, default=Path(__file__).resolve().parents[2] / 'work/world-poster')
-choices = ['desktop', 'mobile', 'preview', 'preview-mobile']
+choices = ['desktop', 'mobile', 'preview', 'preview-mobile', 'doorway', 'exterior', 'house', 'contact', 'review']
 parser.add_argument('--mode', choices=choices)
+parser.add_argument('--samples', type=int, default=None)
 parser.add_argument('view', nargs='?', choices=choices)
 options = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 if options.mode and options.view:
@@ -42,7 +43,7 @@ for block in list(bpy.data.materials):
 scene = bpy.context.scene
 scene.render.engine = 'CYCLES'
 scene.cycles.device = 'CPU'
-scene.cycles.samples = 96
+scene.cycles.samples = 192
 scene.cycles.use_denoising = False
 scene.cycles.use_adaptive_sampling = True
 scene.cycles.adaptive_threshold = 0.018
@@ -59,8 +60,18 @@ scene.view_settings.exposure = 0.55
 scene.render.film_transparent = False
 world = bpy.data.worlds.new('Cool coastal sky')
 world.use_nodes = True
-world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.35, 0.46, 0.64, 1)
-world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.4
+world.node_tree.nodes['Background'].inputs['Color'].default_value = (0.624, 0.708, 0.680, 1)
+world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.65
+environment = world.node_tree.nodes.new('ShaderNodeTexEnvironment')
+environment.image = bpy.data.images.load(str(ROOT / data['environment']['file']))
+world.node_tree.links.new(environment.outputs['Color'], world.node_tree.nodes['Background'].inputs['Color'])
+light_path = world.node_tree.nodes.new('ShaderNodeLightPath')
+strength = world.node_tree.nodes.new('ShaderNodeMath')
+strength.operation = 'MULTIPLY_ADD'
+strength.inputs[1].default_value = data['environment']['cameraStrength'] - data['environment']['indirectStrength']
+strength.inputs[2].default_value = data['environment']['indirectStrength']
+world.node_tree.links.new(light_path.outputs['Is Camera Ray'], strength.inputs[0])
+world.node_tree.links.new(strength.outputs[0], world.node_tree.nodes['Background'].inputs['Strength'])
 scene.world = world
 scene.view_layers[0].use_pass_z = True
 scene.use_nodes = True
@@ -69,7 +80,7 @@ comp.nodes.clear()
 render = comp.nodes.new('CompositorNodeRLayers')
 scaled = comp.nodes.new('CompositorNodeMath')
 scaled.operation = 'MULTIPLY'
-scaled.inputs[1].default_value = 0.0036
+scaled.inputs[1].default_value = data['fog']['density']
 square = comp.nodes.new('CompositorNodeMath')
 square.operation = 'MULTIPLY'
 negative = comp.nodes.new('CompositorNodeMath')
@@ -85,7 +96,8 @@ fog.blend_type = 'MIX'
 
 def srgb_linear(c):
     return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
-fog.inputs[2].default_value = tuple((srgb_linear(c / 255) for c in (147, 169, 178))) + (1,)
+fog_rgb = tuple(int(data['fog']['color'].lstrip('#')[i:i+2], 16) for i in (0,2,4))
+fog.inputs[2].default_value = tuple(srgb_linear(c / 255) for c in fog_rgb) + (1,)
 output = comp.nodes.new('CompositorNodeComposite')
 comp.links.new(render.outputs['Depth'], scaled.inputs[0])
 comp.links.new(scaled.outputs[0], square.inputs[0])
@@ -93,7 +105,15 @@ comp.links.new(scaled.outputs[0], square.inputs[1])
 comp.links.new(square.outputs[0], negative.inputs[0])
 comp.links.new(negative.outputs[0], exponent.inputs[0])
 comp.links.new(exponent.outputs[0], factor.inputs[1])
-comp.links.new(factor.outputs[0], fog.inputs[0])
+is_geometry = comp.nodes.new('CompositorNodeMath')
+is_geometry.operation = 'LESS_THAN'
+is_geometry.inputs[1].default_value = 2000
+comp.links.new(render.outputs['Depth'], is_geometry.inputs[0])
+geometry_fog = comp.nodes.new('CompositorNodeMath')
+geometry_fog.operation = 'MULTIPLY'
+comp.links.new(factor.outputs[0], geometry_fog.inputs[0])
+comp.links.new(is_geometry.outputs[0], geometry_fog.inputs[1])
+comp.links.new(geometry_fog.outputs[0], fog.inputs[0])
 comp.links.new(render.outputs['Image'], fog.inputs[1])
 comp.links.new(fog.outputs[0], output.inputs[0])
 textures = {}
@@ -114,8 +134,8 @@ def texture(node_tree, tid, noncolor=False):
     node.interpolation = 'Linear'
     uv = node_tree.nodes.new('ShaderNodeTexCoord')
     mapping = node_tree.nodes.new('ShaderNodeMapping')
-    mapping.inputs['Scale'].default_value = (spec['repeat'][0], spec['repeat'][1], 1)
-    mapping.inputs['Location'].default_value = (spec['offset'][0], spec['offset'][1], 0)
+    mapping.inputs['Scale'].default_value = (spec['repeat'][0], spec['repeat'][1] * (1 if spec['flipY'] else -1), 1)
+    mapping.inputs['Location'].default_value = (spec['offset'][0], spec['offset'][1] + (0 if spec['flipY'] else 1), 0)
     mapping.inputs['Rotation'].default_value = (0, 0, -spec['rotation'])
     node_tree.links.new(uv.outputs['UV'], mapping.inputs['Vector'])
     node_tree.links.new(mapping.outputs['Vector'], node.inputs['Vector'])
@@ -180,6 +200,41 @@ for spec in data['materials']:
         mult.inputs[1].default_value = spec['roughness']
         nt.links.new(sep.outputs['Green'], mult.inputs[0])
         nt.links.new(mult.outputs[0], p.inputs['Roughness'])
+    alphanode = texture(nt, spec['alphaMap'], True)
+    if alphanode:
+        sep = nt.nodes.new('ShaderNodeSeparateColor')
+        nt.links.new(alphanode.outputs['Color'], sep.inputs['Color'])
+        mult = nt.nodes.new('ShaderNodeMath')
+        mult.operation = 'MULTIPLY'
+        mult.inputs[1].default_value = spec['opacity']
+        nt.links.new(sep.outputs['Green'], mult.inputs[0])
+        nt.links.new(mult.outputs[0], p.inputs['Alpha'])
+    if spec.get('alphaTest'):
+        threshold = nt.nodes.new('ShaderNodeMath')
+        threshold.operation = 'GREATER_THAN'
+        threshold.inputs[1].default_value = spec['alphaTest']
+        if p.inputs['Alpha'].is_linked:
+            nt.links.new(p.inputs['Alpha'].links[0].from_socket, threshold.inputs[0])
+        else:
+            threshold.inputs[0].default_value = spec['opacity']
+        nt.links.new(threshold.outputs[0], p.inputs['Alpha'])
+    object_info = nt.nodes.new('ShaderNodeObjectInfo')
+    instance_tint = nt.nodes.new('ShaderNodeMixRGB')
+    instance_tint.blend_type = 'MULTIPLY'
+    instance_tint.inputs[0].default_value = 1
+    instance_tint.inputs[1].default_value = p.inputs['Base Color'].default_value
+    if p.inputs['Base Color'].is_linked:
+        nt.links.new(p.inputs['Base Color'].links[0].from_socket, instance_tint.inputs[1])
+    nt.links.new(object_info.outputs['Color'], instance_tint.inputs[2])
+    nt.links.new(instance_tint.outputs[0], p.inputs['Base Color'])
+    if spec.get('unlit'):
+        p.inputs['Emission Color'].default_value = p.inputs['Base Color'].default_value
+        if p.inputs['Base Color'].is_linked:
+            nt.links.new(p.inputs['Base Color'].links[0].from_socket, p.inputs['Emission Color'])
+        p.inputs['Base Color'].default_value = (0, 0, 0, 1)
+        if p.inputs['Base Color'].is_linked:
+            nt.links.remove(p.inputs['Base Color'].links[0])
+        p.inputs['Emission Strength'].default_value = 1
     materials.append(material)
 meshes = []
 for spec in data['geometries']:
@@ -211,15 +266,22 @@ for spec in data['geometries']:
         mesh.normals_split_custom_set_from_vertices(xyz(normals).tolist())
     meshes.append(mesh)
 C = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
+object_meshes = {}
 for spec in data['objects']:
-    mesh = meshes[spec['geometry']].copy()
+    key = (spec['geometry'], tuple(spec['materials']))
+    new_mesh = key not in object_meshes
+    if new_mesh:
+        object_meshes[key] = meshes[spec['geometry']].copy()
+    mesh = object_meshes[key]
     obj = bpy.data.objects.new(spec['name'], mesh)
     scene.collection.objects.link(obj)
+    obj.color = (*spec.get('instanceColor', [1,1,1]), 1)
     obj.matrix_world = C @ Matrix(np.array(spec['matrix']).reshape((4, 4), order='F').tolist()) @ C.inverted()
-    for mid in spec['materials']:
-        mesh.materials.append(materials[mid])
+    if new_mesh:
+        for mid in spec['materials']:
+            mesh.materials.append(materials[mid])
     groups = data['geometries'][spec['geometry']]['groups']
-    if len(spec['materials']) > 1:
+    if new_mesh and len(spec['materials']) > 1:
         mids = np.zeros(len(mesh.polygons), dtype=np.int32)
         for g in groups:
             mids[g['start'] // 3:(g['start'] + g['count']) // 3] = g['materialIndex']
@@ -229,12 +291,31 @@ for spec in data['objects']:
         obj['is_original_cat'] = True
 sun_data = bpy.data.lights.new('Directional coastal sun', 'SUN')
 sun_data.energy = data['sun']['energy']
-sun_data.color = (1, 0.89, 0.71)
+sun_data.color = data['sun']['color']
 sun_data.angle = 0.065
 sun = bpy.data.objects.new('Directional coastal sun', sun_data)
 scene.collection.objects.link(sun)
 sun.location = point(data['sun']['position'])
 sun.rotation_euler = (point(data['sun']['target']) - sun.location).to_track_quat('-Z', 'Y').to_euler()
+window_spec = data['windowLight']
+window_data = bpy.data.lights.new('Production window directional light', 'SUN')
+window_data.energy = window_spec['energy']
+window_data.color = window_spec['color']
+window_data.angle = .065
+window = bpy.data.objects.new(window_data.name, window_data)
+scene.collection.objects.link(window)
+window.location = point(window_spec['position'])
+window.rotation_euler = (point(window_spec['target']) - window.location).to_track_quat('-Z', 'Y').to_euler()
+for spec in data.get('lights', []):
+    if spec['type'] != 'PointLight' or spec['intensity'] <= 0:
+        continue
+    lamp_data = bpy.data.lights.new(spec['name'] or 'Source point light', 'POINT')
+    lamp_data.energy = spec['intensity'] * 4 * math.pi
+    lamp_data.color = spec['color']
+    lamp_data.shadow_soft_size = .04
+    lamp = bpy.data.objects.new(lamp_data.name, lamp_data)
+    scene.collection.objects.link(lamp)
+    lamp.location = point(spec['position'])
 camera_data = bpy.data.cameras.new('Production camera')
 camera = bpy.data.objects.new('Production camera', camera_data)
 scene.collection.objects.link(camera)
@@ -242,27 +323,33 @@ scene.camera = camera
 camera_data.type = 'PERSP'
 camera_data.sensor_fit = 'VERTICAL'
 camera_data.sensor_height = 24
-camera_data.lens = 12 / math.tan(math.radians(data['camera']['fov'] / 2))
-camera_data.clip_start = 0.1
+camera_data.clip_start = 0.025
 camera_data.clip_end = 2000
-target = point(data['camera']['target'])
-base = point(data['camera']['position'])
-if mode == 'preview':
-    views = [('preview', 1000, 625, 1)]
+if mode == 'review':
+    views = [(name, 1000, 625, spec) for name, spec in data['reviewViews'].items()]
+elif mode in data['reviewViews']:
+    views = [(mode, 1000, 625, data['reviewViews'][mode])]
+elif mode == 'preview':
+    views = [('preview', 1000, 625, data['camera'])]
 elif mode == 'preview-mobile':
-    views = [('preview-mobile', 650, 1000, 1.5)]
+    views = [('preview-mobile', 650, 1000, data['mobileCamera'])]
 elif mode == 'mobile':
-    views = [('poster-mobile', 650, 1000, 1.5)]
+    views = [('poster-mobile', 650, 1000, data['mobileCamera'])]
 else:
-    views = [('poster', 1600, 1000, 1)]
-for name, w, h, factor in views:
-    camera.location = target + (base - target) * factor
-    camera.rotation_euler = (target - camera.location).to_track_quat('-Z', 'Y').to_euler()
+    views = [('poster', 1600, 1000, data['camera'])]
+for name, w, h, spec in views:
+    camera.location = point(spec['position'])
+    camera.rotation_euler = (point(spec['target']) - camera.location).to_track_quat('-Z', 'Y').to_euler()
+    camera_data.lens = 12 / math.tan(math.radians(spec['fov'] / 2))
     scene.render.resolution_x = w
     scene.render.resolution_y = h
     scene.render.filepath = str(ROOT / (name + '.png'))
-    if mode.startswith('preview'):
+    if mode not in ('desktop', 'mobile'):
         scene.cycles.samples = 32
-    bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / ('world-' + mode + '.blend')))
+    else:
+        scene.cycles.adaptive_threshold = .008
+    if options.samples:
+        scene.cycles.samples = options.samples
+    bpy.ops.wm.save_as_mainfile(filepath=str(ROOT / ('world-' + name + '.blend')))
     bpy.ops.render.render(write_still=True)
 print('WORLD_RENDER_COMPLETE', mode)

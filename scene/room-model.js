@@ -165,14 +165,16 @@ export function createRoom(THREE, assets = {}) {
   box(13.2, .21, .35, palette.darkWood, 0, 6.13, -1.38, group, .025);
 
   const windowGroup = new THREE.Group(); group.add(windowGroup); windowGroup.name = 'Afternoon window';
-  const glassMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .24, emissive: '#ffffff', emissiveIntensity: .22 });
+  const glassMat = assets.worldHome
+    ? new THREE.MeshStandardMaterial({ color: '#dbe8e5', roughness: .12, transparent: true, opacity: .10, depthWrite: false })
+    : new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .24, emissive: '#ffffff', emissiveIntensity: .22 });
   const wx = -4.55, wy = 3.66, ww = 2.28, wh = 4.2;
   for (const side of [-1,1]) {
     box(.12,wh+.24,.16,palette.darkWood,wx+side*(ww+.12)/2,wy,-1.37,windowGroup,.03);
     box(ww,.12,.16,palette.darkWood,wx,wy+side*(wh+.12)/2,-1.37,windowGroup,.03);
   }
   const glass = box(ww, wh, .025, glassMat, wx, wy, -1.265, windowGroup); glass.castShadow=glass.receiveShadow=false;
-  textureLoader.load(new URL('../images/decor/window-garden.webp',import.meta.url).href, texture=>{
+  if (!assets.worldHome) textureLoader.load(new URL('../images/decor/window-garden.webp',import.meta.url).href, texture=>{
     if(roomDisposed){texture.dispose();return;}
     gardenTexture=texture;texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
     texture.repeat.x=(ww/wh)/(1024/1536);texture.offset.x=(1-texture.repeat.x)/2;
@@ -262,7 +264,10 @@ export function createRoom(THREE, assets = {}) {
   }
 
   // The photographic collection uses the actual source aspect ratios.
-  const photoWall = createPhotoWall(THREE, { room: group, palette, targets, onTextureLoad: assets.onTextureLoad });
+  // The walkable world retains the original furniture without fetching the
+  // legacy photographic gallery or its map atlases behind the home view.
+  const photoWall = assets.worldHome ? { group: new THREE.Group(), dispose() {} }
+    : createPhotoWall(THREE, { room: group, palette, targets, onTextureLoad: assets.onTextureLoad });
   const gallery = photoWall.group;
 
   // The owner's name is a distinct small desk object, separate from the photographs.
@@ -430,7 +435,9 @@ export function createRoom(THREE, assets = {}) {
   throwGeo.computeVertexNormals(); throwMat.side = THREE.DoubleSide;
   const throwMesh = mesh(throwGeo, throwMat, chair); throwMesh.position.set(.34, 1.81, .524); throwMesh.rotation.z = .10;
 
-  const cat = createRoomCat(THREE, { group, floorY:.01, asset:assets.catAsset, loadDetail:assets.loadDetailedCat, onAssetChange:assets.onCatChange });
+  const cat = createRoomCat(THREE, { group, floorY:assets.worldHome ? -.03 : .01, contactY:assets.worldHome ? -.027 : undefined, asset:assets.catAsset, loadDetail:assets.loadDetailedCat, onAssetChange:assets.onCatChange });
+  let flowerpot;
+  if (!assets.worldHome) {
   const { plant, instancedFoliage } = createNaturalFoliage(THREE, { group, palette, cord, animated });
   plant(-5.66, .02, 3.20, 1.30, false, true);
   // A compact rosette, an upright snake plant, and tiny flowering stems add
@@ -443,7 +450,7 @@ export function createRoom(THREE, assets = {}) {
     cyl(radius * .90, radius * .90, .012, palette.soil, 0, .228, 0, p);
     return p;
   }
-  const flowerpot = smallPot(-5.01, 1.563, -.96, '#b58260', .17); flowerpot.name = 'Window violets';
+  flowerpot = smallPot(-5.01, 1.563, -.96, '#b58260', .17); flowerpot.name = 'Window violets';
   const flowerLeaves = [], petals = [];
   for (let i = 0; i < 6; i++) {
     const a = i * 2.399, x = Math.cos(a) * .16, z = Math.sin(a) * .12, h = .44 + (i % 3) * .06;
@@ -464,6 +471,7 @@ export function createRoom(THREE, assets = {}) {
     const a = i * Math.PI * 2 / 3; rod([Math.cos(a) * .36, .04, Math.sin(a) * .36], [Math.cos(a) * .28, .89, Math.sin(a) * .28], .033, palette.darkWood, stool, .053);
   }
   plant(4.28, .97, -.30, .97, false, false);
+  }
 
   // Natural rug, woven from a repeating material, anchors the furniture.
   const rugMap = makeCanvas(256, 256, (ctx, w, h) => {
@@ -482,9 +490,9 @@ export function createRoom(THREE, assets = {}) {
     group, palette, desk, chair, research, stack, blog, contact, profile, lamp, pot, windowGroup, gallery, drawers,
   });
 
-  const decorations = addCollectedDecor(THREE, { group, palette, mainRug, onTextureLoad: assets.onTextureLoad });
+  const decorations = assets.worldHome ? null : addCollectedDecor(THREE, { group, palette, mainRug, onTextureLoad: assets.onTextureLoad });
   details.clock.group.userData.roomAction={kind:'detail',label:'現在の時刻の時計'};
-  flowerpot.userData.roomAction={kind:'detail',label:'窓辺の花'};
+  if (flowerpot) flowerpot.userData.roomAction={kind:'detail',label:'窓辺の花'};
   group.updateMatrixWorld(true);
   return { group, targets, animated, lampLight, pets, cat, blinds, details, decorations, envelope, photoWall, drawers, clock: details.clock, windowMaterial: glassMat, dispose(){roomDisposed=true;gardenTexture?.dispose();} };
 }
