@@ -1,18 +1,19 @@
 import * as THREE from '../js/vendor/three.module.min.js';
-import { getRoomTime, updateRoomClock } from './room-time.js?v=20260916-perf1';
-import { loadSurfaceMaterials } from './surface-materials.js?v=20260916-perf1';
-import { createRoom } from './room-model.js?v=20260916-perf1';
-import { createDeskLandmarks } from './desk-landmarks.js?v=20260916-perf1';
-import { createOrbitNavigation } from './orbit-navigation.js?v=20260916-perf1';
-import { StudyCanvasRenderer } from './study-software.js?v=20260916-perf1';
-import { createObjectActions } from './object-actions.js?v=20260916-perf1';
-import { createWallNavigation } from './wall-navigation.js?v=20260916-perf1';
-import { loadCatAsset } from './cat-asset.js?v=20260916-perf1';
+import { getRoomTime, updateRoomClock } from './room-time.js?v=20261106-craft1';
+import { loadSurfaceMaterials } from './surface-materials.js?v=20261106-craft1';
+import { createRoom } from './room-model.js?v=20261106-craft1';
+import { createDeskLandmarks } from './desk-landmarks.js?v=20261106-craft1';
+import { createOrbitNavigation } from './orbit-navigation.js?v=20261106-craft1';
+import { StudyCanvasRenderer } from './study-software.js?v=20261106-craft1';
+import { createObjectActions } from './object-actions.js?v=20261106-craft1';
+import { createWallNavigation } from './wall-navigation.js?v=20261106-craft1';
+import { loadCatAsset, disposeCatAsset } from './cat-asset.js?v=20261106-craft1';
 import { clone as cloneSkeleton } from '../js/vendor/SkeletonUtils.js';
-import { createRoomPicking } from './room-picking.js?v=20260916-perf1';
-import { optimizeRoomStaticDraws } from './static-batching.js?v=20260916-perf1';
+import { createRoomPicking } from './room-picking.js?v=20261106-craft1';
+import { optimizeRoomStaticDraws } from './static-batching.js?v=20261106-craft1';
+import { roomPixelRatio } from './render-budget.js?v=20261106-craft1';
 
-export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>new Date(),catAsset}) {
+export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>new Date(),catAsset,loadCat=loadCatAsset}) {
   let renderer;
   try {const context=canvas.getContext('webgl2',{antialias:true,alpha:false,powerPreference:'high-performance'});renderer=context?new THREE.WebGLRenderer({canvas,context,antialias:true,alpha:false,powerPreference:'high-performance'}):new StudyCanvasRenderer(canvas,THREE);} catch(e){onError(e);return {dispose(){}};}
   const software=!!renderer.software;
@@ -22,32 +23,34 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   const reflectionCanvas=document.createElement('canvas');reflectionCanvas.width=256;reflectionCanvas.height=128;
   const reflectionContext=reflectionCanvas.getContext('2d');
   const reflectionGradient=reflectionContext.createLinearGradient(0,0,0,128);
-  reflectionGradient.addColorStop(0,'#b9c8ce');reflectionGradient.addColorStop(.47,'#f0e5ce');reflectionGradient.addColorStop(1,'#47382e');
+  reflectionGradient.addColorStop(0,'#8c9caa');reflectionGradient.addColorStop(.42,'#e0d8c8');reflectionGradient.addColorStop(.65,'#8f7960');reflectionGradient.addColorStop(1,'#302a24');
   reflectionContext.fillStyle=reflectionGradient;reflectionContext.fillRect(0,0,256,128);
   reflectionContext.fillStyle='#fff8e6';reflectionContext.fillRect(38,18,22,60);
+  reflectionContext.fillStyle='#5c5449';reflectionContext.fillRect(48,18,2,60);reflectionContext.fillRect(38,46,22,2);
   reflectionContext.fillStyle='#cddce2';reflectionContext.fillRect(164,28,38,42);
   const reflectionMap=new THREE.CanvasTexture(reflectionCanvas);reflectionMap.mapping=THREE.EquirectangularReflectionMapping;reflectionMap.colorSpace=THREE.SRGBColorSpace;
   if(!software){scene.environment=reflectionMap;scene.environmentIntensity=.28;}
-  // Keep the render crisp on high-density screens. Frame cadence, rather than
-  // resolution, is the performance budget for this mostly stationary room.
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.setPixelRatio(roomPixelRatio(canvas.clientWidth,canvas.clientHeight,devicePixelRatio));renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
   renderer.shadowMap.enabled=true;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   const camera=new THREE.PerspectiveCamera(40,1,.025,80);
   const ambient=new THREE.HemisphereLight('#e6eddf','#735438',1.35);scene.add(ambient);
   const sun=new THREE.DirectionalLight('#fff0d2',3.7);sun.position.set(-11,8,-9);sun.target.position.set(1,2,3);
   sun.castShadow=true;const shadowResolution=Math.min(4096,renderer.capabilities?.maxTextureSize||2048);sun.shadow.mapSize.set(shadowResolution,shadowResolution);Object.assign(sun.shadow.camera,{left:-7.4,right:7.4,top:7,bottom:-6,near:.5,far:36});
-  sun.shadow.normalBias=.016;sun.shadow.bias=-.00006;sun.shadow.radius=3;scene.add(sun,sun.target);
+  // Millimetre-scale display bases need a smaller normal offset than the room
+  // walls; a large offset made the miniature shadows appear detached.
+  sun.shadow.normalBias=.006;sun.shadow.bias=-.00004;sun.shadow.radius=2;scene.add(sun,sun.target);
   const bounce=new THREE.AmbientLight('#fff2df',1);scene.add(bounce);
   const fill=new THREE.DirectionalLight('#e0e6df',.65);fill.position.set(-3.8,5.9,4.2);scene.add(fill);
-  let room;let textureRevision=0,catRevision=0;
+  let room,catReady;let textureRevision=0,catRevision=0;
   try{
-    const catReady=catAsset?Promise.resolve(catAsset):loadCatAsset().catch(error=>{console.warn('Cat asset unavailable; the study remains usable:',error);return undefined;});
-    const [suppliedCat,landmarks]=await Promise.all([catReady,createDeskLandmarks(THREE)]);
-    room=createRoom(THREE,{catAsset:suppliedCat,loadDetailedCat:!catAsset&&!software?()=>loadCatAsset('full'):undefined,onCatChange(){catRevision++;textureRevision++;},onTextureLoad(){textureRevision++;}});
-    if(!suppliedCat){delete room.cat.group.userData.roomAction;room.cat.contactShadow.visible=false;}
+    // The room and original monuments never wait for the 3.3 MB cat or its
+    // worker decoder. Keep the supplied-asset path synchronous for embedders.
+    if(!catAsset)catReady=loadCat().catch(error=>{console.warn('Cat asset unavailable; the study remains usable:',error);return undefined;});
+    const landmarks=await createDeskLandmarks(THREE);
+    room=createRoom(THREE,{catAsset,loadDetailedCat:!catAsset&&!software?()=>loadCat('full'):undefined,onCatChange(){catRevision++;textureRevision++;},onTextureLoad(){textureRevision++;}});
     room.group.add(landmarks.group);room.targets.push(...landmarks.targets);scene.add(room.group);
-  }catch(e){reflectionMap.dispose();renderer.dispose();onError(e);return {dispose(){}};}
+  }catch(e){catReady?.then(disposeCatAsset);reflectionMap.dispose();renderer.dispose();onError(e);return {dispose(){}};}
   const wallNavigation=createWallNavigation(THREE,{room:room.group,onTextureLoad(){textureRevision++;renderer.invalidate?.();}});
   room.targets.push(...wallNavigation.targets);
   const wallLinks=document.getElementById?.('room-navigation');
@@ -60,7 +63,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   const taskLight=new THREE.SpotLight('#ffdaa2',0,5.8,.95,.65,1.4);
   taskLight.position.set(2.4,3.2,.08);taskLight.target.position.set(.8,1.45,1.15);
   taskLight.castShadow=!software;taskLight.shadow.mapSize.set(1024,1024);
-  taskLight.shadow.bias=-.0003;taskLight.shadow.normalBias=.018;
+  taskLight.shadow.bias=-.00012;taskLight.shadow.normalBias=.006;taskLight.shadow.radius=2;
   scene.add(taskLight,taskLight.target);
   const roomEffects=new THREE.Group();roomEffects.name='Room atmosphere';scene.add(roomEffects);
   const inspectionRoot=new THREE.Group();inspectionRoot.name='360 degree inspection';inspectionRoot.userData.inspectionRoot=true;inspectionRoot.visible=false;scene.add(inspectionRoot);
@@ -69,6 +72,29 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d');const grad=ctx.createRadialGradient(64,64,0,64,64,64);grad.addColorStop(0,'rgba(26,15,5,.46)');grad.addColorStop(.45,'rgba(26,15,5,.23)');grad.addColorStop(1,'rgba(26,15,5,0)');ctx.fillStyle=grad;ctx.fillRect(0,0,128,128);
   const shadowTex=new THREE.CanvasTexture(c);
   for(const [x,z,w,h] of [[0,.2,7,3.4],[1.2,2.3,2.8,2.6],[-4,1,2.7,2.4]]){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,.012,z);roomEffects.add(m);}
+  // Short-range ambient contact stays visible in diffuse light. One shared
+  // sampler grounds the actual feet; it adds no shadow-map or screen pass.
+  const footGeometry=new THREE.PlaneGeometry(1,1),footMaterial=new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false,opacity:.8});
+  const footPoints=[];
+  for(const x of [-2.82,2.82])for(const z of [-.69,.64])footPoints.push([x*1.022,z*1.065,.30,.28]);
+  for(const x of [-5.34,-3.38])for(const z of [-.72,2.16])footPoints.push([x,z,.22,.22]);
+  const chair=room.group.getObjectByName('Windsor chair');
+  if(chair)for(const x of [-.54,.54])for(const z of [-.51,.51]){const p=chair.localToWorld(new THREE.Vector3(x,0,z));footPoints.push([p.x,p.z,.22,.22]);}
+  const footContacts=new THREE.InstancedMesh(footGeometry,footMaterial,footPoints.length),footTransform=new THREE.Object3D();
+  footContacts.name='Furniture foot contact';footContacts.raycast=()=>{};footTransform.rotation.x=-Math.PI/2;
+  footPoints.forEach(([x,z,w,h],i)=>{footTransform.scale.set(w,h,1);footTransform.position.set(x,.016,z);footTransform.updateMatrix();footContacts.setMatrixAt(i,footTransform.matrix);});roomEffects.add(footContacts);
+  // Restrained ambient occlusion under real joinery, separate from the moving
+  // sun. These strips stop at the opaque wall and never cover the window.
+  const edgeCanvas=document.createElement('canvas');edgeCanvas.width=8;edgeCanvas.height=64;
+  const edgeContext=edgeCanvas.getContext('2d'),edgeGradient=edgeContext.createLinearGradient(0,0,0,64);
+  edgeGradient.addColorStop(0,'rgba(29,23,17,.32)');edgeGradient.addColorStop(.3,'rgba(29,23,17,.12)');edgeGradient.addColorStop(1,'rgba(29,23,17,0)');
+  edgeContext.fillStyle=edgeGradient;edgeContext.fillRect(0,0,8,64);
+  const edgeMap=new THREE.CanvasTexture(edgeCanvas),edgeMaterial=new THREE.MeshBasicMaterial({map:edgeMap,transparent:true,depthWrite:false});
+  function joineryShade(w,h,x,y,z,ry=0){const m=new THREE.Mesh(footGeometry,edgeMaterial);m.name='Joinery ambient contact';m.scale.set(w,h,1);m.position.set(x,y,z);m.rotation.y=ry;m.raycast=()=>{};roomEffects.add(m);}
+  joineryShade(13,.24,0,5.91,-1.435);
+  joineryShade(10.8,.22,-6.404,5.93,3.85,Math.PI/2);
+  joineryShade(10.8,.22,6.404,5.93,3.85,-Math.PI/2);
+  joineryShade(12.9,.22,0,5.97,9.307,Math.PI);
   // Tiny contact shadows remain under the desk objects in diffuse daylight.
   // Their world footprints come from the real bases, not oversized click areas.
   for(const target of room.targets.filter(t=>t.id.startsWith('landmark-'))){
@@ -88,7 +114,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   const pointer=new THREE.Vector2(),raycaster=new THREE.Raycaster();
   const targetMap=new Map(room.targets.map(t=>[t.id,t]));
   const inspectMap=new Map(room.targets.map(t=>[t.id,t.object.children.find(o=>o.userData.inspectionSource)||t.object]));
-  if(room.cat?.model)inspectMap.set('cat',room.cat.group);
+  inspectMap.set('cat',room.cat.group);
   const pinMap=new Map([...pins.querySelectorAll('[data-pin]')].map(p=>[p.dataset.pin,p]));
   const picking=createRoomPicking(THREE,{root:room.group});
   const rayMeshes=[];let seenCatRevision=catRevision;
@@ -103,7 +129,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   const navigationCamera=camera.clone(),navigationRay=new THREE.Raycaster();
   const navigationPlane=new THREE.Plane(),normal=new THREE.Vector3();
   const beforeZoom=new THREE.Vector3(),afterZoom=new THREE.Vector3();
-  function resize(){width=Math.max(1,canvas.clientWidth);height=Math.max(1,canvas.clientHeight);portrait=width/height<.85;camera.aspect=width/height;camera.fov=50;camera.updateProjectionMatrix();navigation.resize(portrait,width/height);renderer.setSize(width,height,false);updateDesired();if(!frames){camera.position.copy(desiredPosition);look.copy(desiredLook);camera.lookAt(look);}}
+  function resize(){width=Math.max(1,canvas.clientWidth);height=Math.max(1,canvas.clientHeight);portrait=width/height<.85;camera.aspect=width/height;camera.fov=50;camera.updateProjectionMatrix();navigation.resize(portrait,width/height);const ratio=roomPixelRatio(width,height,devicePixelRatio);if(renderer.getPixelRatio?.()!==ratio){renderer.setPixelRatio(ratio);textureRevision++;}renderer.setSize(width,height,false);updateDesired();if(!frames){camera.position.copy(desiredPosition);look.copy(desiredLook);camera.lookAt(look);}}
   function updateDesired(){const view=navigation.update();desiredLook.copy(view.target);desiredPosition.copy(view.position);return view;}
   function pointAt(x,y,out){
     const view=updateDesired();navigationCamera.copy(camera);navigationCamera.position.copy(desiredPosition);navigationCamera.lookAt(desiredLook);navigationCamera.zoom=view.zoom;navigationCamera.updateProjectionMatrix();navigationCamera.updateMatrixWorld();
@@ -131,6 +157,7 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
   }
   function setInspection(id){
     if(id!=='room'&&!navigation.getFreeMovement())return;
+    if(id==='cat'&&!room.cat.model)return;
     focusedAction=null;approach=1;objectActions.clear();
     const source=inspectMap.get(id);clearInspection();inspectedClone=null;inspectedId=id;
     const inspecting=id!=='room'&&!!source;
@@ -199,9 +226,9 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     updateRoomClock(room.clock,time);
     sun.intensity=time.sunIntensity;sun.position.fromArray(time.sunPosition);sun.target.position.fromArray(time.sunTarget);
     sun.color.copy(dayColor).lerp(eveningColor,time.warmth*.8).lerp(nightColor,1-time.daylight);
-    ambient.intensity=time.hemisphereIntensity*.72;bounce.intensity=time.ambientIntensity*.42;
-    scene.environmentIntensity=.15+time.daylight*.23;
-    fill.intensity=time.fillIntensity*.78;lamp.intensity=time.lampIntensity*.65;
+    ambient.intensity=time.hemisphereIntensity*.66;bounce.intensity=time.ambientIntensity*.34;
+    scene.environmentIntensity=.18+time.daylight*.24;
+    fill.intensity=time.fillIntensity*.72;lamp.intensity=time.lampIntensity*.65;
     taskLight.intensity=2.5+(1-time.daylight)*10;
     renderer.toneMappingExposure=time.exposure;
     renderer.setLighting?.(time.softwareGain,time.softwareTint);
@@ -253,5 +280,12 @@ export async function mountStudy({canvas,pins,onSelect,onReady,onError,now=()=>n
     }
   }
   resize();syncTime();raf=requestAnimationFrame(animate);
-  return {software,setFreeMovement(value){navigation.setFreeMovement(value);active=null;setInspection('room');canvas.dispatchEvent(new CustomEvent('movementchange',{detail:{freeMovement:navigation.getFreeMovement()}}));},getFreeMovement(){return navigation.getFreeMovement();},getActions(){return [...objectActions.entries.values()].map(({id,label,kind})=>({id,label,kind}));},activate:activateObject,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){focusedAction=null;approach=1;objectActions.clear();picking.invalidate();renderer.shadowMap.needsUpdate=true;navigation.preset(name);snapView();announceView();},setLightingMode(mode){if(!['auto','day','night'].includes(mode))return;objectActions.restore();lightingMode=mode;syncTime();},setPaused(v){paused=software||v;if(paused){objectActions.clear();approach=1;picking.invalidate();textureRevision++;renderer.shadowMap.needsUpdate=true;}},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;picking.dispose();clearInspection();room.dispose?.();wallNavigation.dispose();room.cat?.dispose();room.blinds?.dispose();reflectionMap.dispose();objectActions.clear();room.decorations?.dispose();room.photoWall?.dispose();surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
+  catReady?.then(asset=>{
+    if(!asset||!room.cat.installAsset(asset))return;
+    // installAsset owns disposal of results that arrive after the room closes.
+    // Refit immediately so a paused view also has accurate new click geometry.
+    refreshPickMeshes();seenCatRevision=catRevision;renderer.invalidate?.();renderer.shadowMap.needsUpdate=true;
+    canvas.dispatchEvent(new CustomEvent('roomcatchange',{detail:{ready:true}}));
+  });
+  return {software,getCatState(){return {ready:!!room.cat.model};},setFreeMovement(value){navigation.setFreeMovement(value);active=null;setInspection('room');canvas.dispatchEvent(new CustomEvent('movementchange',{detail:{freeMovement:navigation.getFreeMovement()}}));},getFreeMovement(){return navigation.getFreeMovement();},getActions(){return [...objectActions.entries.values()].filter(entry=>entry.kind!=='cat-life'||room.cat.model).map(({id,label,kind})=>({id,label,kind}));},activate:activateObject,focus(id){active=targetMap.has(id)?id:null;markHover(null);},inspect(id){active=null;setInspection(id);},preset(name){focusedAction=null;approach=1;objectActions.clear();picking.invalidate();renderer.shadowMap.needsUpdate=true;navigation.preset(name);snapView();announceView();},setLightingMode(mode){if(!['auto','day','night'].includes(mode))return;objectActions.restore();lightingMode=mode;syncTime();},setPaused(v){paused=software||v;if(paused){objectActions.clear();approach=1;picking.invalidate();textureRevision++;renderer.shadowMap.needsUpdate=true;}},zoom(n){changeZoom(Math.exp(-n*.25));},reset:resetView,dispose(){dead=true;picking.dispose();clearInspection();room.dispose?.();wallNavigation.dispose();room.cat?.dispose();room.blinds?.dispose();reflectionMap.dispose();objectActions.clear();room.decorations?.dispose();room.photoWall?.dispose();surfaces.dispose();cancelAnimationFrame(raf);moveListeners.forEach(f=>f());const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const v of Object.values(m))if(v?.isTexture)textures.add(v);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());renderer.dispose();}};
 }

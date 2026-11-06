@@ -1,4 +1,4 @@
-import { disposeCatAsset } from './cat-asset.js?v=20260916-perf1';
+import { disposeCatAsset } from './cat-asset.js?v=20261106-craft1';
 
 /** The supplied cat's actual skeleton and authored clips, on a quiet room route. */
 export function createRoomCat(T, { group: parent, floorY = .01, route, asset, loadDetail, onAssetChange } = {}) {
@@ -11,7 +11,7 @@ export function createRoomCat(T, { group: parent, floorY = .01, route, asset, lo
   const pathLength = path.getLength(), tangent = new T.Vector3(), point = new T.Vector3();
   const habits = [['walk',12],['idle',3.2],['walk',10],['stretch',4.1],['idle',2],['walk',12],['rest',7.4],['idle',4]];
   const clipNames = {walk:'Walk',idle:'Idle',look:'Idle',stretch:'Stretch',rest:'Lie_Roll_Rest'};
-  let currentAsset, model, mixer, actions = new Map(), currentAction, clipName = 'Idle';
+  let baseAsset = asset, currentAsset, model, mixer, actions = new Map(), currentAction, clipName = 'Idle';
   let distance = 0, habitIndex = 0, habitTime = 0, reaction = 3.6, speed = 0, paused = false, disposed = false;
   let detailPromise, detailedAsset, fullDetail = false, wantsDetail = false, detailRetryAt = 0;
   const angleDelta = (from,to) => Math.atan2(Math.sin(to-from),Math.cos(to-from));
@@ -69,6 +69,7 @@ export function createRoomCat(T, { group: parent, floorY = .01, route, asset, lo
   const shadowMaterial = new T.MeshBasicMaterial({map:shadowMap,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,toneMapped:false});
   const contactShadow = new T.Mesh(new T.PlaneGeometry(.66,1.18),shadowMaterial);
   contactShadow.name = 'Cat floor contact'; contactShadow.rotation.x = -Math.PI/2; contactShadow.raycast = () => {}; parent?.add(contactShadow);
+  contactShadow.visible = !!asset;
   function updateContact() { contactShadow.position.set(group.position.x,floorY-.005,group.position.z); contactShadow.rotation.z = -group.rotation.y; }
   path.getPointAt(0,point); group.position.copy(point);
   group.rotation.y = Math.atan2(-group.position.x,8.24-group.position.z)+.14;
@@ -80,10 +81,18 @@ export function createRoomCat(T, { group: parent, floorY = .01, route, asset, lo
     group, path, contactShadow, react,
     get model(){return model;}, get mixer(){return mixer;}, get asset(){return currentAsset;},
     get state(){return group.userData.catState;}, get fullDetail(){return fullDetail;},
+    // Room furniture can render while the original GLB decodes on workers.
+    // This owner also receives late results after navigation/disposal, so a
+    // completed load cannot resurrect the cat or leak its decoded resources.
+    installAsset(nextAsset){
+      if (!nextAsset) return false;
+      if (disposed || baseAsset) { if (nextAsset !== baseAsset) disposeCatAsset(nextAsset); return false; }
+      baseAsset = nextAsset; contactShadow.visible = true; install(nextAsset); return true;
+    },
     setPaused(value){paused = !!value;},
     ensureDetail(){
       wantsDetail = true;
-      if (disposed || fullDetail || !asset || !loadDetail || Date.now()<detailRetryAt) return Promise.resolve(false);
+      if (disposed || fullDetail || !baseAsset || !loadDetail || Date.now()<detailRetryAt) return Promise.resolve(false);
       if(detailedAsset){fullDetail=true;group.userData.detailLevel='full';install(detailedAsset);return Promise.resolve(true);}
       if (!detailPromise) detailPromise = loadDetail().then(next => {
         if (disposed) { disposeCatAsset(next); return false; }
@@ -92,9 +101,9 @@ export function createRoomCat(T, { group: parent, floorY = .01, route, asset, lo
       }).catch(error => { detailPromise=undefined;detailRetryAt=Date.now()+30000;console.warn('Cat detail remains at room resolution:',error);return false; });
       return detailPromise;
     },
-    useRoomDetail(){wantsDetail=false;if(disposed||!fullDetail||!asset)return;fullDetail=false;group.userData.detailLevel='room';install(asset);},
+    useRoomDetail(){wantsDetail=false;if(disposed||!fullDetail||!baseAsset)return;fullDetail=false;group.userData.detailLevel='room';install(baseAsset);},
     update(delta,enabled = true){
-      if (disposed || paused || !enabled || delta <= 0) return false;
+      if (disposed || !model || paused || !enabled || delta <= 0) return false;
       const dt = Math.min(delta,.075);
       if (reaction > 0) reaction = Math.max(0,reaction-dt);
       else { habitTime += dt; if (habitTime >= habits[habitIndex][1]) { habitTime = 0; habitIndex = (habitIndex+1)%habits.length; } }
@@ -114,7 +123,7 @@ export function createRoomCat(T, { group: parent, floorY = .01, route, asset, lo
     },
     dispose(){
       if (disposed) return; disposed = true; mixer?.stopAllAction(); if(model)mixer?.uncacheRoot(model);
-      disposeCatAsset(asset);if(detailedAsset&&detailedAsset!==asset)disposeCatAsset(detailedAsset);
+      disposeCatAsset(baseAsset);if(detailedAsset&&detailedAsset!==baseAsset)disposeCatAsset(detailedAsset);
       shadowMap.dispose(); shadowMaterial.dispose(); contactShadow.geometry.dispose(); contactShadow.removeFromParent();
     },
   };

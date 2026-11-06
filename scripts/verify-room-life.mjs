@@ -158,6 +158,27 @@ let emptyLoads=0;
 const emptyCat=createRoomCat(T,{group:new T.Group(),loadDetail:async()=>{emptyLoads++;throw new Error('Unexpected detail request without an initial cat');}});
 assert.equal(await emptyCat.ensureDetail(),false);assert.equal(emptyLoads,0);assert.equal(emptyCat.model,undefined);emptyCat.dispose();
 
+// A slow initial decode must neither block the room nor move an invisible cat.
+const delayedRoom=await loadTabbyFixture(), delayedDetail=await loadTabbyFixture('full');
+let delayedChanges=0, delayedLoads=0;
+const delayedCat=createRoomCat(T,{group:new T.Group(),loadDetail:async()=>{delayedLoads++;return delayedDetail;},onAssetChange(){delayedChanges++;}});
+const delayedPosition=delayedCat.group.position.clone();
+assert.equal(delayedCat.contactShadow.visible,false);assert.equal(delayedCat.update(10),false);
+assert.deepEqual(delayedCat.group.position,delayedPosition,'The route starts when the real model is present');
+assert.equal(delayedCat.installAsset(delayedRoom),true);assert.equal(delayedChanges,1);
+assert.equal(delayedCat.model,delayedRoom.scene);assert.equal(delayedCat.contactShadow.visible,true);
+assert.equal(delayedCat.installAsset(delayedRoom),false,'The same completed request installs once');
+assert.equal(delayedChanges,1);assert.equal(delayedCat.update(.05),true);
+assert.equal(await delayedCat.ensureDetail(),true);assert.equal(delayedLoads,1);
+delayedCat.useRoomDetail();assert.equal(delayedCat.asset,delayedRoom,'Late-installed room detail remains the base LOD');
+delayedCat.dispose();
+const cancelledInitial=await loadTabbyFixture();let cancelledDisposals=0;
+const cancelledGeometries=new Set();cancelledInitial.scene.traverse(o=>{if(o.geometry)cancelledGeometries.add(o.geometry);});
+cancelledGeometries.forEach(g=>g.addEventListener('dispose',()=>cancelledDisposals++));
+const cancelledCat=createRoomCat(T,{group:new T.Group()});cancelledCat.dispose();
+assert.equal(cancelledCat.installAsset(cancelledInitial),false);assert.equal(cancelledCat.model,undefined);
+assert.equal(cancelledDisposals,cancelledGeometries.size,'An initial response arriving after disposal releases all geometry');
+
 // Texture preparation must retain the actual animated instance object.
 prepareBoxSurfaceUVs(T,scene);assert.equal(blinds.slats.parent,blinds.group);
 const blindAction=[...actions.entries.values()].find(entry=>entry.kind==='blinds');assert.ok(blindAction);

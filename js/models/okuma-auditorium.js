@@ -15,7 +15,9 @@ export function createOkumaAuditorium(T) {
  const materials={};
  const mat=(name,color)=>materials[name]??=(new T.MeshStandardMaterial({color,roughness:.9,metalness:0}));
  const stone=mat('stone',0xccb78b),wall=mat('wall',0xb59a66),trim=mat('trim',0xe3ce9d),dark=mat('dark',0x344c46),roofMat=mat('roof',0x696e59),paving=mat('paving',0xd9d5c1),edge=mat('edge',0xc3c9b1),earth=mat('earth',0x7b8b72),grass=mat('grass',0x9bad76),trunk=mat('trunk',0x6f6751),leaf=mat('leaf',0x4d7359),leafLight=mat('leafLight',0x759767),leafDark=mat('leafDark',0x375d4a),white=mat('white',0xf3eee0),wine=mat('wine',0x923b4f),metal=mat('metal',0x48635a),neighbor=mat('neighbor',0xbbc7bf),glass=mat('glass',0x64817a),soil=mat('soil',0x927e5e);
- surface(stone,'stone',{tint:'#f1dab1'});surface(trim,'stone',{tint:'#fff0cf'});surface(wall,'stone',{tint:'#d6b482'});surface(roofMat,'slate',{tint:'#d9ded0'});
+ surface(stone,'stone',{tint:'#f1dab1',roughness:.87,bumpScale:.010});surface(trim,'stone',{tint:'#fff0cf',roughness:.78,bumpScale:.008});surface(wall,'stone',{tint:'#d6b482',roughness:.91,bumpScale:.012});surface(roofMat,'slate',{tint:'#d9ded0',roughness:.67,bumpScale:.006});
+ glass.roughness=.24;glass.metalness=.08;
+ metal.roughness=.49;metal.metalness=.62;
  const geometries={box:new T.BoxGeometry(1,1,1),cylinder:new T.CylinderGeometry(1,1,1,8),cone:new T.ConeGeometry(1,1,8),sphere:new T.IcosahedronGeometry(1,1),circle:new T.CylinderGeometry(1,1,1,32)};
  const batches=new Map(), dummy=new T.Object3D();
  function add(g,m,x,y,z,sx=1,sy=1,sz=1,ry=0,rz=0,rx=0){const id=owner.uuid+':'+g.uuid+':'+m.uuid;let b=batches.get(id);if(!b){b={g,m,owner,transforms:[]};batches.set(id,b);}dummy.position.set(x,y,z);dummy.rotation.set(rx,ry,rz);dummy.scale.set(sx,sy,sz);dummy.updateMatrix();b.transforms.push(dummy.matrix.clone());}
@@ -36,6 +38,7 @@ export function createOkumaAuditorium(T) {
  // different from the open, pale stone belfry. Dimensions are interpretive.
  owner=architecture;
  const mortar=mat('mortar',0xcbb996),iron=mat('iron',0x444d48),recess=mat('recess',0x29392f);
+ iron.roughness=.58;iron.metalness=.54;
  box(wall,2,6.9,-5,18,13.3,17);box(stone,2,.65,-5,18.5,.75,17.5);
  box(trim,2,13.7,-5,18.6,.32,17.6);
  const roofShape=new T.Shape();roofShape.moveTo(-9,0);roofShape.lineTo(9,0);roofShape.lineTo(7.4,1.35);roofShape.lineTo(-7.4,1.35);roofShape.closePath();

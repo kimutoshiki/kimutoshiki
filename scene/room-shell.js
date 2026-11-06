@@ -1,12 +1,12 @@
 /** Complete, opaque room envelope. Camera bounds are inset from these surfaces. */
-import { surface } from './surface-materials.js?v=20260916-perf1';
+import { surface } from './surface-materials.js?v=20261106-craft1';
 export function completeRoom(T, group, palette) {
   const shell = new T.Group(); shell.name = 'Complete room envelope';
   const cube = new T.BoxGeometry(1,1,1);
-  const plaster = new T.MeshStandardMaterial({color:'#ded8ca',roughness:.94});
-  const ceiling = new T.MeshStandardMaterial({color:'#d0c6b5',roughness:.96});
-  surface(plaster, 'plaster', { tint: '#ece7da', bumpScale: .012 });
-  surface(ceiling, 'plaster', { tint: '#e5ded1' });
+  const plaster = new T.MeshStandardMaterial({color:'#d0c5b2',roughness:.96});
+  const ceiling = new T.MeshStandardMaterial({color:'#c9bca6',roughness:.97});
+  surface(plaster, 'plaster', { tint: '#d7cbb6', bumpScale: .007 });
+  surface(ceiling, 'plaster', { tint: '#d2c4ae', bumpScale:.005 });
   const box = (w,h,d,x,y,z,mat=plaster) => {
     const m = new T.Mesh(cube,mat);m.scale.set(w,h,d);m.position.set(x,y,z);
     m.castShadow=m.receiveShadow=true;shell.add(m);return m;
@@ -19,12 +19,19 @@ export function completeRoom(T, group, palette) {
     box(.12,.20,10.96,x,6.14,3.92,palette.darkWood);
     box(.14,.035,10.96,x,6.29,3.92,palette.lightWood);
     box(.09,.18,10.96,x,.12,3.92,palette.darkWood);
-    box(.035,1.04,10.9,x,.78,3.92,palette.paint);
+    // The recessed painted backing meets the structural wall; oak rails sit proud.
+    box(.08,1.04,10.9,x+Math.sign(x)*.02,.78,3.92,palette.paint);
+    for (const y of [.31,1.24]) box(.075,.047,10.9,x-Math.sign(x)*.025,y,3.92,palette.wood);
+    box(.025,.015,10.9,x-Math.sign(x)*.065,1.277,3.92,palette.lightWood);
     box(.10,.07,10.96,x,1.34,3.92,palette.lightWood);
     for(let z=-.9;z<9.3;z+=1.28)box(.075,.86,.028,x-Math.sign(x)*.026,.78,z,palette.darkWood);
   }
   for(const y of [.12,1.34,6.14])box(13.0,.12,.13,0,y,9.29,palette.darkWood);
-  box(12.98,1.04,.045,0,.78,9.33,palette.paint);
+  box(12.98,1.04,.08,0,.78,9.33,palette.paint);
+  for (const x of [-.6,1.35,3.30,5.25]) {
+    for (const y of [.34,1.20]) box(1.75,.043,.025,x,y,9.277,palette.wood);
+    for (const side of [-1,1]) box(.043,.86,.025,x+side*.875,.77,9.277,palette.wood);
+  }
   // Flush coffer panels with shallow oak cross beams, supported by the ceiling.
   for(const x of [-4.28,0,4.28])box(.11,.095,10.9,x,6.39,3.88,palette.wood);
   for(const z of [1.5,5.3])box(12.96,.095,.11,0,6.39,z,palette.wood);

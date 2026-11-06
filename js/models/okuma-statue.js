@@ -15,8 +15,8 @@ export function createOkumaStatue(T) {
   group.name = 'Okuma Shigenobu — Waseda campus';
   const mat = (color, roughness = .85, metalness = 0) => new T.MeshStandardMaterial({color, roughness, metalness});
   const M = {
-    bronze: mat(0x46594f, .62, .67),
-    raised: mat(0x68776a, .57, .64),
+    bronze: mat(0x46594f, .54, .73),
+    raised: mat(0x68776a, .45, .76),
     recess: mat(0x2e3e37, .78, .5),
     robe: new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.68,metalness:.58}),
     stone:mat(0xa6a6a0), stoneEdge:mat(0xb7b7af), stoneShade:mat(0x848981),
@@ -86,7 +86,7 @@ export function createOkumaStatue(T) {
   const gauss = (x,c,w) => Math.exp(-(((x-c)/w)**2));
   const mix = (a,b,t) => a+(b-a)*t;
   const smooth = t => {t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
-  const sculptMaterial = new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.64,metalness:.66});
+  const sculptMaterial = new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.56,metalness:.72});
   // Fine casting and granite grain are bounded procedural maps, no external
   // textures or image downloads. Low bump amplitude avoids a painted toy sheen.
   const micro = new Uint8Array(96*96*4), stoneMicro = new Uint8Array(96*96*4);

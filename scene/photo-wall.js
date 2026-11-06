@@ -1,5 +1,5 @@
-import { PHOTO_CATALOG } from './photo-catalog.js?v=20260916-perf1';
-import { createWallAtlas } from './wall-atlas.js?v=20260916-perf1';
+import { PHOTO_CATALOG } from './photo-catalog.js?v=20261106-craft1';
+import { createWallAtlas } from './wall-atlas.js?v=20261106-craft1';
 
 /** A balanced world collection and European collection preserve all thirty photographs. */
 export const PHOTO_WALL_COLLECTIONS = Object.freeze({
