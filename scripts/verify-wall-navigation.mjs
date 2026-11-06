@@ -78,12 +78,21 @@ for(const x of [titleBounds.min.x+.015,0,titleBounds.max.x-.015])for(const y of 
 }
 
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
-const markup=[...html.matchAll(/<a\b([^>]*\bdata-wall-link="([^"]+)"[^>]*)>([\s\S]*?)<\/a>/g)];
+// The archived room still has physical wall labels. The current open world
+// supplies the same destinations as ordinary native links above its canvas.
+let markup=[...html.matchAll(/<a\b([^>]*\bdata-wall-link="([^"]+)"[^>]*)>([\s\S]*?)<\/a>/g)];
+if(!markup.length){
+  const nativeNavigation=html.match(/<nav\b[^>]*\bid="navigation"[^>]*>[\s\S]*?<\/nav>/)?.[0]||'';
+  markup=[...nativeNavigation.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map(([all,attributes,content])=>{
+    const href=attributes.match(/\bhref="([^"]+)"/)?.[1],key=WALL_LINKS.find(link=>link.href===href)?.id;
+    return [all,attributes,key,content];
+  });
+}
 assert.equal(markup.length,5,'Exactly five real HTML navigation links remain available');
 for(const [all,attributes,key,content] of markup){
   const expected=WALL_LINKS.find(link=>link.id===key);assert(expected);
   assert.equal(attributes.match(/\bhref="([^"]+)"/)?.[1],expected.href,'Link goes to its corresponding standalone page');
-  assert(attributes.includes('aria-label=')&&content.includes(expected.label),'Links have a readable keyboard/screen-reader label');
+  assert(content.includes(expected.label),'Links have readable native keyboard/screen-reader text');
   assert(!attributes.includes('data-room-open')&&!attributes.includes('tabindex="-1"'),'Links navigate normally and are keyboard reachable');
 }
 const rectangles=[];
