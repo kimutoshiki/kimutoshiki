@@ -6,7 +6,7 @@
 <title>木村紀喜のホームページ</title>
 <meta name="description" content="佐賀県唐津市出身。早稲田大学で小学校教育の研究と実践に取り組む木村紀喜のホームページ。プロフィール、研究・活動、ブログ、写真を紹介します。">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<meta name="theme-color" content="#111d28">
+<meta name="theme-color" content="#eee5d5">
 <link rel="canonical" href="https://kimutoshiki.com/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ja_JP">
@@ -17,12 +17,12 @@
 <meta property="og:image" content="https://kimutoshiki.com/images/world/poster.webp">
 <meta property="og:image:width" content="1600">
 <meta property="og:image:height" content="1000">
-<meta property="og:image:alt" content="唐津と早稲田の建築と猫がある、海に開かれた風景">
+<meta property="og:image:alt" content="木の机と唐津・早稲田のモニュメント、猫のいる木村紀喜の書斎">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="alternate icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="css/world.css?v=20261106-world1">
+<link rel="stylesheet" href="css/world.css?v=20261106-home2">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://kimutoshiki.com/#website","url":"https://kimutoshiki.com/","name":"木村紀喜のホームページ","alternateName":["木村紀喜","Toshiki Kimura"],"inLanguage":"ja","publisher":{"@id":"https://kimutoshiki.com/#person"}},{"@type":"Person","@id":"https://kimutoshiki.com/#person","name":"木村紀喜","alternateName":["木村 紀喜","Toshiki Kimura"],"url":"https://kimutoshiki.com/","description":"早稲田大学教職大学院で小学校教育、授業づくり、生成AIの教育利用を研究。佐賀県唐津市出身。","sameAs":["https://github.com/kimutoshiki"]}]}</script>
 </head>
 <body>
@@ -34,10 +34,10 @@
 <img src="images/world/poster.webp" width="1600" height="1000" alt="" fetchpriority="high" decoding="async">
 </picture>
 </div>
-<canvas class="world-canvas" id="world-canvas" tabindex="-1" aria-hidden="true" aria-label="唐津と早稲田の建物がある風景。ドラッグで見回し、スクロールやピンチで拡大できます。" aria-describedby="world-help"></canvas>
+<canvas class="world-canvas" id="world-canvas" tabindex="-1" aria-hidden="true" aria-label="猫のいる書斎から庭へ歩ける3D空間。ドラッグで見回し、WASDキーか矢印キーで歩けます。" aria-describedby="world-help"></canvas>
 <div class="world-shade" aria-hidden="true"></div>
 <header class="world-header">
-<a class="world-mark" href="./" aria-label="木村紀喜のホームページ"><span aria-hidden="true">tk<span class="mark-dot">.</span></span></a>
+<a class="world-mark" href="./"><h1 id="world-title">木村 紀喜<span lang="en">TOSHIKI KIMURA</span></h1></a>
 <nav class="world-nav" id="navigation" aria-label="ページ">
 <a href="profile.html">プロフィール</a>
 <a href="research.html">研究・活動</a>
@@ -46,42 +46,53 @@
 <a href="contact.html">お問い合わせ</a>
 </nav>
 </header>
-<section class="world-identity" aria-labelledby="world-title">
-<p class="world-eyebrow" lang="en">KARATSU <span aria-hidden="true">/</span> WASEDA</p>
-<h1 class="world-wordmark" id="world-title" lang="en"><span>TOSHIKI</span> <span>KIMURA</span></h1>
-<p class="world-name">木村 紀喜<span>きむら としき</span></p>
-<p class="world-copy">佐賀県唐津市出身。<br>早稲田大学で、小学校教育の<br class="desktop-break">研究と実践に取り組んでいます。</p>
-<a class="world-profile-link" href="profile.html">プロフィールを見る <span aria-hidden="true">↗</span></a>
-</section>
-<aside class="world-caption" id="world-caption" aria-label="選んだもの" hidden>
+<div class="world-location"><span class="location-dot" aria-hidden="true"></span><span id="world-location-name">書斎</span><span class="location-divider" aria-hidden="true"></span><span lang="en">KARATSU &amp; WASEDA</span></div>
+<p class="visually-hidden">佐賀県唐津市出身。早稲田大学で小学校教育の研究と実践に取り組んでいます。木の机と猫のいる書斎から外へ出ると、唐津城、旧唐津銀行、大隈講堂、大隈重信像があります。</p>
+<aside class="world-caption" id="world-caption" aria-label="行き先" hidden>
 <p id="world-caption-name"></p>
 <a id="world-caption-link" href="profile.html">関連するページへ <span aria-hidden="true">↗</span></a>
 </aside>
 <footer class="world-footer">
+<div class="world-live-controls" id="world-live-controls" hidden>
+<div class="world-walkpad" id="world-walkpad" role="group" aria-label="歩く方向">
+<button type="button" data-walk="forward" aria-label="前へ歩く">↑</button>
+<button type="button" data-walk="left" aria-label="左へ歩く">←</button>
+<button type="button" data-walk="back" aria-label="後ろへ歩く">↓</button>
+<button type="button" data-walk="right" aria-label="右へ歩く">→</button>
+<span>歩く</span>
+</div>
 <div class="world-controlbar">
+<button class="world-travel" id="world-travel" type="button" disabled><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 17V3h9v14M3 17h10M10 10h7m-3-3 3 3-3 3"/></svg><span id="world-travel-label">外へ歩く</span></button>
 <details class="world-places" id="world-places">
-<summary><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="m12.7 7.3-1.4 4-4 1.4 1.4-4z"/></svg>景色をめぐる<span class="summary-plus" aria-hidden="true">＋</span></summary>
+<summary><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="m12.7 7.3-1.4 4-4 1.4 1.4-4z"/></svg>行き先<span class="summary-plus" aria-hidden="true">＋</span></summary>
 <div class="places-panel">
 <p class="places-heading">唐津と早稲田<span lang="en">PLACES</span></p>
-<div class="place-row"><button type="button" data-world-focus="landmark-karatsu-castle" disabled><span>唐津城</span><small lang="en">KARATSU CASTLE</small></button><a href="photos.html" aria-label="唐津城：写真のページへ">↗</a></div>
-<div class="place-row"><button type="button" data-world-focus="landmark-karatsu-bank" disabled><span>旧唐津銀行</span><small lang="en">FORMER KARATSU BANK</small></button><a href="blog.html" aria-label="旧唐津銀行：ブログのページへ">↗</a></div>
-<div class="place-row"><button type="button" data-world-focus="landmark-okuma-auditorium" disabled><span>大隈講堂</span><small lang="en">OKUMA AUDITORIUM</small></button><a href="profile.html" aria-label="大隈講堂：プロフィールのページへ">↗</a></div>
-<div class="place-row"><button type="button" data-world-focus="landmark-okuma-statue" disabled><span>大隈重信像</span><small lang="en">OKUMA SHIGENOBU</small></button><a href="research.html" aria-label="大隈重信像：研究・活動のページへ">↗</a></div>
-<div class="place-row place-cat"><button type="button" data-world-focus="cat" disabled><span>猫を見つける</span><small lang="en">THE WANDERING CAT</small></button><span class="cat-paw" aria-hidden="true">⌾</span></div>
-<p class="places-hint">建物や猫を選ぶと、近くから眺められます。</p>
+<div class="place-row"><button type="button" data-world-focus="landmark-karatsu-castle" disabled><span>唐津城</span><small>唐津の海を見守る城</small></button><a href="photos.html" aria-label="写真のページへ">↗</a></div>
+<div class="place-row"><button type="button" data-world-focus="landmark-karatsu-bank" disabled><span>旧唐津銀行</span><small>赤煉瓦と白い石の銀行建築</small></button><a href="blog.html" aria-label="ブログのページへ">↗</a></div>
+<div class="place-row"><button type="button" data-world-focus="landmark-okuma-auditorium" disabled><span>大隈講堂</span><small>早稲田の時計塔</small></button><a href="profile.html" aria-label="プロフィールのページへ">↗</a></div>
+<div class="place-row"><button type="button" data-world-focus="landmark-okuma-statue" disabled><span>大隈重信像</span><small>早稲田に立つ銅像</small></button><a href="research.html" aria-label="研究・活動のページへ">↗</a></div>
+<div class="place-row place-cat"><button type="button" data-world-focus="cat" disabled><span>書斎の猫</span><small>猫のそばに戻る</small></button><span class="cat-paw" aria-hidden="true">⌾</span></div>
+<p class="places-hint">行き先を選ぶと、道に沿って歩きます。<br>途中で止めて、自由に見回せます。</p>
 </div>
 </details>
-<div class="world-live-controls" id="world-live-controls" hidden>
-<button class="world-control" id="world-motion" type="button" aria-pressed="false" aria-label="動きを止める"><svg class="motion-pause" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg><svg class="motion-play" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m7 4 8 6-8 6z"/></svg><span id="world-motion-label">動きを止める</span></button>
-<button class="world-control" id="world-lighting" type="button" aria-label="光：自動。昼に切り替える"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6 16 16M4 16l1.4-1.4M14.6 5.4 16 4"/></svg><span>光：<span id="world-lighting-label">自動</span></span></button>
-<button class="world-control" id="world-reset" type="button"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 7.5a6 6 0 1 1-.3 4.3M4.5 3.5v4h4"/></svg><span>全景へ</span></button>
+<details class="world-settings" id="world-settings">
+<summary aria-label="操作と設定"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14M7 3v4M13 8v4M8 13v4"/></svg><span class="settings-label">操作と設定</span></summary>
+<div class="settings-panel">
+<p class="places-heading">操作と設定</p>
+<p class="world-help" id="world-help" hidden>ドラッグで見回す<br><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> または矢印キーで歩く<br>画面の矢印を押し続けても歩けます。<br><kbd>Esc</kbd>で移動を止めます。</p>
+<button class="setting-row" id="world-motion" type="button" aria-pressed="false"><span>猫の動き</span><span id="world-motion-label">動いています</span></button>
+<button class="setting-row" id="world-lighting" type="button"><span>部屋と庭の光</span><span id="world-lighting-label">昼</span></button>
+<button class="setting-row" id="world-reset" type="button"><span>書斎に戻る</span><span aria-hidden="true">↩</span></button>
 </div>
+</details>
 </div>
-<div class="world-footnote"><p class="world-help" id="world-help" hidden>ドラッグで見回す <span aria-hidden="true">/</span> スクロールでズーム</p><p class="world-copyright">© <span lang="en">Toshiki Kimura</span></p></div>
+<p class="world-gesture-hint" aria-hidden="true">ドラッグで見回す <span>·</span> 矢印キーで歩く</p>
+</div>
+<p class="world-copyright">© <span lang="en">Toshiki Kimura</span></p>
 </footer>
 <p class="visually-hidden" id="world-status" role="status" aria-live="polite"></p>
-<noscript><style>.world-canvas,.world-help,[data-world-focus],.place-cat,.places-hint{display:none!important}.place-row{grid-template-columns:1fr}.place-row a{justify-self:end}.world-places{display:none}</style></noscript>
+<noscript><p class="static-note">各ページは上のメニューからご覧いただけます。</p></noscript>
 </main>
-<script src="js/world-ui.js?v=20261106-world1" defer></script>
+<script src="js/world-ui.js?v=20261106-home2" defer></script>
 </body>
 </html>

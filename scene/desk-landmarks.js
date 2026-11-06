@@ -97,8 +97,8 @@ function nameplate(T, title, subtitle, brass, edgeGeometry, screwGeometry) {
 }
 
 /** Return a standalone tabletop group and the room's standard target records. */
-export async function createDeskLandmarks(T, { optimize = true } = {}) {
-  if (typeof document !== 'undefined' && document.fonts?.ready) await document.fonts.ready;
+export async function createDeskLandmarks(T, { optimize = true, waitForFonts = true } = {}) {
+  if (waitForFonts && typeof document !== 'undefined' && document.fonts?.ready) await document.fonts.ready;
   const group = new T.Group();
   group.name = 'Original Waseda and Karatsu desk miniatures';
   const targets = [];

@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "node scripts/preview.mjs",
     "build:world": "node scripts/build-world.mjs",
-    "test:world": "node scripts/verify-world.mjs",
-    "test": "node scripts/verify-3d.mjs && node scripts/verify-surfaces.mjs && node scripts/verify-room-time.mjs && node scripts/verify-decor.mjs && node scripts/verify-room-actions.mjs && node scripts/verify-room-life.mjs && node scripts/verify-progressive-loading.mjs && node scripts/verify-cat-picking.mjs && node scripts/verify-room-picking.mjs && node scripts/verify-static-batching.mjs && node scripts/verify-photo-atlas.mjs && node scripts/verify-wall-navigation.mjs && node scripts/verify-wall-updates.mjs && node scripts/verify-world.mjs && node scripts/verify-world-ui.mjs"
+    "test:world": "node scripts/verify-home-navigation.mjs && node scripts/verify-world.mjs && node scripts/verify-world-ui.mjs",
+    "test": "node scripts/verify-3d.mjs && node scripts/verify-surfaces.mjs && node scripts/verify-room-time.mjs && node scripts/verify-decor.mjs && node scripts/verify-room-actions.mjs && node scripts/verify-room-life.mjs && node scripts/verify-progressive-loading.mjs && node scripts/verify-cat-picking.mjs && node scripts/verify-room-picking.mjs && node scripts/verify-static-batching.mjs && node scripts/verify-photo-atlas.mjs && node scripts/verify-wall-navigation.mjs && node scripts/verify-wall-updates.mjs && node scripts/verify-home-navigation.mjs && node scripts/verify-world.mjs && node scripts/verify-world-ui.mjs"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^1.1.0",

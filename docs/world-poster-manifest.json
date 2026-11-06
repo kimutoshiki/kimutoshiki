@@ -1,19 +1,23 @@
 {
-  "render": "Blender 4.3.2 / CPU Cycles / 96 samples / adaptive threshold0.018 / AgX",
-  "verification": "Offline geometry/material/image export and render only; no browser or WebGL claim.",
+  "render": "Blender 4.3.2 / CPU Cycles / 192 samples / adaptive threshold 0.008 / AgX",
+  "encodingScript": {
+    "file": "scripts/world-poster/encode.mjs",
+    "sha256": "819b6c2eae505f70a8b37bf1cb8b9594b74d47e1702795b62c111c674f8bdee8"
+  },
+  "verification": "Actual Three.js geometry/material/image snapshot rendered offline. Cycles lighting is an approximation; this is not a browser or WebGL verification.",
   "camera": {
     "desktop": {
       "position": [
-        38,
-        25,
-        48
+        0.7,
+        1.62,
+        1.85
       ],
       "target": [
-        0,
-        3,
+        -0.2,
+        1,
         0
       ],
-      "fov": 43,
+      "fov": 62,
       "size": [
         1600,
         1000
@@ -21,16 +25,16 @@
     },
     "mobile": {
       "position": [
-        57,
-        36,
-        72
+        0.7,
+        1.62,
+        1.85
       ],
       "target": [
-        0,
-        3,
+        -0.2,
+        1,
         0
       ],
-      "fov": 43,
+      "fov": 78,
       "size": [
         650,
         1000
@@ -40,57 +44,750 @@
   "cat": {
     "source": "models/tabby-cat-room.glb",
     "position": [
-      -2.66,
-      0.052,
-      13
+      -0.6732,
+      1.734723475976807e-18,
+      0.2844
     ],
-    "scale": 6,
+    "scale": [
+      0.9999999999999998,
+      0.9999999999999999,
+      0.9999999999999998
+    ],
     "pose": "Idle +0.8 seconds"
   },
   "sun": {
     "position": [
-      -30,
+      -38,
       55,
-      30
+      -12
     ],
     "target": [
       0,
       0,
-      0
+      35
     ],
-    "energy": 3.2
+    "energy": 2.6,
+    "color": [
+      1,
+      0.775822218312646,
+      0.508881320845802
+    ]
+  },
+  "lights": [
+    {
+      "type": "PointLight",
+      "name": "",
+      "position": [
+        0.8783999999999998,
+        1.125504,
+        -0.11879999999999999
+      ],
+      "color": [
+        1,
+        0.6307571363387763,
+        0.29613827078752575
+      ],
+      "intensity": 0.4536,
+      "distance": 1.224,
+      "decay": 2
+    },
+    {
+      "type": "PointLight",
+      "name": "",
+      "position": [
+        0.2,
+        2.12,
+        1.25
+      ],
+      "color": [
+        1,
+        0.775822218312646,
+        0.508881320845802
+      ],
+      "intensity": 2.3,
+      "distance": 8,
+      "decay": 1
+    }
+  ],
+  "windowLight": {
+    "position": [
+      -3,
+      3,
+      -2.3
+    ],
+    "target": [
+      0,
+      0.1,
+      1.1
+    ],
+    "energy": 0.65,
+    "color": [
+      1,
+      0.8713671191959567,
+      0.6653872982754769
+    ]
   },
   "fog": {
-    "density": 0.0036,
-    "color": "#93a9b2",
+    "density": 0.00165,
+    "color": "#dce0d1",
     "formula": "1-exp(-(density*depth)^2)"
   },
   "geometry": {
-    "objects": 5088,
-    "geometries": 130,
-    "materials": 117,
-    "textures": 20,
-    "bytes": 20577748,
-    "errors": []
+    "objects": 32563,
+    "geometries": 323,
+    "materials": 213,
+    "textures": 55,
+    "bytes": 35451500
   },
   "sourceHashes": {
-    "scene/world-landscape.js": "c0133fcf5b9f37315af6484d9564f0c9df9a8dadf846ece77afa6e5fa2ba1a3f",
-    "scene/world-landmarks.js": "fe72af5b34995d122ca65551a88b276d1806cb185479f3015ee37b2d92643225",
+    "scene/cat-asset.js": "f30816f047561a15ca47fe029f5de74c17c2ab8e17b5271daa4e139307448435",
+    "scene/cat-life.js": "f6ea5064be9dce06599599b586377656e51e126214dbab6e3d40eb525ac99c17",
+    "scene/collected-decor.js": "78deb3c561d4bcc62a05d19c7d233a7d81b057b184bf8292874540a2768d3ff8",
+    "scene/desk-landmarks.js": "a6e61fcb01188daad14ce9deed525f6a9e831592cb8a7a12521e34d8da597c70",
+    "scene/home-interior.js": "8f0a502a9b06fc0b68b77cae599b3b6b4945e73c1f012e1735f41a507cefc75c",
+    "scene/home-navigation.js": "484ddf37c3829d2a07efaff41e61a0acbaf9aada9234d3f7ff56d238b9d4b9c2",
+    "scene/natural-details.js": "04d806f5541c98592e4c62cf604ec5a193a43c2a19c3eb8be709cc318218b0cb",
+    "scene/natural-props.js": "26ef06503519597e9be6cb2cef443d688b1b2bb2468e63217fa3e4ca27fd0eb4",
+    "scene/object-actions.js": "6d1af4fa4a672c45358c139ebb053a9c6ad7590ec17434dec4e9803cd6fbe01b",
+    "scene/orbit-navigation.js": "9c9071aea613fcbdb694ddd89241cc71d39a03d92064540b4f19a19378e2db68",
+    "scene/photo-catalog.js": "72b87a0ae21714b4df1d241c6ae82ef1e45a112b1082e4e952f6f957901111f5",
+    "scene/photo-wall.js": "ec203ea2e027fa5e059226e9e16214ac7f2879fd1519f887806add8c00bd03a8",
+    "scene/render-budget.js": "9ab365f80d698d77824ad93ec8d13ed00a7190fb3df6a95fe1a990f1005a922c",
+    "scene/room-details.js": "ddce5aaef477dc3fc2fa40908d0286e3876bf54a4f6188f63d3ceda9f9690ef1",
+    "scene/room-model.js": "a791f8d60be02ef9248cac09687c4cc59ea6e4455175afde2a906565300a78c3",
+    "scene/room-picking.js": "3292d7b5b24e4367721a11bc391898508b07dd6f04f23d671bdab9323887a308",
+    "scene/room-shell.js": "55bd85faf32652559497891377fb62c57a939af53ee1c4005f8b0375e90b2750",
+    "scene/room-time.js": "93190fb2f4de23873dba5dede72a3fbe724ab19519e1fc3ff79ffa1c6a08d2d9",
+    "scene/static-batching.js": "3c69b547c0cca348a83b8d0d5118dfe595b83db3a9947de392564f913972a933",
+    "scene/study-software.js": "94634f1ef7f01a54100760cc592afea2dd13cbc45fed6c46d770e7b43a1090e8",
+    "scene/study.js": "bdd7585a11ebb78ac0eaf1b4ad04f48adf3351b61a7bd61b14a5432591d4efca",
     "scene/surface-materials.js": "efc623c7f5b939bac2a37e777c114ce21f2f71b1b8fcaedfffd3deaf85cf5e84",
-    "models/tabby-cat-room.glb": "ebe9b7e9f7d9301532c4226f7dcc3719eae14821605220b704e43a265c579d8f"
+    "scene/wall-atlas.js": "b7cc4ea71a78380e8bd5fcc2ea72ce208134ae6e16bbf055061f9659aa2db866",
+    "scene/wall-navigation.js": "5ce0d48950b5d219b50171c216c75a0a9d3531be16b6c27450654a36469f1745",
+    "scene/window-blinds.js": "558fba61af81cc9172c1e9fb6504bc94738c109b3e56e4d410ae714f4a9b2921",
+    "scene/workshop-details.js": "83e305115d613bf18f9e9a58d11c17a4e4917783b5e1ddef8f3ee8768f13448d",
+    "scene/world-cat-loader.js": "e9da5c8c1e7565e673407d92b0f820dd6db866558ea381ed2710dc128ab85fc8",
+    "scene/world-landmarks.js": "51994274861fbb619d64fda22ce2f3beffa1ced5528cc5963d3b9ddba07b6f61",
+    "scene/world-landscape.js": "84e5c8972ff5029adee7d09bb6846f7e309b75b6c84322f551bc4a038662fd12",
+    "scene/world-layout.js": "2369d91137181b3cabc51ad7e7fe9b14801f41a0719cabeb3e605c694242a7c7",
+    "scene/world-navigation.js": "46030a335c8ae826fc34718b0d897df59dd40368bbd9125e0513b5b4ac8b6dec",
+    "scene/world-three.js": "b6bd971bceba4a65b2b3c3888230baf413e1bf19e39d006990e2220c5cc6d3b8",
+    "scene/world.js": "cc2a926a6d7f214fb562b6b79f40400984eb1cbc70d8a074dfb96060b8bdedc1",
+    "js/models/okuma-auditorium.js": "612350f76ba1b70429a33fd1c5b2197c3aafd25ad1a3d0c5012cff4ffb0cf188",
+    "js/models/okuma-statue.js": "2185a3dc140922c473761ebcaae54867fab0ac008a997ad22f1e6de62d67173f",
+    "js/models/karatsu-castle.js": "d11944352081b6e4585063904ced21526d996df60eda55dea68c058b6052d620",
+    "js/models/karatsu-bank.js": "8fd587c485105b64ea23689748b833b163d0972eeba6119816c7a9c2e020529c",
+    "models/tabby-cat-room.glb": "ebe9b7e9f7d9301532c4226f7dcc3719eae14821605220b704e43a265c579d8f",
+    "scripts/world-poster/export.mjs": "ea019cd75895d5dc470cdaa02061d77b89f0d5cd711ad01bcb16c94d205a3105",
+    "scripts/world-poster/render.py": "9e51d2362e92515715f455b4342809eb735e8810152c8ecf052c74f9aa7bbc12",
+    "scripts/world-poster/encode.mjs": "7f9d14ef1c3321b4d498504c6cf32f54cd8689b0ad70c1305b66eccf44a8fb7b"
   },
+  "textureHashes": [
+    {
+      "file": "textures/texture-0.png",
+      "sha256": "49ccfc6bef8746cf1ac93e267c062870808d08c8343ddc145d0a79a7f4dc9eea"
+    },
+    {
+      "file": "textures/texture-1.png",
+      "sha256": "09201d47c9c00636bc115e8bccb5c0357ce4994c74178834bf50472f7caefd99"
+    },
+    {
+      "file": "textures/texture-2.png",
+      "sha256": "c79b7f4da1e7fdb18ef96b2dc6ad570775ab59d175138c4c6ff220b9e9a0d605"
+    },
+    {
+      "file": "textures/texture-3.png",
+      "sha256": "eabeb7a8644e5883474ab41a320fc818f39b390402e32415ad4e00d56fd61e52"
+    },
+    {
+      "file": "textures/texture-4.png",
+      "sha256": "eabeb7a8644e5883474ab41a320fc818f39b390402e32415ad4e00d56fd61e52"
+    },
+    {
+      "file": "textures/texture-5.png",
+      "sha256": "83fa13187ce9ec28dd7a5fad3aebd470ec67b52bb0df01e28ec98a1c6ba194b7"
+    },
+    {
+      "file": "textures/texture-6.png",
+      "sha256": "83fa13187ce9ec28dd7a5fad3aebd470ec67b52bb0df01e28ec98a1c6ba194b7"
+    },
+    {
+      "file": "textures/texture-7.png",
+      "sha256": "990daf36438066626f324d9486b35e4ede231f7853099b99e7f458cc748354e8"
+    },
+    {
+      "file": "textures/texture-8.png",
+      "sha256": "990daf36438066626f324d9486b35e4ede231f7853099b99e7f458cc748354e8"
+    },
+    {
+      "file": "textures/texture-9.png",
+      "sha256": "1e70cd675410d5832b048c2a3eac9eb5d04470636cdba52c7a7f7aa64b954ab0"
+    },
+    {
+      "file": "textures/texture-10.png",
+      "sha256": "1e70cd675410d5832b048c2a3eac9eb5d04470636cdba52c7a7f7aa64b954ab0"
+    },
+    {
+      "file": "textures/texture-11.png",
+      "sha256": "1c65834ab634cf6c399e2ffef0faf4ac87529db03b61e24cdc76d741b9b5a39b"
+    },
+    {
+      "file": "textures/texture-12.png",
+      "sha256": "0613899151ab908436d5fbf0f127b3733a4aedddb4a7e4ba0bf664f24ebc5dbd"
+    },
+    {
+      "file": "textures/texture-13.png",
+      "sha256": "0613899151ab908436d5fbf0f127b3733a4aedddb4a7e4ba0bf664f24ebc5dbd"
+    },
+    {
+      "file": "textures/texture-14.png",
+      "sha256": "55185e6f860aedb34f937dabecb927b11dd18ebe1bc678425dcee03eed3cc31e"
+    },
+    {
+      "file": "textures/texture-15.png",
+      "sha256": "6473b640f91527f83332e0cd49ea35cc91c7985f86b3d2e6a6783aa327fe8433"
+    },
+    {
+      "file": "textures/texture-16.png",
+      "sha256": "adb9febd217dbc09c01b3cc03971be8eae4237642e2286bc668b38cd36c525c8"
+    },
+    {
+      "file": "textures/texture-17.png",
+      "sha256": "0613899151ab908436d5fbf0f127b3733a4aedddb4a7e4ba0bf664f24ebc5dbd"
+    },
+    {
+      "file": "textures/texture-18.png",
+      "sha256": "0613899151ab908436d5fbf0f127b3733a4aedddb4a7e4ba0bf664f24ebc5dbd"
+    },
+    {
+      "file": "textures/texture-19.png",
+      "sha256": "1af93f8d27326fb7addb01f985d0be62b05b0f8fbb61a1a3b5ef21f3d8bf26fd"
+    },
+    {
+      "file": "textures/texture-20.png",
+      "sha256": "6c8edb54f1aabe0af5d1b10ccd57c232fe25b591cb22385bbe15b5e5074ed806"
+    },
+    {
+      "file": "textures/texture-21.png",
+      "sha256": "3ca81550341747c9a90bf2dff75ee660049150eff2f62a595fe236779fef4712"
+    },
+    {
+      "file": "textures/texture-22.png",
+      "sha256": "793dce255a6808c8c25f0265b245dbee5b576f1e39faa74554d5f0eeab01bab4"
+    },
+    {
+      "file": "textures/texture-23.png",
+      "sha256": "ebe9ffeb19a12ba6f3b167413ae0faf9599999bc1d8321673e32fd89df2f7bb9"
+    },
+    {
+      "file": "textures/texture-24.png",
+      "sha256": "dd15a5a88c88686a35138bb12fdb9b9b30fd4486298edea2afd911a7968f8a05"
+    },
+    {
+      "file": "textures/texture-25.png",
+      "sha256": "d39ef4b57fd474962de6d4634ca6f6f91c912786912524ce1d07b169083a56dd"
+    },
+    {
+      "file": "textures/texture-26.png",
+      "sha256": "edfbb6a8bce572de9a33f35b5a7bcaec555139fa12f26abda1689e58e7067387"
+    },
+    {
+      "file": "textures/texture-27.png",
+      "sha256": "e4728bb31f79cec7f331f0172f9a1df230597be592505f3f3dd39e96524e2d1e"
+    },
+    {
+      "file": "textures/texture-28.png",
+      "sha256": "06f64f5c5bd089a98f14348b99931a4e24a3cc797308b06fef69ba01130ab324"
+    },
+    {
+      "file": "textures/texture-29.png",
+      "sha256": "94d21781647c333b10cfb8045883b224a61d3f5346ee7fd993067370726d3c97"
+    },
+    {
+      "file": "textures/texture-30.png",
+      "sha256": "19113139780da95d26404995d5a8e49c372e8423a32cfe02dc343ea279986bfd"
+    },
+    {
+      "file": "textures/texture-31.png",
+      "sha256": "53a72b41933554b04a09f59da3d4f100813f98a24b5a9a4a3943c69db7f08519"
+    },
+    {
+      "file": "textures/texture-32.png",
+      "sha256": "4fe56788dab22170e651a34b8e6122e4fba15bc2b739428e0ff26fb2fa92844a"
+    },
+    {
+      "file": "textures/texture-33.png",
+      "sha256": "fe9d81a272a79e4254fcaea22a4a671ae6a794233dcef2df48fb87e40ea74354"
+    },
+    {
+      "file": "textures/texture-34.png",
+      "sha256": "2bd6918d4ef6041077055f68f61e19016d23079fe3d2e8f16c58a6e4e8f16e2d"
+    },
+    {
+      "file": "textures/texture-35.png",
+      "sha256": "c7149989c9256be5c1cd4176986808bee86459869eac762baead3afc3f90b02f"
+    },
+    {
+      "file": "textures/texture-36.png",
+      "sha256": "335f6a2eccb1991504830a140ae4e3c1d7dc74332319d371f9276d6d40f2f06e"
+    },
+    {
+      "file": "textures/texture-37.png",
+      "sha256": "6b5d10e13dfdc02a65e3ef9bf4d97f8bb305481f89548a05f0d8b67c2e7658cb"
+    },
+    {
+      "file": "textures/texture-38.png",
+      "sha256": "990daf36438066626f324d9486b35e4ede231f7853099b99e7f458cc748354e8"
+    },
+    {
+      "file": "textures/texture-39.png",
+      "sha256": "990daf36438066626f324d9486b35e4ede231f7853099b99e7f458cc748354e8"
+    },
+    {
+      "file": "textures/texture-40.png",
+      "sha256": "84922943b7492e82d83b86979b15f897cab6cb742e20702fc0f6628ba0c2a2c4"
+    },
+    {
+      "file": "textures/texture-41.png",
+      "sha256": "17dc614b857d8c0770c84603f4a5fd6cc17857c17c9dc46cf34173c33e5d7fe6"
+    },
+    {
+      "file": "textures/texture-42.png",
+      "sha256": "affca5ff154b4218735698e6bc2b49cfa98d28d22dbc3086ff6b8d1e145b73bd"
+    },
+    {
+      "file": "textures/texture-43.png",
+      "sha256": "eabeb7a8644e5883474ab41a320fc818f39b390402e32415ad4e00d56fd61e52"
+    },
+    {
+      "file": "textures/texture-44.png",
+      "sha256": "eabeb7a8644e5883474ab41a320fc818f39b390402e32415ad4e00d56fd61e52"
+    },
+    {
+      "file": "textures/texture-45.png",
+      "sha256": "83fa13187ce9ec28dd7a5fad3aebd470ec67b52bb0df01e28ec98a1c6ba194b7"
+    },
+    {
+      "file": "textures/texture-46.png",
+      "sha256": "83fa13187ce9ec28dd7a5fad3aebd470ec67b52bb0df01e28ec98a1c6ba194b7"
+    },
+    {
+      "file": "textures/texture-47.png",
+      "sha256": "a417db71677d1a55006f67bd8c48e74c6045200792cfe042532c483d9edbed14"
+    },
+    {
+      "file": "textures/texture-48.png",
+      "sha256": "6473b640f91527f83332e0cd49ea35cc91c7985f86b3d2e6a6783aa327fe8433"
+    },
+    {
+      "file": "textures/texture-49.png",
+      "sha256": "c3661bb1082469ec307e0424f0a2844add7fd1ae8845e22e86af07bb12a5fc29"
+    },
+    {
+      "file": "textures/texture-50.png",
+      "sha256": "a5e3a904f512844096ee9b3c3075606c7c9b8da36232782c971585d0c2148a8b"
+    },
+    {
+      "file": "textures/texture-51.png",
+      "sha256": "55185e6f860aedb34f937dabecb927b11dd18ebe1bc678425dcee03eed3cc31e"
+    },
+    {
+      "file": "textures/texture-52.png",
+      "sha256": "1c65834ab634cf6c399e2ffef0faf4ac87529db03b61e24cdc76d741b9b5a39b"
+    },
+    {
+      "file": "textures/texture-53.png",
+      "sha256": "1e70cd675410d5832b048c2a3eac9eb5d04470636cdba52c7a7f7aa64b954ab0"
+    },
+    {
+      "file": "textures/texture-54.png",
+      "sha256": "1e70cd675410d5832b048c2a3eac9eb5d04470636cdba52c7a7f7aa64b954ab0"
+    }
+  ],
   "posters": [
     {
       "file": "poster.webp",
-      "bytes": 71832,
-      "sha256": "72c529fc74036d095029d86c1b9b0113d8e59b58efe936505b2edac58ea6fe9a",
-      "webpQuality": 84
+      "width": 1600,
+      "height": 1000,
+      "webpQuality": 44,
+      "bytes": 99306,
+      "preferredBudget": 100000,
+      "budget": 100000,
+      "sha256": "3cf93a173b3ed627f3474856fe047d86af6031ec1f1a7588a04c3d16a165fbf2"
     },
     {
       "file": "poster-mobile.webp",
-      "bytes": 28930,
-      "sha256": "1db1c957ed0f68beb60a42f55426190f43c8590d3826c435cedad1272b769e17",
-      "webpQuality": 84
+      "width": 650,
+      "height": 1000,
+      "webpQuality": 42,
+      "bytes": 48354,
+      "preferredBudget": 50000,
+      "budget": 50000,
+      "sha256": "2874681101205b65cea88d2cb7215497149295315e6b1de50718d13ae7f25d5d"
     }
-  ]
+  ],
+  "snapshotRelationship": {
+    "roomPosters": "Rendered before the final paving-union and pre-load collision-reservation changes; the captured source hashes above are retained exactly.",
+    "outdoorReview": "Rendered from the later final paving-union snapshot. The inward-facing home geometry, cameras, cat and light parameters are unchanged between these two captures.",
+    "changedSources": [
+      "scene/world-landscape.js",
+      "scene/world-layout.js",
+      "scene/world.js"
+    ]
+  },
+  "outdoorReview": {
+    "render": "Blender 4.3.2 / CPU Cycles / 32 samples / adaptive threshold 0.018 / AgX",
+    "verification": "Offline actual-geometry render; not a browser or WebGL verification.",
+    "cameras": {
+      "doorway": {
+        "position": [
+          -1.296,
+          1.62,
+          2.1
+        ],
+        "target": [
+          -1.296,
+          1.62,
+          20
+        ],
+        "fov": 62
+      },
+      "exterior": {
+        "position": [
+          -1.296,
+          1.62,
+          9
+        ],
+        "target": [
+          0,
+          6.5,
+          40
+        ],
+        "fov": 62
+      },
+      "house": {
+        "position": [
+          5.8,
+          1.62,
+          11
+        ],
+        "target": [
+          0,
+          1.5,
+          1.4
+        ],
+        "fov": 62
+      }
+    },
+    "geometry": {
+      "objects": 32563,
+      "geometries": 323,
+      "materials": 213,
+      "textures": 55,
+      "bytes": 35455920
+    },
+    "sourceHashes": {
+      "scene/cat-asset.js": "f30816f047561a15ca47fe029f5de74c17c2ab8e17b5271daa4e139307448435",
+      "scene/cat-life.js": "f6ea5064be9dce06599599b586377656e51e126214dbab6e3d40eb525ac99c17",
+      "scene/collected-decor.js": "78deb3c561d4bcc62a05d19c7d233a7d81b057b184bf8292874540a2768d3ff8",
+      "scene/desk-landmarks.js": "a6e61fcb01188daad14ce9deed525f6a9e831592cb8a7a12521e34d8da597c70",
+      "scene/home-interior.js": "8f0a502a9b06fc0b68b77cae599b3b6b4945e73c1f012e1735f41a507cefc75c",
+      "scene/home-navigation.js": "484ddf37c3829d2a07efaff41e61a0acbaf9aada9234d3f7ff56d238b9d4b9c2",
+      "scene/natural-details.js": "04d806f5541c98592e4c62cf604ec5a193a43c2a19c3eb8be709cc318218b0cb",
+      "scene/natural-props.js": "26ef06503519597e9be6cb2cef443d688b1b2bb2468e63217fa3e4ca27fd0eb4",
+      "scene/object-actions.js": "6d1af4fa4a672c45358c139ebb053a9c6ad7590ec17434dec4e9803cd6fbe01b",
+      "scene/orbit-navigation.js": "9c9071aea613fcbdb694ddd89241cc71d39a03d92064540b4f19a19378e2db68",
+      "scene/photo-catalog.js": "72b87a0ae21714b4df1d241c6ae82ef1e45a112b1082e4e952f6f957901111f5",
+      "scene/photo-wall.js": "ec203ea2e027fa5e059226e9e16214ac7f2879fd1519f887806add8c00bd03a8",
+      "scene/render-budget.js": "9ab365f80d698d77824ad93ec8d13ed00a7190fb3df6a95fe1a990f1005a922c",
+      "scene/room-details.js": "ddce5aaef477dc3fc2fa40908d0286e3876bf54a4f6188f63d3ceda9f9690ef1",
+      "scene/room-model.js": "a791f8d60be02ef9248cac09687c4cc59ea6e4455175afde2a906565300a78c3",
+      "scene/room-picking.js": "3292d7b5b24e4367721a11bc391898508b07dd6f04f23d671bdab9323887a308",
+      "scene/room-shell.js": "55bd85faf32652559497891377fb62c57a939af53ee1c4005f8b0375e90b2750",
+      "scene/room-time.js": "93190fb2f4de23873dba5dede72a3fbe724ab19519e1fc3ff79ffa1c6a08d2d9",
+      "scene/static-batching.js": "3c69b547c0cca348a83b8d0d5118dfe595b83db3a9947de392564f913972a933",
+      "scene/study-software.js": "94634f1ef7f01a54100760cc592afea2dd13cbc45fed6c46d770e7b43a1090e8",
+      "scene/study.js": "bdd7585a11ebb78ac0eaf1b4ad04f48adf3351b61a7bd61b14a5432591d4efca",
+      "scene/surface-materials.js": "efc623c7f5b939bac2a37e777c114ce21f2f71b1b8fcaedfffd3deaf85cf5e84",
+      "scene/wall-atlas.js": "b7cc4ea71a78380e8bd5fcc2ea72ce208134ae6e16bbf055061f9659aa2db866",
+      "scene/wall-navigation.js": "5ce0d48950b5d219b50171c216c75a0a9d3531be16b6c27450654a36469f1745",
+      "scene/window-blinds.js": "558fba61af81cc9172c1e9fb6504bc94738c109b3e56e4d410ae714f4a9b2921",
+      "scene/workshop-details.js": "83e305115d613bf18f9e9a58d11c17a4e4917783b5e1ddef8f3ee8768f13448d",
+      "scene/world-cat-loader.js": "e9da5c8c1e7565e673407d92b0f820dd6db866558ea381ed2710dc128ab85fc8",
+      "scene/world-landmarks.js": "51994274861fbb619d64fda22ce2f3beffa1ced5528cc5963d3b9ddba07b6f61",
+      "scene/world-landscape.js": "670d5f5bbf94a0b5e98e8be1bf4f9ad3a06f6035b0fc43b2cebc7dc58c418f8c",
+      "scene/world-layout.js": "354ca2a3445a585db6ebf67f05422b20e951c451293db3599a4d316b9f5ed15e",
+      "scene/world-navigation.js": "46030a335c8ae826fc34718b0d897df59dd40368bbd9125e0513b5b4ac8b6dec",
+      "scene/world-three.js": "b6bd971bceba4a65b2b3c3888230baf413e1bf19e39d006990e2220c5cc6d3b8",
+      "scene/world.js": "d876e3b3628ef5a84aed9ceddee4d0e341de9d4d4fd3b36f3c86694c4373a009",
+      "js/models/okuma-auditorium.js": "612350f76ba1b70429a33fd1c5b2197c3aafd25ad1a3d0c5012cff4ffb0cf188",
+      "js/models/okuma-statue.js": "2185a3dc140922c473761ebcaae54867fab0ac008a997ad22f1e6de62d67173f",
+      "js/models/karatsu-castle.js": "d11944352081b6e4585063904ced21526d996df60eda55dea68c058b6052d620",
+      "js/models/karatsu-bank.js": "8fd587c485105b64ea23689748b833b163d0972eeba6119816c7a9c2e020529c",
+      "models/tabby-cat-room.glb": "ebe9b7e9f7d9301532c4226f7dcc3719eae14821605220b704e43a265c579d8f",
+      "scripts/world-poster/export.mjs": "ea019cd75895d5dc470cdaa02061d77b89f0d5cd711ad01bcb16c94d205a3105",
+      "scripts/world-poster/render.py": "9e51d2362e92515715f455b4342809eb735e8810152c8ecf052c74f9aa7bbc12",
+      "scripts/world-poster/encode.mjs": "7f9d14ef1c3321b4d498504c6cf32f54cd8689b0ad70c1305b66eccf44a8fb7b"
+    },
+    "textureHashes": [
+      {
+        "file": "textures/texture-0.png",
+        "sha256": "49ccfc6bef8746cf1ac93e267c062870808d08c8343ddc145d0a79a7f4dc9eea"
+      },
+      {
+        "file": "textures/texture-1.png",
+        "sha256": "c79b7f4da1e7fdb18ef96b2dc6ad570775ab59d175138c4c6ff220b9e9a0d605"
+      },
+      {
+        "file": "textures/texture-2.png",
+        "sha256": "09201d47c9c00636bc115e8bccb5c0357ce4994c74178834bf50472f7caefd99"
+      },
+      {
+        "file": "textures/texture-3.png",
+        "sha256": "eabeb7a8644e5883474ab41a320fc818f39b390402e32415ad4e00d56fd61e52"
+      },
+      {
+        "file": "textures/texture-4.png",
+        "sha256": "eabeb7a8644e5883474ab41a320fc818f39b390402e32415ad4e00d56fd61e52"
+      },
+      {
+        "file": "textures/texture-5.png",
+        "sha256": "83fa13187ce9ec28dd7a5fad3aebd470ec67b52bb0df01e28ec98a1c6ba194b7"
+      },
+      {
+        "file": "textures/texture-6.png",
+        "sha256": "83fa13187ce9ec28dd7a5fad3aebd470ec67b52bb0df01e28ec98a1c6ba194b7"
+      },
+      {
+        "file": "textures/texture-7.png",
+        "sha256": "990daf36438066626f324d9486b35e4ede231f7853099b99e7f458cc748354e8"
+      },
+      {
+        "file": "textures/texture-8.png",
+        "sha256": "990daf36438066626f324d9486b35e4ede231f7853099b99e7f458cc748354e8"
+      },
+      {
+        "file": "textures/texture-9.png",
+        "sha256": "1e70cd675410d5832b048c2a3eac9eb5d04470636cdba52c7a7f7aa64b954ab0"
+      },
+      {
+        "file": "textures/texture-10.png",
+        "sha256": "1e70cd675410d5832b048c2a3eac9eb5d04470636cdba52c7a7f7aa64b954ab0"
+      },
+      {
+        "file": "textures/texture-11.png",
+        "sha256": "1c65834ab634cf6c399e2ffef0faf4ac87529db03b61e24cdc76d741b9b5a39b"
+      },
+      {
+        "file": "textures/texture-12.png",
+        "sha256": "0613899151ab908436d5fbf0f127b3733a4aedddb4a7e4ba0bf664f24ebc5dbd"
+      },
+      {
+        "file": "textures/texture-13.png",
+        "sha256": "0613899151ab908436d5fbf0f127b3733a4aedddb4a7e4ba0bf664f24ebc5dbd"
+      },
+      {
+        "file": "textures/texture-14.png",
+        "sha256": "55185e6f860aedb34f937dabecb927b11dd18ebe1bc678425dcee03eed3cc31e"
+      },
+      {
+        "file": "textures/texture-15.png",
+        "sha256": "6473b640f91527f83332e0cd49ea35cc91c7985f86b3d2e6a6783aa327fe8433"
+      },
+      {
+        "file": "textures/texture-16.png",
+        "sha256": "adb9febd217dbc09c01b3cc03971be8eae4237642e2286bc668b38cd36c525c8"
+      },
+      {
+        "file": "textures/texture-17.png",
+        "sha256": "0613899151ab908436d5fbf0f127b3733a4aedddb4a7e4ba0bf664f24ebc5dbd"
+      },
+      {
+        "file": "textures/texture-18.png",
+        "sha256": "0613899151ab908436d5fbf0f127b3733a4aedddb4a7e4ba0bf664f24ebc5dbd"
+      },
+      {
+        "file": "textures/texture-19.png",
+        "sha256": "1af93f8d27326fb7addb01f985d0be62b05b0f8fbb61a1a3b5ef21f3d8bf26fd"
+      },
+      {
+        "file": "textures/texture-20.png",
+        "sha256": "6c8edb54f1aabe0af5d1b10ccd57c232fe25b591cb22385bbe15b5e5074ed806"
+      },
+      {
+        "file": "textures/texture-21.png",
+        "sha256": "3ca81550341747c9a90bf2dff75ee660049150eff2f62a595fe236779fef4712"
+      },
+      {
+        "file": "textures/texture-22.png",
+        "sha256": "793dce255a6808c8c25f0265b245dbee5b576f1e39faa74554d5f0eeab01bab4"
+      },
+      {
+        "file": "textures/texture-23.png",
+        "sha256": "ebe9ffeb19a12ba6f3b167413ae0faf9599999bc1d8321673e32fd89df2f7bb9"
+      },
+      {
+        "file": "textures/texture-24.png",
+        "sha256": "dd15a5a88c88686a35138bb12fdb9b9b30fd4486298edea2afd911a7968f8a05"
+      },
+      {
+        "file": "textures/texture-25.png",
+        "sha256": "d39ef4b57fd474962de6d4634ca6f6f91c912786912524ce1d07b169083a56dd"
+      },
+      {
+        "file": "textures/texture-26.png",
+        "sha256": "edfbb6a8bce572de9a33f35b5a7bcaec555139fa12f26abda1689e58e7067387"
+      },
+      {
+        "file": "textures/texture-27.png",
+        "sha256": "e4728bb31f79cec7f331f0172f9a1df230597be592505f3f3dd39e96524e2d1e"
+      },
+      {
+        "file": "textures/texture-28.png",
+        "sha256": "06f64f5c5bd089a98f14348b99931a4e24a3cc797308b06fef69ba01130ab324"
+      },
+      {
+        "file": "textures/texture-29.png",
+        "sha256": "94d21781647c333b10cfb8045883b224a61d3f5346ee7fd993067370726d3c97"
+      },
+      {
+        "file": "textures/texture-30.png",
+        "sha256": "19113139780da95d26404995d5a8e49c372e8423a32cfe02dc343ea279986bfd"
+      },
+      {
+        "file": "textures/texture-31.png",
+        "sha256": "53a72b41933554b04a09f59da3d4f100813f98a24b5a9a4a3943c69db7f08519"
+      },
+      {
+        "file": "textures/texture-32.png",
+        "sha256": "4fe56788dab22170e651a34b8e6122e4fba15bc2b739428e0ff26fb2fa92844a"
+      },
+      {
+        "file": "textures/texture-33.png",
+        "sha256": "fe9d81a272a79e4254fcaea22a4a671ae6a794233dcef2df48fb87e40ea74354"
+      },
+      {
+        "file": "textures/texture-34.png",
+        "sha256": "2bd6918d4ef6041077055f68f61e19016d23079fe3d2e8f16c58a6e4e8f16e2d"
+      },
+      {
+        "file": "textures/texture-35.png",
+        "sha256": "c7149989c9256be5c1cd4176986808bee86459869eac762baead3afc3f90b02f"
+      },
+      {
+        "file": "textures/texture-36.png",
+        "sha256": "335f6a2eccb1991504830a140ae4e3c1d7dc74332319d371f9276d6d40f2f06e"
+      },
+      {
+        "file": "textures/texture-37.png",
+        "sha256": "6b5d10e13dfdc02a65e3ef9bf4d97f8bb305481f89548a05f0d8b67c2e7658cb"
+      },
+      {
+        "file": "textures/texture-38.png",
+        "sha256": "990daf36438066626f324d9486b35e4ede231f7853099b99e7f458cc748354e8"
+      },
+      {
+        "file": "textures/texture-39.png",
+        "sha256": "990daf36438066626f324d9486b35e4ede231f7853099b99e7f458cc748354e8"
+      },
+      {
+        "file": "textures/texture-40.png",
+        "sha256": "84922943b7492e82d83b86979b15f897cab6cb742e20702fc0f6628ba0c2a2c4"
+      },
+      {
+        "file": "textures/texture-41.png",
+        "sha256": "17dc614b857d8c0770c84603f4a5fd6cc17857c17c9dc46cf34173c33e5d7fe6"
+      },
+      {
+        "file": "textures/texture-42.png",
+        "sha256": "affca5ff154b4218735698e6bc2b49cfa98d28d22dbc3086ff6b8d1e145b73bd"
+      },
+      {
+        "file": "textures/texture-43.png",
+        "sha256": "eabeb7a8644e5883474ab41a320fc818f39b390402e32415ad4e00d56fd61e52"
+      },
+      {
+        "file": "textures/texture-44.png",
+        "sha256": "eabeb7a8644e5883474ab41a320fc818f39b390402e32415ad4e00d56fd61e52"
+      },
+      {
+        "file": "textures/texture-45.png",
+        "sha256": "83fa13187ce9ec28dd7a5fad3aebd470ec67b52bb0df01e28ec98a1c6ba194b7"
+      },
+      {
+        "file": "textures/texture-46.png",
+        "sha256": "83fa13187ce9ec28dd7a5fad3aebd470ec67b52bb0df01e28ec98a1c6ba194b7"
+      },
+      {
+        "file": "textures/texture-47.png",
+        "sha256": "a417db71677d1a55006f67bd8c48e74c6045200792cfe042532c483d9edbed14"
+      },
+      {
+        "file": "textures/texture-48.png",
+        "sha256": "6473b640f91527f83332e0cd49ea35cc91c7985f86b3d2e6a6783aa327fe8433"
+      },
+      {
+        "file": "textures/texture-49.png",
+        "sha256": "c3661bb1082469ec307e0424f0a2844add7fd1ae8845e22e86af07bb12a5fc29"
+      },
+      {
+        "file": "textures/texture-50.png",
+        "sha256": "a5e3a904f512844096ee9b3c3075606c7c9b8da36232782c971585d0c2148a8b"
+      },
+      {
+        "file": "textures/texture-51.png",
+        "sha256": "55185e6f860aedb34f937dabecb927b11dd18ebe1bc678425dcee03eed3cc31e"
+      },
+      {
+        "file": "textures/texture-52.png",
+        "sha256": "1c65834ab634cf6c399e2ffef0faf4ac87529db03b61e24cdc76d741b9b5a39b"
+      },
+      {
+        "file": "textures/texture-53.png",
+        "sha256": "1e70cd675410d5832b048c2a3eac9eb5d04470636cdba52c7a7f7aa64b954ab0"
+      },
+      {
+        "file": "textures/texture-54.png",
+        "sha256": "1e70cd675410d5832b048c2a3eac9eb5d04470636cdba52c7a7f7aa64b954ab0"
+      }
+    ],
+    "images": [
+      {
+        "file": "docs/reviews/home-to-garden/doorway.webp",
+        "bytes": 125938,
+        "size": [
+          1000,
+          625
+        ],
+        "webpQuality": 84,
+        "budget": 150000,
+        "sha256": "7ff6747d297ec8c1e067a9cfa906c4807aa22c3a65530be81a9e244e94bc68f8",
+        "sourcePngSha256": "a40b6b0e1bf9a3f3383bb30600a6ad35ebc18cd35da51129c92e25c8488ff4b0"
+      },
+      {
+        "file": "docs/reviews/home-to-garden/exterior.webp",
+        "bytes": 98664,
+        "size": [
+          1000,
+          625
+        ],
+        "webpQuality": 84,
+        "budget": 150000,
+        "sha256": "48a9c85ce38c8581aadb29e8b9a8858b44fcb20160ab5fc76a2ea8cdd3630e52",
+        "sourcePngSha256": "9f53e3751ac9b76ea70011e3723c7d85ac3cdc4d627be876690498af7db485d9"
+      },
+      {
+        "file": "docs/reviews/home-to-garden/house.webp",
+        "bytes": 55746,
+        "size": [
+          1000,
+          625
+        ],
+        "webpQuality": 84,
+        "budget": 150000,
+        "sha256": "b7f4b7c79a58fcf8f5a5b81bdc98902bc401a56c77a2fdd58a82c0b55404f932",
+        "sourcePngSha256": "70bfbcd982381ea649c8fa32646210c00966ce88d0a8838189c8739670fd397f"
+      }
+    ]
+  }
 }

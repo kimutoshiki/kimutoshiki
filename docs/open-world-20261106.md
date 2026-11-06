@@ -1,5 +1,9 @@
 # Coastal personal world — 6 November 2026
 
+Historical report for PR #6. Its aerial composition is superseded by the
+[original study and walkable garden](home-to-garden-20261106.md). Publication
+statements below describe the report's pre-approval snapshot.
+
 The homepage replaces the enclosed study with a broad coastal landscape. Only
 the owner's original animated cat and four Waseda/Karatsu architectural subjects
 occupy the world: Okuma Auditorium, the Okuma Shigenobu statue, Karatsu Castle

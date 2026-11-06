@@ -1,5 +1,6 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -52,6 +53,8 @@ T.TextureLoader.prototype.load = function (url, onLoad, onProgress, onError) {
 const { createWorldLandscape } = await fromRepo('scene/world-landscape.js');
 const { createWorldLandmarks } = await fromRepo('scene/world-landmarks.js');
 const { loadSurfaceMaterials } = await fromRepo('scene/surface-materials.js');
+const { createHomeInterior } = await fromRepo('scene/home-interior.js');
+const layout = await fromRepo('scene/world-layout.js');
 const scene = new T.Group();
 const landscape = createWorldLandscape(T, {});
 const landmarks = await createWorldLandmarks(T, {});
@@ -91,18 +94,14 @@ asset.scene.traverse(object => {
     }
   }
 });
-const cat = new T.Group();
-cat.name = 'Original animated tabby';
-cat.position.set(-2.66, .052, 13);
-cat.rotation.y = .14;
-asset.scene.scale.setScalar(6);
-asset.scene.position.y = -.001213 * 6;
-cat.add(asset.scene);
-scene.add(cat);
-const mixer = new T.AnimationMixer(asset.scene);
-const idle = asset.animations.find(clip => clip.name === 'Idle');
-if (idle) mixer.clipAction(idle).play();
-mixer.update(.8);
+const home = createHomeInterior(T, { catAsset: asset });
+await home.loadMiniatures();
+home.refine();
+scene.add(home.group);
+loadSurfaceMaterials(T, home.group);
+const cat = home.cat.group;
+cat.scale.setScalar(1 / (1.8 * layout.HOME.scale));
+home.cat.mixer?.update(.8);
 while (pending.size) await Promise.all([...pending]);
 if (errors.length) throw new Error(errors.join('\n'));
 scene.updateMatrixWorld(true);
@@ -141,9 +140,10 @@ async function textureId(texture) {
     ctx.putImageData(rgba, 0, 0);
   } else ctx.drawImage(source, 0, 0, width, height);
   const file = `textures/texture-${id}.png`;
-  await writeFile(path.join(out, file), surface.toBuffer('image/png'));
+  const pixels = surface.toBuffer('image/png');
+  await writeFile(path.join(out, file), pixels);
   textures[id] = {
-    id, file, width, height,
+    id, file, width, height, sha256: createHash('sha256').update(pixels).digest('hex'),
     repeat: texture.repeat.toArray(), offset: texture.offset.toArray(),
     rotation: texture.rotation, flipY: texture.flipY, colorspace: texture.colorSpace,
   };
@@ -160,6 +160,7 @@ async function materialId(material, tint) {
   if (tint) color.multiply(tint);
   materials[id] = {
     id, name: material.name || `material-${id}`, color: color.toArray(),
+    unlit: !!material.isMeshBasicMaterial, alphaTest: material.alphaTest || 0,
     roughness: material.roughness ?? 1, metalness: material.metalness ?? 0,
     opacity: material.opacity ?? 1, transparent: !!material.transparent, side: material.side,
     emissive: material.emissive?.toArray() || [0, 0, 0],
@@ -237,17 +238,51 @@ for (const object of meshes) {
     objects.push({
       name: object.name || object.parent?.name || 'World mesh', geometry,
       matrix: matrix.toArray(),
-      materials: await Promise.all(sourceMaterials.map(material => materialId(material, color))),
+      materials: await Promise.all(sourceMaterials.map(material => materialId(material))),
+      instanceColor: color?.toArray() || [1,1,1],
       castShadow: object.castShadow, receiveShadow: object.receiveShadow, cat: isCat(object),
     });
   }
 }
+const sourceHashes = {};
+for (const name of (await readdir(path.join(repo, 'scene'))).filter(name => name.endsWith('.js') && !name.includes('world-chunk') && !name.includes('.bundle.'))) {
+  const file = `scene/${name}`;
+  sourceHashes[file] = createHash('sha256').update(await readFile(path.join(repo, file))).digest('hex');
+}
+for (const file of ['js/models/okuma-auditorium.js', 'js/models/okuma-statue.js', 'js/models/karatsu-castle.js', 'js/models/karatsu-bank.js', 'models/tabby-cat-room.glb', 'scripts/world-poster/export.mjs', 'scripts/world-poster/render.py', 'scripts/world-poster/encode.mjs']) {
+  sourceHashes[file] = createHash('sha256').update(await readFile(path.join(repo, file))).digest('hex');
+}
+const lights = [];
+const roomFill = new T.PointLight('#ffe4bd', 2.3, 8, 1); roomFill.position.set(.2, 2.12, 1.25);
+scene.add(roomFill);
+scene.updateMatrixWorld(true);
+scene.traverseVisible(object => {
+  if (!object.isLight) return;
+  const position = object.getWorldPosition(new T.Vector3()).toArray();
+  lights.push({type: object.type, name: object.name, position, color: object.color.toArray(), intensity: object.intensity, distance: object.distance, decay: object.decay});
+});
+const skyCanvas = canvas(256, 128), skyContext = skyCanvas.getContext('2d');
+const gradient = skyContext.createLinearGradient(0, 0, 0, 128);
+for (const [offset, color] of [[0,'#91adb5'],[.43,'#cfdbd7'],[.51,'#eee9da'],[.65,'#8f9b7c'],[1,'#596449']]) gradient.addColorStop(offset, color);
+skyContext.fillStyle = gradient; skyContext.fillRect(0, 0, 256, 128);
+await writeFile(path.join(out, 'sky.png'), skyCanvas.toBuffer('image/png'));
+const camera = layout.REVIEW_VIEWS.interior;
 const data = {
-  geometries, materials, textures, objects,
-  landscapeStats: landscape.stats, landmarkStats: landmarks.stats,
-  camera: { position: [38, 25, 48], target: [0, 3, 0], fov: 43 },
-  sun: { position: [-30, 55, 30], target: [0, 0, 0], energy: 3.2 },
+  geometries, materials, textures, objects, lights, sourceHashes,
+  landscapeStats: landscape.stats, landmarkStats: landmarks.stats, homeMetadata: home.metadata,
+  camera, mobileCamera: {...camera, fov: layout.worldFov(650 / 1000)}, environment: {file: 'sky.png', indirectStrength: .65, cameraStrength: 1},
+  reviewViews: {
+    doorway: layout.REVIEW_VIEWS.doorway,
+    exterior: layout.REVIEW_VIEWS.garden,
+    house: layout.REVIEW_VIEWS.house,
+    contact: {position: [-.65, .45, 1.1], target: [-.67, .15, .285], fov: 55},
+  },
+  cat: {source: 'models/tabby-cat-room.glb', position: cat.getWorldPosition(new T.Vector3()).toArray(), scale: asset.scene.getWorldScale(new T.Vector3()).toArray(), pose: 'Idle +0.8 seconds'},
+  sun: { position: [-38, 55, -12], target: [0, 0, 35], energy: 2.6, color: new T.Color('#ffe4bd').toArray() },
+  windowLight: {position: [-3,3,-2.3], target: [0,.1,1.1], energy: .65, color: new T.Color('#fff0d5').toArray()},
+  fog: {density: .00165, color: '#dce0d1'},
 };
+await writeFile(path.join(out, 'snapshot-metadata.json'), JSON.stringify({camera: data.camera, mobileCamera: data.mobileCamera, reviewViews: data.reviewViews, cat: data.cat, sun: data.sun, lights: data.lights, windowLight: data.windowLight, fog: data.fog, sourceHashes, textureHashes: textures.map(({file,sha256}) => ({file,sha256})), geometry: {objects: objects.length, geometries: geometries.length, materials: materials.length, textures: textures.length, bytes: offset}}, null, 2));
 await writeFile(path.join(out, 'scene.bin'), Buffer.concat(chunks));
 await writeFile(path.join(out, 'scene.json'), JSON.stringify(data));
 console.log(JSON.stringify({
