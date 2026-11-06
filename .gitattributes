@@ -1,0 +1,4 @@
+# esbuild preserves Three.js shader strings, including their source whitespace.
+# Review the corresponding world source modules; retain shader literals intact.
+scene/world.bundle.js linguist-generated=true -whitespace
+scene/world-chunk-*.js linguist-generated=true -whitespace

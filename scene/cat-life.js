@@ -1,7 +1,7 @@
 import { disposeCatAsset } from './cat-asset.js?v=20261106-craft1';
 
 /** The supplied cat's actual skeleton and authored clips, on a quiet room route. */
-export function createRoomCat(T, { group: parent, floorY = .01, route, asset, loadDetail, onAssetChange } = {}) {
+export function createRoomCat(T, { group: parent, floorY = .01, contactY, route, asset, loadDetail, onAssetChange } = {}) {
   const group = new T.Group(); group.name = 'Wandering tabby cat'; parent?.add(group);
   // The source is metric: a 49 cm cat. The room's furniture uses a larger scale.
   const modelScale = 1.8;
@@ -70,7 +70,7 @@ export function createRoomCat(T, { group: parent, floorY = .01, route, asset, lo
   const contactShadow = new T.Mesh(new T.PlaneGeometry(.66,1.18),shadowMaterial);
   contactShadow.name = 'Cat floor contact'; contactShadow.rotation.x = -Math.PI/2; contactShadow.raycast = () => {}; parent?.add(contactShadow);
   contactShadow.visible = !!asset;
-  function updateContact() { contactShadow.position.set(group.position.x,floorY-.005,group.position.z); contactShadow.rotation.z = -group.rotation.y; }
+  function updateContact() { contactShadow.position.set(group.position.x,contactY??floorY-.005,group.position.z); contactShadow.rotation.z = -group.rotation.y; }
   path.getPointAt(0,point); group.position.copy(point);
   group.rotation.y = Math.atan2(-group.position.x,8.24-group.position.z)+.14;
   group.userData.catState = 'look'; group.userData.detailLevel = 'room'; updateContact();

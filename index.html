@@ -4,248 +4,84 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>木村紀喜のホームページ</title>
-<meta name="description" content="木村紀喜のホームページ。早稲田大学教職大学院で取り組む小学校教育、授業づくり、生成AI活用の研究と実践を紹介します。本や写真から、プロフィールや活動記録をご覧いただけます。">
+<meta name="description" content="佐賀県唐津市出身。早稲田大学で小学校教育の研究と実践に取り組む木村紀喜のホームページ。プロフィール、研究・活動、ブログ、写真を紹介します。">
 <meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#111d28">
 <link rel="canonical" href="https://kimutoshiki.com/">
-<meta name="theme-color" content="#39271f">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="木村紀喜のホームページ">
 <meta property="og:title" content="木村紀喜のホームページ">
-<meta property="og:description" content="木村紀喜のプロフィール、小学校教育の研究と実践、日々の活動を紹介します。">
+<meta property="og:description" content="唐津から早稲田へ。小学校教育の研究と実践、日々の活動を紹介します。">
 <meta property="og:url" content="https://kimutoshiki.com/">
-<meta property="og:image" content="https://kimutoshiki.com/images/og-portfolio.jpg">
+<meta property="og:image" content="https://kimutoshiki.com/images/world/poster.webp">
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="1000">
+<meta property="og:image:alt" content="唐津と早稲田の建築と猫がある、海に開かれた風景">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="favicon.svg?v=20261106-craft1" type="image/svg+xml">
-<link rel="alternate icon" href="favicon.png?v=20261106-craft1" type="image/png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261106-craft1">
-<link rel="stylesheet" href="css/study.css?v=20261106-craft1">
-<link rel="modulepreload" href="scene/study.js?v=20261106-craft1">
-<link rel="preload" href="models/tabby-cat-room.glb" as="fetch" crossorigin="anonymous" fetchpriority="low">
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://kimutoshiki.com/#website", "url": "https://kimutoshiki.com/", "name": "木村紀喜のホームページ", "alternateName": ["木村紀喜", "Toshiki Kimura"], "inLanguage": "ja", "publisher": {"@id": "https://kimutoshiki.com/#person"}}, {"@type": "Person", "@id": "https://kimutoshiki.com/#person", "name": "木村紀喜", "alternateName": ["木村 紀喜", "Toshiki Kimura"], "url": "https://kimutoshiki.com/", "description": "早稲田大学教職大学院で小学校教育、授業づくり、生成AIの教育利用を研究。佐賀県唐津市出身。", "sameAs": ["https://github.com/kimutoshiki"]}]}</script>
-<link rel="stylesheet" href="css/material-finish.css?v=20261106-craft1"/>
-<link rel="stylesheet" href="css/photo-gallery.css?v=20261106-craft1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="css/world.css?v=20261106-world1">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://kimutoshiki.com/#website","url":"https://kimutoshiki.com/","name":"木村紀喜のホームページ","alternateName":["木村紀喜","Toshiki Kimura"],"inLanguage":"ja","publisher":{"@id":"https://kimutoshiki.com/#person"}},{"@type":"Person","@id":"https://kimutoshiki.com/#person","name":"木村紀喜","alternateName":["木村 紀喜","Toshiki Kimura"],"url":"https://kimutoshiki.com/","description":"早稲田大学教職大学院で小学校教育、授業づくり、生成AIの教育利用を研究。佐賀県唐津市出身。","sameAs":["https://github.com/kimutoshiki"]}]}</script>
 </head>
-<body data-page="home">
-<main class="study" id="main">
-<a href="#room-navigation" class="skip-link">コンテンツを選ぶ</a>
-<div class="room-stage">
-<canvas id="study-canvas" tabindex="0" aria-label="木村紀喜の書斎。机の前から目線を動かし、ズームできます。壁のメニューで各ページへ移動します。自由な移動は右上の設定から切り替えられます。"></canvas>
-<div class="room-vignette" aria-hidden="true"></div>
-<div class="room-pins hidden-pins" aria-label="ホームページのコンテンツ">
-<a href="profile.html" data-pin="profile" data-room-open="profile" class="room-pin" aria-label="机の名札：プロフィールを開く" tabindex="-1">
-<span class="pin-dot" aria-hidden="true">＋</span>
-<span class="pin-label">プロフィール</span>
-</a>
-<a href="research.html" data-pin="research" data-room-open="research" class="room-pin" aria-label="棚の本：研究・活動を開く" tabindex="-1">
-<span class="pin-dot" aria-hidden="true">＋</span>
-<span class="pin-label">研究・活動</span>
-</a>
-<a href="blog.html" data-pin="blog" data-room-open="blog" class="room-pin" aria-label="開いたノート：ブログを開く" tabindex="-1">
-<span class="pin-dot" aria-hidden="true">＋</span>
-<span class="pin-label">ブログ</span>
-</a>
-<a href="photos.html" data-pin="gallery" data-room-open="gallery" class="room-pin" aria-label="壁の写真：写真を開く" tabindex="-1">
-<span class="pin-dot" aria-hidden="true">＋</span>
-<span class="pin-label">写真</span>
-</a>
-<a href="contact.html" data-pin="contact" data-room-open="contact" class="room-pin" aria-label="机の手紙：お問い合わせを開く" tabindex="-1">
-<span class="pin-dot" aria-hidden="true">＋</span>
-<span class="pin-label">お問い合わせ</span>
-</a>
+<body>
+<a class="skip-link" href="#navigation">ページを選ぶ</a>
+<main class="world" id="main">
+<div class="world-stage" aria-hidden="true">
+<picture class="world-poster">
+<source media="(max-width:650px)" srcset="images/world/poster-mobile.webp">
+<img src="images/world/poster.webp" width="1600" height="1000" alt="" fetchpriority="high" decoding="async">
+</picture>
 </div>
-</div>
-<h1 class="visually-hidden">木村紀喜のホームページ</h1>
-<nav class="wall-navigation" id="room-navigation" aria-label="壁のメニュー">
-<a href="profile.html" data-wall-link="profile" class="wall-link" aria-label="プロフィールのページへ"><span>プロフィール</span></a>
-<a href="research.html" data-wall-link="research" class="wall-link" aria-label="研究・活動のページへ"><span>研究・活動</span></a>
-<a href="blog.html" data-wall-link="blog" class="wall-link" aria-label="ブログのページへ"><span>ブログ</span></a>
-<a href="photos.html" data-wall-link="gallery" class="wall-link" aria-label="写真のページへ"><span>写真</span></a>
-<a href="contact.html" data-wall-link="contact" class="wall-link" aria-label="お問い合わせのページへ"><span>お問い合わせ</span></a>
+<canvas class="world-canvas" id="world-canvas" tabindex="-1" aria-hidden="true" aria-label="唐津と早稲田の建物がある風景。ドラッグで見回し、スクロールやピンチで拡大できます。" aria-describedby="world-help"></canvas>
+<div class="world-shade" aria-hidden="true"></div>
+<header class="world-header">
+<a class="world-mark" href="./" aria-label="木村紀喜のホームページ"><span aria-hidden="true">tk<span class="mark-dot">.</span></span></a>
+<nav class="world-nav" id="navigation" aria-label="ページ">
+<a href="profile.html">プロフィール</a>
+<a href="research.html">研究・活動</a>
+<a href="blog.html">ブログ</a>
+<a href="photos.html">写真</a>
+<a href="contact.html">お問い合わせ</a>
 </nav>
-<header class="room-header">
-<button class="settings-trigger" id="settings-toggle" type="button" aria-label="設定を開く" aria-controls="room-settings" aria-expanded="false" title="設定">
-<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9.4 3-.5 2-1.7 1-2-.6-2.3 4 1.5 1.4v2.1L2.9 14l2.3 4 2-.6 1.7 1 .5 2h4.7l.5-2 1.8-1 1.9.6 2.3-4-1.5-1.2v-2.1l1.5-1.4-2.3-4-1.9.6-1.8-1-.5-2z"/><circle cx="11.8" cy="12" r="3.1"/></svg>
-</button>
 </header>
-<div class="loading-note" id="room-status" role="status" aria-live="polite">
-<div class="loading-monogram" aria-hidden="true">tk<span>.</span></div>
-<span class="loading-rule" aria-hidden="true"><span></span></span>
-<p>読み込んでいます。少々お待ちください。</p>
-</div>
-<div class="fallback-message" hidden id="room-fallback"><p>メニューからご覧いただけます。</p></div>
-<footer class="room-footer"><p class="prototype-label">© 木村紀喜</p></footer>
-</main>
-<dialog id="room-settings" class="settings-panel" aria-labelledby="settings-title">
-<div class="settings-heading"><div><span lang="en">THE STUDY</span><h2 id="settings-title">設定</h2></div><button class="settings-close" id="settings-close" aria-label="設定を閉じる">×</button></div>
-<div class="settings-section room-actions">
-<a class="setting-row translation-link" href="https://translate.google.com/translate?sl=ja&amp;tl=en&amp;u=https%3A%2F%2Fkimutoshiki.com%2F" aria-label="英語に翻訳"><span>表示言語</span><span lang="en">English ↗</span></a>
-<button class="setting-row" id="night-toggle" aria-label="光：自動。昼の明かりに切り替える"><span>光</span><span id="lighting-label">自動</span></button>
-<button class="setting-row" id="motion-toggle" aria-label="動きを止める" aria-pressed="false"><span>小物の動き</span><span id="motion-label">再生中</span></button>
-<button class="setting-row" id="markers-toggle" aria-label="案内を表示する" aria-pressed="false"><span>案内マーク</span><span id="markers-label">非表示</span></button>
-</div>
-<div class="settings-section">
-<label class="movement-toggle" for="free-movement"><span>自由に移動する<small>通常は机の前で、目線とズーム。</small></span><input id="free-movement" type="checkbox" role="switch"><span class="switch-track" aria-hidden="true"></span></label>
-<fieldset id="movement-controls" disabled>
-<legend class="visually-hidden">自由移動の操作</legend>
-<div class="orbit-controls"><label for="view-subject">見るもの</label><select id="view-subject" aria-label="詳しく見るもの"><option value="room">書斎全体</option><option value="landmark-okuma-auditorium">大隈講堂</option><option value="landmark-okuma-statue">大隈重信像</option><option value="landmark-karatsu-castle">唐津城</option><option value="landmark-karatsu-bank">旧唐津銀行</option><option value="cat">猫</option></select><div class="view-presets" role="group" aria-label="見る方向"><button data-view="front">正面</button><button data-view="left">左</button><button data-view="right">右</button><button data-view="back">後ろ</button></div></div>
-</fieldset>
-<div class="view-controls"><button id="zoom-out" aria-label="縮小する">−</button><button id="zoom-in" aria-label="拡大する">＋</button><button id="view-reset">視点を戻す <span aria-hidden="true">↺</span></button></div>
-<p id="inspection-caption" class="inspection-caption" role="status" hidden></p>
-</div>
-<nav class="settings-pages" aria-label="ページ"><a href="profile.html">プロフィール<span aria-hidden="true">↗</span></a><a href="research.html">研究・活動<span aria-hidden="true">↗</span></a><a href="blog.html">ブログ<span aria-hidden="true">↗</span></a><a href="photos.html">写真<span aria-hidden="true">↗</span></a><a href="contact.html">お問い合わせ<span aria-hidden="true">↗</span></a></nav>
-<div class="settings-foot"><div class="room-time" id="room-time" hidden><span>LOCAL TIME</span><time id="local-time"></time></div><span id="render-mode"></span></div>
-</dialog>
-<dialog id="reader" class="reading-sheet" aria-labelledby="reader-title" aria-describedby="reader-subtitle">
-<div class="reader-top">
-<button class="back-button" data-close-reader>
-<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="m10 5-7 7 7 7M3 12h18"/>
-</svg>ホームに戻る</button>
-<button class="reader-x" data-close-reader aria-label="閉じる">
-<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="m6 6 12 12M18 6 6 18"/>
-</svg>
-</button>
-</div>
-<div class="reader-heading">
-<span class="reader-number" id="reader-number">
-</span>
-<h2 id="reader-title">
-</h2>
-<p id="reader-subtitle">
-</p>
-</div>
-<div class="reader-body" id="reader-body">
-</div>
-<p class="reader-footer">© 木村 紀喜</p>
-</dialog>
-<template id="panel-profile">
-<h2>木村 紀喜<small>きむら としき</small>
-</h2>
-<p>佐賀県唐津市出身。早稲田大学大学院教育学研究科 高度教職実践専攻にて学びながら、 2027年4月からの小学校教諭着任に向け、実践と研究を往還しています。</p>
-<h3>子どもたちの「前向きに生きる力」を育てる</h3>
-<p>子どもたちが自分のよさや関心に気付き、何かに打ち込めるよう支えたいと考えています。大学院での学びと学校での実践を、このサイトに記録しています。</p>
-<div class="timeline">
-<article>
-<time>2025 - Present</time>
-<h4>早稲田大学大学院 教育学研究科</h4>
-<p>高度教職実践専攻。理論と実践の往還を中心に据えながら、授業開発と教育工学を探究。</p>
-</article>
-<article>
-<time>2021 - 2025</time>
-<h4>佐賀大学 教育学部</h4>
-<p>教員免許取得に向けて学びを深めながら、地域の学校現場でのボランティア活動に従事。</p>
-</article>
-</div>
-<a class="reader-link" href="profile.html">経歴・資格を詳しく読む <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M7 17 17 7M7 7h10v10"/>
-</svg>
-</a>
-</template>
-<template id="panel-research">
-<p>小学校教育を軸に、授業づくりと教育研究に取り組んでいます。</p>
-<article class="research-item">
-<span class="item-tag">総合・探究</span>
-<h3>少人数ゼミで進める教科等横断的な探究学習</h3>
-<p>小学校の総合的な学習の時間に、子どもの関心と各教科の学びを結び付け、少人数・異学年で自分の問いを追究する教育課程を構想。</p>
-</article>
-<article class="research-item">
-<span class="item-tag">生成AI・UDL</span>
-<h3>生成AIとUDLで支える自己調整学習</h3>
-<p>学び方や表し方に選択肢を用意するUDL（学びのユニバーサルデザイン）に、生成AIを「問い返し相手」として活用。資料と照らし合わせ、学び方を自ら調整する授業を研究。</p>
-</article>
-<article class="research-item">
-<span class="item-tag">社会科教育</span>
-<h3>社会科の資質・能力を育てる授業づくり</h3>
-<p>地域や社会の課題について資料を集め、確かめ、比べ、関連付ける。多様な立場を踏まえ、根拠をもとに判断し表現する学習を研究。</p>
-</article>
-<article class="research-item">
-<span class="item-tag">学力向上</span>
-<h3>確かな学力を育てる授業と評価</h3>
-<p>知識・技能と思考力・判断力・表現力を結び付け、子どものつまずきや伸びに応じて指導と評価を改善。一人一人の学力向上につなげる方法を研究。</p>
-</article>
-<article class="research-item">
-<span class="item-tag">道徳・AI倫理</span>
-<h3>道徳科で育てる生成AI時代の倫理観</h3>
-<p>AIの答えを資料と照らし合わせ、誤りや偏り、個人情報、著作権、他者への影響を手掛かりに、人が判断する責任を考える学習を構想。</p>
-</article>
-<article class="research-item">
-<span class="item-tag">ふるさと教育・構想中</span>
-<h3>唐津から考える「佐賀を誇りに思う」ふるさと教育</h3>
-<p>唐津・佐賀の歴史、文化、自然、産業と地域の課題を教科等横断的に学び、自分なりの愛着や誇りを育てる独自のカリキュラムを構想中。</p>
-</article>
-<a class="reader-link" href="research.html">研究履歴・活動実績を詳しく読む <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M7 17 17 7M7 7h10v10"/>
-</svg>
-</a>
-</template>
-<template id="panel-blog">
-<p>日々の学びや、活動の記録。</p>
-<div class="home-posts">
-<a class="home-post" href="blog.html#post-20260810-1">
-<span class="item-tag">2026.08.10 · 活動</span>
-<h3>学生寮のメンバーで富士登山に行きました！</h3>
-</a>
-<a class="home-post" href="blog.html#post-20260805-2">
-<span class="item-tag">2026.08.05 · 思考</span>
-<h3>夏期集中講義を受けて（UDL）</h3>
-</a>
-<a class="home-post" href="blog.html#post-20260801-3">
-<span class="item-tag">2026.08.01 · 活動</span>
-<h3>万福寺盆踊りのボランティアに参加しました</h3>
-</a>
-<a class="home-post" href="blog.html#post-20260724-4">
-<span class="item-tag">2026.07.24 · 活動</span>
-<h3>早稲田大学教職大学院 佐賀ツアーを開催しました！</h3>
-</a>
-<a class="home-post" href="blog.html#post-20260720-5">
-<span class="item-tag">2026.07.20 · 活動</span>
-<h3>東京都大田区子どもフェスタのボランティアに参加しました！</h3>
-</a>
-<a class="home-post" href="blog.html#post-20260718-6">
-<span class="item-tag">2026.07.18 · 活動</span>
-<h3>千代ケ丘小夏祭りボランティアに参加しました</h3>
-</a>
-<a class="home-post" href="blog.html#post-20260716-7">
-<span class="item-tag">2026.07.16 · 活動</span>
-<h3>千代ヶ丘小学校にて出前授業を行いました</h3>
-</a>
-</div>
-<a class="reader-link" href="blog.html">すべての記事を読む <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M7 17 17 7M7 7h10v10"/>
-</svg>
-</a>
-</template>
-<template id="panel-gallery"><div class="photo-grid" data-photo-gallery></div><a class="reader-link" href="photos.html">すべての写真を見る <span aria-hidden="true">↗</span></a></template>
-<template id="panel-contact">
-<div class="letter-heading">
-<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<rect x="2" y="4" width="20" height="16" rx="2"/>
-<path d="m2 5 10 8L22 5"/>
-</svg>
-<p>お問い合わせ</p>
-</div>
-<p>研究や教育に関するご相談、その他のご依頼は、メールでご連絡ください。</p>
-<a class="email-address" href="mailto:kimu.toshiki@gmail.com">kimu.toshiki@gmail.com <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M7 17 17 7M7 7h10v10"/>
-</svg>
-</a>
-<p class="contact-note">クリックすると、お使いのメールアプリが開きます。</p>
-<a class="reader-link" href="contact.html">お問い合わせについて詳しく読む <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-<path d="M7 17 17 7M7 7h10v10"/>
-</svg>
-</a>
-</template>
-<noscript>
-<style>.loading-note{display:none}.fallback-message{display:block!important}</style>
-<section class="noscript-about">
-<h2>木村紀喜のホームページ</h2>
-<p>佐賀県唐津市出身。早稲田大学大学院教育学研究科 高度教職実践専攻にて学びながら、 2027年4月からの小学校教諭着任に向け、実践と研究を往還しています。</p>
-<p>子どもたちの「前向きに生きる力」を育てる。小学校教育・授業づくり・生成AI活用の研究と実践を紹介します。</p>
+<section class="world-identity" aria-labelledby="world-title">
+<p class="world-eyebrow" lang="en">KARATSU <span aria-hidden="true">/</span> WASEDA</p>
+<h1 class="world-wordmark" id="world-title" lang="en"><span>TOSHIKI</span> <span>KIMURA</span></h1>
+<p class="world-name">木村 紀喜<span>きむら としき</span></p>
+<p class="world-copy">佐賀県唐津市出身。<br>早稲田大学で、小学校教育の<br class="desktop-break">研究と実践に取り組んでいます。</p>
+<a class="world-profile-link" href="profile.html">プロフィールを見る <span aria-hidden="true">↗</span></a>
 </section>
-</noscript>
-<script src="js/study-ui.js?v=20261106-craft1" defer>
-</script>
+<aside class="world-caption" id="world-caption" aria-label="選んだもの" hidden>
+<p id="world-caption-name"></p>
+<a id="world-caption-link" href="profile.html">関連するページへ <span aria-hidden="true">↗</span></a>
+</aside>
+<footer class="world-footer">
+<div class="world-controlbar">
+<details class="world-places" id="world-places">
+<summary><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="m12.7 7.3-1.4 4-4 1.4 1.4-4z"/></svg>景色をめぐる<span class="summary-plus" aria-hidden="true">＋</span></summary>
+<div class="places-panel">
+<p class="places-heading">唐津と早稲田<span lang="en">PLACES</span></p>
+<div class="place-row"><button type="button" data-world-focus="landmark-karatsu-castle" disabled><span>唐津城</span><small lang="en">KARATSU CASTLE</small></button><a href="photos.html" aria-label="唐津城：写真のページへ">↗</a></div>
+<div class="place-row"><button type="button" data-world-focus="landmark-karatsu-bank" disabled><span>旧唐津銀行</span><small lang="en">FORMER KARATSU BANK</small></button><a href="blog.html" aria-label="旧唐津銀行：ブログのページへ">↗</a></div>
+<div class="place-row"><button type="button" data-world-focus="landmark-okuma-auditorium" disabled><span>大隈講堂</span><small lang="en">OKUMA AUDITORIUM</small></button><a href="profile.html" aria-label="大隈講堂：プロフィールのページへ">↗</a></div>
+<div class="place-row"><button type="button" data-world-focus="landmark-okuma-statue" disabled><span>大隈重信像</span><small lang="en">OKUMA SHIGENOBU</small></button><a href="research.html" aria-label="大隈重信像：研究・活動のページへ">↗</a></div>
+<div class="place-row place-cat"><button type="button" data-world-focus="cat" disabled><span>猫を見つける</span><small lang="en">THE WANDERING CAT</small></button><span class="cat-paw" aria-hidden="true">⌾</span></div>
+<p class="places-hint">建物や猫を選ぶと、近くから眺められます。</p>
+</div>
+</details>
+<div class="world-live-controls" id="world-live-controls" hidden>
+<button class="world-control" id="world-motion" type="button" aria-pressed="false" aria-label="動きを止める"><svg class="motion-pause" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg><svg class="motion-play" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m7 4 8 6-8 6z"/></svg><span id="world-motion-label">動きを止める</span></button>
+<button class="world-control" id="world-lighting" type="button" aria-label="光：自動。昼に切り替える"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6 16 16M4 16l1.4-1.4M14.6 5.4 16 4"/></svg><span>光：<span id="world-lighting-label">自動</span></span></button>
+<button class="world-control" id="world-reset" type="button"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4.5 7.5a6 6 0 1 1-.3 4.3M4.5 3.5v4h4"/></svg><span>全景へ</span></button>
+</div>
+</div>
+<div class="world-footnote"><p class="world-help" id="world-help" hidden>ドラッグで見回す <span aria-hidden="true">/</span> スクロールでズーム</p><p class="world-copyright">© <span lang="en">Toshiki Kimura</span></p></div>
+</footer>
+<p class="visually-hidden" id="world-status" role="status" aria-live="polite"></p>
+<noscript><style>.world-canvas,.world-help,[data-world-focus],.place-cat,.places-hint{display:none!important}.place-row{grid-template-columns:1fr}.place-row a{justify-self:end}.world-places{display:none}</style></noscript>
+</main>
+<script src="js/world-ui.js?v=20261106-world1" defer></script>
 </body>
 </html>

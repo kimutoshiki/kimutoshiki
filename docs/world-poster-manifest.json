@@ -1,0 +1,96 @@
+{
+  "render": "Blender 4.3.2 / CPU Cycles / 96 samples / adaptive threshold0.018 / AgX",
+  "verification": "Offline geometry/material/image export and render only; no browser or WebGL claim.",
+  "camera": {
+    "desktop": {
+      "position": [
+        38,
+        25,
+        48
+      ],
+      "target": [
+        0,
+        3,
+        0
+      ],
+      "fov": 43,
+      "size": [
+        1600,
+        1000
+      ]
+    },
+    "mobile": {
+      "position": [
+        57,
+        36,
+        72
+      ],
+      "target": [
+        0,
+        3,
+        0
+      ],
+      "fov": 43,
+      "size": [
+        650,
+        1000
+      ]
+    }
+  },
+  "cat": {
+    "source": "models/tabby-cat-room.glb",
+    "position": [
+      -2.66,
+      0.052,
+      13
+    ],
+    "scale": 6,
+    "pose": "Idle +0.8 seconds"
+  },
+  "sun": {
+    "position": [
+      -30,
+      55,
+      30
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "energy": 3.2
+  },
+  "fog": {
+    "density": 0.0036,
+    "color": "#93a9b2",
+    "formula": "1-exp(-(density*depth)^2)"
+  },
+  "geometry": {
+    "objects": 5088,
+    "geometries": 130,
+    "materials": 117,
+    "textures": 20,
+    "bytes": 20577748,
+    "errors": []
+  },
+  "sourceHashes": {
+    "scene/world-landscape.js": "c0133fcf5b9f37315af6484d9564f0c9df9a8dadf846ece77afa6e5fa2ba1a3f",
+    "scene/world-landmarks.js": "fe72af5b34995d122ca65551a88b276d1806cb185479f3015ee37b2d92643225",
+    "scene/surface-materials.js": "efc623c7f5b939bac2a37e777c114ce21f2f71b1b8fcaedfffd3deaf85cf5e84",
+    "models/tabby-cat-room.glb": "ebe9b7e9f7d9301532c4226f7dcc3719eae14821605220b704e43a265c579d8f"
+  },
+  "posters": [
+    {
+      "file": "poster.webp",
+      "bytes": 71832,
+      "sha256": "72c529fc74036d095029d86c1b9b0113d8e59b58efe936505b2edac58ea6fe9a",
+      "webpQuality": 84
+    },
+    {
+      "file": "poster-mobile.webp",
+      "bytes": 28930,
+      "sha256": "1db1c957ed0f68beb60a42f55426190f43c8590d3826c435cedad1272b769e17",
+      "webpQuality": 84
+    }
+  ]
+}
