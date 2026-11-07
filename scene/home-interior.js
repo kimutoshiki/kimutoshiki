@@ -217,7 +217,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
     try {
       const { createDeskLandmarks } = await import('./desk-landmarks.js');
       if(disposed){startLandmarks(null);return null;}
-      const result = await createDeskLandmarks(T, {waitForFonts:false});
+      const result = await createDeskLandmarks(T, {waitForFonts:false,yieldBetweenModels:true});
       if(disposed){disposeTree(result.group);startLandmarks(null);return null;}
       landmarks=result;if(clockSnapshot)landmarks.updateClock?.(clockSnapshot);room.add(result.group);group.updateMatrixWorld(true);
       for(const target of result.targets){target.anchor=target.object.localToWorld(new T.Vector3(0,.4,0));targets.push(target);}

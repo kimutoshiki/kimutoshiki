@@ -98,7 +98,7 @@ function nameplate(T, title, subtitle, brass, edgeGeometry, screwGeometry) {
 }
 
 /** Return a standalone tabletop group and the room's standard target records. */
-export async function createDeskLandmarks(T, { optimize = true, waitForFonts = true } = {}) {
+export async function createDeskLandmarks(T, { optimize = true, waitForFonts = true, yieldBetweenModels = false } = {}) {
   if (waitForFonts && typeof document !== 'undefined' && document.fonts?.ready) await document.fonts.ready;
   const group = new T.Group();
   group.name = 'Original Waseda and Karatsu desk miniatures';
@@ -119,6 +119,7 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
     { key: 'karatsu-bank', title: '旧唐津銀行', subtitle: 'FORMER KARATSU BANK', targetId: 'landmark-karatsu-bank', x: 1.9, z: -.31, rotation: .03, height: 1.00, anchor: [0, 7, 6.30], factory: createKaratsuBank, extract: extractBank },
   ];
   for (const layout of layouts) {
+    if(yieldBetweenModels)await new Promise(resolve=>setTimeout(resolve,0));
     const model = layout.factory(T);
     const before = countGeometry(model.group);
     layout.extract(model);
@@ -175,6 +176,7 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
       displaySize: finalBounds.getSize(new T.Vector3()).toArray(),
     });
   }
+  if(yieldBetweenModels)await new Promise(resolve=>setTimeout(resolve,0));
   group.updateMatrixWorld(true);
   // Project the original box/custom UVs before combining different sizes. The
   // room-wide material loader respects this flag and cannot rescale them twice.
@@ -191,6 +193,7 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
   const protectedHands = new Set(clocks.flatMap(clock => [clock.hour, clock.minute]));
   if (optimize) {
     for (const display of group.children) {
+      if(yieldBetweenModels)await new Promise(resolve=>setTimeout(resolve,0));
       const mount = display.children.find(child => child.userData.inspectionSource);
       const architecture = mount.children[0].children[0];
       const clockFaces = new Set();

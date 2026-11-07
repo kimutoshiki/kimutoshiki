@@ -1,0 +1,414 @@
+{
+  "browser": "155.0.8059.79",
+  "renderer": "Chromium / ANGLE SwiftShader (software)",
+  "checkedAt": "2026-11-07T09:39:03.932Z",
+  "cases": [
+    {
+      "name": "desktop",
+      "automaticLive3D": true,
+      "menusBeforeRenderer": true,
+      "posterRequests": 0,
+      "firstFrameMs": 3377,
+      "canvas": {
+        "width": 1110,
+        "height": 900,
+        "cssWidth": 1110,
+        "cssHeight": 900
+      },
+      "resources": [
+        {
+          "name": "/css/world.css",
+          "bytes": 18027
+        },
+        {
+          "name": "/images/home/waseda.webp",
+          "bytes": 7916
+        },
+        {
+          "name": "/images/home/kyukeisha.webp",
+          "bytes": 19804
+        },
+        {
+          "name": "/js/world-ui.js",
+          "bytes": 17765
+        },
+        {
+          "name": "/scene/world.bundle.js",
+          "bytes": 127401
+        },
+        {
+          "name": "/favicon.png",
+          "bytes": 2972
+        },
+        {
+          "name": "/favicon.svg",
+          "bytes": 805
+        },
+        {
+          "name": "/scene/world-chunk-chunk-3D5PGYBA.js",
+          "bytes": 1979
+        },
+        {
+          "name": "/scene/world-chunk-chunk-FVPNB6PD.js",
+          "bytes": 4092
+        },
+        {
+          "name": "/scene/world-chunk-chunk-5LVMXEXY.js",
+          "bytes": 4107
+        },
+        {
+          "name": "/scene/world-chunk-chunk-IAOCED2O.js",
+          "bytes": 627491
+        },
+        {
+          "name": "/scene/world-chunk-desk-landmarks-ZEAHSINW.js",
+          "bytes": 6908
+        },
+        {
+          "name": "/images/decor/burgundy-rug.webp",
+          "bytes": 212792
+        },
+        {
+          "name": "/images/atlas/karatsu.webp",
+          "bytes": 777026
+        },
+        {
+          "name": "/images/materials/burgundy-linen.webp",
+          "bytes": 97482
+        },
+        {
+          "name": "/images/materials/walnut.webp",
+          "bytes": 109774
+        },
+        {
+          "name": "/images/materials/plaster.webp",
+          "bytes": 69768
+        },
+        {
+          "name": "/images/materials/slate.webp",
+          "bytes": 48872
+        },
+        {
+          "name": "/scene/world-chunk-world-cat-loader-5GFAS527.js",
+          "bytes": 51138
+        },
+        {
+          "name": "/scene/world-chunk-chunk-5UGJ2FV5.js",
+          "bytes": 67621
+        },
+        {
+          "name": "/models/tabby-cat-world.glb",
+          "bytes": 498248
+        },
+        {
+          "name": "/js/vendor/draco/draco_wasm_wrapper.js",
+          "bytes": 58456
+        },
+        {
+          "name": "/js/vendor/draco/draco_decoder.wasm",
+          "bytes": 192420
+        },
+        {
+          "name": "/images/materials/sandstone.webp",
+          "bytes": 98370
+        },
+        {
+          "name": "/images/materials/brick.webp",
+          "bytes": 86770
+        },
+        {
+          "name": "/scene/world-chunk-world-landscape-G465A6XB.js",
+          "bytes": 11376
+        },
+        {
+          "name": "/scene/world-chunk-garden-boundary-GSNOVJGH.js",
+          "bytes": 8351
+        },
+        {
+          "name": "/scene/world-chunk-world-landmarks-KHFB54MI.js",
+          "bytes": 3347
+        }
+      ]
+    },
+    {
+      "name": "walking lifecycle",
+      "riseMs": 4299.052952000002,
+      "timingNote": "Local software-renderer observation, not a device benchmark",
+      "doorway": true,
+      "sitAtDesk": true,
+      "sameContextAndCanvas": true,
+      "engineAndCatRedownloads": 0,
+      "browserErrors": 0
+    },
+    {
+      "name": "mobile",
+      "automaticLive3D": true,
+      "menusBeforeRenderer": false,
+      "posterRequests": 0,
+      "firstFrameMs": 2370.5,
+      "canvas": {
+        "width": 390,
+        "height": 290,
+        "cssWidth": 390,
+        "cssHeight": 290
+      },
+      "resources": [
+        {
+          "name": "/css/world.css",
+          "bytes": 18027
+        },
+        {
+          "name": "/images/home/waseda.webp",
+          "bytes": 7916
+        },
+        {
+          "name": "/images/home/kyukeisha.webp",
+          "bytes": 19804
+        },
+        {
+          "name": "/js/world-ui.js",
+          "bytes": 17765
+        },
+        {
+          "name": "/scene/world.bundle.js",
+          "bytes": 127401
+        },
+        {
+          "name": "/favicon.png",
+          "bytes": 2972
+        },
+        {
+          "name": "/scene/world-chunk-chunk-3D5PGYBA.js",
+          "bytes": 1979
+        },
+        {
+          "name": "/scene/world-chunk-chunk-FVPNB6PD.js",
+          "bytes": 4092
+        },
+        {
+          "name": "/scene/world-chunk-chunk-5LVMXEXY.js",
+          "bytes": 4107
+        },
+        {
+          "name": "/scene/world-chunk-chunk-IAOCED2O.js",
+          "bytes": 627491
+        },
+        {
+          "name": "/favicon.svg",
+          "bytes": 805
+        },
+        {
+          "name": "/scene/world-chunk-desk-landmarks-ZEAHSINW.js",
+          "bytes": 6908
+        },
+        {
+          "name": "/images/atlas/karatsu.webp",
+          "bytes": 777026
+        },
+        {
+          "name": "/images/decor/burgundy-rug.webp",
+          "bytes": 212792
+        },
+        {
+          "name": "/images/materials/walnut.webp",
+          "bytes": 109774
+        },
+        {
+          "name": "/images/materials/burgundy-linen.webp",
+          "bytes": 97482
+        },
+        {
+          "name": "/images/materials/plaster.webp",
+          "bytes": 69768
+        },
+        {
+          "name": "/images/materials/slate.webp",
+          "bytes": 48872
+        },
+        {
+          "name": "/scene/world-chunk-world-cat-loader-5GFAS527.js",
+          "bytes": 51138
+        },
+        {
+          "name": "/scene/world-chunk-chunk-5UGJ2FV5.js",
+          "bytes": 67621
+        },
+        {
+          "name": "/models/tabby-cat-world.glb",
+          "bytes": 498248
+        },
+        {
+          "name": "/scene/world-chunk-world-landscape-G465A6XB.js",
+          "bytes": 11376
+        },
+        {
+          "name": "/scene/world-chunk-garden-boundary-GSNOVJGH.js",
+          "bytes": 8351
+        },
+        {
+          "name": "/js/vendor/draco/draco_wasm_wrapper.js",
+          "bytes": 58456
+        },
+        {
+          "name": "/js/vendor/draco/draco_decoder.wasm",
+          "bytes": 192420
+        },
+        {
+          "name": "/scene/world-chunk-world-landmarks-KHFB54MI.js",
+          "bytes": 3347
+        },
+        {
+          "name": "/images/materials/sandstone.webp",
+          "bytes": 98370
+        },
+        {
+          "name": "/images/materials/brick.webp",
+          "bytes": 86770
+        }
+      ]
+    },
+    {
+      "name": "narrow-night",
+      "automaticLive3D": true,
+      "menusBeforeRenderer": false,
+      "posterRequests": 0,
+      "firstFrameMs": 2603.800000000745,
+      "canvas": {
+        "width": 320,
+        "height": 290,
+        "cssWidth": 320,
+        "cssHeight": 290
+      },
+      "resources": [
+        {
+          "name": "/css/world.css",
+          "bytes": 18027
+        },
+        {
+          "name": "/images/home/waseda.webp",
+          "bytes": 7916
+        },
+        {
+          "name": "/images/home/kyukeisha.webp",
+          "bytes": 19804
+        },
+        {
+          "name": "/js/world-ui.js",
+          "bytes": 17765
+        },
+        {
+          "name": "/scene/world.bundle.js",
+          "bytes": 127401
+        },
+        {
+          "name": "/favicon.png",
+          "bytes": 2972
+        },
+        {
+          "name": "/favicon.svg",
+          "bytes": 805
+        },
+        {
+          "name": "/scene/world-chunk-chunk-3D5PGYBA.js",
+          "bytes": 1979
+        },
+        {
+          "name": "/scene/world-chunk-chunk-FVPNB6PD.js",
+          "bytes": 4092
+        },
+        {
+          "name": "/scene/world-chunk-chunk-5LVMXEXY.js",
+          "bytes": 4107
+        },
+        {
+          "name": "/scene/world-chunk-chunk-IAOCED2O.js",
+          "bytes": 627491
+        },
+        {
+          "name": "/scene/world-chunk-desk-landmarks-ZEAHSINW.js",
+          "bytes": 6908
+        },
+        {
+          "name": "/images/atlas/karatsu.webp",
+          "bytes": 777026
+        },
+        {
+          "name": "/images/decor/burgundy-rug.webp",
+          "bytes": 212792
+        },
+        {
+          "name": "/images/materials/walnut.webp",
+          "bytes": 109774
+        },
+        {
+          "name": "/images/materials/plaster.webp",
+          "bytes": 69768
+        },
+        {
+          "name": "/images/materials/burgundy-linen.webp",
+          "bytes": 97482
+        },
+        {
+          "name": "/images/materials/slate.webp",
+          "bytes": 48872
+        },
+        {
+          "name": "/scene/world-chunk-world-cat-loader-5GFAS527.js",
+          "bytes": 51138
+        },
+        {
+          "name": "/scene/world-chunk-chunk-5UGJ2FV5.js",
+          "bytes": 67621
+        },
+        {
+          "name": "/models/tabby-cat-world.glb",
+          "bytes": 498248
+        },
+        {
+          "name": "/scene/world-chunk-world-landscape-G465A6XB.js",
+          "bytes": 11376
+        },
+        {
+          "name": "/scene/world-chunk-garden-boundary-GSNOVJGH.js",
+          "bytes": 8351
+        },
+        {
+          "name": "/js/vendor/draco/draco_wasm_wrapper.js",
+          "bytes": 58456
+        },
+        {
+          "name": "/js/vendor/draco/draco_decoder.wasm",
+          "bytes": 192420
+        },
+        {
+          "name": "/scene/world-chunk-world-landmarks-KHFB54MI.js",
+          "bytes": 3347
+        },
+        {
+          "name": "/images/materials/sandstone.webp",
+          "bytes": 98370
+        },
+        {
+          "name": "/images/materials/brick.webp",
+          "bytes": 86770
+        }
+      ]
+    },
+    {
+      "name": "WebGL unavailable",
+      "nativeMenu": true,
+      "fallbackPoster": true
+    },
+    {
+      "name": "JavaScript disabled",
+      "nativeMenu": true
+    }
+  ],
+  "sourceHashes": {
+    "index.html": "ef3e27d1680de085d3c86f1f982da935c85e0c5bf9e3ab2e58eec502abbd2bba",
+    "css/world.css": "4ed9585a86469c14fea058cae2273065b3958e181b653d658f535ef359a0709e",
+    "js/world-ui.js": "90925bb2f37179593edd9eb65d7a880f4836765fa3794fe16a86d43b1c0a8061",
+    "scene/world.bundle.js": "ad69bef8aeb2b0bc53252d816bf90108ded0bb313c55f0528ec237f8438d6951",
+    "scripts/verify-home-browser.mjs": "48dcfd74ed6636a8aefa0c8db749b4ce71bb7cefa9abc94949e2bf47504fbc1c"
+  }
+}

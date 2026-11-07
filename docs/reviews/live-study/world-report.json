@@ -1,0 +1,552 @@
+{
+  "type": "Actual production source WebGL through ANGLE SwiftShader; no hardware-FPS claim",
+  "browser": "155.0.8059.79",
+  "fixture": "Minimal same-origin page; production mountWorld, real standUp()/leave() path, source camera, paused cat, injected JST12:00/17:30/23:00. No scene/camera/material overrides; all clocks visible.",
+  "captures": [
+    {
+      "phase": "day",
+      "state": {
+        "webgl": true,
+        "catReady": true,
+        "landmarksReady": true,
+        "miniaturesReady": true,
+        "outdoorsReady": true,
+        "outdoorsLoading": false,
+        "outdoorsError": null,
+        "renderingActive": true,
+        "readyPhase": "complete",
+        "focus": "outside",
+        "paused": true,
+        "lightingMode": "auto",
+        "mode": "outside",
+        "travel": false,
+        "seated": false,
+        "standing": true,
+        "posture": "walking",
+        "time": {
+          "timeZone": "Asia/Tokyo",
+          "timeZoneLabel": "日本時間",
+          "mode": "auto",
+          "dateISO": "2026-11-07",
+          "label": "12:00",
+          "dateTime": "2026-11-07T03:00:00.000Z",
+          "zonedDateTime": "2026-11-07T12:00:00+09:00",
+          "unixMs": 1794020400000,
+          "hour": 12,
+          "minute": 0,
+          "second": 0,
+          "millisecond": 0,
+          "secondsSinceMidnight": 43200,
+          "actualHour": 12,
+          "minuteKey": "2026-11-07T12:00+09:00",
+          "secondKey": "2026-11-07T12:00:00+09:00",
+          "clockKey": "2026-11-07T12:00:00+09:00",
+          "lightingKey": "auto:29900340",
+          "clockAngles": {
+            "hour": 0,
+            "minute": 0,
+            "second": 0
+          },
+          "hourAngle": 0,
+          "minuteAngle": 0,
+          "secondAngle": 0,
+          "phase": "day",
+          "daylight": 1,
+          "nightMix": 0,
+          "dawn": 0,
+          "dusk": 0,
+          "sun": {
+            "intensity": 2.5999999999999996,
+            "color": "#ffe4bd",
+            "position": [
+              -38,
+              55,
+              -12
+            ],
+            "target": [
+              0,
+              0,
+              35
+            ]
+          },
+          "hemisphere": {
+            "intensity": 1.15,
+            "skyColor": "#e1eee9",
+            "groundColor": "#7a6b50"
+          },
+          "ambientIntensity": 0.3,
+          "ambientColor": "#eee2ca",
+          "environmentIntensity": 0.45,
+          "backgroundIntensity": 1,
+          "exposure": 1.12,
+          "roomFillIntensity": 2.3,
+          "windowLightIntensity": 0.65,
+          "deskLampIntensity": 0.4536,
+          "skyStops": [
+            {
+              "offset": 0,
+              "color": "#91adb5"
+            },
+            {
+              "offset": 0.43,
+              "color": "#cfdbd7"
+            },
+            {
+              "offset": 0.51,
+              "color": "#eee9da"
+            },
+            {
+              "offset": 0.65,
+              "color": "#8f9b7c"
+            },
+            {
+              "offset": 1,
+              "color": "#596449"
+            }
+          ],
+          "fogColor": "#dce0d1"
+        },
+        "position": {
+          "x": -1.2959999999999998,
+          "y": 1.62,
+          "z": 9
+        }
+      },
+      "performance": {
+        "frames": 13,
+        "lastRenderMs": 7.600000001490116,
+        "drawCalls": 726,
+        "triangles": 1613503,
+        "pixelRatio": 1,
+        "shadowRefreshes": 5,
+        "frameIntervalMs": 816.7000000000007,
+        "outdoorsReady": true,
+        "miniaturesReady": true
+      },
+      "camera": {
+        "position": [
+          -1.2959999999999998,
+          1.62,
+          9
+        ],
+        "quaternion": [
+          -0.0016277736996664876,
+          0.9967418410490086,
+          -0.07790590082000136,
+          -0.020826023922955295
+        ],
+        "fov": 62,
+        "aspect": 1.5238095238095237
+      },
+      "buffer": [
+        1600,
+        1050
+      ],
+      "landscape": {
+        "nodes": 19,
+        "meshes": 18,
+        "lines": 0,
+        "drawCalls": 18,
+        "triangles": 190603,
+        "matrixAutoUpdates": 1,
+        "geometryBytes": 362469,
+        "externalRequests": 0,
+        "textures": 4,
+        "maxTextureSide": 256,
+        "trees": 17,
+        "vegetationBatches": 9,
+        "mountainLayers": 3,
+        "mountainTriangles": 12288,
+        "groundY": 0,
+        "continuousGround": true
+      },
+      "file": "docs/reviews/live-study/courtyard-day.webp",
+      "bytes": 207404,
+      "quality": 84,
+      "sha256": "7595a521d10af5afdc76b251a20bcb16963e5a4ff3feba630621295678261ba9"
+    },
+    {
+      "phase": "dusk",
+      "state": {
+        "webgl": true,
+        "catReady": true,
+        "landmarksReady": true,
+        "miniaturesReady": true,
+        "outdoorsReady": true,
+        "outdoorsLoading": false,
+        "outdoorsError": null,
+        "renderingActive": true,
+        "readyPhase": "complete",
+        "focus": "outside",
+        "paused": true,
+        "lightingMode": "auto",
+        "mode": "outside",
+        "travel": false,
+        "seated": false,
+        "standing": true,
+        "posture": "walking",
+        "time": {
+          "timeZone": "Asia/Tokyo",
+          "timeZoneLabel": "日本時間",
+          "mode": "auto",
+          "dateISO": "2026-11-07",
+          "label": "17:30",
+          "dateTime": "2026-11-07T08:30:00.000Z",
+          "zonedDateTime": "2026-11-07T17:30:00+09:00",
+          "unixMs": 1794040200000,
+          "hour": 17,
+          "minute": 30,
+          "second": 0,
+          "millisecond": 0,
+          "secondsSinceMidnight": 63000,
+          "actualHour": 17.5,
+          "minuteKey": "2026-11-07T17:30+09:00",
+          "secondKey": "2026-11-07T17:30:00+09:00",
+          "clockKey": "2026-11-07T17:30:00+09:00",
+          "lightingKey": "auto:29900670",
+          "clockAngles": {
+            "hour": -2.8797932657906435,
+            "minute": -3.1415926535897927,
+            "second": 0
+          },
+          "hourAngle": -2.8797932657906435,
+          "minuteAngle": -3.1415926535897927,
+          "secondAngle": 0,
+          "phase": "dusk",
+          "daylight": 0.6479999999999999,
+          "nightMix": 0.3520000000000001,
+          "dawn": 0,
+          "dusk": 1,
+          "sun": {
+            "intensity": 1.8783999999999998,
+            "color": "#f4c6a0",
+            "position": [
+              -38,
+              55,
+              -12
+            ],
+            "target": [
+              0,
+              0,
+              35
+            ]
+          },
+          "hemisphere": {
+            "intensity": 0.99864,
+            "skyColor": "#cadbe2",
+            "groundColor": "#726650"
+          },
+          "ambientIntensity": 0.30704,
+          "ambientColor": "#e0dcd1",
+          "environmentIntensity": 0.3972,
+          "backgroundIntensity": 1,
+          "exposure": 1.13408,
+          "roomFillIntensity": 2.652,
+          "windowLightIntensity": 0.5056799999999999,
+          "deskLampIntensity": 0.5403328000000001,
+          "skyStops": [
+            {
+              "offset": 0,
+              "color": "#4d5e77"
+            },
+            {
+              "offset": 0.43,
+              "color": "#bc8f89"
+            },
+            {
+              "offset": 0.51,
+              "color": "#deb08a"
+            },
+            {
+              "offset": 0.65,
+              "color": "#7e7866"
+            },
+            {
+              "offset": 1,
+              "color": "#4c5145"
+            }
+          ],
+          "fogColor": "#aba69d"
+        },
+        "position": {
+          "x": -1.2959999999999998,
+          "y": 1.62,
+          "z": 9
+        }
+      },
+      "performance": {
+        "frames": 14,
+        "lastRenderMs": 1983.199999999255,
+        "drawCalls": 160,
+        "triangles": 440911,
+        "pixelRatio": 1,
+        "shadowRefreshes": 6,
+        "frameIntervalMs": 33.5,
+        "outdoorsReady": true,
+        "miniaturesReady": true
+      },
+      "camera": {
+        "position": [
+          -1.2959999999999998,
+          1.62,
+          9
+        ],
+        "quaternion": [
+          -0.0016277736996664876,
+          0.9967418410490086,
+          -0.07790590082000136,
+          -0.020826023922955295
+        ],
+        "fov": 62,
+        "aspect": 1.5238095238095237
+      },
+      "buffer": [
+        1600,
+        1050
+      ],
+      "landscape": {
+        "nodes": 19,
+        "meshes": 18,
+        "lines": 0,
+        "drawCalls": 18,
+        "triangles": 190603,
+        "matrixAutoUpdates": 1,
+        "geometryBytes": 362469,
+        "externalRequests": 0,
+        "textures": 4,
+        "maxTextureSide": 256,
+        "trees": 17,
+        "vegetationBatches": 9,
+        "mountainLayers": 3,
+        "mountainTriangles": 12288,
+        "groundY": 0,
+        "continuousGround": true
+      },
+      "file": "docs/reviews/live-study/courtyard-dusk.webp",
+      "bytes": 198652,
+      "quality": 84,
+      "sha256": "b6706bc7d4288eee840530a4eb57f4c7715de7192fc83043cc837bb2615a160f"
+    },
+    {
+      "phase": "night",
+      "state": {
+        "webgl": true,
+        "catReady": true,
+        "landmarksReady": true,
+        "miniaturesReady": true,
+        "outdoorsReady": true,
+        "outdoorsLoading": false,
+        "outdoorsError": null,
+        "renderingActive": true,
+        "readyPhase": "complete",
+        "focus": "outside",
+        "paused": true,
+        "lightingMode": "auto",
+        "mode": "outside",
+        "travel": false,
+        "seated": false,
+        "standing": true,
+        "posture": "walking",
+        "time": {
+          "timeZone": "Asia/Tokyo",
+          "timeZoneLabel": "日本時間",
+          "mode": "auto",
+          "dateISO": "2026-11-07",
+          "label": "23:00",
+          "dateTime": "2026-11-07T14:00:00.000Z",
+          "zonedDateTime": "2026-11-07T23:00:00+09:00",
+          "unixMs": 1794060000000,
+          "hour": 23,
+          "minute": 0,
+          "second": 0,
+          "millisecond": 0,
+          "secondsSinceMidnight": 82800,
+          "actualHour": 23,
+          "minuteKey": "2026-11-07T23:00+09:00",
+          "secondKey": "2026-11-07T23:00:00+09:00",
+          "clockKey": "2026-11-07T23:00:00+09:00",
+          "lightingKey": "auto:29901000",
+          "clockAngles": {
+            "hour": -5.759586531581287,
+            "minute": 0,
+            "second": 0
+          },
+          "hourAngle": -5.759586531581287,
+          "minuteAngle": 0,
+          "secondAngle": 0,
+          "phase": "night",
+          "daylight": 0,
+          "nightMix": 1,
+          "dawn": 0,
+          "dusk": 0,
+          "sun": {
+            "intensity": 0.55,
+            "color": "#b8cee8",
+            "position": [
+              -38,
+              55,
+              -12
+            ],
+            "target": [
+              0,
+              0,
+              35
+            ]
+          },
+          "hemisphere": {
+            "intensity": 0.72,
+            "skyColor": "#a0b8d5",
+            "groundColor": "#625d51"
+          },
+          "ambientIntensity": 0.32,
+          "ambientColor": "#c5d0df",
+          "environmentIntensity": 0.3,
+          "backgroundIntensity": 1,
+          "exposure": 1.16,
+          "roomFillIntensity": 3.3,
+          "windowLightIntensity": 0.24,
+          "deskLampIntensity": 0.7,
+          "skyStops": [
+            {
+              "offset": 0,
+              "color": "#111e32"
+            },
+            {
+              "offset": 0.43,
+              "color": "#293d54"
+            },
+            {
+              "offset": 0.51,
+              "color": "#526271"
+            },
+            {
+              "offset": 0.65,
+              "color": "#303e3e"
+            },
+            {
+              "offset": 1,
+              "color": "#202b30"
+            }
+          ],
+          "fogColor": "#3c4d61"
+        },
+        "position": {
+          "x": -1.2959999999999998,
+          "y": 1.62,
+          "z": 9
+        }
+      },
+      "performance": {
+        "frames": 15,
+        "lastRenderMs": 70.30000000074506,
+        "drawCalls": 160,
+        "triangles": 440911,
+        "pixelRatio": 1,
+        "shadowRefreshes": 7,
+        "frameIntervalMs": 33.400000000001455,
+        "outdoorsReady": true,
+        "miniaturesReady": true
+      },
+      "camera": {
+        "position": [
+          -1.2959999999999998,
+          1.62,
+          9
+        ],
+        "quaternion": [
+          -0.0016277736996664876,
+          0.9967418410490086,
+          -0.07790590082000136,
+          -0.020826023922955295
+        ],
+        "fov": 62,
+        "aspect": 1.5238095238095237
+      },
+      "buffer": [
+        1600,
+        1050
+      ],
+      "landscape": {
+        "nodes": 19,
+        "meshes": 18,
+        "lines": 0,
+        "drawCalls": 18,
+        "triangles": 190603,
+        "matrixAutoUpdates": 1,
+        "geometryBytes": 362469,
+        "externalRequests": 0,
+        "textures": 4,
+        "maxTextureSide": 256,
+        "trees": 17,
+        "vegetationBatches": 9,
+        "mountainLayers": 3,
+        "mountainTriangles": 12288,
+        "groundY": 0,
+        "continuousGround": true
+      },
+      "file": "docs/reviews/live-study/courtyard-night.webp",
+      "bytes": 199454,
+      "quality": 88,
+      "sha256": "6f018289c81833cd782825f3eb8f41a8bfb7543d00dbf124320a4924e71c9084"
+    }
+  ],
+  "errors": [],
+  "warnings": [
+    "THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead."
+  ],
+  "sourceHashes": {
+    "scene/world.js": "3950020e296c88b64a18c8d2f422b95a51989952eff3d1b1b71d2bf563505137",
+    "scene/world-landscape.js": "6751a3906ea62c29ffbbba2073363167232efe0a75d28a2078e64ca87bf2668a",
+    "scene/world-sky.js": "735c891a1c23b7170e2ce74e97df8b52c368fe5c68641b3a67ab4824e1907c62",
+    "scene/world-time.js": "beb067a9a4d40274c84dce70e6a4f19682a38343f59d845aaf60925c5550ddff",
+    "scene/garden-boundary.js": "d61eb5e3fa3642dbb083ddada2b675d1dc7c238b9a236bf3b623d862dbb26d0b",
+    "scene/home-interior.js": "5246b353156b5209e4ee452b339e67806e5740aa1a60871a20964661068fa547",
+    "scene/desk-landmarks.js": "94f078ff23ae91db96874b16f76e95b07aa85feb8111f84a2cac6119c0b65892",
+    "scene/cat-life.js": "a5758f842bd639cb2e7e93731e27cb45f383cb8ebf15e98cd47f7d62964a1743",
+    "scene/cat-disposal.js": "5aa368de54072dafab404170a89bce48d41b8ecc680b85fda87e73b42eab7456",
+    "scene/cat-asset.js": "a92f1f81a4c9636c06650e58bdb5e2547e117e48f8824756d4fa2a3194a18623",
+    "scene/home-navigation.js": "f12567c124bec4e73309c3673763aa48d7dc1dec54c4cf971ad198b3bc40b8cb",
+    "scene/world-layout.js": "023d561942f155692ad7cd417c0b5929874945be8aa7ccd9ce02784bfa867bde",
+    "scene/landmark-clocks.js": "f838ebb495314dd87a94fe6a44fb0928c5066e5138da27fb2e8f992a1f11b60a",
+    "scene/world-landmarks.js": "7300bd6c477149d16fb8216f5acf98d9c0794e0e886f5d0f616d992abd82c501",
+    "scripts/capture-live-world.mjs": "81f8c4467a3e007af1ec02f11983ad7293a5067c07ddfe3f4c6fdab8894d3057",
+    "js/vendor/three.module.min.js": "86bcee248b64f44bcfc23c331ae74619061957d59cab040171dcb6fb5900beb6",
+    "js/vendor/three.core.min.js": "0e9dd2793e01d0d9eb4f2ab00b4ffcdd4488275ebebee5c31fa8d347bc29f0bf",
+    "scene/world-three.js": "b6bd971bceba4a65b2b3c3888230baf413e1bf19e39d006990e2220c5cc6d3b8",
+    "scene/surface-materials.js": "efc623c7f5b939bac2a37e777c114ce21f2f71b1b8fcaedfffd3deaf85cf5e84",
+    "scene/room-model.js": "a791f8d60be02ef9248cac09687c4cc59ea6e4455175afde2a906565300a78c3",
+    "scene/static-batching.js": "3c69b547c0cca348a83b8d0d5118dfe595b83db3a9947de392564f913972a933",
+    "scene/collected-decor.js": "78deb3c561d4bcc62a05d19c7d233a7d81b057b184bf8292874540a2768d3ff8",
+    "scene/room-shell.js": "55bd85faf32652559497891377fb62c57a939af53ee1c4005f8b0375e90b2750",
+    "scene/room-details.js": "ddce5aaef477dc3fc2fa40908d0286e3876bf54a4f6188f63d3ceda9f9690ef1",
+    "scene/natural-details.js": "04d806f5541c98592e4c62cf604ec5a193a43c2a19c3eb8be709cc318218b0cb",
+    "scene/natural-props.js": "26ef06503519597e9be6cb2cef443d688b1b2bb2468e63217fa3e4ca27fd0eb4",
+    "scene/window-blinds.js": "558fba61af81cc9172c1e9fb6504bc94738c109b3e56e4d410ae714f4a9b2921",
+    "scene/workshop-details.js": "83e305115d613bf18f9e9a58d11c17a4e4917783b5e1ddef8f3ee8768f13448d",
+    "js/vendor/BufferGeometryUtils.js": "5f76ff28be936bb281c241a292bb075bbd574d3bf0ca23f4f00896f74181ddd1",
+    "scene/photo-wall.js": "ec203ea2e027fa5e059226e9e16214ac7f2879fd1519f887806add8c00bd03a8",
+    "scene/photo-catalog.js": "72b87a0ae21714b4df1d241c6ae82ef1e45a112b1082e4e952f6f957901111f5",
+    "scene/wall-atlas.js": "b7cc4ea71a78380e8bd5fcc2ea72ce208134ae6e16bbf055061f9659aa2db866",
+    "images/materials/walnut.webp": "81f887ecd2a56f02f8674579c120a6c061f9ccc01462a019cb4fea98051dd7a4",
+    "images/decor/burgundy-rug.webp": "03e69c93f7afc4799fa91b67854ad7c4c0b3309fa326e66072c7a3012c462672",
+    "images/materials/burgundy-linen.webp": "804a06762539e99ad3e70e17a08de8214b6d977893d005eb4fc3ffbc8dd238be",
+    "images/materials/plaster.webp": "32c68142a57c2c5d060bc573ef36d29e83cbce9aa33540dfac44fdac6288d8bb",
+    "images/atlas/karatsu.webp": "c46dedda0c2caa9218bb5a1a65afdb71275d49a452e6d280de4d777752620541",
+    "images/materials/slate.webp": "3d5bbd201011ecafe92500d1ebc4c22b35be9a88a615a5cd67d263fffe2ea107",
+    "scene/world-cat-loader.js": "e9da5c8c1e7565e673407d92b0f820dd6db866558ea381ed2710dc128ab85fc8",
+    "js/models/model-utils.js": "5cbbe05643e0219704d8feb71594e7f0199a936fe3ad23dd8a7fde967276209c",
+    "js/models/okuma-auditorium.js": "612350f76ba1b70429a33fd1c5b2197c3aafd25ad1a3d0c5012cff4ffb0cf188",
+    "js/models/okuma-statue.js": "2185a3dc140922c473761ebcaae54867fab0ac008a997ad22f1e6de62d67173f",
+    "js/models/karatsu-bank.js": "8fd587c485105b64ea23689748b833b163d0972eeba6119816c7a9c2e020529c",
+    "js/models/karatsu-castle.js": "d11944352081b6e4585063904ced21526d996df60eda55dea68c058b6052d620",
+    "js/vendor/GLTFLoader.js": "e2ab44d6c6fcad49651bb708cc443f779af0471d66a4cf8ff8f8e34c414a6634",
+    "js/vendor/DRACOLoader.js": "75bbcf6d7dfbe26265d3b809f488fe59ede34bc078a659b61336a7332723d003",
+    "images/materials/sandstone.webp": "c9d09810c17743b762403c9878c8ab313d8838bca5a118b17114cc4c312f87de",
+    "images/materials/brick.webp": "fddec096aa1c9888fedc43cece325933e62a8e8e5d350d9aa2e3f6dd747485e3",
+    "js/vendor/SkeletonUtils.js": "d5fc069c345d2eb93b5f93da485c75135000e50965e71ed12d4bdc3cfe9c9144",
+    "models/tabby-cat-world.glb": "2f1ab50150a8f0f18a4a7cf83c2f79657770dcacdbc992509ad73b07ff703997",
+    "js/vendor/draco/draco_wasm_wrapper.js": "8bb2952d2ba7d67e1414f8df819410cb0434a666be53f671fff75f68843d76f6",
+    "js/vendor/draco/draco_decoder.wasm": "a680d927bed9cb864ddbd63521868891af2bfbe755092761b4837487618df8ac"
+  },
+  "sourceChangesDuringCapture": []
+}
