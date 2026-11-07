@@ -43,14 +43,17 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
   function box(name, material, x, y, z, w, h, d, cast = true) {
     const mesh = new T.Mesh(cube, material); mesh.name = name; mesh.position.set(x, y, z); mesh.scale.set(w, h, d); mesh.castShadow = cast; mesh.receiveShadow = true; group.add(mesh); return mesh;
   }
-  function plane(name, material, x, z, w, d, y = -.001, span = 4) {
-    const geo = new T.PlaneGeometry(w, d); geo.rotateX(-Math.PI / 2);
+  function plane(name, material, x, z, w, d, y = -.001, span = 4, segments = 1) {
+    const geo = new T.PlaneGeometry(w, d, segments, segments); geo.rotateX(-Math.PI / 2);
     const uv = geo.getAttribute('uv'); for (let i = 0; i < uv.count; i++) uv.setXY(i, (x + (uv.getX(i) - .5) * w) / span, (z + (.5 - uv.getY(i)) * d) / span);
     geometries.add(geo); const mesh = new T.Mesh(geo, material); mesh.name = name; mesh.position.set(x, y, z); mesh.receiveShadow = true; group.add(mesh); return mesh;
   }
   // This terrain reaches the atmospheric horizon. There is no exposed slab,
   // island edge, ocean, cliff or void below the walking floor.
-  plane('Unbroken ground to the horizon', grass, 0, 40, 1800, 1800, -.008, 3.2);
+  // Shorter terrain triangles retain depth precision when looking down from
+  // the study. One horizon-sized quad can incorrectly cover the raised floor
+  // and rug after near-plane clipping on software/WebGL renderers.
+  plane('Unbroken ground to the horizon', grass, 0, 40, 1800, 1800, -.008, 3.2, 32);
   // Build the union of every stone footprint, rather than stacking coplanar
   // rectangles. Each new convex rectangle is cut by all preceding rectangles;
   // only its uncovered convex pieces survive. All pieces share one world UV

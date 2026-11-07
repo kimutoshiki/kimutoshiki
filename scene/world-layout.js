@@ -5,8 +5,9 @@ export const HOME = Object.freeze({
   door: { x: -1.296, z: 3.4056, width: 1.2, height: 2.1 },
   spawn: { x: .70, z: 1.85, yaw: Math.atan2(-.9, -1.85), pitch: Math.atan2(-.62, Math.hypot(.9, 1.85)) },
   target: [-.2, 1, 0],
+  seated: { position: [0, 1.18, 1.65], target: [0, .86, 0] },
 });
-export const WORLD_BOUNDS = { minX: -60, maxX: 60, minZ: -12, maxZ: 105 };
+export const WORLD_BOUNDS = { minX: -48, maxX: 48, minZ: -8, maxZ: 90 };
 /** Wider portrait view keeps the same human eye in the room, never pulls outside. */
 export function worldFov(aspect) { return 62 + 16 * Math.max(0, Math.min(1, (1.1 - aspect) / .3)); }
 export const WAYPOINTS = [
@@ -29,6 +30,7 @@ export const LANDMARK_RESERVATIONS = LANDMARK_SITES.map(site => {
   return {id:'landmark-'+site.key,minX:site.position[0]-halfX,maxX:site.position[0]+halfX,minZ:site.position[1]-halfZ,maxZ:site.position[1]+halfZ};
 });
 export const REVIEW_VIEWS = {
+  seated: { position: HOME.seated.position, target: HOME.seated.target, fov: 62 },
   interior: { position: [.70, 1.62, 1.85], target: [-.2, 1, 0], fov: 62 },
   doorway: { position: [-1.296, 1.62, 2.1], target: [-1.296, 1.62, 20], fov: 62 },
   garden: { position: [-1.296, 1.62, 9], target: [0, 6.5, 40], fov: 62 },

@@ -142,6 +142,10 @@ export function createWalkNavigation({
     travel += total; moving ||= total > EPS;
     return total;
   }
+  function setEyeHeight(value) {
+    if (!finite(value) || value <= 0) return false;
+    eyeHeight = value; syncCamera(); return true;
+  }
   function syncCamera() {
     if (!camera) return;
     camera.position.set(x, eyeHeight, z);
@@ -192,5 +196,5 @@ export function createWalkNavigation({
   syncCamera();
   return { update, getState, setInput, rotate, stop, cancelRoute, walkRoute, findRoute,
     autoWalkTo: (destination, finalLook) => walkRoute([destination], finalLook),
-    setObstacles, setWaypoints, canTravel, dispose() { stop(); disposed = true; } };
+    setObstacles, setWaypoints, setEyeHeight, canTravel, dispose() { stop(); disposed = true; } };
 }

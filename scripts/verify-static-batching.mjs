@@ -46,6 +46,8 @@ function verifyBatch({owner,sources,merged}) {
 }
 
 const plain=await createDeskLandmarks(T,{optimize:false}), before=staticDrawStats(plain.group);
+const clockHands = new Set(plain.clocks.flatMap(clock=>[clock.hour,clock.minute]));
+assert.equal(clockHands.size,8,'The four clock faces retain their actual moving hands');
 const beforeBox=new T.Box3().setFromObject(plain.group), architecturalNames=['Okuma auditorium architecture','Okuma statue monument','Five-tier keep','Landmark architecture'];
 const samples=[];
 for(const display of plain.group.children){
@@ -61,10 +63,11 @@ for(const display of plain.group.children){
   }
   const mount=display.children.find(o=>o.userData.inspectionSource),architecture=mount.children[0].children[0],clocks=new Set();
   architecture.traverse(o=>{if(/^Clock face [1-4]$/.test(o.name))clocks.add(o);});
-  mergeStaticDraws(T,architecture,{byParent:false,preserveGroups:clocks,onBatch:verifyBatch});
+  mergeStaticDraws(T,architecture,{byParent:false,preserveGroups:clocks,protectedObjects:clockHands,onBatch:verifyBatch});
   mergeStaticDraws(T,display,{skipRoots:new Set([mount]),onBatch:verifyBatch});
 }
-cacheStaticLocalMatrices(plain.group);
+cacheStaticLocalMatrices(plain.group,{movable:new Set([plain.group,...clockHands])});
+for(const hand of clockHands)assert.ok(hand.matrixAutoUpdate&&hand.parent,'Clock hands remain live after static architecture caching');
 plain.group.updateMatrixWorld(true);
 const after=staticDrawStats(plain.group),afterBox=new T.Box3().setFromObject(plain.group);
 // Merging rotated geometry tightens the old union of individual bounding boxes.
@@ -114,7 +117,11 @@ function matrixWork(root){
 const reference=await createDeskLandmarks(T,{optimize:false}),built=await createDeskLandmarks(T);
 assert.deepEqual(staticDrawStats(built.group),after,'Factory differs from independently checked batching path');
 const matricesBefore=matrixWork(reference.group),matricesAfter=matrixWork(built.group);
-assert.ok(matricesAfter.compose<matricesBefore.compose*.02);assert.ok(matricesAfter.multiply<matricesBefore.multiply*.30);
+// The eight original clock hands are now deliberately live. Keep the prior
+// static architecture budget, plus at most one hand update per rendered frame.
+const clockMatrixBudget=clockHands.size*matricesAfter.frames;
+assert.ok(matricesAfter.compose<matricesBefore.compose*.02+clockMatrixBudget);
+assert.ok(matricesAfter.multiply<matricesBefore.multiply*.30+clockMatrixBudget);
 
 // The conservative room pass must retain direct references and action ownership.
 T.TextureLoader.prototype.load=function(){return new T.Texture();};
