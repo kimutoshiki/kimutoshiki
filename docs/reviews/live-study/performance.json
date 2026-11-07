@@ -1,0 +1,32 @@
+{
+  "comparison": "3D engine startup graph using identical esbuild/gzip options; the previous static homepage deferred this graph until standing.",
+  "baselineRevision": "e9b23f19105c37e34b1327537be0763a888be292",
+  "before": {
+    "files": 7,
+    "bytes": 826509,
+    "gzipBytes": 235099
+  },
+  "after": {
+    "files": [
+      "scene/world.bundle.js",
+      "scene/world-chunk-chunk-3D5PGYBA.js",
+      "scene/world-chunk-chunk-FVPNB6PD.js",
+      "scene/world-chunk-chunk-5LVMXEXY.js",
+      "scene/world-chunk-chunk-IAOCED2O.js"
+    ],
+    "bytes": 765070,
+    "gzip": 214947
+  },
+  "initialGzipReductionPercent": 8.57,
+  "firstFrameHomeTriangles": 35552,
+  "movingCatFramesWithNoShadowRefresh": 360,
+  "garden": {
+    "triangles": 190603,
+    "drawCalls": 18,
+    "geometryBytes": 362469,
+    "mountainLayers": 3,
+    "mountainTriangles": 12288,
+    "externalImageRequests": 0
+  },
+  "scope": "Build size and deterministic geometry/runtime checks; not hardware FPS or network timing."
+}

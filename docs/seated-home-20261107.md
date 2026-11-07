@@ -1,3 +1,5 @@
+Historical record of PR #8. The later live-3D homepage replaces its static entry and renderer-remount behavior; see [the current implementation](live-study-20261107.md).
+
 The homepage now opens as a seated view of the original study with five ordinary page links. The visitor can read the site immediately and choose **席を立つ** to load the walkable world. Sitting down again releases the renderer and restores the homepage.
 
 ![Seated homepage](reviews/seated-home/desktop.webp)

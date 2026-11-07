@@ -151,7 +151,8 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
       const angle = i * 2.399 + random(), reach = height * (.13 + random() * .11), cy = height * (.68 + random() * .22);
       const cx = x + Math.cos(angle) * reach, cz = z + Math.sin(angle) * reach;
       if (i < 5) branchRecords.push({ a: [x + .08, height * .47, z], b: [cx, cy, cz], r: height * .009 });
-      crownRecords.push({ p: [cx, cy, cz], s: [height * (.15 + random() * .055), height * (.13 + random() * .05), height * (.14 + random() * .06)] });
+      const band=z<0?0:z<40?1:z<75?2:3;
+      crownRecords.push({ cluster:band*2+(x>=0?1:0),p: [cx, cy, cz], s: [height * (.15 + random() * .055), height * (.13 + random() * .05), height * (.14 + random() * .06)] });
     }
   }
   const dummy = new T.Object3D(), up = new T.Vector3(0, 1, 0), a = new T.Vector3(), b = new T.Vector3();
@@ -167,29 +168,86 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
   leafGeometry.setAttribute('uv', new T.Float32BufferAttribute([.5,.5,.5,0,.86,.275,1,.57,.775,.86,.5,1,.225,.86,0,.57,.14,.275],2));
   leafGeometry.setIndex([0,1,2,0,2,3,0,3,4,0,4,5,0,5,6,0,6,7,0,7,8,0,8,1]);
   leafGeometry.computeVertexNormals(); geometries.add(leafGeometry); leaf.side=T.DoubleSide; leaf.bumpScale=.004;
-  const leavesPerCluster=140, crowns=new T.InstancedMesh(leafGeometry,leaf,crownRecords.length*leavesPerCluster);
-  crowns.name='Individual cupped leaves in naturally open tree crowns';
-  const color = new T.Color(); let leafIndex=0;
+  const leavesPerCluster=140;
+  // Spatial batches keep distant trees out of the camera and compact room
+  // shadow frusta. A single world-wide instance bound submits every leaf.
+  const crowns=Array.from({length:8},(_,cluster)=>{
+    const mesh=new T.InstancedMesh(leafGeometry,leaf,crownRecords.filter(r=>r.cluster===cluster).length*leavesPerCluster);
+    mesh.name='Individual cupped leaves — garden cluster '+cluster;mesh.userData.vegetationCluster=cluster;return mesh;
+  });
+  const color = new T.Color(),leafIndices=new Uint32Array(8);
   for (const r of crownRecords) for(let j=0;j<leavesPerCluster;j++) {
     const angle=random()*Math.PI*2, vertical=random()*2-1, reach=Math.cbrt(random()), horizontal=Math.sqrt(1-vertical*vertical);
     dummy.position.set(r.p[0]+Math.cos(angle)*horizontal*reach*r.s[0],r.p[1]+vertical*reach*r.s[1],r.p[2]+Math.sin(angle)*horizontal*reach*r.s[2]);
     dummy.rotation.set((random()-.5)*1.8,random()*Math.PI*2,(random()-.5)*1.4);
-    const size=.10+random()*.055;dummy.scale.set(size*.64,size,size);dummy.updateMatrix();crowns.setMatrixAt(leafIndex,dummy.matrix);
-    const v=.77+random()*.42;color.setRGB(v,v,v*.9);crowns.setColorAt(leafIndex++,color);
+    const size=.10+random()*.055;dummy.scale.set(size*.64,size,size);dummy.updateMatrix();const mesh=crowns[r.cluster],leafIndex=leafIndices[r.cluster]++;mesh.setMatrixAt(leafIndex,dummy.matrix);
+    const v=.77+random()*.42;color.setRGB(v,v,v*.9);mesh.setColorAt(leafIndex,color);
   }
-  crowns.castShadow=crowns.receiveShadow=true;crowns.computeBoundingSphere();group.add(crowns);
-  // The soft background ridge is attached to the same terrain, well behind the garden.
-  const ridgeMat = mat('Distant sage wooded ridge', { color: '#82927d', roughness: 1 });
-  const ridgeGeo = new T.PlaneGeometry(1200, 200, 80, 8); ridgeGeo.rotateX(-Math.PI / 2);
-  const rp = ridgeGeo.getAttribute('position');
-  for (let i = 0; i < rp.count; i++) { const x = rp.getX(i), z = rp.getZ(i), envelope = Math.sin((z + 100) / 200 * Math.PI); rp.setY(i, Math.max(0, envelope) * (17 + Math.sin(x * .018) * 8 + Math.cos(x * .031) * 5)); }
-  ridgeGeo.computeVertexNormals(); geometries.add(ridgeGeo); const ridge = new T.Mesh(ridgeGeo, ridgeMat); ridge.name = 'Grounded distant wooded hillside'; ridge.position.z = 220; group.add(ridge);
-  mergeStaticDraws(T, group, { byParent: false, skipRoots: new Set([trunks, crowns]) }); cacheStaticLocalMatrices(group);
+  for(const mesh of crowns){mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingSphere();group.add(mesh);}
+  // Three real height fields overlap in depth. Broad shoulders, unequal peaks
+  // and lower saddles replace the former single, almost horizontal green bank.
+  // Their perimeter meets the same ground; none enters the walkable courtyard.
+  const ridgeDefinitions=[
+    {name:'Wooded foothills',width:1000,depth:190,z:235,height:35,phase:.7,frequency:.85,day:'#62765f',night:'#354642'},
+    {name:'Middle mountain folds',width:1200,depth:260,z:390,height:96,phase:.2,frequency:1.2,day:'#7b9188',night:'#3b4b50'},
+    {name:'Distant mountain skyline',width:1400,depth:320,z:565,height:132,phase:.8,frequency:.65,day:'#9aaba9',night:'#46576a'},
+  ];
+  const ridgeMaterials=[],ridgeMeshes=[];
+  const smooth=(a,b,value)=>{const t=Math.max(0,Math.min(1,(value-a)/(b-a)));return t*t*(3-2*t);};
+  function terrainNoise(x,y,period=256){
+    const ix=Math.floor(x),iy=Math.floor(y),u=smooth(0,1,x-ix),v=smooth(0,1,y-iy);
+    const hash=(dx,dy)=>{let a=((ix+dx)%period+period)%period,b=((iy+dy)%period+period)%period,n=Math.imul(a+97,374761393)^Math.imul(b+53,668265263);n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295;};
+    return (hash(0,0)*(1-u)+hash(1,0)*u)*(1-v)+(hash(0,1)*(1-u)+hash(1,1)*u)*v;
+  }
+  const forestCanvas=document.createElement('canvas');forestCanvas.width=forestCanvas.height=128;
+  const forestContext=forestCanvas.getContext('2d'),forestPixels=forestContext.createImageData(128,128);
+  for(let y=0;y<128;y++)for(let x=0;x<128;x++){
+    const field=terrainNoise(x/128*8,y/128*8,8)*.5+terrainNoise(x/128*16,y/128*16,16)*.3+terrainNoise(x/128*32,y/128*32,32)*.2;
+    const value=Math.round(205+field*50),offset=(y*128+x)*4;
+    forestPixels.data.set([value,value,value,255],offset);
+  }
+  forestContext.putImageData(forestPixels,0,0);
+  const forestMap=new T.CanvasTexture(forestCanvas);forestMap.name='Procedural wooded mountain cover';forestMap.colorSpace=T.SRGBColorSpace;forestMap.wrapS=forestMap.wrapT=T.RepeatWrapping;textures.add(forestMap);
+  for(const definition of ridgeDefinitions){
+    const geometry=new T.PlaneGeometry(definition.width,definition.depth,128,16);geometry.rotateX(-Math.PI/2);
+    const positions=geometry.getAttribute('position'),phase=definition.phase;
+    for(let i=0;i<positions.count;i++){
+      const x=positions.getX(i),z=positions.getZ(i),t=(z+definition.depth/2)/definition.depth;
+      const longitude=x*definition.frequency;
+      const spine=.49+.13*Math.sin(longitude*.014+phase)+.045*Math.sin(longitude*.037-phase);
+      const shoulder=Math.exp(-Math.pow((t-spine)/.29,2)*1.35)*smooth(0,.12,t)*(1-smooth(.88,1,t));
+      const peaks=.52+.22*Math.sin(longitude*.012+phase)+.15*Math.cos(longitude*.027-phase*1.3)+.08*Math.sin(longitude*.061+phase*2.8);
+      const fold=.66+.34*Math.abs(Math.sin(longitude*.052+z*.018+phase));
+      const ends=1-smooth(.82,1,Math.abs(x)/(definition.width/2));
+      positions.setY(i,Math.max(0,shoulder*peaks*fold*definition.height*ends)-.008);
+      geometry.attributes.uv.setXY(i,x/140,(z+definition.z)/140);
+    }
+    geometry.computeVertexNormals();
+    const normals=geometry.getAttribute('normal'),shades=new Uint8Array(positions.count*3),light=new T.Vector3(-38,55,-47).normalize();
+    for(let i=0;i<positions.count;i++){
+      const facing=Math.max(0,normals.getX(i)*light.x+normals.getY(i)*light.y+normals.getZ(i)*light.z);
+      const texture=(terrainNoise(positions.getX(i)*.055,positions.getZ(i)*.055)-.5)*.08;
+      const value=Math.round(255*Math.min(1,.42+facing*.58+texture));
+      shades.set([value,value,value],i*3);
+    }
+    geometry.setAttribute('color',new T.BufferAttribute(shades,3,true));geometry.deleteAttribute('normal');geometry.computeBoundingSphere();geometries.add(geometry);
+    // Baked broad slope shading avoids six point-light calculations on remote
+    // mountains. Scene fog and a JST-driven tint provide atmospheric depth.
+    const material=new T.MeshBasicMaterial({color:definition.day,map:forestMap,vertexColors:true,fog:true});material.name=definition.name+' atmosphere';materials.add(material);ridgeMaterials.push(material);
+    const mesh=new T.Mesh(geometry,material);mesh.name=definition.name;mesh.position.z=definition.z;mesh.userData.terrainLayer={grounded:true,layer:ridgeMeshes.length};ridgeMeshes.push(mesh);group.add(mesh);
+  }
+  const tint=new T.Color(),nightTint=new T.Color(),fogTint=new T.Color();
+  function setTime(snapshot){
+    const daylight=Math.max(0,Math.min(1,snapshot.daylight??1)),dusk=snapshot.dusk||0;fogTint.set(snapshot.fogColor||'#dce0d1');
+    ridgeMaterials.forEach((material,i)=>{tint.set(ridgeDefinitions[i].day);nightTint.set(ridgeDefinitions[i].night);material.color.copy(nightTint).lerp(tint,daylight).lerp(fogTint,dusk*.10+i*.035);});
+  }
+  function setInteriorView(indoors){const next=!indoors;if(trunks.visible===next)return false;trunks.visible=next;for(const mesh of crowns)mesh.visible=next;return true;}
+  mergeStaticDraws(T, group, { byParent: false, skipRoots: new Set([trunks,...crowns,...ridgeMeshes]) }); cacheStaticLocalMatrices(group);
   group.updateMatrixWorld(true);
-  const stats = { ...staticDrawStats(group), externalRequests: 0, textures: textures.size, maxTextureSide: 256, trees: trees.length, groundY: 0, continuousGround: true };
+  const stats = { ...staticDrawStats(group), externalRequests: 0, textures: textures.size, maxTextureSide: 256, trees: trees.length, vegetationBatches:crowns.length+1, mountainLayers:ridgeMeshes.length, mountainTriangles:ridgeMeshes.reduce((sum,mesh)=>sum+mesh.geometry.index.count/3,0), groundY: 0, continuousGround: true };
   group.userData.landscapeStats = stats;
   onTextureLoad('garden-procedural-surfaces');
-  return { group, stats, collisions, materials: { stone, edging, grass, timber, iron }, cameraPlan: { ...REVIEW_VIEWS.interior, groundY: 0, bounds: WORLD_BOUNDS }, update() {},
+  return { group, stats, collisions, materials: { stone, edging, grass, timber, iron }, cameraPlan: { ...REVIEW_VIEWS.interior, groundY: 0, bounds: WORLD_BOUNDS }, setTime,setInteriorView,update() {},
     dispose() { if (disposed) return; disposed = true; group.traverse(o => { if (o.geometry) geometries.add(o.geometry); }); geometries.forEach(g => g.dispose()); textures.forEach(t => t.dispose()); materials.forEach(m => m.dispose()); },
   };
 }
