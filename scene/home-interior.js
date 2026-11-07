@@ -16,7 +16,7 @@ export const HOME_FRONT_WINDOW = Object.freeze({ x: .85, width: 1.4, sill: .8, h
  * No external image or cat request begins during this synchronous factory.
  */
 export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange = () => {}, catAsset, loadCatDetail } = {}) {
-  let disposed = false, landmarks;
+  let disposed = false, landmarks, clockSnapshot;
   const group = new T.Group(); group.name = 'Home · the original warm study';
   const original = createRoom(T, { worldHome: true, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
   original.lampLight.intensity *= HOME_SCALE * HOME_SCALE;
@@ -219,7 +219,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
       if(disposed){startLandmarks(null);return null;}
       const result = await createDeskLandmarks(T, {waitForFonts:false});
       if(disposed){disposeTree(result.group);startLandmarks(null);return null;}
-      landmarks=result;room.add(result.group);group.updateMatrixWorld(true);
+      landmarks=result;if(clockSnapshot)landmarks.updateClock?.(clockSnapshot);room.add(result.group);group.updateMatrixWorld(true);
       for(const target of result.targets){target.anchor=target.object.localToWorld(new T.Vector3(0,.4,0));targets.push(target);}
       metadata.miniatures=result.targets.map(t=>({id:t.id,position:t.object.getWorldPosition(new T.Vector3()).toArray()}));
       onAssetChange();startLandmarks(result);return result;
@@ -237,8 +237,9 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
     });
   }
   return {
-    group,targets,collisions,metadata,cat:original.cat,lampLight:original.lampLight,landmarksReady,
+    group,targets,collisions,metadata,cat:original.cat,lampLight:original.lampLight,clock:original.clock,landmarksReady,
     refine,loadMiniatures,
+    updateClock(snapshot){clockSnapshot=snapshot;landmarks?.updateClock?.(snapshot);},
     update(delta,enabled=true){return original.blinds.update(delta,enabled);},
     dispose(){
       if(disposed)return;disposed=true;startLandmarks(null);original.dispose();

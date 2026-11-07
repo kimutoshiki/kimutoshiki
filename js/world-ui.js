@@ -1,7 +1,11 @@
-/* Native page navigation and the small room poster are usable before WebGL. */
+/* A native homepage first. WebGL is imported only after the visitor stands up. */
 (() => {
   const byId = id => document.getElementById(id);
   const world = byId('main'), canvas = byId('world-canvas');
+  const stand = byId('world-stand'), standLabel = byId('world-stand-label'), entryNote = byId('world-entry-note');
+  const homePanel = byId('home-panel'), homeMenu = byId('home-menu'), homeIntro = byId('home-intro'), homeEntry = byId('home-entry');
+  const clock = byId('world-clock'), phaseLabel = byId('world-time-phase');
+  const seat = byId('world-seat');
   const places = byId('world-places'), settings = byId('world-settings');
   const controls = byId('world-live-controls'), help = byId('world-help');
   const travel = byId('world-travel'), travelLabel = byId('world-travel-label');
@@ -20,7 +24,23 @@
     cat: { label: '書斎の猫' },
   };
   let engine, disposed = false, firstFrame = false, failed = false, motionChosen = false;
-  let state = { catReady: false, landmarksReady: false, paused: reducedMotion.matches, lightingMode: 'day', focus: 'room', mode: 'inside', travel: false };
+  let launching = false, session = 0, wantsSeat = false, seatTimer, clockTimer;
+  const clockFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  let posterPhase = '';
+  function updateClock() {
+    const now = new Date(), label = clockFormat.format(now), hour = Number(label.slice(0, 2));
+    clock.textContent = label; clock.setAttribute('datetime', now.toISOString());
+    const phase = hour < 6 || hour >= 19 ? 'night' : hour < 8 || hour >= 16 ? 'dusk' : 'day';
+    phaseLabel.textContent = phase === 'night' ? '夜の書斎' : phase === 'dusk' ? (hour < 8 ? '朝の書斎' : '夕暮れの書斎') : '昼の書斎';
+    if (phase !== posterPhase) {
+      posterPhase = phase;
+      const photo = document.querySelector('.world-poster img'), mobile = document.querySelector('.world-poster source');
+      if (mobile) mobile.srcset = 'images/world/seated-' + phase + '-mobile.webp';
+      if (photo) photo.src = 'images/world/seated-' + phase + '.webp';
+    }
+  }
+  function scheduleClock() { clearTimeout(clockTimer); updateClock(); if (!disposed && !document.hidden) clockTimer = setTimeout(scheduleClock, 60000 - Date.now() % 60000 + 20); }
+  let state = { catReady: false, landmarksReady: false, paused: reducedMotion.matches, lightingMode: 'auto', seated: true, standing: false, focus: 'room', mode: 'inside', travel: false };
   let announcement = '';
   const held = new Map();
   let assistiveTimer, keyClickTimer, keyClickButton;
@@ -31,7 +51,9 @@
   function syncState(next = {}) {
     if (disposed || failed) return;
     state = { ...state, ...next };
-    const ready = !!engine && firstFrame;
+    const ready = !!engine && firstFrame && !state.seated && state.posture !== 'standing-up' && state.posture !== 'sitting-down';
+    seat.disabled = !ready;
+    if (wantsSeat && state.seated && engine) { clearTimeout(seatTimer); seatTimer = setTimeout(returnToStill, 0); }
     travel.disabled = !ready;
     focusButtons.forEach(button => { button.disabled = !ready || !(button.dataset.worldFocus === 'cat' ? state.catReady : state.landmarksReady); });
     walkButtons.forEach(button => { button.disabled = !ready; });
@@ -41,16 +63,17 @@
     motion.setAttribute('aria-pressed', String(state.paused));
     motion.setAttribute('aria-label', state.paused ? '猫の動きを再開する' : '猫の動きを止める');
     motionLabel.textContent = state.paused ? '停止中' : '動いています';
-    lightingLabel.textContent = state.lightingMode === 'night' ? '夜' : '昼';
-    lighting.setAttribute('aria-label', '光を' + (state.lightingMode === 'night' ? '昼' : '夜') + 'に切り替える');
+    lightingLabel.textContent = {auto:'現在の時刻', day:'昼を眺める', night:'夜を眺める'}[state.lightingMode];
+    lighting.setAttribute('aria-label', '光：' + lightingLabel.textContent + '。クリックで切り替え');
     const subject = subjects[state.focus];
-    caption.hidden = !subject;
+    caption.hidden = !firstFrame || !subject;
     if (subject) {
       captionName.textContent = subject.label + (state.travel ? 'へ移動中' : '');
       captionLink.hidden = !subject.href;
       if (subject.href) { captionLink.href = subject.href; captionLink.textContent = subject.link + ' ↗'; }
     }
-    if (firstFrame) announce(state.travel ? (subject?.label || (state.mode === 'inside' ? '庭' : '書斎')) + 'へ歩いています。途中で止められます。' : (subject?.label || locationName.textContent) + '。ドラッグで見回し、矢印キーで歩けます。');
+    if (firstFrame && state.posture === 'standing-up') announce('席を立っています。');
+    else if (firstFrame) announce(state.travel ? (subject?.label || (state.mode === 'inside' ? '庭' : '書斎')) + 'へ歩いています。途中で止められます。' : (subject?.label || locationName.textContent) + '。ドラッグで見回し、矢印キーで歩けます。');
   }
   function sendPadInput() {
     const directions = new Set(held.values());
@@ -72,7 +95,10 @@
   function refresh() { syncState(engine?.getState?.() || {}); }
   function fail(error) {
     if (disposed || failed) return;
-    failed = true;
+    failed = true; launching = false; session++;
+    stand.disabled = true; standLabel.textContent = '書斎を眺める';
+    entryNote.textContent = 'この環境では散策を起動できません。各ページはメニューからご覧いただけます。';
+    world.classList.remove('is-loading'); showHome(true);
     console.warn('The study remains available as a still image:', error);
     releasePad(); closePanels();
     world.classList.remove('is-live'); world.classList.add('is-fallback');
@@ -83,13 +109,26 @@
     engine?.dispose?.(); engine = undefined;
     announce('各ページは上のメニューからご覧いただけます。');
   }
+  function showHome(show) {
+    homePanel.hidden = !show; homeMenu.hidden = !show; homeIntro.hidden = !show; homeEntry.hidden = !show;
+    const skip = document.querySelector('.skip-link'); if (skip) skip.href = show ? '#home-menu' : '#walking-navigation';
+  }
+  function returnToStill() {
+    if (disposed || !wantsSeat || !engine || !state.seated) return;
+    wantsSeat = false; session++; releasePad(); closePanels();
+    const previous = engine; engine = undefined; firstFrame = false; previous.dispose?.();
+    world.classList.remove('is-live'); controls.hidden = true; help.hidden = true; caption.hidden = true;
+    canvas.tabIndex = -1; canvas.setAttribute('aria-hidden', 'true');
+    showHome(true); stand.disabled = false; standLabel.textContent = '席を立つ';
+    scheduleClock(); stand.focus({ preventScroll: true }); announce('書斎の席に戻りました。各ページをメニューからご覧いただけます。');
+  }
   function ready() {
     if (disposed || failed) return;
     firstFrame = true; canvas.tabIndex = 0; canvas.removeAttribute('aria-hidden');
-    world.classList.add('is-live'); controls.hidden = false; help.hidden = false;
+    world.classList.add('is-live'); world.classList.remove('is-loading'); showHome(false); controls.hidden = false; help.hidden = false;
     syncState();
   }
-  canvas.addEventListener('worldstate', event => syncState(event.detail));
+  canvas.addEventListener('worldstate', event => { if (engine || launching) syncState(event.detail); });
   travel.addEventListener('click', () => {
     if (!engine || travel.disabled) return;
     releasePad(); closePanels();
@@ -110,8 +149,14 @@
   });
   lighting.addEventListener('click', () => {
     if (!engine) return;
-    state.lightingMode = state.lightingMode === 'night' ? 'day' : 'night';
+    state.lightingMode = {auto:'day', day:'night', night:'auto'}[state.lightingMode];
     engine.setLightingMode?.(state.lightingMode); refresh();
+  });
+  seat.addEventListener('click', () => {
+    if (!engine || seat.disabled) return;
+    releasePad(); closePanels(); wantsSeat = true;
+    if (engine.sitDown?.() === false) wantsSeat = false;
+    refresh(); canvas.focus({ preventScroll: true });
   });
   byId('world-reset').addEventListener('click', () => {
     if (!engine) return;
@@ -170,31 +215,44 @@
     closePanels(); opened?.querySelector('summary')?.focus();
   });
   window.addEventListener('blur', releasePad);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) releasePad(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { releasePad(); clearTimeout(clockTimer); } else scheduleClock(); });
   reducedMotion.addEventListener?.('change', event => {
     if (motionChosen || failed || disposed) return;
     state.paused = event.matches; engine?.setPaused?.(state.paused); syncState();
   });
-  syncState();
-  let launchTimer;
-  const launchFrame = requestAnimationFrame(() => {
-    launchTimer = setTimeout(async () => {
-      if (disposed) return;
-      try {
-        const rendererContext = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
-        if (!rendererContext) { fail(new Error('WebGL2 is unavailable')); return; }
-        const { mountWorld } = await import('../scene/world.bundle.js?v=20261106-home2');
-        if (disposed) return;
-        const mounted = await mountWorld({ canvas, rendererContext, reducedMotion: reducedMotion.matches, onReady: ready, onError: fail, onSelect: id => syncState({ focus: id }) });
-        if (disposed || failed) { mounted?.dispose?.(); return; }
-        engine = mounted; engine?.setPaused?.(state.paused); engine?.setLightingMode?.('day');
-        refresh();
-      } catch (error) { fail(error); }
-    }, 0);
+  syncState(); scheduleClock();
+  stand.addEventListener('click', async () => {
+    if (disposed || failed || launching || engine) return;
+    launching = true; firstFrame = false; wantsSeat = false;
+    state = { ...state, seated: true, standing: false, posture: 'seated', lightingMode: 'auto', focus: 'room', travel: false };
+    const currentSession = ++session;
+    const active = () => !disposed && !failed && currentSession === session;
+    stand.disabled = true; standLabel.textContent = '書斎を開いています…';
+    world.classList.add('is-loading'); announce('書斎を開いています。各ページのメニューもご利用いただけます。');
+    let started = false;
+    function beginWalking() {
+      if (!active() || !engine || !firstFrame || started) return;
+      started = true; launching = false;
+      engine.setPaused?.(state.paused); engine.standUp?.(); refresh(); canvas.focus({ preventScroll: true });
+    }
+    try {
+      const rendererContext = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
+      if (!rendererContext) { fail(new Error('WebGL2 is unavailable')); return; }
+      const { mountWorld } = await import('../scene/world.bundle.js?v=20261107-seated1');
+      if (!active()) return;
+      const mounted = await mountWorld({ canvas, rendererContext, seated: true, autoTime: true, reducedMotion: reducedMotion.matches,
+        onReady: () => { if (active()) { ready(); beginWalking(); } },
+        onError: error => { if (active()) fail(error); },
+        onSelect: id => { if (active()) syncState({ focus: id }); },
+      });
+      if (!active()) { mounted?.dispose?.(); return; }
+      engine = mounted; refresh(); beginWalking();
+    } catch (error) { if (active()) fail(error); }
   });
   window.addEventListener('pagehide', event => {
-    releasePad(); engine?.stopMovement?.();
+    releasePad(); engine?.stopMovement?.(); clearTimeout(clockTimer);
     if (event.persisted) return;
-    disposed = true; cancelAnimationFrame(launchFrame); clearTimeout(launchTimer); engine?.dispose?.();
+    disposed = true; session++; clearTimeout(seatTimer); engine?.dispose?.();
   });
+  window.addEventListener('pageshow', () => { if (!disposed) scheduleClock(); });
 })();

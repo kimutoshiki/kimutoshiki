@@ -79,10 +79,10 @@ for(const x of [titleBounds.min.x+.015,0,titleBounds.max.x-.015])for(const y of 
 
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
 // The archived room still has physical wall labels. The current open world
-// supplies the same destinations as ordinary native links above its canvas.
+// supplies the same destinations as ordinary native links on its static homepage.
 let markup=[...html.matchAll(/<a\b([^>]*\bdata-wall-link="([^"]+)"[^>]*)>([\s\S]*?)<\/a>/g)];
 if(!markup.length){
-  const nativeNavigation=html.match(/<nav\b[^>]*\bid="navigation"[^>]*>[\s\S]*?<\/nav>/)?.[0]||'';
+  const nativeNavigation=html.match(/<nav\b[^>]*\bid="home-menu"[^>]*>[\s\S]*?<\/nav>/)?.[0]||'';
   markup=[...nativeNavigation.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map(([all,attributes,content])=>{
     const href=attributes.match(/\bhref="([^"]+)"/)?.[1],key=WALL_LINKS.find(link=>link.href===href)?.id;
     return [all,attributes,key,content];

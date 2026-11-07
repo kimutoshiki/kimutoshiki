@@ -2,6 +2,8 @@ import * as T from './world-three.js';
 import { createWorldLandscape } from './world-landscape.js';
 import { createHomeInterior } from './home-interior.js';
 import { createWalkNavigation } from './home-navigation.js';
+import { createGardenBoundary } from './garden-boundary.js';
+import { getWorldTime } from './world-time.js';
 import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS, worldFov } from './world-layout.js';
 
 const clamp = T.MathUtils.clamp;
@@ -10,7 +12,7 @@ const collision = ({ id, box }) => ({ id, minX: box.min.x, maxX: box.max.x, minZ
 const inHome = p => p.x > HOME.bounds.minX && p.x < HOME.bounds.maxX && p.z > HOME.bounds.minZ && p.z < HOME.bounds.maxZ;
 
 /** Start in the original study. Every trip outside is a physical, eye-level walk. */
-export async function mountWorld({ canvas, onReady = () => {}, onError = () => {}, onSelect = () => {}, onProgress = () => {}, rendererFactory, rendererContext, loadLandmarks, loadCat, reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false } = {}) {
+export async function mountWorld({ canvas, onReady = () => {}, onError = () => {}, onSelect = () => {}, onProgress = () => {}, rendererFactory, rendererContext, loadLandmarks, loadCat, seated: startSeated = true, autoTime = true, now = () => new Date(), reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false } = {}) {
   let renderer;
   try {
     renderer = rendererFactory ? rendererFactory(canvas) : new T.WebGLRenderer({ canvas, context: rendererContext, antialias: true, alpha: false, powerPreference: 'high-performance' });
@@ -18,7 +20,12 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     onError(error); return { getState: () => ({ webgl: false, catReady: false, landmarksReady: false }), dispose() {} };
   }
   let disposed = false, paused = reducedMotion, visible = !document.hidden, raf = 0, paintRaf = 0, paintTimer = 0, previousMs = 0, lastDraw = 0;
-  let landmarks, home, cat, landscape, surfaces, navigation, sky, shadowDirty = true, revision = 1, lightingMode = 'day', focusId = 'room', lastState = '', lastView = '', lastShadow = -1000;
+  let landmarks, home, cat, landscape, boundary, surfaces, navigation, sky, shadowDirty = true, revision = 1, lightingMode = autoTime ? 'auto' : 'day', focusId = 'room', lastState = '', lastView = '', lastShadow = -1000;
+  let posture = startSeated ? 'seated' : 'walking', postureTransition = null, pendingSeat = false;
+  let timeState, lastTimeSample = -Infinity, lastClockKey = '', lastLightKey = '';
+  const seatPosition = HOME.seated.position, seatTarget = HOME.seated.target;
+  const seatedSpawn = { x: seatPosition[0], z: seatPosition[2], yaw: Math.atan2(seatTarget[0]-seatPosition[0],seatTarget[2]-seatPosition[2]), pitch: Math.atan2(seatTarget[1]-seatPosition[1],Math.hypot(seatTarget[0]-seatPosition[0],seatTarget[2]-seatPosition[2])) };
+  const seatLook = { x: seatTarget[0], y: seatTarget[1], z: seatTarget[2] };
   let width = 1, height = 1, down = null, dragging = null, moved = false, wheelInputUntil = 0;
   const abort = new AbortController(), listeners = [], targets = new Map(), pressed = new Set(), activePointers = new Set();
   const scene = new T.Scene(), camera = new T.PerspectiveCamera(62, 1, .035, 700);
@@ -30,15 +37,12 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     scene.add(home.group); for (const target of home.targets || []) targets.set(target.id, target); cat = home.cat;
     if (cat) { cat.group.scale.setScalar(1 / (1.8 * HOME.scale)); cat.group.userData.targetId = 'cat'; }
     landscape = createWorldLandscape(T); scene.add(landscape.group);
-    navigation = createWalkNavigation({ camera, bounds: WORLD_BOUNDS, obstacles: [...[...(home.collisions || []), ...(landscape.collisions || [])].map(collision), ...LANDMARK_RESERVATIONS], spawn: HOME.spawn, eyeHeight: HOME.eyeHeight, radius: .20, speed: 2.4, waypoints: WAYPOINTS });
-  } catch (error) { home?.dispose?.(); landscape?.dispose?.(); renderer.dispose(); onError(error); return { getState: () => ({ webgl: false, catReady: false, landmarksReady: false }), dispose() {} }; }
+    boundary = createGardenBoundary(T, { bounds: WORLD_BOUNDS }); scene.add(boundary.group);
+    navigation = createWalkNavigation({ camera, bounds: WORLD_BOUNDS, obstacles: [...[...(home.collisions || []), ...(landscape.collisions || []), ...(boundary.collisions || [])].map(collision), ...LANDMARK_RESERVATIONS], spawn: startSeated ? seatedSpawn : HOME.spawn, eyeHeight: startSeated ? seatPosition[1] : HOME.eyeHeight, radius: .20, speed: 2.4, waypoints: WAYPOINTS });
+  } catch (error) { home?.dispose?.(); landscape?.dispose?.(); boundary?.dispose?.(); renderer.dispose(); onError(error); return { getState: () => ({ webgl: false, catReady: false, landmarksReady: false }), dispose() {} }; }
   scene.fog = new T.FogExp2('#dce0d1', .00165);
   const skyCanvas = document.createElement('canvas'); skyCanvas.width = 256; skyCanvas.height = 128;
-  const skyContext = skyCanvas.getContext('2d'), gradient = skyContext.createLinearGradient(0, 0, 0, 128);
-  gradient.addColorStop(0, '#91adb5'); gradient.addColorStop(.43, '#cfdbd7'); gradient.addColorStop(.51, '#eee9da'); gradient.addColorStop(.65, '#8f9b7c'); gradient.addColorStop(1, '#596449');
-  skyContext.fillStyle = gradient; skyContext.fillRect(0, 0, 256, 128);
-  sky = new T.CanvasTexture(skyCanvas); sky.mapping = T.EquirectangularReflectionMapping; sky.colorSpace = T.SRGBColorSpace;
-  scene.background = sky; scene.environment = sky; scene.environmentIntensity = .45;
+  const skyContext = skyCanvas.getContext('2d');
   renderer.outputColorSpace = T.SRGBColorSpace; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false;
   const sun = new T.DirectionalLight('#ffe4bd', 2.6); sun.position.set(-38, 55, -12); sun.target.position.set(0, 0, 35); sun.castShadow = true;
@@ -54,12 +58,50 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   sun.shadow.autoUpdate = false; windowLight.shadow.autoUpdate = false;
   scene.add(sun, sun.target, hemisphere, ambient, roomFill, windowLight, windowLight.target);
 
+  function applyTime(force=false) {
+    const snapshot=getWorldTime(now(),lightingMode);
+    timeState=snapshot;
+    if(force || snapshot.secondKey!==lastClockKey) {
+      lastClockKey=snapshot.secondKey;
+      home.updateClock?.(snapshot);landmarks?.updateClock?.(snapshot);
+      if(home.clock) {
+        if(home.clock.hour)home.clock.hour.rotation.z=snapshot.clockAngles.hour;
+        if(home.clock.minute)home.clock.minute.rotation.z=snapshot.clockAngles.minute;
+        if(home.clock.second)home.clock.second.rotation.z=snapshot.clockAngles.second;
+        home.clock.group.userData.localTime=snapshot.label;
+        home.clock.group.userData.timeZone=snapshot.timeZone;
+      }
+      revision++;
+    }
+    if(force || snapshot.lightingKey!==lastLightKey) {
+      lastLightKey=snapshot.lightingKey;
+      sun.intensity=snapshot.sun.intensity;sun.color.set(snapshot.sun.color);
+      sun.position.fromArray(snapshot.sun.position);
+      hemisphere.intensity=snapshot.hemisphere.intensity;
+      hemisphere.color.set(snapshot.hemisphere.skyColor);hemisphere.groundColor.set(snapshot.hemisphere.groundColor);
+      ambient.intensity=snapshot.ambientIntensity;ambient.color.set(snapshot.ambientColor);
+      roomFill.intensity=snapshot.roomFillIntensity;windowLight.intensity=snapshot.windowLightIntensity;
+      if(home.lampLight)home.lampLight.intensity=snapshot.deskLampIntensity;
+      scene.environmentIntensity=snapshot.environmentIntensity;scene.backgroundIntensity=snapshot.backgroundIntensity;
+      renderer.toneMappingExposure=snapshot.exposure;scene.fog.color.set(snapshot.fogColor);
+      const skyGradient=skyContext.createLinearGradient(0,0,0,skyCanvas.height);
+      for(const stop of snapshot.skyStops)skyGradient.addColorStop(stop.offset,stop.color);
+      skyContext.fillStyle=skyGradient;skyContext.fillRect(0,0,skyCanvas.width,skyCanvas.height);
+      // Three caches equirectangular cube maps and PMREM by texture identity;
+      // changing CanvasTexture.version alone leaves the previous sky on screen.
+      // A lighting change replaces that identity and frees both cached maps.
+      const previousSky=sky;
+      sky=new T.CanvasTexture(skyCanvas);sky.mapping=T.EquirectangularReflectionMapping;sky.colorSpace=T.SRGBColorSpace;
+      scene.background=sky;scene.environment=sky;previousSky?.dispose();
+      boundary.setNightFactor(snapshot.nightMix);invalidate();
+    }
+  }
   function state() {
     const view = navigation.getState();
-    return { webgl: true, catReady: !!cat?.model, landmarksReady: !!landmarks, focus: focusId, paused, lightingMode, mode: inHome(view.position) ? 'inside' : 'outside', travel: !!view.routeActive, position: { ...view.position } };
+    return { webgl: true, catReady: !!cat?.model, landmarksReady: !!landmarks, focus: focusId, paused, lightingMode, mode: inHome(view.position) ? 'inside' : 'outside', travel: !!view.routeActive || !!postureTransition, seated: posture === 'seated', standing: posture === 'walking' || posture === 'returning-to-seat', posture, time: timeState, position: { ...view.position } };
   }
   function emit(force = false) {
-    const value = state(), key = [value.catReady, value.landmarksReady, value.focus, value.paused, value.lightingMode, value.mode, value.travel].join(',');
+    const value = state(), key = [value.catReady, value.landmarksReady, value.focus, value.paused, value.lightingMode, value.mode, value.travel, value.posture, value.time?.label, value.time?.phase].join(',');
     if (force || key !== lastState) { lastState = key; canvas.dispatchEvent(new CustomEvent('worldstate', { detail: value })); }
   }
   function resize() {
@@ -71,7 +113,23 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (disposed || !visible) return;
     const delta = previousMs ? Math.min((ms - previousMs) / 1000, .075) : .016; previousMs = ms;
     if (wheelInputUntil && ms > wheelInputUntil) { wheelInputUntil = 0; navigation.setInput({ forward: 0, right: 0 }); }
-    const view = navigation.update(delta), catMoved = cat?.update(delta, !paused);
+    if (ms-lastTimeSample>=1000) { lastTimeSample=ms; applyTime(); }
+    let view = navigation.update(delta);
+    if (pendingSeat && !view.routeActive) {
+      pendingSeat=false;
+      if(Math.hypot(view.position.x-seatPosition[0],view.position.z-seatPosition[2])<.03) beginPosture('sitting-down',seatPosition[1]);
+      else posture='walking';
+    }
+    if (postureTransition) {
+      const transition=postureTransition;transition.elapsed=Math.min(transition.duration,transition.elapsed+delta);
+      const t=transition.elapsed/transition.duration,ease=t*t*(3-2*t);
+      navigation.setEyeHeight(transition.from+(transition.to-transition.from)*ease);
+      const nextPitch=transition.fromPitch+(transition.toPitch-transition.fromPitch)*ease;
+      navigation.rotate(0,nextPitch-navigation.getState().pitch);
+      if(t===1) { posture=transition.kind==='standing-up'?'walking':'seated';postureTransition=null; }
+      view=navigation.getState();
+    }
+    const catMoved = cat?.update(delta, !paused);
     home.update?.(delta, !paused);
     const key = [revision, view.position.x, view.position.y, view.position.z, view.yaw, view.pitch, width, height].join(',');
     if (force || catMoved || key !== lastView) {
@@ -88,13 +146,29 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function animate(ms) { if (disposed || !visible) return; raf = requestAnimationFrame(animate); if (ms - lastDraw < 32) return; lastDraw = ms; draw(ms); }
   function walk(points, focus, look) {
-    if (disposed) return false;
+    if (disposed || posture === 'seated' || postureTransition) return false;
+    pendingSeat=false;posture='walking';
     const accepted = navigation.walkRoute(points, look);
     if (accepted) { focusId = focus; pressed.clear(); revision++; emit(true); }
     return accepted;
   }
+  function beginPosture(kind,to) {
+    navigation.stop();pendingSeat=false;pressed.clear();posture=kind;
+    const current=navigation.getState();
+    postureTransition={kind,from:current.position.y,to,fromPitch:current.pitch,toPitch:Math.atan2(seatTarget[1]-to,Math.hypot(seatTarget[0]-current.position.x,seatTarget[2]-current.position.z)),elapsed:0,duration:.9};
+    revision++;emit(true);
+  }
+  function standUp() {
+    if(disposed || posture!=='seated')return false;
+    beginPosture('standing-up',HOME.eyeHeight);return true;
+  }
+  function sitDown() {
+    if(disposed || posture==='seated' || postureTransition)return false;
+    const accepted=walk([{x:seatedSpawn.x,z:seatedSpawn.z}],'room',seatLook);
+    if(accepted){pendingSeat=true;posture='returning-to-seat';emit(true);}return accepted;
+  }
   function leave() { cat?.useRoomDetail?.(); return walk([{ x: HOME.door.x, z: 4.8 }, { x: HOME.door.x, z: 9 }], 'outside', { x: 0, y: 6.5, z: 40 }); }
-  function returnHome() { cat?.useRoomDetail?.(); return walk([{ x: HOME.spawn.x, z: HOME.spawn.z, yaw: HOME.spawn.yaw, pitch: HOME.spawn.pitch }], 'room', { x: HOME.target[0], y: HOME.target[1], z: HOME.target[2] }); }
+  function returnHome() { cat?.useRoomDetail?.(); return walk([{ x: seatedSpawn.x, z: seatedSpawn.z }], 'room', seatLook); }
   function goToLandmark(id) {
     cat?.useRoomDetail?.();
     const key = id.replace(/^landmark-/, ''), site = LANDMARK_SITES.find(s => s.key === key); if (!site) return false;
@@ -110,9 +184,9 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     }
     return goToLandmark(id);
   }
-  function setMovement(input = {}) { navigation.setInput(input); if (input.forward || input.right) { focusId = inHome(navigation.getState().position) ? 'room' : 'outside'; revision++; emit(); } }
-  function stopMovement() { navigation.stop(); pressed.clear(); wheelInputUntil = 0; revision++; emit(); }
-  function look(dx, dy) { navigation.rotate(dx, dy); revision++; }
+  function setMovement(input = {}) { if (posture === 'seated' || postureTransition) return; if(input.forward || input.right) {pendingSeat=false;posture='walking';} navigation.setInput(input); if (input.forward || input.right) { focusId = inHome(navigation.getState().position) ? 'room' : 'outside'; revision++; emit(); } }
+  function stopMovement() { navigation.stop(); pendingSeat=false; if(posture==='returning-to-seat')posture='walking'; pressed.clear(); wheelInputUntil = 0; revision++; emit(); }
+  function look(dx, dy) { if(posture==='seated'||postureTransition)return;pendingSeat=false;posture='walking'; navigation.rotate(dx, dy); revision++; }
   function zoom(delta) { if (!Number.isFinite(delta) || delta === 0) return; setMovement({ forward: delta < 0 ? 1 : -1, right: 0 }); wheelInputUntil = performance.now() + 150; }
   function select(event) {
     const rect = canvas.getBoundingClientRect(); pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1); raycaster.setFromCamera(pointer, camera);
@@ -127,7 +201,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     onSelect(id);
   }
   listen(canvas, 'pointerdown', event => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || posture === 'seated' || postureTransition) return;
     canvas.focus?.({ preventScroll: true }); canvas.setPointerCapture?.(event.pointerId);
     activePointers.add(event.pointerId); if (activePointers.size > 1) { moved = true; return; }
     if (dragging) return; dragging = { id: event.pointerId, x: event.clientX, y: event.clientY }; down = { ...dragging }; moved = false;
@@ -145,7 +219,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     dragging = down = null; if (cancel) stopMovement();
   }
   listen(canvas, 'pointerup', event => endPointer(event)); listen(canvas, 'pointercancel', event => endPointer(event, true)); listen(canvas, 'lostpointercapture', event => endPointer(event, true));
-  listen(canvas, 'wheel', event => { if (event.ctrlKey || event.metaKey) return; event.preventDefault(); zoom(clamp(event.deltaY, -300, 300)); }, { passive: false });
+  listen(canvas, 'wheel', event => { if (event.ctrlKey || event.metaKey || posture === 'seated' || postureTransition) return; event.preventDefault(); zoom(clamp(event.deltaY, -300, 300)); }, { passive: false });
   const keyMovement = () => setMovement({ forward: Number(pressed.has('w') || pressed.has('arrowup')) - Number(pressed.has('s') || pressed.has('arrowdown')), right: Number(pressed.has('d') || pressed.has('arrowright')) - Number(pressed.has('a') || pressed.has('arrowleft')), sprint: pressed.has('shift') });
   listen(canvas, 'keydown', event => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -156,12 +230,12 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   });
   listen(window, 'keyup', event => { if (pressed.delete(event.key.toLowerCase())) { keyMovement(); revision++; } });
   listen(window, 'blur', stopMovement); listen(canvas, 'blur', stopMovement); listen(window, 'resize', resize);
-  listen(document, 'visibilitychange', () => { visible = !document.hidden; stopMovement(); cancelAnimationFrame(raf); previousMs = 0; if (visible && !disposed) { revision++; raf = requestAnimationFrame(animate); } });
+  listen(document, 'visibilitychange', () => { visible = !document.hidden; stopMovement(); cancelAnimationFrame(raf); previousMs = 0; lastTimeSample=-Infinity; if (visible && !disposed) { revision++; raf = requestAnimationFrame(animate); } });
   function dispose() {
-    if (disposed) return; disposed = true; abort.abort(); cancelAnimationFrame(raf); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose(); surfaces?.dispose(); home.dispose?.(); landmarks?.dispose(); landscape.dispose(); sky.dispose(); renderer.dispose();
+    if (disposed) return; disposed = true; abort.abort(); cancelAnimationFrame(raf); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose(); surfaces?.dispose(); home.dispose?.(); landmarks?.dispose(); landscape.dispose(); boundary.dispose(); sky.dispose(); renderer.dispose();
   }
   listen(canvas, 'webglcontextlost', event => { event.preventDefault(); dispose(); onError(new Error('World graphics context lost')); });
-  resize(); draw(0, true); onReady(); onProgress({ phase: 'home' }); emit(true); raf = requestAnimationFrame(animate);
+  applyTime(true); resize(); draw(0, true); onReady(); onProgress({ phase: 'home' }); emit(true); raf = requestAnimationFrame(animate);
   async function defaultLoadCat(tier, options) { const { loadWorldCat } = await import('./world-cat-loader.js'); return loadWorldCat(tier, options); }
   const afterPaint = () => new Promise(resolve => { paintRaf = requestAnimationFrame(() => { paintRaf = 0; paintTimer = setTimeout(() => { paintTimer = 0; resolve(); }, 0); }); });
   afterPaint().then(async () => {
@@ -173,9 +247,9 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       const factory = loadLandmarks || (await import('./world-landmarks.js')).createWorldLandmarks;
       const result = await factory(T);
       if (disposed) { result.dispose?.(); return; }
-      landmarks = result; scene.add(result.group); result.targets.forEach(target => targets.set(target.id, target));
+      landmarks = result; result.updateClock?.(timeState); scene.add(result.group); result.targets.forEach(target => targets.set(target.id, target));
       // Footprints include every structural protrusion but never force the eye up.
-      navigation.setObstacles([...[...(home.collisions || []), ...(landscape.collisions || [])].map(collision), ...result.targets.map(target => collision({ id: target.id, box: new T.Box3().setFromObject(target.object) }))]);
+      navigation.setObstacles([...[...(home.collisions || []), ...(landscape.collisions || []), ...(boundary.collisions || [])].map(collision), ...result.targets.map(target => collision({ id: target.id, box: new T.Box3().setFromObject(target.object) }))]);
       invalidate(); draw(performance.now(), true); emit(); onProgress({ phase: 'architecture' });
       import('./surface-materials.js').then(({ loadSurfaceMaterials }) => {
         if (disposed) return; surfaces = loadSurfaceMaterials(T, scene, { anisotropy: renderer.capabilities?.getMaxAnisotropy?.() || 1, onLoad: invalidate });
@@ -188,13 +262,11 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     } catch (error) { if (!disposed && error.name !== 'AbortError') console.warn('Room cat unavailable:', error); }
   }).catch(error => { if (!disposed) onError(error); });
   return {
-    getState: state, focus, leave, returnHome, goToLandmark, reset: returnHome, zoom, setMovement, look, stopMovement,
+    getState: state, standUp, sitDown, focus, leave, returnHome, goToLandmark, reset: returnHome, zoom, setMovement, look, stopMovement,
     setPaused(value) { paused = !!value; revision++; emit(); },
     setLightingMode(value) {
-      if (!['day', 'night', 'auto'].includes(value)) return; lightingMode = value;
-      const night = value === 'night' || value === 'auto' && (new Date().getHours() < 6 || new Date().getHours() >= 19);
-      sun.intensity = night ? .45 : 2.6; sun.color.set(night ? '#b9cae4' : '#ffe4bd'); hemisphere.intensity = night ? .55 : 1.15; ambient.intensity = night ? .23 : .30; roomFill.intensity = night ? 3 : 2.3; windowLight.intensity = night ? .2 : .65;
-      scene.environmentIntensity = night ? .22 : .45; scene.backgroundIntensity = night ? .24 : 1; renderer.toneMappingExposure = night ? 1.02 : 1.12; scene.fog.color.set(night ? '#556457' : '#dce0d1'); invalidate(); emit();
+      if (!['day','night','auto'].includes(value)) return;
+      lightingMode=value;applyTime(true);emit();
     },
     dispose,
   };

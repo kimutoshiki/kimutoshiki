@@ -11,6 +11,7 @@ import { batchStaticMeshes } from '../js/models/model-utils.js';
 
 import { surface, prepareBoxSurfaceUVs, ensureSurfaceUV, SURFACES } from './surface-materials.js';
 import { mergeStaticDraws, cacheStaticLocalMatrices, staticDrawStats } from './static-batching.js';
+import { captureLandmarkClocks, updateLandmarkClocks } from './landmark-clocks.js';
 
 const TABLE_Y = 2.164;
 const DISPLAY_WIDTH = .85;
@@ -101,7 +102,7 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
   if (waitForFonts && typeof document !== 'undefined' && document.fonts?.ready) await document.fonts.ready;
   const group = new T.Group();
   group.name = 'Original Waseda and Karatsu desk miniatures';
-  const targets = [];
+  const targets = [], clocks = [];
   const stats = { models: [], geometryPolicy: 'Original geometry and uniform scale; independently separable context removed.' };
   const wood = new T.MeshStandardMaterial({ color: 0x513725, roughness: .43 });
   surface(wood, 'walnut', { tint: '#a58e75', roughness: .43, bumpScale: .004 });
@@ -122,9 +123,12 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
     const before = countGeometry(model.group);
     layout.extract(model);
     const retained = countGeometry(model.group);
+    const modelClocks = captureLandmarkClocks(model.group);
+    clocks.push(...modelClocks);
+    const movingHands = modelClocks.flatMap(clock => [clock.hour, clock.minute]);
     // Use the site's existing batching helper after extraction. It keeps source
     // geometry and materials while preserving every nested mesh transform.
-    batchStaticMeshes(T, model.group);
+    batchStaticMeshes(T, model.group, movingHands);
     const display = new T.Group();
     display.name = `desk-${layout.key}`;
     display.position.set(layout.x, TABLE_Y, layout.z);
@@ -184,21 +188,22 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
     object.geometry.userData.surfaceUVPrepared = true;
   });
   stats.performance = { before: staticDrawStats(group), models: [] };
+  const protectedHands = new Set(clocks.flatMap(clock => [clock.hour, clock.minute]));
   if (optimize) {
     for (const display of group.children) {
       const mount = display.children.find(child => child.userData.inspectionSource);
       const architecture = mount.children[0].children[0];
-      const clocks = new Set();
-      architecture.traverse(object => { if (/^Clock face [1-4]$/.test(object.name)) clocks.add(object); });
+      const clockFaces = new Set();
+      architecture.traverse(object => { if (/^Clock face [1-4]$/.test(object.name)) clockFaces.add(object); });
       stats.performance.models.push({ assetId: display.userData.landmarkId,
-        architecture: mergeStaticDraws(T, architecture, { byParent: false, preserveGroups: clocks }),
+        architecture: mergeStaticDraws(T, architecture, { byParent: false, preserveGroups: clockFaces, protectedObjects: protectedHands }),
         display: mergeStaticDraws(T, display, { skipRoots: new Set([mount]) }),
       });
     }
-    cacheStaticLocalMatrices(group);
+    cacheStaticLocalMatrices(group, { movable: new Set([group, ...protectedHands]) });
   }
   stats.performance.after = staticDrawStats(group);
   stats.total = countGeometry(group);
   group.userData.landmarkStats = stats;
-  return { group, targets, stats };
+  return { group, targets, stats, clocks, updateClock(snapshot) { return updateLandmarkClocks(clocks, snapshot); } };
 }

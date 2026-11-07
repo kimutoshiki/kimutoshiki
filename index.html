@@ -14,38 +14,55 @@
 <meta property="og:title" content="木村紀喜のホームページ">
 <meta property="og:description" content="唐津から早稲田へ。小学校教育の研究と実践、日々の活動を紹介します。">
 <meta property="og:url" content="https://kimutoshiki.com/">
-<meta property="og:image" content="https://kimutoshiki.com/images/world/poster.webp">
-<meta property="og:image:width" content="1600">
-<meta property="og:image:height" content="1000">
+<meta property="og:image" content="https://kimutoshiki.com/images/world/seated-day.webp">
+<meta property="og:image:width" content="1400">
+<meta property="og:image:height" content="1100">
 <meta property="og:image:alt" content="木の机と唐津・早稲田のモニュメント、猫のいる木村紀喜の書斎">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="alternate icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="css/world.css?v=20261106-home2">
+<link rel="stylesheet" href="css/world.css?v=20261107-seated1">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://kimutoshiki.com/#website","url":"https://kimutoshiki.com/","name":"木村紀喜のホームページ","alternateName":["木村紀喜","Toshiki Kimura"],"inLanguage":"ja","publisher":{"@id":"https://kimutoshiki.com/#person"}},{"@type":"Person","@id":"https://kimutoshiki.com/#person","name":"木村紀喜","alternateName":["木村 紀喜","Toshiki Kimura"],"url":"https://kimutoshiki.com/","description":"早稲田大学教職大学院で小学校教育、授業づくり、生成AIの教育利用を研究。佐賀県唐津市出身。","sameAs":["https://github.com/kimutoshiki"]}]}</script>
 </head>
 <body>
-<a class="skip-link" href="#navigation">ページを選ぶ</a>
+<a class="skip-link" href="#home-menu">ページを選ぶ</a>
 <main class="world" id="main">
 <div class="world-stage" aria-hidden="true">
 <picture class="world-poster">
-<source media="(max-width:650px)" srcset="images/world/poster-mobile.webp">
-<img src="images/world/poster.webp" width="1600" height="1000" alt="" fetchpriority="high" decoding="async">
+<source media="(max-width:650px)" srcset="images/world/seated-day-mobile.webp">
+<img src="images/world/seated-day.webp" width="1400" height="1100" alt="" fetchpriority="high" decoding="async">
 </picture>
 </div>
 <canvas class="world-canvas" id="world-canvas" tabindex="-1" aria-hidden="true" aria-label="猫のいる書斎から庭へ歩ける3D空間。ドラッグで見回し、WASDキーか矢印キーで歩けます。" aria-describedby="world-help"></canvas>
 <div class="world-shade" aria-hidden="true"></div>
 <header class="world-header">
 <a class="world-mark" href="./"><h1 id="world-title">木村 紀喜<span lang="en">TOSHIKI KIMURA</span></h1></a>
-<nav class="world-nav" id="navigation" aria-label="ページ">
+<nav class="world-nav" id="walking-navigation" aria-label="ページ">
 <a href="profile.html">プロフィール</a>
 <a href="research.html">研究・活動</a>
 <a href="blog.html">ブログ</a>
 <a href="photos.html">写真</a>
 <a href="contact.html">お問い合わせ</a>
 </nav>
+<div class="home-clock"><span>日本時間</span><time id="world-clock" aria-label="現在の日本時間">--:--</time><span id="world-time-phase">書斎にて</span></div>
 </header>
+<section class="home-panel" id="home-panel" aria-label="ホームページのメニュー">
+<div class="home-intro" id="home-intro"><p class="home-eyebrow" lang="en">FROM KARATSU, AT WASEDA</p><h2>書斎へ、ようこそ。</h2><p>唐津から早稲田へ。<br>小学校教育の研究と実践、<br>日々の学びを綴っています。</p></div>
+<nav class="home-menu" id="home-menu" tabindex="-1" aria-label="各ページへ">
+<a href="profile.html"><span class="menu-number">01</span><span>プロフィール<small>経歴・学び・取得資格</small></span><span aria-hidden="true">↗</span></a>
+<a href="research.html"><span class="menu-number">02</span><span>研究・活動<small>授業づくりと教育実践</small></span><span aria-hidden="true">↗</span></a>
+<a href="blog.html"><span class="menu-number">03</span><span>ブログ<small>日々の学びと活動の記録</small></span><span aria-hidden="true">↗</span></a>
+<a href="photos.html"><span class="menu-number">04</span><span>写真<small>旅先と日々の風景</small></span><span aria-hidden="true">↗</span></a>
+<a href="contact.html"><span class="menu-number">05</span><span>お問い合わせ<small>研究・教育のご相談</small></span><span aria-hidden="true">↗</span></a>
+</nav>
+<div class="home-memories" aria-label="写真からたどる、ゆかりの場所">
+<a href="photos.html"><img src="images/home/waseda.webp" width="320" height="240" alt="" decoding="async"><span>早稲田</span></a>
+<a href="blog.html"><img src="images/home/kyukeisha.webp" width="320" height="180" alt="" decoding="async"><span>東京唐津くんち・久敬社</span></a>
+</div>
+<p class="home-panel-credit" lang="en">© Toshiki Kimura</p>
+</section>
+<div class="home-entry" id="home-entry"><p>この書斎から、唐津と早稲田の庭へ。</p><button type="button" id="world-stand"><span id="world-stand-label">席を立つ</span><span aria-hidden="true">↗</span></button><p class="home-entry-note" id="world-entry-note">机の先に広がる世界を、歩いてみる。</p></div>
 <div class="world-location"><span class="location-dot" aria-hidden="true"></span><span id="world-location-name">書斎</span><span class="location-divider" aria-hidden="true"></span><span lang="en">KARATSU &amp; WASEDA</span></div>
 <p class="visually-hidden">佐賀県唐津市出身。早稲田大学で小学校教育の研究と実践に取り組んでいます。木の机と猫のいる書斎から外へ出ると、唐津城、旧唐津銀行、大隈講堂、大隈重信像があります。</p>
 <aside class="world-caption" id="world-caption" aria-label="行き先" hidden>
@@ -81,7 +98,8 @@
 <p class="places-heading">操作と設定</p>
 <p class="world-help" id="world-help" hidden>ドラッグで見回す<br><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> または矢印キーで歩く<br>画面の矢印を押し続けても歩けます。<br><kbd>Esc</kbd>で移動を止めます。</p>
 <button class="setting-row" id="world-motion" type="button" aria-pressed="false"><span>猫の動き</span><span id="world-motion-label">動いています</span></button>
-<button class="setting-row" id="world-lighting" type="button"><span>部屋と庭の光</span><span id="world-lighting-label">昼</span></button>
+<button class="setting-row" id="world-lighting" type="button"><span>部屋と庭の光</span><span id="world-lighting-label">現在の時刻</span></button>
+<button class="setting-row" id="world-seat" type="button"><span>席に戻って座る</span><span aria-hidden="true">↩</span></button>
 <button class="setting-row" id="world-reset" type="button"><span>書斎に戻る</span><span aria-hidden="true">↩</span></button>
 </div>
 </details>
@@ -91,8 +109,8 @@
 <p class="world-copyright">© <span lang="en">Toshiki Kimura</span></p>
 </footer>
 <p class="visually-hidden" id="world-status" role="status" aria-live="polite"></p>
-<noscript><p class="static-note">各ページは上のメニューからご覧いただけます。</p></noscript>
+<noscript><style>.home-clock,#world-stand,.home-entry-note{display:none}</style></noscript>
 </main>
-<script src="js/world-ui.js?v=20261106-home2" defer></script>
+<script src="js/world-ui.js?v=20261107-seated1" defer></script>
 </body>
 </html>

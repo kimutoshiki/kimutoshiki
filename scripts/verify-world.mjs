@@ -12,14 +12,17 @@ import { createKaratsuBank } from '../js/models/karatsu-bank.js';
 import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS } from '../scene/world-layout.js';
 import { mountWorld } from '../scene/world.js';
 import { createWalkNavigation } from '../scene/home-navigation.js';
+import { getWorldTime } from '../scene/world-time.js';
+import { createGardenBoundary } from '../scene/garden-boundary.js';
 import { loadTabbyFixture } from './helpers/load-tabby-fixture.mjs';
 
 // This test retains the actual authored geometry, materials, bounds and rays.
 // Canvas pixels are inert; it makes no claim about browser/GPU rendering.
+const linearGradients = [];
 const context = new Proxy({}, {
   get(object, key) {
     if (key === 'createImageData' || key === 'getImageData') return (w, h) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) });
-    if (key === 'createLinearGradient' || key === 'createRadialGradient') return () => ({ addColorStop() {} });
+    if (key === 'createLinearGradient' || key === 'createRadialGradient') return () => { const gradient = { stops: [], addColorStop(offset,color) { this.stops.push({offset,color}); } }; if (key === 'createLinearGradient') linearGradients.push(gradient); return gradient; };
     if (key === 'measureText') return value => ({ width: value.length * 10 });
     return object[key] ?? (() => {});
   },
@@ -73,11 +76,53 @@ function geometrySummary(root, relativeTo = root) {
 function close(actual, expected, tolerance, message) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${message}: ${actual} vs ${expected}`);
 }
+function assertAuditoriumClockFaces(root,time,label) {
+  assert.ok(root,'The actual auditorium remains available for '+label);
+  root.updateWorldMatrix(true,true);
+  for(let side=1;side<=4;side++) {
+    const face=root.getObjectByName('Clock face '+side);assert.ok(face,'Retained clock face '+side+' for '+label);
+    assert.equal(face.userData.localTime,time.label,'Every auditorium face shows the same Japan time');
+    assert.equal(face.userData.clockTimeZone,'Asia/Tokyo');
+    const hands=face.children.filter(object=>object.userData.worldClockHand);
+    assert.equal(hands.length,2,'Both original hands survive static batching on '+label+' face '+side);
+    for(const [kind,length] of [['hour',.55],['minute',.78]]) {
+      const hand=hands.find(object=>object.userData.worldClockHand===kind);
+      assert.ok(hand?.isMesh&&!hand.isInstancedMesh,'The '+kind+' hand remains an individually movable authored mesh');
+      close(hand.scale.y,length,1e-10,'Original clock hand length is preserved');
+      const base=face.worldToLocal(hand.localToWorld(new T.Vector3(0,-.5,0)));
+      const tip=face.worldToLocal(hand.localToWorld(new T.Vector3(0,.5,0)));
+      const angle=time.clockAngles[kind],expectedTip=new T.Vector3(-Math.sin(angle)*length,Math.cos(angle)*length,.1);
+      assert.ok(base.distanceTo(new T.Vector3(0,0,.1))<1e-6,'Actual '+kind+' hand base stays at the dial centre: '+label+' face '+side);
+      assert.ok(tip.distanceTo(expectedTip)<1e-6,'Actual '+kind+' hand tip follows clockwise Japan time, not rotation around its own centre: '+label+' face '+side);
+      assert.ok(Math.hypot(tip.x,tip.y)<1.1&&tip.z>.07,'Moving hand stays within and in front of the original opaque dial');
+    }
+  }
+}
 const landscape = createWorldLandscape(T);
 assert.equal(typeof landscape.then, 'undefined', 'Ground geometry is synchronous');
 assert.deepEqual(requests, [], 'Ground construction never requests external assets');
 assert.ok(landscape.stats.triangles < 200000 && landscape.stats.drawCalls < 24 && landscape.stats.geometryBytes < 250000, 'Initial garden geometry has bounded triangle/draw budgets');
 assert.ok(!landscape.group.children.some(object => object.isLight), 'Garden geometry adds no lighting passes');
+// Chromium visual QA caught the horizon-sized two-triangle grass plane
+// covering the raised home floor in downward views. Guard the actual world
+// triangle size used by the confirmed fix; ray support alone misses that bug.
+const horizonGround=landscape.group.getObjectByName('Unbroken ground to the horizon');
+assert.ok(horizonGround?.isMesh,'The continuous horizon ground remains actual geometry');
+horizonGround.updateWorldMatrix(true,false);
+const groundPositions=horizonGround.geometry.getAttribute('position'),groundIndices=horizonGround.geometry.index;
+const groundVertices=[new T.Vector3(),new T.Vector3(),new T.Vector3()];let maximumGroundEdge=0;
+const groundIndexCount=groundIndices?.count??groundPositions.count;
+for(let i=0;i<groundIndexCount;i+=3) {
+  for(let vertex=0;vertex<3;vertex++)groundVertices[vertex].fromBufferAttribute(groundPositions,groundIndices?groundIndices.getX(i+vertex):i+vertex).applyMatrix4(horizonGround.matrixWorld);
+  for(let vertex=0;vertex<3;vertex++)maximumGroundEdge=Math.max(maximumGroundEdge,groundVertices[vertex].distanceTo(groundVertices[(vertex+1)%3]));
+}
+assert.ok(maximumGroundEdge<=80,'Horizon ground uses short triangles to preserve floor/rug depth in downward views: '+maximumGroundEdge+'m');
+const horizonBounds=new T.Box3().setFromObject(horizonGround),horizonSize=horizonBounds.getSize(new T.Vector3());
+assert.ok([...horizonBounds.min.toArray(),...horizonBounds.max.toArray()].every(Number.isFinite),'Horizon ground bounds remain finite');
+close(horizonSize.x,1800,1e-6,'Ground subdivision retains the full horizon width');close(horizonSize.z,1800,1e-6,'Ground subdivision retains the full horizon depth');
+close(horizonBounds.min.y,-.008,1e-7,'Subdivided ground stays below the house floor');close(horizonBounds.max.y,-.008,1e-7,'Subdivided ground remains flat');
+report.horizonGround={triangles:groundIndexCount/3,maximumEdgeMetres:maximumGroundEdge};
+checks.push('Actual horizon ground triangles stay below 80 m edges, guarding the browser-confirmed floor/rug depth fix');
 const raycaster = new T.Raycaster(), down = new T.Vector3(0, -1, 0);
 function groundAt(root, x, z, height = 1) {
   root.updateWorldMatrix(true, true);
@@ -225,7 +270,7 @@ assert.deepEqual(report.sourceSha256, {
   'js/models/karatsu-castle.js': 'd11944352081b6e4585063904ced21526d996df60eda55dea68c058b6052d620',
   'js/models/karatsu-bank.js': '8fd587c485105b64ea23689748b833b163d0972eeba6119816c7a9c2e020529c',
 }, 'The four original model sources remain byte-for-byte preserved');
-for (const path of ['scene/world.js', 'scene/home-interior.js', 'scene/home-navigation.js', 'scene/room-model.js', 'scene/world-landscape.js', 'scene/world-landmarks.js', 'scene/cat-life.js', 'scene/surface-materials.js', 'scene/static-batching.js', ...preservedFiles]) {
+for (const path of ['scene/world.js', 'scene/home-interior.js', 'scene/home-navigation.js', 'scene/world-time.js', 'scene/landmark-clocks.js', 'scene/garden-boundary.js', 'scene/room-model.js', 'scene/world-landscape.js', 'scene/world-landmarks.js', 'scene/cat-life.js', 'scene/surface-materials.js', 'scene/static-batching.js', ...preservedFiles]) {
   const source = await readFile(new URL('../' + path, import.meta.url), 'utf8');
   assert.ok(!/import\s+\*\s+as\s+\w+\s+from\s+['"][^'"]*vendor\/three/.test(source), 'Runtime factory never imports the entire vendor Three namespace: ' + path);
   for (const [, name] of source.matchAll(/\b(?:T|THREE)\.([A-Z]\w*)/g)) assert.ok(name in WorldThree, 'Explicit Three palette includes ' + path + ' dependency ' + name);
@@ -284,12 +329,12 @@ function pointer(canvas, type, x, y, id = 1) {
 function key(canvas, type, value, extras = {}) {
   const event = new Event(type, { cancelable: true }); Object.assign(event, { key: value, code: value.length === 1 ? 'Key' + value.toUpperCase() : value, ...extras }); canvas.dispatchEvent(event); return event;
 }
-async function pendingWorld() {
+async function pendingWorld({ defaultSeated = false, now = () => new Date('2026-11-06T03:15:30Z') } = {}) {
   const canvas = new Canvas(), renderer = new Renderer(canvas), model = deferred(), initialCat = deferred(), fullCat = deferred();
   const calls = [], errors = [], progress = [], selected = [], events = []; let ready = 0;
   canvas.addEventListener('worldstate', event => events.push(event.detail));
   const requestCount = runtimeRequests.length;
-  const pending = mountWorld({ canvas, rendererFactory: () => renderer, reducedMotion: false,
+  const pending = mountWorld({ canvas, rendererFactory: () => renderer, reducedMotion: false, now, ...(defaultSeated ? {} : { seated: false }),
     loadLandmarks() { calls.push('landmarks'); return model.promise; },
     loadCat(detail) { calls.push('cat-' + detail); return (detail === 'full' ? fullCat : initialCat).promise; },
     onReady() { ready++; }, onError(error) { errors.push(error); }, onProgress(value) { progress.push(value); }, onSelect(id) { selected.push(id); },
@@ -301,7 +346,10 @@ async function pendingWorld() {
   assert.equal(ready, 1, 'The furnished home is immediately usable while all outdoor assets remain pending');
   assert.equal(engine.getState().mode, 'inside');
   assert.ok(!engine.getState().landmarksReady && !engine.getState().catReady);
-  close(renderer.renders[0].camera.position.y, 1.62, 1e-8, 'First camera is at actual standing eye height');
+  close(renderer.renders[0].camera.position.y, defaultSeated ? HOME.seated.position[1] : HOME.eyeHeight, 1e-8, 'First camera respects the selected seated or walking eye height');
+  assert.equal(engine.getState().seated, defaultSeated);
+  assert.equal(engine.getState().lightingMode, 'auto');
+  assert.equal(engine.getState().time.label, getWorldTime(now()).label, 'Initial clock is actual Japan time');
   const first = renderer.renders[0];
   assert.ok(first.camera.position.x > HOME.bounds.minX && first.camera.position.x < HOME.bounds.maxX && first.camera.position.z > HOME.bounds.minZ && first.camera.position.z < HOME.bounds.maxZ, 'The first view is physically inside the retained home');
   assert.ok(first.scene.getObjectByName('A quiet room for learning'), 'The actual original furnished room is in the first frame');
@@ -309,7 +357,8 @@ async function pendingWorld() {
   assert.deepEqual(errors, []);
   return { canvas, renderer, engine, model, initialCat, fullCat, calls, errors, progress, selected, events, get ready() { return ready; } };
 }
-const running = await pendingWorld(), worldScene = running.renderer.renders[0].scene;
+let generalWorldDate=new Date('2026-11-06T03:15:30Z');
+const running = await pendingWorld({now:()=>generalWorldDate}), worldScene = running.renderer.renders[0].scene;
 const room = worldScene.getObjectByName('A quiet room for learning');
 const home = worldScene.getObjectByName('Home · the original warm study');
 assert.ok(home, 'Original warm room is retained');
@@ -358,7 +407,7 @@ assert.ok(windowNavigation.getState().position.z<=frontWindow.min[2]-.20+1e-6,'A
 report.frontWindow = { clearBidirectionalRays: windowRays, walkingBlocked: true };
 checks.push('Front garden window has real transparent glazing, 32 clear bidirectional aperture rays, solid frame/wall surrounds and a nonwalkable collision boundary');
 raycaster.far = Infinity;
-checks.push('First frame is the original warm furnished home at 1.62 m eye height; its real walls contain a clear human-width door opening');
+checks.push('Explicit walking mode renders the original warm home at 1.62 m eye height with a real clear doorway');
 // Keep the real outdoor factory unresolved while walking. Its eventual
 // geometry must never appear around someone who entered an unreserved site.
 let earlyWalkingFrames = 0;
@@ -424,6 +473,18 @@ for (const site of LANDMARK_SITES) {
   assert.ok(bounds.min.y > .7 && bounds.max.y < 1.5, 'Desk model is on the original waist-height desk');
 }
 checks.push('All four complete original architectural miniatures remain on the original desk');
+const outdoorAuditorium=liveMonuments.targets.find(target=>target.id==='landmark-okuma-auditorium').object;
+const deskAuditorium=home.getObjectByName('desk-okuma-auditorium');
+assert.equal(liveMonuments.clocks.length,4,'Outdoor owner retains all four movable face records');
+for(const iso of ['2026-11-06T03:00:00Z','2026-11-05T18:00:00Z','2026-11-05T21:00:00Z','2026-11-06T00:00:00Z','2026-11-05T21:30:00Z','2026-11-06T14:47:42Z']) {
+  generalWorldDate=new Date(iso);frame(32);const expected=getWorldTime(generalWorldDate);
+  assertAuditoriumClockFaces(outdoorAuditorium,expected,'life-size auditorium');
+  assertAuditoriumClockFaces(deskAuditorium,expected,'desk auditorium');
+}
+generalWorldDate=new Date('2026-11-06T03:15:30Z');frame(32);
+report.auditoriumClocks={facesPerModel:4,modelScales:2,testedJapanTimes:['12:00','03:00','06:00','09:00','06:30','23:47:42']};
+checks.push('All four faces of both original auditoriums retain real moving hands; their base/tip geometry proves centre pivots and clockwise Japan time across six poses');
+
 
 const asset = await loadTabbyFixture(new URL('../models/tabby-cat-world.glb', import.meta.url));
 running.initialCat.resolve(asset); await until(() => running.engine.getState().catReady, 'Real supplied tabby skeleton installs independently');
@@ -476,7 +537,7 @@ for (const site of LANDMARK_SITES) {
   assert.ok(position().distanceTo(new T.Vector3(site.arrival[0], HOME.eyeHeight, site.arrival[1])) < .25, 'Walk reaches actual monument arrival ' + site.key + ': ' + position().toArray() + ' expected ' + site.arrival);
   running.engine.returnHome(); travelToEnd('return from ' + site.key);
   assert.equal(running.engine.getState().mode, 'inside');
-  assert.ok(position().distanceTo(new T.Vector3(HOME.spawn.x, HOME.eyeHeight, HOME.spawn.z)) < .25, 'Walk returns to original indoor spawn');
+  assert.ok(position().distanceTo(new T.Vector3(HOME.seated.position[0], HOME.eyeHeight, HOME.seated.position[2])) < .25, 'Walk returns to the indoor seat position while standing');
 }
 assert.ok(crossedDoor >= 8, 'Repeated landmark trips genuinely cross the physical door in both directions');
 report.travelSamples = travelSamples;
@@ -515,6 +576,138 @@ running.engine.dispose(); running.engine.dispose(); assert.equal(running.rendere
 for (const [resource,count] of [...sceneResources,...cachedGroomResources]) assert.equal(count, 1, 'Mounted scene and cached cat resource released exactly once: ' + resource.type + ' ' + resource.name);
 const disposedDraws = running.renderer.renders.length; frame(4); assert.equal(running.renderer.renders.length, disposedDraws);
 assert.equal(frames.size, 0, 'Disposal cancels continuing frame callbacks');
+// The default experience is seated. An explicit action raises only eye height;
+// the existing walking fixture above opts into seated:false for route coverage.
+let currentJapanDate = new Date('2026-11-06T03:15:30Z');
+const seatedWorld = await pendingWorld({ defaultSeated: true, now: () => currentJapanDate });
+seatedWorld.engine.setPaused(true); frame(3);
+const seatedScene = seatedWorld.renderer.renders[0].scene, initialSeatCamera = seatedWorld.renderer.renders[0].camera;
+const seatState = () => seatedWorld.engine.getState();
+const seatPoint = () => { const p=seatState().position;return new T.Vector3(p.x,p.y,p.z); };
+assert.deepEqual(seatPoint().toArray(),HOME.seated.position,'Default camera begins at the authored seated position');
+const seatedBefore = seatPoint(), seatedDirection = initialSeatCamera.getWorldDirection(new T.Vector3());
+seatedWorld.engine.setMovement({forward:1,right:1});seatedWorld.engine.look(1,.3);seatedWorld.engine.zoom(-1);
+key(seatedWorld.canvas,'keydown','w');
+pointer(seatedWorld.canvas,'pointerdown',300,300);pointer(seatedWorld.canvas,'pointermove',650,500);pointer(seatedWorld.canvas,'pointerup',650,500);
+const seatedWheel=new Event('wheel',{cancelable:true});Object.assign(seatedWheel,{deltaY:-100});seatedWorld.canvas.dispatchEvent(seatedWheel);
+assert.equal(seatedWheel.defaultPrevented,false,'A seated scene leaves native wheel scrolling available');
+assert.equal(seatedWorld.engine.leave(),false);assert.equal(seatedWorld.engine.goToLandmark(LANDMARK_SITES[0].key),false);
+frame(35);assert.deepEqual(seatPoint(),seatedBefore,'Movement, dragging, wheel and landmark routes cannot move the seated camera');
+assert.ok(seatedWorld.renderer.renders.at(-1).camera.getWorldDirection(new T.Vector3()).distanceTo(seatedDirection)<1e-9,'Seated input preserves the initial desk view');
+key(window,'keyup','w');
+assert.equal(seatedWorld.engine.standUp(),true);assert.equal(seatState().posture,'standing-up');
+const riseStart=milliseconds;let previousSeatPoint=seatPoint(),riseFrames=0;
+while(seatState().posture==='standing-up'&&riseFrames<60) {
+  seatedWorld.engine.setMovement({forward:1,right:1});frame();riseFrames++;
+  const next=seatPoint();close(next.x,HOME.seated.position[0],1e-10,'Standing never jumps sideways');close(next.z,HOME.seated.position[2],1e-10,'Standing never jumps forward');
+  assert.ok(next.y>=previousSeatPoint.y&&next.y-previousSeatPoint.y<.06,'Eye rises smoothly without a vertical teleport');previousSeatPoint=next;
+}
+assert.equal(seatState().posture,'walking');close(seatPoint().y,HOME.eyeHeight,1e-10,'Standing reaches physical eye height');
+assert.ok(riseFrames>=12&&riseFrames<=35,'Standing spans the intended roughly .9-second transition');
+assert.ok(milliseconds-riseStart>=850&&milliseconds-riseStart<1200,'Standing uses elapsed time instead of an instant camera swap');
+assert.ok(seatedWorld.engine.leave(),'Standing unlocks walking to the garden');
+let postureSteps=0;
+while(seatState().travel&&postureSteps++<4000)frame();
+assert.equal(seatState().mode,'outside');
+const beforeSit=seatPoint();assert.ok(seatedWorld.engine.sitDown());assert.deepEqual(seatPoint(),beforeSit,'Sit down first routes home without teleporting X/Z');
+previousSeatPoint=seatPoint();let loweringFrames=0;
+while(seatState().posture!=='seated'&&postureSteps++<8000) {
+  frame();const next=seatPoint();
+  assert.ok(next.distanceTo(previousSeatPoint)<.19,'Returning to the seat remains a continuous physical walk');
+  if(seatState().posture==='sitting-down'||next.y<HOME.eyeHeight-1e-6) {
+    close(next.x,HOME.seated.position[0],1e-7,'Lowering begins only at the seat X');close(next.z,HOME.seated.position[2],1e-7,'Lowering begins only at the seat Z');
+    assert.ok(next.y<=previousSeatPoint.y&&previousSeatPoint.y-next.y<.06,'Sitting lowers the eye smoothly');loweringFrames++;
+  } else close(next.y,HOME.eyeHeight,1e-7,'The walk home keeps standing eye height');
+  previousSeatPoint=next;
+}
+assert.equal(seatState().posture,'seated');assert.ok(loweringFrames>=12);assert.deepEqual(seatPoint().toArray(),HOME.seated.position);
+assert.ok(seatedWorld.renderer.renders.at(-1).camera.quaternion.angleTo(initialSeatCamera.quaternion)<1e-6,'Sitting restores the authored initial desk view');
+checks.push('Default first view is seated at 1.18 m with movement blocked; standing rises over .9 seconds without X/Z movement, and sitting walks home before lowering continuously');
+
+await until(()=>seatedScene.getObjectByName('desk-okuma-auditorium'),'Delayed desk auditorium becomes available for current-time checks');
+let seatedOutdoorAuditorium;
+const seatedDeskAuditorium=seatedScene.getObjectByName('desk-okuma-auditorium');
+const clockHour=seatedScene.getObjectByName('Wall hour hand'),clockMinute=seatedScene.getObjectByName('Wall minute hand');
+const boundaryGroup=seatedScene.getObjectByName('Red brick garden walls and warm promenade lamps');
+assert.ok(clockHour&&clockMinute&&boundaryGroup,'The real scene contains its moving clock and garden lights');
+const gardenLights=[],groundPools=[];boundaryGroup.traverse(object=>{if(object.isPointLight)gardenLights.push(object);if(object.name==='Soft warm ground light pool')groundPools.push(object);});
+assert.ok(gardenLights.every(light=>!light.visible),'Daylight-off lamps do not occupy material shader light slots');
+assert.ok(gardenLights.length>=4&&gardenLights.length<=6,'Night uses a bounded number of actual streetlights');
+assert.equal(groundPools.length,gardenLights.length);
+for(const light of gardenLights){assert.equal(light.castShadow,false,'Streetlights add no cube shadow passes');assert.ok(light.distance>0&&light.distance<=16);assert.equal(light.intensity,0,'Streetlights are off at actual Japan noon');}
+function checkActualTime(mode='auto') {
+  const expected=getWorldTime(currentJapanDate,mode),actual=seatState().time;
+  assert.equal(actual.dateISO,expected.dateISO);assert.equal(actual.label,expected.label);assert.equal(actual.timeZone,'Asia/Tokyo');assert.equal(actual.dateTime,currentJapanDate.toISOString());
+  close(clockHour.rotation.z,expected.hourAngle,1e-10,'Real hour hand follows actual Japan seconds');close(clockMinute.rotation.z,expected.minuteAngle,1e-10,'Real minute hand follows actual Japan seconds');
+  assertAuditoriumClockFaces(seatedDeskAuditorium,expected,'paused desk auditorium');
+  if(seatedOutdoorAuditorium)assertAuditoriumClockFaces(seatedOutdoorAuditorium,expected,'paused life-size auditorium');
+
+  assert.deepEqual(linearGradients.at(-1).stops,expected.skyStops,'Actual sky texture is painted from the same Japan-time lighting snapshot');
+  close(seatedScene.environmentIntensity,expected.environmentIntensity,1e-10,'Environment reflection intensity follows the clock snapshot');
+  close(seatedWorld.renderer.toneMappingExposure,expected.exposure,1e-10,'Rendering exposure follows the clock snapshot');
+  return expected;
+}
+checkActualTime();
+const minuteBefore=clockMinute.rotation.z,initialSky=seatedScene.background,clockDraws=seatedWorld.renderer.renders.length;
+let initialSkyDisposals=0;initialSky.addEventListener('dispose',()=>initialSkyDisposals++);
+currentJapanDate=new Date('2026-11-06T03:15:31Z');frame(32);checkActualTime();
+assert.notEqual(clockMinute.rotation.z,minuteBefore,'A paused scene still advances real clock hands');assert.ok(seatedWorld.renderer.renders.length>clockDraws);
+assert.equal(seatedScene.background,initialSky,'A clock-only second retains the same sky and its GPU caches');assert.equal(initialSkyDisposals,0);
+const fixedClockDraws=seatedWorld.renderer.renders.length;frame(65);assert.equal(seatedWorld.renderer.renders.length,fixedClockDraws,'An unchanged clock and paused scene remain idle');
+currentJapanDate=new Date('2026-11-06T09:15:00Z');frame(32);const evening=checkActualTime();assert.equal(evening.phase,'dusk');assert.notEqual(seatedScene.background,initialSky,'A lighting change replaces the identity used by Three cube-map and PMREM caches');assert.equal(seatedScene.environment,seatedScene.background);assert.equal(initialSkyDisposals,1,'Previous sky and its cached GPU maps are released exactly once');
+const eveningSky=seatedScene.background;let eveningSkyDisposals=0;eveningSky.addEventListener('dispose',()=>eveningSkyDisposals++);
+for(const light of gardenLights)assert.ok(light.intensity>0&&light.intensity<34,'Streetlights fade on during Japan dusk');
+// Complete the outdoor factory after the clock has moved from noon to dusk.
+// Newly attached hands must immediately use the fresh snapshot, not source pose
+// or the time captured when the asynchronous request originally started.
+const delayedClockLandmarks=await createWorldLandmarks(T);seatedWorld.model.resolve(delayedClockLandmarks);
+await until(()=>seatState().landmarksReady,'Delayed outdoor clock geometry installs at actual dusk');
+seatedOutdoorAuditorium=delayedClockLandmarks.targets.find(target=>target.id==='landmark-okuma-auditorium').object;
+assertAuditoriumClockFaces(seatedOutdoorAuditorium,getWorldTime(currentJapanDate),'late-loaded dusk auditorium');
+
+const beforeHidden=seatedWorld.renderer.renders.length;
+document.hidden=true;document.dispatchEvent(new Event('visibilitychange'));
+currentJapanDate=new Date('2026-11-06T15:00:00Z');frame(40);assert.equal(seatedWorld.renderer.renders.length,beforeHidden,'Hidden scenes suspend clock drawing');
+document.hidden=false;document.dispatchEvent(new Event('visibilitychange'));frame();const midnight=checkActualTime();
+assert.notEqual(seatedScene.background,eveningSky,'Returning to a newly dark sky refreshes the cached texture identity');assert.equal(eveningSkyDisposals,1);
+assert.equal(midnight.dateISO,'2026-11-07');assert.equal(midnight.label,'00:00');assert.equal(midnight.phase,'night');
+for(const light of gardenLights)assert.ok(light.intensity>=30,'Visible tab resumes with the actual midnight streetlight intensity');
+assert.ok(gardenLights.every(light=>light.visible),'All six real street lights are active after dark');
+for(const pool of groundPools){assert.ok(pool.visible&&pool.material.opacity>0&&pool.material.opacity<=.14);close(pool.getWorldPosition(new T.Vector3()).y,.0015,1e-7,'Lamp pool stays at ground contact');}
+const lanternMaterials=new Set();boundaryGroup.traverse(object=>{for(const material of Array.isArray(object.material)?object.material:object.material?[object.material]:[])if(/lantern glass|lantern.*bulb/i.test(material.name))lanternMaterials.add(material);});
+assert.ok(lanternMaterials.size>=2);for(const material of lanternMaterials)assert.ok(material.emissiveIntensity>1,'Lantern glass and visible bulbs actually glow at night');
+seatedWorld.engine.setLightingMode('day');frame();checkActualTime('day');for(const light of gardenLights)assert.equal(light.intensity,0);assert.equal(seatState().time.label,'00:00','Manual day preview does not falsify the clock');
+seatedWorld.engine.setLightingMode('auto');frame();checkActualTime();for(const light of gardenLights)assert.ok(light.intensity>=30);
+assert.ok(seatedWorld.events.some(value=>value.time?.label==='00:00'&&value.time?.dateISO==='2026-11-07'),'UI state receives the same fresh Japan date and time on resume');
+report.seatedTime={riseFrames,loweringFrames,streetlights:gardenLights.length,resumedJapanDate:midnight.dateISO,resumedJapanTime:midnight.label};
+checks.push('Room and all eight auditorium faces keep actual Japan time while paused, including late geometry and midnight tab resume; sky and lamps follow the same snapshot');
+const finalSky=seatedScene.background;let finalSkyDisposals=0;finalSky.addEventListener('dispose',()=>finalSkyDisposals++);
+seatedWorld.engine.dispose();assert.equal(frames.size,0);assert.equal(finalSkyDisposals,1,'Unmount releases the current sky cache once');
+
+// Check physical masonry and its exact production collision boxes independently
+// of the walking bounds, so an invisible numeric limit cannot stand in for a wall.
+const boundaryFixture=createGardenBoundary(T,{bounds:WORLD_BOUNDS});boundaryFixture.group.updateMatrixWorld(true);
+const boundaryObstacles=boundaryFixture.collisions.map(({box})=>({minX:box.min.x,maxX:box.max.x,minZ:box.min.z,maxZ:box.max.z}));
+const cx=(WORLD_BOUNDS.minX+WORLD_BOUNDS.maxX)/2,cz=(WORLD_BOUNDS.minZ+WORLD_BOUNDS.maxZ)/2;
+for(const [side,spawn,vector,inside] of [
+  ['east',{x:WORLD_BOUNDS.maxX-3,z:cz,yaw:Math.PI/2},new T.Vector3(1,0,0),p=>p.x<=WORLD_BOUNDS.maxX-.7],
+  ['west',{x:WORLD_BOUNDS.minX+3,z:cz,yaw:-Math.PI/2},new T.Vector3(-1,0,0),p=>p.x>=WORLD_BOUNDS.minX+.7],
+  ['north',{x:cx,z:WORLD_BOUNDS.maxZ-3,yaw:0},new T.Vector3(0,0,1),p=>p.z<=WORLD_BOUNDS.maxZ-.7],
+  ['south',{x:cx,z:WORLD_BOUNDS.minZ+3,yaw:Math.PI},new T.Vector3(0,0,-1),p=>p.z>=WORLD_BOUNDS.minZ+.7],
+]) {
+  for(const y of [.12,1.18,1.62,2.5]) {
+    raycaster.set(new T.Vector3(spawn.x,y,spawn.z),vector);raycaster.far=4;
+    const hit=raycaster.intersectObject(boundaryFixture.group,true).find(value=>value.object.isMesh&&!value.object.material?.transparent);
+    assert.ok(hit&&hit.object.castShadow&&hit.object.receiveShadow,'Real opaque shadowed boundary blocks the '+side+' side at '+y+'m');
+  }
+  const walker=createWalkNavigation({bounds:WORLD_BOUNDS,obstacles:boundaryObstacles,spawn,radius:.20,eyeHeight:HOME.eyeHeight});walker.setInput({forward:1,right:0});for(let i=0;i<100;i++)walker.update(.05);
+  assert.ok(inside(walker.getState().position),'The actual '+side+' wall stops walking before the outer numerical bound');walker.dispose();
+}
+raycaster.far=Infinity;
+for(const {bounds} of worldBoxes)for(const obstacle of boundaryFixture.collisions)assert.ok(!bounds.intersectsBox(obstacle.box),'Garden masonry and lamps never intersect the complete original monuments');
+const boundaryResources=watchResources(boundaryFixture.group);boundaryFixture.dispose();boundaryFixture.dispose();for(const count of boundaryResources.values())assert.equal(count,1,'Boundary and lamp resources dispose exactly once');
+checks.push('Four real brick boundaries block rays and production walking at seated/standing heights, remain clear of original monuments and release resources once');
+
 const departed = await pendingWorld(), lateMonuments = await createWorldLandmarks(T);
 departed.engine.dispose(); let releasedMonuments = 0;
 const originalDispose = lateMonuments.dispose; lateMonuments.dispose = () => { releasedMonuments++; originalDispose(); };

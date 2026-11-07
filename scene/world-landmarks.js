@@ -6,6 +6,7 @@ import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20261106-c
 import { createKaratsuBank } from '../js/models/karatsu-bank.js?v=20261106-craft1';
 import { prepareBoxSurfaceUVs, ensureSurfaceUV, SURFACES } from './surface-materials.js';
 import { mergeStaticDraws, cacheStaticLocalMatrices, staticDrawStats } from './static-batching.js';
+import { captureLandmarkClocks, updateLandmarkClocks } from './landmark-clocks.js';
 
 import { LANDMARK_SITES } from './world-layout.js';
 const FACTORIES = { 'okuma-auditorium': createOkumaAuditorium, 'karatsu-castle': createKaratsuCastle, 'karatsu-bank': createKaratsuBank, 'okuma-statue': createOkumaStatue };
@@ -46,7 +47,7 @@ function prepareSurfaces(T, root) {
 export async function createWorldLandmarks(T, { onTextureLoad } = {}) {
   const group = new T.Group(); group.name = 'Waseda and Karatsu · life-size garden landmarks';
   const targets = [], stats = { models: [], geometryPolicy: 'Original architecture at approximate real-world height, uniformly scaled and grounded at y=0; continuous garden.' };
-  const ownedTextures = new Set();
+  const ownedTextures = new Set(), clocks = [], protectedHands = new Set();
   let disposed = false;
   try {
     for (const site of SITES) {
@@ -55,6 +56,9 @@ export async function createWorldLandmarks(T, { onTextureLoad } = {}) {
       const architecture = model.architecture || model.group.getObjectByName(site.name);
       if (!architecture || architecture.name !== site.name) throw new Error('Missing complete world architecture: ' + site.key);
       architecture.removeFromParent();
+      const modelClocks = captureLandmarkClocks(architecture);
+      clocks.push(...modelClocks);
+      for (const clock of modelClocks) { protectedHands.add(clock.hour); protectedHands.add(clock.minute); }
       const retained = resources(architecture);
       releaseExcept(generated, retained);
       retained.textures.forEach(texture => ownedTextures.add(texture));
@@ -86,9 +90,9 @@ export async function createWorldLandmarks(T, { onTextureLoad } = {}) {
       });
       // Project physical UVs before merging differently sized source parts.
       prepareSurfaces(T, monument);
-      const clocks = new Set();
-      architecture.traverse(object => { if (/^Clock face [1-4]$/.test(object.name)) clocks.add(object); });
-      const architectureBatch = mergeStaticDraws(T, architecture, { byParent: false, preserveGroups: clocks });
+      const clockFaces = new Set();
+      architecture.traverse(object => { if (/^Clock face [1-4]$/.test(object.name)) clockFaces.add(object); });
+      const architectureBatch = mergeStaticDraws(T, architecture, { byParent: false, preserveGroups: clockFaces, protectedObjects: protectedHands });
       mergeStaticDraws(T, monument, { skipRoots: new Set([body]) });
       monument.updateWorldMatrix(true, true);
       const finalBounds = new T.Box3().setFromObject(monument);
@@ -102,7 +106,7 @@ export async function createWorldLandmarks(T, { onTextureLoad } = {}) {
         baseHeight: 0, worldBounds: { min: finalBounds.min.toArray(), max: finalBounds.max.toArray() },
       });
     }
-    cacheStaticLocalMatrices(group);
+    cacheStaticLocalMatrices(group, { movable: new Set([group, ...protectedHands]) });
     group.updateMatrixWorld(true);
     stats.total = staticDrawStats(group);
     group.userData.landmarkStats = stats;
@@ -114,7 +118,8 @@ export async function createWorldLandmarks(T, { onTextureLoad } = {}) {
     throw error;
   }
   return {
-    group, targets, stats,
+    group, targets, stats, clocks,
+    updateClock(snapshot) { return disposed ? false : updateLandmarkClocks(clocks, snapshot); },
     dispose() {
       if (disposed) return; disposed = true;
       const owned = resources(group);

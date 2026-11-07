@@ -1,0 +1,147 @@
+{
+  "browser": "155.0.8059.79",
+  "renderer": "Chromium / ANGLE SwiftShader (software)",
+  "checkedAt": "2026-11-07T04:15:49.194Z",
+  "cases": [
+    {
+      "name": "desktop",
+      "initialWebGLContexts": 0,
+      "initialWorldRequests": 0,
+      "requests": 8,
+      "resources": [
+        {
+          "name": "/css/world.css",
+          "bytes": 17611
+        },
+        {
+          "name": "/images/world/seated-day.webp",
+          "bytes": 175660
+        },
+        {
+          "name": "/images/home/waseda.webp",
+          "bytes": 7916
+        },
+        {
+          "name": "/images/home/kyukeisha.webp",
+          "bytes": 19804
+        },
+        {
+          "name": "/js/world-ui.js",
+          "bytes": 15989
+        },
+        {
+          "name": "/favicon.png",
+          "bytes": 2972
+        },
+        {
+          "name": "/favicon.svg",
+          "bytes": 805
+        }
+      ]
+    },
+    {
+      "name": "walking lifecycle",
+      "stand": true,
+      "doorway": true,
+      "night": true,
+      "sitAtDesk": true,
+      "remount": true,
+      "outsideReturnButtonStartsRoute": true,
+      "fullPhysicalReturnEvidence": "manifest.json / lifecycle",
+      "browserErrors": 0
+    },
+    {
+      "name": "mobile",
+      "initialWebGLContexts": 0,
+      "initialWorldRequests": 0,
+      "requests": 8,
+      "resources": [
+        {
+          "name": "/css/world.css",
+          "bytes": 17611
+        },
+        {
+          "name": "/images/world/seated-day-mobile.webp",
+          "bytes": 78204
+        },
+        {
+          "name": "/images/home/kyukeisha.webp",
+          "bytes": 19804
+        },
+        {
+          "name": "/images/home/waseda.webp",
+          "bytes": 7916
+        },
+        {
+          "name": "/js/world-ui.js",
+          "bytes": 15989
+        },
+        {
+          "name": "/favicon.png",
+          "bytes": 2972
+        },
+        {
+          "name": "/favicon.svg",
+          "bytes": 805
+        }
+      ]
+    },
+    {
+      "name": "narrow-night",
+      "initialWebGLContexts": 0,
+      "initialWorldRequests": 0,
+      "requests": 9,
+      "resources": [
+        {
+          "name": "/css/world.css",
+          "bytes": 17611
+        },
+        {
+          "name": "/images/home/waseda.webp",
+          "bytes": 7916
+        },
+        {
+          "name": "/images/world/seated-day-mobile.webp",
+          "bytes": 78204
+        },
+        {
+          "name": "/images/home/kyukeisha.webp",
+          "bytes": 19804
+        },
+        {
+          "name": "/js/world-ui.js",
+          "bytes": 15989
+        },
+        {
+          "name": "/images/world/seated-night-mobile.webp",
+          "bytes": 79640
+        },
+        {
+          "name": "/favicon.png",
+          "bytes": 2972
+        },
+        {
+          "name": "/favicon.svg",
+          "bytes": 805
+        }
+      ]
+    },
+    {
+      "name": "WebGL unavailable",
+      "nativeMenu": true,
+      "explanatoryFallback": true
+    },
+    {
+      "name": "JavaScript disabled",
+      "nativeMenu": true
+    }
+  ],
+  "sourceHashes": {
+    "index.html": "76403c39b90cf4d9a8c78dfd62dc5368590aaca57a32386853318088498def4e",
+    "css/world.css": "58163a5215f3aaca2bfcc996ab8608154adaf9931d77bb2fc631e6e40a0f225c",
+    "js/world-ui.js": "5a924950e275fe9fd24795a10ffcb72c99d0e598d17b9f18bf976e476075ccd8",
+    "scene/world.bundle.js": "de9e71edd1d8ba5c384f6f21c0111987f652ed2ff763c929934ad31df2d0d305"
+  },
+  "driverHashAtRun": "a9dda48b22b839f644234e79a49722e6c206c047381aaafdae5377b7a692624d",
+  "metadataCorrection": "The evidence pointer was corrected from returnTrip to lifecycle after the run; test behavior and outcomes are unchanged."
+}
