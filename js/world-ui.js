@@ -366,6 +366,17 @@
     modeStatus.textContent = '軽量3Dの書斎を読み込んでいます…';
     if (!pageSuspended && !document.hidden) launch();
   }
+  // Some browsers offer WebGL2 through a CPU driver. The textured Canvas
+  // renderer draws the same walks much faster on those devices.
+  function hasSoftwareDriver(gl) {
+    try {
+      const debug = gl.getExtension?.('WEBGL_debug_renderer_info');
+      const renderer = gl.getParameter?.(debug?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER) || '';
+      return /swiftshader|llvmpipe|softpipe|software (?:rasterizer|renderer)|microsoft basic render/i.test(renderer);
+    } catch {
+      return false;
+    }
+  }
   async function launch() {
     if (disposed || launching || engine || mode !== '3d' || pageSuspended || document.hidden) return;
     launching = true;
@@ -376,6 +387,11 @@
       if (kind === 'native') {
         rendererContext ??= canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
         if (!rendererContext || rendererContext.isContextLost?.()) throw new Error('WebGL2 is unavailable');
+        if (hasSoftwareDriver(rendererContext)) {
+          rendererContext.getExtension?.('WEBGL_lose_context')?.loseContext();
+          rendererContext = undefined;
+          throw new Error('Software WebGL driver');
+        }
         const url = '../scene/world.bundle.js?v=20261118-survey2' + (loadFailures ? '&retry=' + loadFailures : '');
         const { mountWorld } = await import(url);
         mount = mountWorld;

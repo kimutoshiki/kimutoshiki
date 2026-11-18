@@ -155,6 +155,7 @@ export function createPlacePhoto(T,{key,view,onReady}) {
     ready=true;onReady?.();return true;
   });
   return {group,ready:pending,
+    get coversView() {return ready && !disposed && common.strength.value===1;},
     update(camera,time) {
       const delta=camera.position.distanceTo(registered.eye);
       common.strength.value=1-T.MathUtils.smoothstep(delta,30,51);
@@ -162,10 +163,16 @@ export function createPlacePhoto(T,{key,view,onReady}) {
       const night=Math.min(1,Math.max(0,time?.nightMix??0));
       common.lighting.value.set(1-.45*night,1-.39*night,1-.28*night);
     },
-    render(renderer,camera) {
+    render(renderer,camera,fullFrame=false) {
       if(!ready || disposed || common.strength.value<.004 || !renderer.clearDepth) return false;
       const original=renderer.autoClear;
-      try {renderer.autoClear=false;renderer.clearDepth();renderer.render(scene,camera);}
+      try {
+        // The textured dome encloses the camera near the registered view.
+        // Only the transition out of that area needs the regional scene behind it.
+        renderer.autoClear=fullFrame;
+        if (!fullFrame) renderer.clearDepth();
+        renderer.render(scene,camera);
+      }
       finally {renderer.autoClear=original;}
       return true;
     },

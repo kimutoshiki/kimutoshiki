@@ -35,13 +35,25 @@ async function picture(page, name) {
   canvas.getContext('2d').drawImage(img, 0, 0);
   await writeFile(new URL(name + '.webp', output), await canvas.encode('webp', 82));
 }
-async function open(viewport, options = {}) {
+async function open(viewport, {rendererName = 'ANGLE (Intel, Intel UHD Graphics)', ...options} = {}) {
   const page = await browser.newPage({ viewport, deviceScaleFactor: 1, reducedMotion: 'reduce', ...options });
   const requests = [], failures = [], errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) failures.push([response.status(), response.url()]); });
   page.on('request', request => requests.push(request.url()));
-  await page.addInitScript(() => {
+  await page.addInitScript(rendererName => {
+    // Exercise accelerated routing with real WebGL drawing on CI. Only this
+    // identification string is overridden. One explicit case keeps SwiftShader.
+    window.__identifiedRenderers=[];
+    if(window.WebGL2RenderingContext){
+      const getParameter=WebGL2RenderingContext.prototype.getParameter;
+      WebGL2RenderingContext.prototype.getParameter=function(parameter){
+        const value=getParameter.call(this,parameter);
+        if(parameter!==0x9246 && parameter!==this.RENDERER)return value;
+        window.__identifiedRenderers.push(value);
+        return rendererName??value;
+      };
+    }
     const getContext = HTMLCanvasElement.prototype.getContext;
     window.__glCalls = 0;
     HTMLCanvasElement.prototype.getContext = function(type, ...args) {
@@ -49,7 +61,7 @@ async function open(viewport, options = {}) {
       return getContext.call(this, type, ...args);
     };
     document.addEventListener('worldstate', e => { window.__worldState = e.detail; }, true);
-  });
+  }, rendererName);
   return { page, requests, failures, errors };
 }
 async function goHome(page) {
@@ -360,6 +372,24 @@ try {
   assert(!await slow.page.locator('#main').evaluate(el => el.classList.contains('is-rendered')));
   assert(!slow.requests.some(url => /cat-world.*\.glb/.test(url)), 'A canceled world import cannot start a fresh cat download');
   await slow.page.close();
+
+  const emulated=await open({width:720,height:480},{rendererName:null});
+  await goHome(emulated.page);
+  await checkIllustration(emulated.page,emulated.requests);
+  await emulated.page.locator('#study-mode-3d').click();
+  await emulated.page.waitForFunction(()=>window.__worldState?.renderer==='software' && window.__worldState?.renderedDistrict==='room');
+  assert(await emulated.page.evaluate(()=>window.__identifiedRenderers.some(label=>/swiftshader|llvmpipe|softpipe|software renderer|software rasterizer|microsoft basic render/i.test(label))),
+    'The actual Chromium software GL context was identified on normal entry');
+  assert(!emulated.requests.some(url=>/world\.bundle|cat-world.*\.glb/.test(url)), 'An emulated GPU does not transfer the native renderer');
+  assert.equal(await emulated.page.locator('canvas[data-renderer="software"]').count(),1);
+  assert((await pixelSample(emulated.page.locator('canvas[data-renderer="software"]'))).colors>1800);
+  await emulated.page.locator('#world-stand').click();
+  await emulated.page.waitForFunction(()=>window.__worldState?.standing && window.__worldState.mode==='outside');
+  await emulated.page.locator('#world-seat').click();
+  await emulated.page.waitForFunction(()=>window.__worldState?.seated);
+  assert.deepEqual(emulated.errors,[]);assert.deepEqual(emulated.failures,[]);
+  await emulated.page.close();
+  report.cases.push({name:'Available software-emulated WebGL selects the textured CPU world before any native renderer transfer'});
 
   const unsupported = await open({ width: 390, height: 844 });
   await unsupported.page.addInitScript(() => {

@@ -325,7 +325,10 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     const landscapeMoved = !region&&landscape?.update?.(elapsed, !paused && !inside, view.position);
     const key = [revision, view.position.x, view.position.y, view.position.z, view.yaw, view.pitch, width, height].join(',');
     if (force || deskMoved || blindsMoved || landscapeMoved || catMoved || key !== lastView) {
-      const refreshShadows=shadowDirty;
+      const localPhoto=region && photo;
+      localPhoto?.update?.(camera,timeState);
+      const covered=localPhoto?.coversView===true;
+      const refreshShadows=shadowDirty && !covered;
       if(refreshShadows) {
         // Bake the complete exterior before hiding foliage behind opaque study
         // walls. Cached sun shadows therefore remain correct at the doorway.
@@ -333,9 +336,10 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
         sun.shadow.needsUpdate=true;windowLight.shadow.needsUpdate=true;
         renderer.shadowMap.needsUpdate=true;shadowDirty=false;performanceStats.shadowRefreshes++;
       }
-      const renderStart=performance.now();renderer.render(scene,camera);
-      if(region&&photo){
-        photo.update?.(camera,timeState);const drew=photo.render?.(renderer,camera);
+      const renderStart=performance.now();
+      if (!covered) renderer.render(scene,camera);
+      if (localPhoto){
+        const drew=localPhoto.render?.(renderer,camera,covered);
         if(photoDecoded && drew!==false)photoReady=true;
       }
       if(posture==='seated'){

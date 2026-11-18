@@ -75,7 +75,18 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
   const frames = new Map(), tasks = new Map(), warnings = [], calls = [];
   const observers = [];
   let nextId = 0, imports = 0, contextRequests = 0, softwareImports = 0, tourOptions, mountOptions, resolveMount, launch, now = 0;
-  const rendererContext = {};
+  const rendererContext = {
+    RENDERER:0x1f01,
+    getExtension(name) {
+      if(name==='WEBGL_debug_renderer_info' && context!=='softpipe-generic')return {UNMASKED_RENDERER_WEBGL:0x9246};
+      return null;
+    },
+    getParameter(parameter){
+      if(parameter===0x9246&&context==='swiftshader')return 'ANGLE (Google, Vulkan 1.3.0 SwiftShader Device (Subzero))';
+      if(parameter===this.RENDERER&&context==='softpipe-generic')return 'Mesa softpipe';
+      return 'Intel Iris Xe Graphics';
+    },
+  };
   byId('world-canvas').getContext = (kind, options) => {
     contextRequests++; assert.equal(kind, 'webgl2'); same(options, { antialias: true, alpha: false, powerPreference: 'high-performance' });
     if (context === 'throw') throw new Error('Simulated GPU creation error');
@@ -238,7 +249,7 @@ assert.equal(clockOnly.contextRequests, 0); assert.equal(clockOnly.imports, 0, '
 emit(clockOnly.window, 'pagehide', { persisted: false }); const finalClock = clockOnly.byId('world-clock').textContent;
 await clockOnly.advance(120000); emit(clockOnly.window, 'pageshow'); assert.equal(clockOnly.byId('world-clock').textContent, finalClock);
 
-for (const context of ['null', 'throw']) {
+for (const context of ['null', 'throw', 'swiftshader', 'softpipe-generic']) {
   const h = harness({ context }); assertLanding(h);
   assert.equal(h.softwareImports, 0);
   await h.select3d(); await h.finishUnsupported();
