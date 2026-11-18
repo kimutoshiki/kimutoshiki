@@ -1,4 +1,4 @@
-import { HOME, LANDMARK_SITES, REVIEW_VIEWS, WORLD_BOUNDS } from './world-layout.js';
+import { HOME, REVIEW_VIEWS, WORLD_BOUNDS } from './world-layout.js';
 import { createWalkDistricts } from './walk-districts.js';
 import { mergeStaticDraws, cacheStaticLocalMatrices, staticDrawStats } from './static-batching.js';
 
@@ -115,10 +115,6 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
   pave('Statue and bank forecourt',4.5,23,33,11);
   pave('Auditorium approach',-14,39,29,9);
   pave('Castle approach',12.5,56,27,10);
-  for(const site of LANDMARK_SITES) {
-    const size=site.key==='okuma-auditorium'?[37,31]:site.key==='karatsu-castle'?[27,25]:site.key==='karatsu-bank'?[22,18]:[6,6];
-    pave(site.title+' flush stone apron',site.position[0],site.position[1],...size,site.rotation);
-  }
   const pavingPositions=[],pavingNormals=[],pavingUVs=[];
   for(const polygon of pavingPieces) for(let i=1;i<polygon.length-1;i++) {
     // Counterclockwise XZ polygons need reversed fan winding for +Y normals.

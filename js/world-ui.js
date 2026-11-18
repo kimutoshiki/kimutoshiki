@@ -27,7 +27,7 @@
     'landmark-okuma-statue': { label: '大隈重信像', href: 'profile.html', link: 'プロフィールを見る' },
     cat: { label: '書斎の猫' },
   };
-  const districts = { '大隈講堂前': 'okuma-auditorium', '大隈重信像前': 'okuma-statue', '唐津城の水辺': 'karatsu-castle', '旧唐津銀行通り': 'karatsu-bank' };
+  const districts = { '大隈講堂前': 'okuma-auditorium', '大隈重信像前': 'okuma-statue', '唐津城・本丸': 'karatsu-castle', '旧唐津銀行通り': 'karatsu-bank' };
   let mode = '2d', engine, rendererContext, disposed = false, firstFrame = false, motionChosen = false;
   let backend = 'native', requestedPlace = null, visitingEngine = null;
   let launching = false, pageSuspended = false, session = 0, modeRevision = 0, loadFailures = 0, wantsSeat = false, seatTimer, clockTimer;
@@ -293,7 +293,7 @@
   async function openGarden(key) {
     const revision = modeRevision;
     try {
-      tourImport ??= import('./study-tour.js?v=20261118-explore');
+      tourImport ??= import('./study-tour.js?v=20261118-survey2');
       const { createGardenTour } = await tourImport;
       if (disposed || mode !== '2d' || revision !== modeRevision) return;
       tour ??= createGardenTour(stand, { onExplore: key => {
@@ -376,11 +376,11 @@
       if (kind === 'native') {
         rendererContext ??= canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
         if (!rendererContext || rendererContext.isContextLost?.()) throw new Error('WebGL2 is unavailable');
-        const url = '../scene/world.bundle.js?v=20261118-grounds2' + (loadFailures ? '&retry=' + loadFailures : '');
+        const url = '../scene/world.bundle.js?v=20261118-survey2' + (loadFailures ? '&retry=' + loadFailures : '');
         const { mountWorld } = await import(url);
         mount = mountWorld;
       } else {
-        const url = './software-world.js?v=20261118-perspective' + (loadFailures ? '&retry=' + loadFailures : '');
+        const url = './software-world.js?v=20261118-survey2' + (loadFailures ? '&retry=' + loadFailures : '');
         const { mountSoftwareWorld } = await import(url);
         mount = mountSoftwareWorld;
       }

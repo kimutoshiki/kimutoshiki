@@ -18,12 +18,12 @@ const browser = await chromium.launch({
 });
 const report = { browser: await browser.version(), renderer: 'ANGLE SwiftShader', cases: [] };
 const destinations = ['profile', 'research', 'blog', 'photos', 'contact'];
-const engineResource = /\/(?:scene|models|js\/vendor)\/|\/js\/software-(?:world|renderer|garden|desk)\.js/;
+const engineResource = /\/(?:scene|models|js\/vendor)\/|\/js\/software-[^/?]+\.js|\/images\/study\/desk-(?:joinery|room)\.webp/;
 const galleryResource = /\/images\/outdoors\//;
 const places = [
   { key:'okuma-auditorium', name:'大隈講堂', detail:'時計塔' },
   { key:'okuma-statue', name:'大隈重信像', detail:'杖' },
-  { key:'karatsu-castle', name:'唐津城', detail:'唐津湾' },
+  { key:'karatsu-castle', name:'唐津城', detail:'本丸' },
   { key:'karatsu-bank', name:'旧唐津銀行', detail:'れんが' },
 ];
 const outdoorResource = /world-chunk-(?:world-landscape|garden-boundary|world-landmarks)-|software-garden\.js/;
@@ -178,7 +178,7 @@ async function exploreAndReturn(page, scene, renderer, capture) {
   await page.locator('.tour-explore').click();
   await page.waitForFunction(key => {
     const s = window.__worldState;
-    return s?.standing && s.mode === 'outside' && s.landmarksReady && s.focus === 'landmark-' + key;
+    return s?.standing && s.mode === 'outside' && s.landmarksReady && (s.webgl ? s.placeArtReady : s.textureReady && s.renderedDistrict==='landmark-'+key) && s.focus === 'landmark-' + key;
   }, scene.key, { timeout: 180000 });
   const state = await page.evaluate(() => window.__worldState);
   const nativeEye = OUTDOOR_VIEWS[scene.key].eye, simulated = SOFTWARE_PLACES['landmark-' + scene.key];

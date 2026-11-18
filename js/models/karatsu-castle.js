@@ -27,17 +27,33 @@ export function createKaratsuCastle(T) {
     tile: material('#56646a', .53), tileLight: material('#738084', .62),
     roofEdge: material('#737e7e'), timber: material('#5b5148'),
     dark: material('#242e2e'), window: material('#354543', .25),
-    balcony: material('#aa5e42'), balconyCap: material('#9d583a'),
+    balcony: material('#a44c35'), balconyCap: material('#783d32'),
+    lattice: material('#827f72'), ridgeFish: material('#928f81',.50), joint: material('#62695e'),
     gravel: material('#c8bea4'), path: material('#ddd0b5'),
     earth: material('#64665b'), soil: material('#828272'),
     lawn: material('#8a9770'), moss: material('#657956'),
-    stone: ['#9a9d8c', '#a9aa96', '#828d81', '#b3b29c', '#8c9588', '#737e76'].map(c => material(c)),
+    stone: ['#8d9186', '#a2a297', '#818a80', '#aaa99a', '#8d9587', '#778278'].map(c => material(c)),
     leaves: ['#4e6b49', '#668254', '#79925e', '#394f3a', '#8c9c65'].map(c => material(c)),
     trunk: material('#6a6551'), water: material('#6b9d9d', 0.44),
     shallow: material('#99b9ad', 0.65), foam: material('#cbd8c7'),
   };
   for(const key of ['plaster','plasterLight','plasterShade'])surface(m[key],'plaster',{tint:key==='plasterShade'?'#dadeda':'#ffffff'});
-  m.stone.forEach((material,i)=>surface(material,'stone',{tint:['#c4c7c0','#d3d4c7','#adb9af','#dddccc','#bac4ba','#a3afaa'][i]}));
+  m.ridgeFish.metalness=.32;
+  // Close-range grain belongs to each physical stone. A photograph with its
+  // own mortar joints would create a conflicting second masonry pattern.
+  const grainSize=64,grainData=new Uint8Array(grainSize*grainSize*4);
+  let graniteSeed=1966;
+  for(let i=0;i<grainData.length;i+=4) {
+    graniteSeed=(Math.imul(1664525,graniteSeed)+1013904223)>>>0;
+    const value=216+(graniteSeed>>>26);
+    grainData[i]=Math.min(255,value);grainData[i+1]=Math.min(255,value);
+    grainData[i+2]=Math.min(255,value-2);grainData[i+3]=255;
+  }
+  const graniteGrain=new T.DataTexture(grainData,grainSize,grainSize);
+  graniteGrain.wrapS=graniteGrain.wrapT=T.RepeatWrapping;
+  graniteGrain.magFilter=T.LinearFilter;graniteGrain.minFilter=T.LinearMipmapLinearFilter;
+  graniteGrain.generateMipmaps=true;graniteGrain.needsUpdate=true;
+  for(const stone of m.stone){stone.map=graniteGrain;stone.bumpMap=graniteGrain;stone.bumpScale=.015;}
   surface(m.roof,'slate',{roughness:.66,bumpScale:.006});surface(m.timber,'walnut',{tint:'#b3aea6',roughness:.64,bumpScale:.005});
   m.window.metalness=.08;
   const boxGeometry = new T.BoxGeometry(1, 1, 1);
@@ -155,53 +171,127 @@ export function createKaratsuCastle(T) {
     beam([x,1.96,15.3],[x,2.71,12.54],0.065,m.timber,landscape);
   }
 
-  // Sloping ishigaki plinth: six staggered courses of individually scaled stone.
-  const stoneBottom = 1.87, stoneTop = 6.0;
+  // The upper keep rests on separate, tightly fitted granite stones. Use one
+  // shared pattern of irregular joints per face, with a slight inward batter.
+  const stoneBottom = 1.87, stoneTop = 6.0, height = stoneTop - stoneBottom;
   const bottomW = 18.5, bottomD = 15.3, topW = 14.8, topD = 12.0;
-  function frustum(w0,d0,w1,d1,y0,y1,mat) {
-    const v=[[-w0/2,y0,-d0/2],[w0/2,y0,-d0/2],[w0/2,y0,d0/2],[-w0/2,y0,d0/2],
-      [-w1/2,y1,-d1/2],[w1/2,y1,-d1/2],[w1/2,y1,d1/2],[-w1/2,y1,d1/2]];
-    return mesh(geometry(v,[0,4,1,1,4,5,1,5,2,2,5,6,2,6,3,3,6,7,3,7,0,0,7,4,4,7,5,5,7,6,0,1,2,0,2,3]),mat);
-  }
-  frustum(bottomW,bottomD,topW,topD,stoneBottom,stoneTop,m.stone[5]);
-  // The official detail photograph shows uncoursed, irregular granite rather
-  // than rectangular brickwork. Staggered polygon stones follow the battered
-  // surface; darker backing occupies their joints and closes the whole plinth.
-  const courses = [0, .11, .25, .40, .55, .71, .86, 1];
+  const granitePositions=[],graniteIndices=[],graniteColors=[],graniteUVs=[];
+  const entrance = { left: -.08, right: 2.48, lintel: 2.31, back: 5.70 };
   for(let side=0;side<4;side++) {
     const front=side<2, sign=side%2===0?1:-1;
-    for(let row=0;row<courses.length-1;row++) {
-      const low=courses[row], high=courses[row+1], mid=(low+high)/2;
-      const span=mix(front?bottomW:bottomD, front?topW:topD, mid);
-      const count=Math.round(span/(row%2?1.39:1.72));
-      const divisions=[-.5];
-      for(let i=1;i<count;i++)divisions.push(i/count-.5+(random()-.5)*.36/count);
-      divisions.push(.5);
-      for(let i=0;i<count;i++) {
-        const left=divisions[i]*span+.035, right=divisions[i+1]*span-.035;
-        const cy=mix(stoneBottom,stoneTop,mid), h=(high-low)*(stoneTop-stoneBottom)-.07;
-        if(side===0 && row<3 && right>-.1 && left<2.5)continue;
-        const w=right-left,cx=(left+right)/2;
-        const profile=[[-.5,-.40],[-.43,-.50],[.36,-.50],[.50,-.35],[.49,.41],[.37,.50],[-.42,.48],[-.51,.35]].map(([x,y],j)=>[x+(j%2?(random()-.5)*.10:0),y+(random()-.5)*.10]);
-        const verts=[],indices=[];
-        for(const depth of [-.14,.16])for(const [xx,yy] of profile) {
-          const y=cy+yy*h+(random()-.5)*.045;
-          const t=(y-stoneBottom)/(stoneTop-stoneBottom);
-          const plane=mix(front?bottomD:bottomW,front?topD:topW,t)/2+depth;
-          verts.push(front?[cx+xx*w,y,sign*plane]:[sign*plane,y,cx+xx*w]);
+    const width=front?bottomW:bottomD, crown=front?topW:topD;
+    const depth=front?bottomD:bottomW, crownDepth=front?topD:topW;
+    function point(x,y,relief=0) {
+      const t=y/height, narrow=1-Math.pow(1-t,1.18);
+      const u=x*mix(1,crown/width,narrow);
+      const normal=sign*(mix(depth,crownDepth,narrow)/2+relief);
+      return front?[u,stoneBottom+y,normal]:[normal,stoneBottom+y,u];
+    }
+    // Polygons have counterclockwise winding in their own surface plane.
+    function panel(points,mat,relief=0,round=0) {
+      if(points.length<3)return;
+      const area=points.reduce((sum,a,i)=>{const b=points[(i+1)%points.length];return sum+a[0]*b[1]-a[1]*b[0];},0);
+      if(Math.abs(area)<.001)return;
+      const cx=points.reduce((sum,a)=>sum+a[0],0)/points.length;
+      const cy=points.reduce((sum,a)=>sum+a[1],0)/points.length;
+      const inner=points.map(([x,y])=>[mix(cx,x,round?.962:1),mix(cy,y,round?.956:1)]);
+      const vertices=[point(cx,cy,relief+round),...inner.map(([x,y],i)=>point(x,y,relief+(round?(i%3)*.009:0)))];
+      const indices=[];
+      for(let j=0;j<inner.length;j++) {
+        const a=j+1,b=(j+1)%inner.length+1;
+        indices.push(0,a,b);
+      }
+      if((front&&sign<0)||(!front&&sign>0))indices.reverse();
+      if(!round){mesh(geometry(vertices,indices),mat);return;}
+      // All stones have the same material response. Store individual colours
+      // in a single indexed surface, retaining each polygon's own normals.
+      const base=granitePositions.length/3;
+      for(const vertex of vertices) {
+        granitePositions.push(...vertex);
+        graniteColors.push(mat.color.r,mat.color.g,mat.color.b);
+        graniteUVs.push(vertex[front?0:2]/.9,vertex[1]/.9);
+      }
+      for(const i of indices)graniteIndices.push(base+i);
+    }
+    // Clip a convex polygon against a half-plane. Cells share their actual
+    // boundaries, so joints run between irregular stones instead of crossing them.
+    function clip(points,nx,ny,limit) {
+      const result=[];
+      for(let i=0;i<points.length;i++) {
+        const a=points[i],b=points[(i+1)%points.length];
+        const da=a[0]*nx+a[1]*ny-limit,db=b[0]*nx+b[1]*ny-limit;
+        if(da<=0)result.push(a);
+        if((da<0&&db>0)||(da>0&&db<0)) {
+          const t=da/(da-db);result.push([mix(a[0],b[0],t),mix(a[1],b[1],t)]);
         }
-        for(let j=1;j<7;j++)indices.push(0,j+1,j,8,8+j,9+j);
-        for(let j=0;j<8;j++){const k=(j+1)%8;indices.push(j,k,8+j,k,8+k,8+j);}
-        // Prism winding follows the outward axis, including the far two faces.
-        if((front&&sign<0)||(!front&&sign>0))for(let j=0;j<indices.length;j+=3)[indices[j+1],indices[j+2]]=[indices[j+2],indices[j+1]];
-        mesh(geometry(verts,indices),m.stone[Math.floor(random()*6)]);
+      }
+      return result;
+    }
+    const rectangle=[[-width/2,0],[width/2,0],[width/2,height],[-width/2,height]];
+    // Leave a deep opening in the backing as well as the outer stonework.
+    function outsidePassage(points) {
+      if(side!==0)return [points];
+      return [clip(points,0,-1,-entrance.lintel),
+        clip(clip(points,0,1,entrance.lintel),1,0,entrance.left),
+        clip(clip(points,0,1,entrance.lintel),-1,0,-entrance.right)];
+    }
+    for(const part of outsidePassage(rectangle))panel(part,m.joint,-.02);
+    const sites=[],sx=1.08,sy=.69;
+    for(let j=0;j<6;j++) {
+      const columns=Math.ceil(width/sx);
+      for(let i=-1;i<=columns;i++) {
+        const x=(i+.35+(j%2)*.5+(random()-.5)*.72)*width/columns-width/2;
+        const y=(j+.5+(random()-.5)*.63)*height/6;
+        sites.push([x,y]);
       }
     }
+    for(const [x,y] of sites) {
+      let cell=rectangle;
+      for(const [nx,ny] of sites) {
+        const dx=nx-x,dy=ny-y;
+        if((!dx&&!dy)||Math.abs(dx)>sx*3.6||Math.abs(dy)>sy*3.7)continue;
+        // Anisotropic spacing preserves the wide, interlocking granite faces.
+        const ax=dx/(sx*sx),ay=dy/(sy*sy);
+        cell=clip(cell,ax,ay,ax*(x+nx)/2+ay*(y+ny)/2);
+        if(cell.length<3)break;
+      }
+      if(cell.length<3)continue;
+      const fieldStone=m.stone[Math.floor(random()*m.stone.length)],relief=.025+random()*.05;
+      for(const part of outsidePassage(cell))panel(part,fieldStone,relief,.035+random()*.07);
+    }
   }
-  box(2.48,2.15,0.10,1.2,2.95,7.31,m.dark);
-  box(2.9,0.37,0.53,1.2,4.07,6.96,m.stone[1]);
-  for(const x of [-.21,2.61]) box(.32,2.05,.49,x,2.94,7.04,m.stone[3]);
-  box(3.1,0.16,0.62,1.2,1.98,7.59,m.stone[1]);
+  const masonry=new T.BufferGeometry();
+  masonry.setAttribute('position',new T.Float32BufferAttribute(granitePositions,3));
+  masonry.setAttribute('color',new T.Float32BufferAttribute(graniteColors,3));
+  masonry.setAttribute('uv',new T.Float32BufferAttribute(graniteUVs,2));
+  masonry.setIndex(graniteIndices);masonry.computeVertexNormals();
+  const granite=material('#ffffff');granite.vertexColors=true;
+  granite.map=graniteGrain;granite.bumpMap=graniteGrain;granite.bumpScale=.015;
+  mesh(masonry,granite).name='Interlocking dressed granite fieldstones';
+
+  // The visitor entrance passes through the battered stone base into the
+  // museum basement. The recessed glazed doors can be seen beyond the jambs.
+  const portal=new T.Group();portal.name='Basement entrance passage';architecture.add(portal);
+  const openingWidth=entrance.right-entrance.left,centre=(entrance.right+entrance.left)/2;
+  box(openingWidth+.22,.12,2.06,centre,stoneBottom+.035,6.66,m.stone[1],portal);
+  box(openingWidth+.08,.16,1.39,centre-.07,stoneBottom+entrance.lintel,6.32,m.joint,portal);
+  for(const [x,s] of [[entrance.left,-1],[entrance.right,1]]) {
+    for(let row=0;row<4;row++) {
+      const h=entrance.lintel/4, yy=(row+.5)*h;
+      const narrow=1-Math.pow(1-yy/height,1.18);
+      const centreX=x*mix(1,topW/bottomW,narrow);
+      const outerZ=mix(bottomD,topD,narrow)/2+.06;
+      box(.24,h-.018,outerZ-entrance.back+.05,centreX+s*.10,stoneBottom+yy,(outerZ+entrance.back)/2,m.stone[(row+2)%6],portal);
+    }
+  }
+  box(2.81,.34,.55,centre-.09,stoneBottom+entrance.lintel+.11,6.72,m.stone[1],portal);
+  box(openingWidth,.22,.52,centre,stoneBottom+.01,7.58,m.stone[4],portal);
+  box(openingWidth,2.15,.12,centre,stoneBottom+1.08,entrance.back,m.dark,portal);
+  for(const s of [-1,1]) {
+    box(.97,1.61,.055,centre+s*.52,stoneBottom+.94,entrance.back+.080,m.window,portal);
+    box(.059,1.87,.07,centre+s*.045,stoneBottom+.94,entrance.back+.12,m.timber,portal);
+  }
+  box(openingWidth,.08,.10,centre,stoneBottom+1.82,entrance.back+.12,m.timber,portal);
   box(15.0,0.24,12.2,0,6.03,0,m.plasterShade);
 
   // Each wall has a white sill, projecting lintel, and inset barred windows.
@@ -215,15 +305,15 @@ export function createKaratsuCastle(T) {
       for(const sign of [-1,1]) for(let i=0;i<count;i++) {
         const p=span*((i+.5)/count-.5)*.87;
         const wx=front?p:sign*(w/2+.031), wz=front?sign*(d/2+.031):p;
-        const ww = y1-y0>2.4?1.18:0.94, wh=Math.min(1.05,(y1-y0)*.45), wy=(y0+y1)/2+.08;
+        const ww = y1-y0>2.4?1.36:1.08, wh=Math.min(1.23,(y1-y0)*.50), wy=(y0+y1)/2+.08;
         const window=box(ww,wh,.065,wx,wy,wz,m.window);
         if(!front)window.rotation.y=Math.PI/2;
         const sill=box(ww+.20,.13,.17,wx,wy-wh/2-.08,wz,m.plasterLight);
         const lintel=box(ww+.14,.105,.14,wx,wy+wh/2+.07,wz,m.plasterLight);
         if(!front){sill.rotation.y=Math.PI/2;lintel.rotation.y=Math.PI/2;}
-        for(let bar=0;bar<5;bar++) {
-          const offset=(bar/4-.5)*ww*.86;
-          const part=box(.057,wh,.09,wx+(front?offset:sign*.045),wy,wz+(front?sign*.045:offset),m.dark);
+        for(let bar=0;bar<7;bar++) {
+          const offset=(bar/6-.5)*ww*.88;
+          const part=box(.052,wh,.092,wx+(front?offset:sign*.047),wy,wz+(front?sign*.047:offset),m.lattice);
           if(!front)part.rotation.y=Math.PI/2;
         }
         // Narrow recessed frame edges make the existing openings feel carved
@@ -463,13 +553,27 @@ export function createKaratsuCastle(T) {
   // The top is an irimoya: exposed triangular gables on both ridge ends.
   gable(4.02,1.47,1.40,23.08,3.24,'triangle',Math.PI/2);
   gable(4.02,1.47,1.40,23.08,3.24,'triangle',-Math.PI/2);
-  // Two small shachihoko-inspired ridge silhouettes, modeled abstractly.
+  // Paired, inward-facing shachihoko on the main ridge. Each has a stout
+  // fish body, a short horned head and an upswept, forked tail.
+  const fishShape=new T.Shape();
+  fishShape.moveTo(-.40,.10);fishShape.quadraticCurveTo(-.49,.16,-.44,.29);
+  fishShape.lineTo(-.33,.29);fishShape.lineTo(-.33,.43);fishShape.lineTo(-.22,.37);
+  fishShape.lineTo(-.17,.52);fishShape.lineTo(-.06,.38);
+  fishShape.bezierCurveTo(.16,.47,.23,.63,.28,.85);
+  fishShape.lineTo(.28,1.10);fishShape.lineTo(.43,.94);fishShape.lineTo(.64,1.18);
+  fishShape.quadraticCurveTo(.60,.88,.49,.72);
+  fishShape.bezierCurveTo(.40,.40,.30,.12,.12,.04);fishShape.lineTo(-.19,.03);fishShape.closePath();
+  const casting=new T.ExtrudeGeometry(fishShape,{depth:.17,bevelEnabled:true,bevelSegments:1,bevelSize:.035,bevelThickness:.035,curveSegments:7});
   for(const sign of [-1,1]) {
-    const x=sign*2.87;
-    beam([x,24.68,0],[x+sign*.15,25.08,0],.14,m.tileLight);
-    beam([x+sign*.15,25.08,0],[x+sign*.32,25.60,0],.115,m.tile);
-    beam([x+sign*.32,25.60,0],[x+sign*.54,25.88,0],.09,m.tileLight);
-    beam([x+sign*.13,25.08,0],[x-sign*.18,25.27,0],.08,m.tileLight);
+    const finial=new T.Group();finial.name='Shachihoko ridge casting';architecture.add(finial);
+    finial.position.set(sign*2.88,24.68,0);finial.scale.x=sign;
+    const fish=mesh(casting,m.ridgeFish,finial);fish.position.z=-.085;
+    box(.66,.15,.31,.04,.02,0,m.tile,finial);
+    for(const face of [-1,1]) {
+      const z=face*.139;
+      beam([-.21,.34,z],[-.29,.30,z],.031,m.tileLight,finial);
+      for(let i=0;i<3;i++)beam([.04+i*.072,.15+i*.10,z],[.16+i*.065,.26+i*.10,z],.022,m.tileLight,finial);
+    }
   }
 
   // Small west-side connecting wing, with its own lower white wall and tiles.
@@ -576,8 +680,8 @@ export function createKaratsuCastle(T) {
   group.userData = {
     asset: 'karatsu-castle',
     description: 'Original miniature of the present five-tier Karatsu Castle keep',
-    referenceURLs: ['https://karatsujo.com/','https://karatsujo.com/images/top-about1.jpg','https://karatsujo.com/images/top-instagram4.jpg','https://karatsujo.com/images/top-instagram5.jpg','https://www.city.karatsu.lg.jp/page/3841.html','https://online.bunka.go.jp/heritages/detail/442823','https://kojodan.jp/castle/146/photo/397738.html'],
-    revision: '20260908-multiangle',
+    referenceURLs: ['https://karatsujo.com/','https://karatsujo.com/images/top-about1.jpg','https://karatsujo.com/images/top-instagram4.jpg','https://karatsujo.com/images/top-instagram5.jpg','https://www.city.karatsu.lg.jp/page/3841.html','https://www.city.karatsu.lg.jp/uploaded/image/20675.png','https://www.asobo-saga.jp/spots/detail/83cd698f-0214-46e2-8fbd-3dc0e772f7c5','https://online.bunka.go.jp/heritages/detail/442823','https://kojodan.jp/castle/146/photo/397738.html'],
+    revision: '20261118-stone-passage',
     sourceBasis: 'Observed official elevation, eave-understructure and granite detail photographs; interpreted dimensions, not a survey',
     measuredSurvey: false,
     frontAxis: '+Z',

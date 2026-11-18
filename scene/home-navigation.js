@@ -3,7 +3,7 @@
  * listeners, so native links and browser keyboard shortcuts stay untouched. */
 export function createWalkNavigation({
   camera, bounds, obstacles = [], spawn = { x: 0, z: 0, yaw: 0, pitch: 0 },
-  eyeHeight = 1.62, radius = .22, speed = 3, waypoints = [],
+  eyeHeight = 1.62, groundHeight = () => 0, radius = .22, speed = 3, waypoints = [],
 } = {}) {
   const EPS = 1e-7, CLEARANCE = .006, MAX_DT = .1;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -106,7 +106,7 @@ export function createWalkNavigation({
     finalHeading = finite(last.yaw) || finite(last.pitch) ? { yaw: finite(last.yaw) ? last.yaw : null, pitch: finite(last.pitch) ? clamp(last.pitch, -1.2, 1.2) : null } : null;
     if (valid(finalLook)) finalHeading = {
       yaw: Math.atan2(finalLook.x - last.x, finalLook.z - last.z),
-      pitch: clamp(Math.atan2((finite(finalLook.y) ? finalLook.y : eyeHeight) - eyeHeight, distance(finalLook, last)), -1.2, 1.2),
+      pitch: clamp(Math.atan2((finite(finalLook.y) ? finalLook.y : groundHeight(last.x,last.z)+eyeHeight) - (groundHeight(last.x,last.z)+eyeHeight), distance(finalLook, last)), -1.2, 1.2),
     };
     route = nextRoute; input = { forward: 0, right: 0, sprint: false }; blocked = false;
     return true;
@@ -157,13 +157,15 @@ export function createWalkNavigation({
   }
   function syncCamera() {
     if (!camera) return;
-    camera.position.set(x, eyeHeight, z);
-    camera.lookAt(x + Math.sin(yaw) * Math.cos(pitch), eyeHeight + Math.sin(pitch), z + Math.cos(yaw) * Math.cos(pitch));
+    const elevatedEye=groundHeight(x,z)+eyeHeight;
+    camera.position.set(x,elevatedEye,z);
+    camera.lookAt(x + Math.sin(yaw) * Math.cos(pitch), elevatedEye + Math.sin(pitch), z + Math.cos(yaw) * Math.cos(pitch));
     camera.updateMatrixWorld?.();
   }
   function getState() {
     const routeActive = route.length > 0 || finalHeading !== null;
-    return { position: { x, y: eyeHeight, z }, target: { x: x + Math.sin(yaw) * Math.cos(pitch), y: eyeHeight + Math.sin(pitch), z: z + Math.cos(yaw) * Math.cos(pitch) },
+    const elevatedEye=groundHeight(x,z)+eyeHeight;
+    return { position: { x, y:elevatedEye, z }, target: { x: x + Math.sin(yaw) * Math.cos(pitch), y: elevatedEye + Math.sin(pitch), z: z + Math.cos(yaw) * Math.cos(pitch) },
       yaw, pitch, moving, travel, routeActive, blocked, mode: routeActive ? 'route' : moving ? 'walking' : 'idle' };
   }
   function update(delta = 0) {

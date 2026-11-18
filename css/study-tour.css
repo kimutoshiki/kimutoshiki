@@ -133,3 +133,8 @@
 .tour-arrival span { position: absolute; left: 50%; bottom: 12%; width: max-content; max-width: 95%; transform: translateX(-50%); padding: .45em 1em; border-radius: 3px; background: #2a2320dc; color: #fff9ee; font: 500 1rem/1.5 var(--sans, sans-serif); }
 .tour-arrival.is-arrived { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .tour-arrival { transition: none; } }
+
+.tour-meta { display: flex; gap: 1em; align-items: baseline; flex-wrap: wrap; }
+.tour-source { font-size: .82rem; text-decoration: underline; text-underline-offset: .2em; color: #654b43; }
+@media(max-width: 410px) { .tour-meta { gap: .2rem .5rem; } }
+@media(max-height: 460px) and (orientation: landscape) { .tour-meta { display: none; } }

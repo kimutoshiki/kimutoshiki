@@ -1,9 +1,8 @@
 import {branchCards,createLeafSprays} from './grove-foliage.js';
-import {createPlaceSettings} from './place-settings.js';
 /** Small, authored outdoor details. All dimensions are in walking metres.
  * The arcade and harbour are imagined settings around the original landmarks.
  * No image, GLB, light, or reflection pass is needed for either district. */
-function coloredGeometry(T) {
+export function coloredGeometry(T) {
   const positions = [], colors = [], indices = [], palette = new Map();
   function solid(vertices, faces, hex) {
     if (!palette.has(hex)) palette.set(hex, new T.Color(hex).toArray().map(c => Math.round(c * 255)));
@@ -166,7 +165,7 @@ function sailingBoat(geometry) {
   beam([-.33,3.54,.045],[-1.65,.38,0],.011,.011,'#b69f80',4);
 }
 
-function treeGeometry(T, pine) {
+export function treeGeometry(T, pine) {
   const geometry=coloredGeometry(T), canopy=branchCards(T), {beam}=geometry;
   let seed = pine ? 205 : 937;
   const random = () => { seed = (Math.imul(seed,1664525)+1013904223)>>>0; return seed/4294967296; };
@@ -223,7 +222,6 @@ export function createWalkDistricts(T, {obstacle, materials, geometries, texture
   const architecture=coloredGeometry(T);
   campusArcade(architecture,obstacle);harbourQuay(architecture,obstacle);
   add(new T.Mesh(architecture.finish(),material)).name='Open campus arcade and mooring quay';
-  const settings=createPlaceSettings(T,{root,obstacle,materials,geometries,textures,makeGeometry:coloredGeometry});
   const transform=new T.Object3D();
   let trees=0;
   function grove(name,pine,sites) {
@@ -240,10 +238,7 @@ export function createWalkDistricts(T, {obstacle, materials, geometries, texture
   }
   grove('Ginkgo trees on the campus walk',false,[[-7.4,13,1.11,.1],[-10.45,17.8,1.16,2.1],[-9.7,26.1,1.17,.7],[-11.4,30.3,1.12,4.1],[-13,74,1.28,1.1],[-19,79,1.2,2.8],[-12.2,11.0,1.28,2.7],[-1.93,23.0,1.19,.6],[-6.1,25.95,1.04,3.2],[-14.8,26.15,1.34,1.5]]);
   grove('Windswept coastal pines',true,[[7.7,10.5,.99,2.2],[8.0,16.0,1.07,1.3],[14.7,39.9,1.25,.5],[22.9,50.8,1.08,2.2],[31.4,50,1.25,1.1],[38.5,49.8,1.19,3.65],[43,54,1.18,1.4],[17.0,86.2,1.3,3.1],
-    ...[.18,.50,.92,1.48,1.88,2.39,2.90,3.37,3.90,4.42,4.91,5.45,5.92].map((angle,i)=>{
-      const [x,z,elevation]=settings.hillPine(angle,.84+(i%3)*.035);
-      return [x,z,.71+(i%4)*.075,angle+.55,elevation];
-    })]);
+    [22,64,1.05,1.0],[17,67,1.15,2.8],[29,61,1.22,.5]]);
   const {left,right,near,far}=HARBOUR;
   const waterMap=makeWater(T);textures.add(waterMap);
   const waterMaterial=new T.MeshStandardMaterial({map:waterMap,roughness:.43,metalness:.10});

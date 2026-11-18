@@ -93,7 +93,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
       notify({ deskAction: id, deskStatus: '操作しました', deskActionSequence: engineState.deskActionSequence + 1 });
       return true;
     },
-    explorePlace(key) { record('explorePlace', key); notify({ seated: false, standing: true, posture: 'walking', mode: 'outside', focus: 'landmark-' + key, district: '唐津城の水辺', outdoorsReady: true, landmarksReady: true }); },
+    explorePlace(key) { record('explorePlace', key); notify({ seated: false, standing: true, posture: 'walking', mode: 'outside', focus: 'landmark-' + key, district: '唐津城・本丸', outdoorsReady: true, landmarksReady: true }); },
     standUp() { record('standUp'); Object.assign(engineState, { seated: false, standing: true, posture: 'walking', mode: 'inside' }); return true; },
     prewarmExterior() { record('prewarmExterior'); return Promise.resolve(); },
     setRenderingActive(value) { record('setRenderingActive', value); },
@@ -271,7 +271,7 @@ gardenOnly.tourOptions.onExplore('karatsu-castle'); await tick();
 await gardenOnly.attach(); gardenOnly.options.onReady(); await tick();
 assert.equal(gardenOnly.count('explorePlace'), 1);
 assert.equal(gardenOnly.byId('main').dataset.displayMode, '3d');
-assert.equal(gardenOnly.byId('world-location-name').textContent, '唐津城の水辺');
+assert.equal(gardenOnly.byId('world-location-name').textContent, '唐津城・本丸');
 assert(gardenOnly.byId('main').classList.contains('is-walking'));
 const canceled = harness();
 await canceled.select3d(); canceled.select2d(); canceled.options.onReady(); await canceled.attach();
