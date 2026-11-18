@@ -126,6 +126,21 @@ function mapleArrangement(T,room) {
 export function furnishStudy(T,original) {
   const room=original.group;
   mapleArrangement(T,room);
+  const veneer = finish(T,'#855b3e',.39,.025,.41);
+  for (const [index, drawer] of original.drawers.entries()) {
+    const front=drawer.children.find(part=>part.isMesh && part.position.z===.772);
+    if (!front) continue;
+    front.name='Bookmatched walnut drawer veneer';
+    front.material=veneer;front.geometry=front.geometry.clone();
+    const {position,uv}=front.geometry.attributes;
+    // Cut a narrow strip along the grain instead of squeezing an entire
+    // rectangular photograph onto one long, shallow drawer.
+    for(let i=0;i<uv.count;i++){
+      const u=position.getX(i)/2.46+.5;
+      uv.setXY(i,index?1-u:u,(index?.56:.43)+position.getY(i)*.61);
+    }
+    uv.needsUpdate=true;
+  }
   const inset=room.getObjectByName('Olive leather writing inset');
   inset.material.color.set('#465039');inset.material.roughness=.57;inset.material.bumpScale=.0012;
   // A shared reflection map gives varnish, green enamel and bronze a readable
@@ -147,7 +162,7 @@ export function furnishStudy(T,original) {
   });
   polish(room);
   function setMiniatureFinishes(group){polish(group);}
-  return {setMiniatureFinishes};
+  return {setMiniatureFinishes,veneer};
 }
 
 export function createWindowLight(T) {

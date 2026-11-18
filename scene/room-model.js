@@ -273,7 +273,7 @@ export function createRoom(THREE, assets = {}) {
   const gallery = photoWall.group;
 
   // The owner's name is a distinct small desk object, separate from the photographs.
-  const profile = new THREE.Group(); profile.position.set(-2.12, 2.183, .48); profile.rotation.y = -.09; group.add(profile);
+  const profile = new THREE.Group(); profile.position.set(assets.worldHome ? -2.32 : -2.12, 2.183, .48); profile.rotation.y = -.09; group.add(profile);
   box(.83, .055, .37, palette.darkWood, 0, .027, 0, profile, .024);
   const nameBacking = box(.79, .27, .035, palette.wood, 0, .184, -.053, profile, .018); nameBacking.rotation.x = -.16;
   const nameMap = makeCanvas(640, 240, (ctx, w, h) => {

@@ -176,15 +176,29 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
     for(let i=0;i<uv.count;i++)if(Math.abs(n.getY(i))>.5)uv.setXY(i,p.getX(i)/6.2+.5,p.getZ(i)/3.14+.5);
     uv.needsUpdate=true;
   }
+  const viewMaterial = new T.MeshBasicMaterial({color:'#fff2dd'});
+  const gardenView = new T.Mesh(new T.PlaneGeometry(3.22,5.1),viewMaterial);
+  gardenView.name='Autumn garden beyond the study window';
+  gardenView.position.set(-4.97,3.53,-2.20);
+  gardenView.visible=false;room.add(gardenView);
+  let seatedView=true;
+  function setSeatedView(seated){seatedView=seated;gardenView.visible=seatedView && !!viewMaterial.map;}
+  function setDaylight(daylight){viewMaterial.color.setRGB(.10+.90*daylight,.12+.81*daylight,.17+.62*daylight);}
   const loader = new T.TextureLoader(); let refined=false;
   function refine() {
     if(refined||disposed)return;refined=true;
-    for(const [file,material] of [['atlas/karatsu',mapMaterial],['decor/burgundy-rug',rug?.material]]) {
+    for(const [file,material] of [['atlas/karatsu',mapMaterial],['decor/burgundy-rug',rug?.material],
+      ['materials/figured-walnut',studyFinishes.veneer],['world/autumn-window',viewMaterial]]) {
       if(!material)continue;
       loader.load(new URL('../images/'+file+'.webp',import.meta.url).href,texture=>{
         if(disposed){texture.dispose();return;}ownedTextures.add(texture);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;
         const previous=material.map;material.map=texture;previous?.dispose();
-        material.color.set('#ffffff');material.needsUpdate=true;onTextureLoad(file);onAssetChange();
+        if (material===viewMaterial) {
+          const visibleWidth=(3.22/5.1)/(texture.image.width/texture.image.height);
+          texture.repeat.x=Math.min(1,visibleWidth);texture.offset.x=(1-texture.repeat.x)*.48;
+          setSeatedView(seatedView);
+        } else material.color.set(material===studyFinishes.veneer?'#efdbc4':'#ffffff');
+        material.needsUpdate=true;onTextureLoad(file);onAssetChange();
       },undefined,()=>{});
     }
   }
@@ -193,7 +207,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
   group.traverse(o=>{if(!o.isMesh)return;for(const material of Array.isArray(o.material)?o.material:[o.material]){const spec=SURFACES[material.userData.surface?.key];if(spec)ensureSurfaceUV(T,o.geometry,spec.span);}o.geometry.userData.surfaceUVPrepared=true;});
   const skipRoots = new Set([original.cat.group, original.cat.contactShadow, original.blinds.group, original.clock.group]);
   const deskActions = createDeskActions(T, {journal, lampLight:original.lampLight, drawer:original.drawers[0], desk:room.getObjectByName('Writing desk')});
-  const protectedObjects = new Set([map, rug, floor, ...deskActions.protectedObjects].filter(Boolean));
+  const protectedObjects = new Set([map, rug, floor, gardenView, ...deskActions.protectedObjects].filter(Boolean));
   // Keep selection roots and furniture identities but combine their static parts.
   const preserveGroups = new Set([room.getObjectByName('Writing desk'),chair,room.getObjectByName('Oak and iron window workbench'),...deskActions.preserveGroups,...targets.map(t=>t.object)].filter(Boolean));
   const batchReport = mergeStaticDraws(T, group, {byParent:false,skipRoots,protectedObjects,preserveGroups});
@@ -245,7 +259,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
   }
   return {
     group,targets,collisions,metadata,deskActions,cat:original.cat,lampLight:original.lampLight,clock:original.clock,landmarksReady,
-    refine,loadMiniatures,
+    refine,loadMiniatures,setSeatedView,setDaylight,
     updateClock(snapshot){clockSnapshot=snapshot;landmarks?.updateClock?.(snapshot);},
     update(delta,enabled=true){return original.blinds.update(delta,enabled);},
     dispose(){
