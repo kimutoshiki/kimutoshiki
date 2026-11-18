@@ -44,7 +44,7 @@ function prepareSurfaces(T, root) {
 
 /** Build only after the landscape's first frame. Yield between the four
  * factories so a moving camera / loading UI keeps receiving frame callbacks. */
-export async function createWorldLandmarks(T, { onTextureLoad } = {}) {
+export async function createWorldLandmarks(T, { onTextureLoad, waitForStudy } = {}) {
   const group = new T.Group(); group.name = 'Waseda and Karatsu · life-size garden landmarks';
   const targets = [], stats = { models: [], geometryPolicy: 'Original architecture at approximate real-world height, uniformly scaled and grounded at y=0; continuous garden.' };
   const ownedTextures = new Set(), clocks = [], protectedHands = new Set();
@@ -52,6 +52,7 @@ export async function createWorldLandmarks(T, { onTextureLoad } = {}) {
   try {
     for (const site of SITES) {
       await new Promise(resolve => setTimeout(resolve, 0));
+      if(waitForStudy && !await waitForStudy())break;
       const model = site.factory(T), generated = resources(model.group);
       const architecture = model.architecture || model.group.getObjectByName(site.name);
       if (!architecture || architecture.name !== site.name) throw new Error('Missing complete world architecture: ' + site.key);

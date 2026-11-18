@@ -16,12 +16,12 @@ function drawJournal(canvas) {
   };
   const mincho = deskMincho;
   const burgundy = '#814439', ink = '#243e3f', gold = '#e7ca85';
-  c.fillStyle = '#244543'; c.fillRect(0, 0, 512, 512);
+  c.fillStyle = '#344736'; c.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 512; i += 4) {
-    c.fillStyle = i % 8 ? '#2b4c48' : '#284947'; c.fillRect(i, 0, 1, 512);
+    c.fillStyle = i % 8 ? '#3b503d' : '#374a38'; c.fillRect(i, 0, 1, 512);
     c.fillStyle = 'rgba(177,164,117,.065)'; c.fillRect(0, i, 512, 1);
   }
-  c.fillStyle = '#1b3635'; c.fillRect(0, 0, 34, 512);
+  c.fillStyle = '#293629'; c.fillRect(0, 0, 34, 512);
   c.strokeStyle = gold; c.lineWidth = 3; c.strokeRect(54, 20, 435, 472);
   c.lineWidth = 1; c.strokeRect(61, 27, 421, 458); line(32, 0, 32, 512);
   c.textAlign = 'center'; c.fillStyle = gold;
@@ -110,10 +110,10 @@ function panelUV(columnFraction, rowFraction, panel) {
 
 export function createDeskJournal(T, root, onTextureLoad) {
   root.userData.deskProp = 'notebook';
-  root.position.set(-.70, 2.172, .493);
-  root.rotation.y = -.045; root.scale.setScalar(1);
+  root.position.set(-.86, 2.172, .50);
+  root.rotation.y = -.065; root.scale.set(1.20,1.06,1.04);
   const print = journalPrint(T, onTextureLoad);
-  const cloth = new T.MeshStandardMaterial({color:'#274442', roughness:.86});
+  const cloth = new T.MeshStandardMaterial({color:'#334734', roughness:.86});
   const paper = new T.MeshStandardMaterial({color:'#ded0ae', roughness:.93});
   const ribbon = new T.MeshStandardMaterial({color:'#8d483a', roughness:.85});
   const block = new T.BoxGeometry(1, 1, 1);

@@ -1,4 +1,5 @@
 import { createRoom } from './room-model.js';
+import { createReadingLamp, finishEnvelope, furnishStudy } from './study-finishes.js';
 import { createDeskActions, createDeskJournal } from './desk-interactions.js';
 import { surface, prepareBoxSurfaceUVs, ensureSurfaceUV, SURFACES } from './surface-materials.js';
 import { mergeStaticDraws, cacheStaticLocalMatrices } from './static-batching.js';
@@ -16,11 +17,12 @@ export const HOME_FRONT_WINDOW = Object.freeze({ x: .85, width: 1.4, sill: .8, h
  * The returned cat is the original empty owner; the caller installs its asset.
  * No external image or cat request begins during this synchronous factory.
  */
-export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange = () => {}, catAsset, loadCatDetail } = {}) {
+export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange = () => {}, catAsset, loadCatDetail, waitForStudy } = {}) {
   let disposed = false, landmarks, clockSnapshot;
   const group = new T.Group(); group.name = 'Home · the original warm study';
   let journal;
-  const original = createRoom(T, { worldHome: true, createNotebook: root => { journal=createDeskJournal(T,root,onTextureLoad); }, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
+  const original = createRoom(T, { worldHome: true, createReadingLamp, finishEnvelope, createNotebook: root => { journal=createDeskJournal(T,root,onTextureLoad); }, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
+  const studyFinishes=furnishStudy(T,original);
   original.lampLight.intensity *= HOME_SCALE * HOME_SCALE;
   original.lampLight.distance *= HOME_SCALE;
   const room = original.group; room.scale.setScalar(HOME_SCALE); room.position.y = .0108; group.add(room);
@@ -174,15 +176,30 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
     for(let i=0;i<uv.count;i++)if(Math.abs(n.getY(i))>.5)uv.setXY(i,p.getX(i)/6.2+.5,p.getZ(i)/3.14+.5);
     uv.needsUpdate=true;
   }
+  const viewMaterial = new T.MeshBasicMaterial({color:'#fff2dd'});
+  const gardenView = new T.Mesh(new T.PlaneGeometry(3.22,5.1),viewMaterial);
+  gardenView.name='Autumn garden beyond the study window';
+  gardenView.position.set(-4.97,3.53,-2.20);
+  gardenView.visible=false;room.add(gardenView);
+  let seatedView=true;
+  function setSeatedView(seated){seatedView=seated;gardenView.visible=seatedView && !!viewMaterial.map;}
+  function setDaylight(daylight){viewMaterial.color.setRGB(.10+.90*daylight,.12+.81*daylight,.17+.62*daylight);}
   const loader = new T.TextureLoader(); let refined=false;
   function refine() {
     if(refined||disposed)return;refined=true;
-    for(const [file,material] of [['atlas/karatsu',mapMaterial],['decor/burgundy-rug',rug?.material]]) {
+    for(const [file,material] of [['atlas/karatsu',mapMaterial],['decor/burgundy-rug',rug?.material],
+      ['materials/figured-walnut',studyFinishes.veneer],['world/autumn-window',viewMaterial]]) {
       if(!material)continue;
       loader.load(new URL('../images/'+file+'.webp',import.meta.url).href,texture=>{
         if(disposed){texture.dispose();return;}ownedTextures.add(texture);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;
         const previous=material.map;material.map=texture;previous?.dispose();
-        material.color.set('#ffffff');material.needsUpdate=true;onTextureLoad(file);onAssetChange();
+        if (material===viewMaterial) {
+          const visibleWidth=(3.22/5.1)/(texture.image.width/texture.image.height);
+          texture.repeat.x=Math.min(1,visibleWidth);texture.offset.x=(1-texture.repeat.x)*.48;
+          setSeatedView(seatedView);
+        } else if (material===mapMaterial) material.color.set('#c5b9ad');
+        else material.color.set(material===studyFinishes.veneer?'#efdbc4':'#ffffff');
+        material.needsUpdate=true;onTextureLoad(file);onAssetChange();
       },undefined,()=>{});
     }
   }
@@ -191,7 +208,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
   group.traverse(o=>{if(!o.isMesh)return;for(const material of Array.isArray(o.material)?o.material:[o.material]){const spec=SURFACES[material.userData.surface?.key];if(spec)ensureSurfaceUV(T,o.geometry,spec.span);}o.geometry.userData.surfaceUVPrepared=true;});
   const skipRoots = new Set([original.cat.group, original.cat.contactShadow, original.blinds.group, original.clock.group]);
   const deskActions = createDeskActions(T, {journal, lampLight:original.lampLight, drawer:original.drawers[0], desk:room.getObjectByName('Writing desk')});
-  const protectedObjects = new Set([map, rug, floor, ...deskActions.protectedObjects].filter(Boolean));
+  const protectedObjects = new Set([map, rug, floor, gardenView, ...deskActions.protectedObjects].filter(Boolean));
   // Keep selection roots and furniture identities but combine their static parts.
   const preserveGroups = new Set([room.getObjectByName('Writing desk'),chair,room.getObjectByName('Oak and iron window workbench'),...deskActions.preserveGroups,...targets.map(t=>t.object)].filter(Boolean));
   const batchReport = mergeStaticDraws(T, group, {byParent:false,skipRoots,protectedObjects,preserveGroups});
@@ -218,11 +235,13 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
   async function loadMiniatures() {
     if(landmarksStarted||disposed)return landmarksReady;landmarksStarted=true;
     try {
+      if(waitForStudy && !await waitForStudy()){startLandmarks(null);return null;}
       const { createDeskLandmarks } = await import('./desk-landmarks.js');
       if(disposed){startLandmarks(null);return null;}
-      const result = await createDeskLandmarks(T, {waitForFonts:false,yieldBetweenModels:true,onTextureLoad});
+      const result = await createDeskLandmarks(T, {waitForFonts:false,yieldBetweenModels:true,waitForStudy,onTextureLoad});
+      if(waitForStudy)await waitForStudy();
       if(disposed){disposeTree(result.group);startLandmarks(null);return null;}
-      landmarks=result;if(clockSnapshot)landmarks.updateClock?.(clockSnapshot);room.add(result.group);group.updateMatrixWorld(true);
+      landmarks=result;studyFinishes.setMiniatureFinishes(result.group);if(clockSnapshot)landmarks.updateClock?.(clockSnapshot);room.add(result.group);group.updateMatrixWorld(true);
       for(const target of result.targets){target.anchor=target.object.localToWorld(new T.Vector3(0,.4,0));targets.push(target);}
       metadata.miniatures=result.targets.map(t=>({id:t.id,position:t.object.getWorldPosition(new T.Vector3()).toArray()}));
       onAssetChange();startLandmarks(result);return result;
@@ -241,7 +260,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
   }
   return {
     group,targets,collisions,metadata,deskActions,cat:original.cat,lampLight:original.lampLight,clock:original.clock,landmarksReady,
-    refine,loadMiniatures,
+    refine,loadMiniatures,setSeatedView,setDaylight,
     updateClock(snapshot){clockSnapshot=snapshot;landmarks?.updateClock?.(snapshot);},
     update(delta,enabled=true){return original.blinds.update(delta,enabled);},
     dispose(){

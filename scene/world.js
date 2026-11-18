@@ -1,3 +1,5 @@
+import { createStudyDestinations } from './study-destinations.js';
+import { createWindowLight } from './study-finishes.js';
 import * as T from './world-three.js';
 import { createHomeInterior } from './home-interior.js';
 import { createWalkNavigation } from './home-navigation.js';
@@ -7,7 +9,7 @@ import { loadSurfaceMaterials } from './surface-materials.js';
 import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS, worldFov } from './world-layout.js';
 
 const clamp = T.MathUtils.clamp;
-const pixelRatio = (w, h) => Math.min(globalThis.devicePixelRatio || 1, 1.6, Math.max(1, Math.sqrt(1900000 / Math.max(1, w * h))));
+const pixelRatio = (w, h) => Math.min(globalThis.devicePixelRatio || 1, 2, Math.max(.7, Math.sqrt(3000000 / Math.max(1, w * h))));
 const collision = ({ id, box }) => ({ id, minX: box.min.x, maxX: box.max.x, minZ: box.min.z, maxZ: box.max.z });
 const inHome = p => p.x > HOME.bounds.minX && p.x < HOME.bounds.maxX && p.z > HOME.bounds.minZ && p.z < HOME.bounds.maxZ;
 
@@ -24,6 +26,17 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     onError(error); return { getState: () => ({ webgl: false, catReady: false, landmarksReady: false }), dispose() {} };
   }
   let disposed = false, paused = reducedMotion, visible = !document.hidden, renderingActive=true, raf = 0, paintRaf = 0, paintTimer = 0, previousMs = 0, lastDraw = 0;
+  let studyActive = true, finishPaint;
+  const assetWaiters = new Set();
+  function waitForStudy() {
+    if (disposed || studyActive) return Promise.resolve(!disposed);
+    return new Promise(resolve => assetWaiters.add(resolve));
+  }
+  function releaseWaiters() {
+    for (const resolve of assetWaiters) resolve(!disposed);
+    assetWaiters.clear();
+  }
+  let destinations, lastHover = null;
   let landmarks, home, cat, landscape, boundary, navigation, skyOwner, shadowDirty = true, revision = 1, lightingMode = autoTime ? 'auto' : 'day', focusId = 'room', lastState = '', lastView = '';
   let miniaturesReady=false,outdoorsReady=false,outdoorsLoading=false,outdoorsError=null,outdoorPromise,landmarkPromise;
   let clockWake = 0, firstFrameReady = false, performanceScale = 1, slowFrames = 0, lastPerformanceChange = 0;
@@ -41,7 +54,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   const raycaster = new T.Raycaster(), pointer = new T.Vector2();
   function listen(target, name, handler, options) { target.addEventListener(name, handler, options); listeners.push(() => target.removeEventListener(name, handler, options)); }
   function wake() {
-    if (!firstFrameReady || disposed || !visible || !renderingActive) return;
+    if (!firstFrameReady || disposed || !visible || !studyActive || !renderingActive) return;
     if (clockWake) {
       cancelClockWake(clockWake); clockWake = 0;
       // Input after a long idle wait advances from this input, not from the last clock tick.
@@ -56,8 +69,8 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function invalidate() { revision++; shadowDirty = true; wake(); }
   try {
-    home = createHomeInterior(T, { onTextureLoad: invalidate, onAssetChange: () => { applyCatShadowPolicy(); invalidate(); }, loadCatDetail: () => (loadCat || defaultLoadCat)('full', { signal: abort.signal }) });
-    scene.add(home.group); for (const target of home.targets || []) targets.set(target.id, target); cat = home.cat;
+    home = createHomeInterior(T, { waitForStudy, onTextureLoad: invalidate, onAssetChange: () => { applyCatShadowPolicy(); invalidate(); }, loadCatDetail: () => (loadCat || defaultLoadCat)('full', { signal: abort.signal }) });
+    scene.add(home.group); destinations=createStudyDestinations(T,home.group); for (const target of home.targets || []) targets.set(target.id, target); cat = home.cat;
     if (cat) { cat.group.scale.setScalar(1 / (1.8 * HOME.scale)); cat.group.userData.targetId = 'cat'; }
     navigation = createWalkNavigation({ camera, bounds: WORLD_BOUNDS, obstacles: [...(home.collisions || []).map(collision), ...LANDMARK_RESERVATIONS, loadingGate()], spawn: startSeated ? seatedSpawn : HOME.spawn, eyeHeight: startSeated ? seatPosition[1] : HOME.eyeHeight, radius: .20, speed: 2.4, waypoints: WAYPOINTS });
   } catch (error) { home?.dispose?.(); landscape?.dispose?.(); boundary?.dispose?.(); renderer.dispose(); onError(error); return { getState: () => ({ webgl: false, catReady: false, landmarksReady: false }), dispose() {} }; }
@@ -74,8 +87,10 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   // The close window-light map retains chair legs and desk details; the cat
   // keeps its moving contact plane and the broad sun map serves the garden.
   const windowLight = new T.DirectionalLight('#fff0d5', .65); windowLight.position.set(-3, 3, -2.3); windowLight.target.position.set(0, .1, 1.1); windowLight.castShadow = true;
-  windowLight.shadow.mapSize.set(1024, 1024); Object.assign(windowLight.shadow.camera, { left: -3.8, right: 3.8, top: 4, bottom: -4, near: .1, far: 14 }); windowLight.shadow.camera.updateProjectionMatrix(); windowLight.shadow.normalBias = .007; windowLight.shadow.bias = -.00005;
+  windowLight.shadow.mapSize.set(shadowResolution,shadowResolution); Object.assign(windowLight.shadow.camera, { left: -3.8, right: 3.8, top: 4, bottom: -4, near: .1, far: 14 }); windowLight.shadow.camera.updateProjectionMatrix(); windowLight.shadow.normalBias = .007; windowLight.shadow.bias = -.00005;
   sun.shadow.autoUpdate = false; windowLight.shadow.autoUpdate = false;
+  const sash = createWindowLight(T);
+  scene.add(sash.light,sash.light.target);
   scene.add(sun, sun.target, hemisphere, ambient, roomFill, windowLight, windowLight.target);
 
   function applyTime(force=false) {
@@ -100,7 +115,9 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       hemisphere.intensity=snapshot.hemisphere.intensity;
       hemisphere.color.set(snapshot.hemisphere.skyColor);hemisphere.groundColor.set(snapshot.hemisphere.groundColor);
       ambient.intensity=snapshot.ambientIntensity;ambient.color.set(snapshot.ambientColor);
-      roomFill.intensity=snapshot.roomFillIntensity;windowLight.intensity=snapshot.windowLightIntensity;
+      roomFill.intensity=snapshot.roomFillIntensity*.83;windowLight.intensity=snapshot.windowLightIntensity*1.30;
+      sash.light.intensity=5.8*snapshot.daylight + 1.35*snapshot.dusk;
+      home.setDaylight?.(snapshot.daylight);
       if(home.lampLight)home.lampLight.intensity=snapshot.deskLampIntensity;
       scene.environmentIntensity=snapshot.environmentIntensity;scene.backgroundIntensity=snapshot.backgroundIntensity;
       renderer.toneMappingExposure=snapshot.exposure;scene.fog.color.set(snapshot.fogColor);
@@ -141,8 +158,10 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   function loadOutdoorLandmarks() {
     if(landmarkPromise)return landmarkPromise;
     landmarkPromise=(async()=>{
+      if(!studyActive && !await waitForStudy())return false;
       const factory=loadLandmarks||(await import('./world-landmarks.js')).createWorldLandmarks;
-      if(disposed)return false;const result=await factory(T);
+      if(disposed||(!studyActive&&!await waitForStudy()))return false;const result=await factory(T,{waitForStudy});
+      if(!studyActive)await waitForStudy();
       if(disposed){result.dispose?.();return false;}
       landmarks=result;result.updateClock?.(timeState);scene.add(result.group);result.targets.forEach(target=>targets.set(target.id,target));
       refreshObstacles();refineSurfaces(result.group);invalidate();emit();onProgress({phase:'architecture'});return true;
@@ -155,11 +174,12 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if(outdoorPromise)return outdoorPromise;
     outdoorsError=null;outdoorsLoading=true;emit();
     outdoorPromise=(async()=>{
+      if(!studyActive && !await waitForStudy())return false;
       const factories=await Promise.all([loadLandscape?Promise.resolve(loadLandscape):import('./world-landscape.js').then(module=>module.createWorldLandscape),loadBoundary?Promise.resolve(loadBoundary):import('./garden-boundary.js').then(module=>module.createGardenBoundary)]);
-      if(disposed)return false;
-      landscape=await factories[0](T);if(disposed){landscape.dispose?.();return false;}scene.add(landscape.group);landscape.setTime?.(timeState);
-      await new Promise(resolve=>setTimeout(resolve,0));if(disposed)return false;
-      boundary=await factories[1](T,{bounds:WORLD_BOUNDS});if(disposed){boundary.dispose?.();return false;}scene.add(boundary.group);boundary.setNightFactor(timeState.nightMix);
+      if(disposed||(!studyActive&&!await waitForStudy()))return false;
+      landscape=await factories[0](T);if(!studyActive)await waitForStudy();if(disposed){landscape.dispose?.();return false;}scene.add(landscape.group);landscape.setTime?.(timeState);
+      await new Promise(resolve=>setTimeout(resolve,0));if(disposed||(!studyActive&&!await waitForStudy()))return false;
+      boundary=await factories[1](T,{bounds:WORLD_BOUNDS});if(!studyActive)await waitForStudy();if(disposed){boundary.dispose?.();return false;}scene.add(boundary.group);boundary.setNightFactor(timeState.nightMix);
       outdoorsReady=true;refreshObstacles();arriveInGarden();refineSurfaces(boundary.group);invalidate();emit();onProgress({phase:'garden'});
       const architectureReady=await loadOutdoorLandmarks();outdoorsLoading=false;if(!disposed)emit();return architectureReady;
     })().catch(error=>{if(disposed)return false;outdoorsLoading=false;outdoorPromise=null;if(!outdoorsReady){landscape?.group.removeFromParent();landscape?.dispose();landscape=undefined;boundary?.group.removeFromParent();boundary?.dispose();boundary=undefined;}if(!disposed){outdoorsError=String(error?.message||error);console.warn('Garden preparation unavailable:',error);emit();}return false;});
@@ -176,7 +196,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function updateProjection() {
     camera.aspect = width / height;
-    camera.fov = worldFov(camera.aspect) + (posture === 'seated' ? seatedZoom : 0);
+    camera.fov = worldFov(camera.aspect,posture === 'seated') + (posture === 'seated' ? seatedZoom : 0);
     camera.updateProjectionMatrix();
   }
   function resize() {
@@ -185,7 +205,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     renderer.setSize(width, height, false); performanceStats.pixelRatio=ratio; updateProjection(); revision++; wake();
   }
   function draw(ms, force = false) {
-    if (disposed || !visible || !renderingActive) return;
+    if (disposed || !visible || !studyActive || !renderingActive) return;
     const elapsed = previousMs ? Math.max(0,(ms-previousMs)/1000) : .016, delta=Math.min(elapsed,.075); previousMs=ms;
     if (wheelInputUntil && ms > wheelInputUntil) { wheelInputUntil = 0; movementHeld = false; navigation.setInput({ forward: 0, right: 0 }); }
     if (ms-lastTimeSample>=1000) { lastTimeSample=ms; applyTime(); }
@@ -212,6 +232,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       view=navigation.getState();
     }
     const inside=inHome(view.position),showGarden=!inside || view.position.z>1 && Math.cos(view.yaw)>.15;
+    home.setSeatedView?.(posture==='seated');
     const catVisible=inside || Math.hypot(view.position.x,view.position.z)<9;
     if(cat){cat.group.visible=catVisible;cat.contactShadow.visible=catVisible&&!!cat.model;}
     landscape?.setInteriorView?.(!showGarden);
@@ -232,6 +253,10 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
         renderer.shadowMap.needsUpdate=true;shadowDirty=false;performanceStats.shadowRefreshes++;
       }
       const renderStart=performance.now();renderer.render(scene,camera);
+      if(posture==='seated'){
+        const points=destinations.projectionChanged(camera);
+        if(points)canvas.dispatchEvent(new CustomEvent('studyprojection',{bubbles:true,detail:{points}}));
+      }
       performanceStats.lastRenderMs=performance.now()-renderStart;performanceStats.frameIntervalMs=elapsed*1000;performanceStats.frames++;
       performanceStats.drawCalls=renderer.info?.render?.calls||0;performanceStats.triangles=renderer.info?.render?.triangles||0;
       if(refreshShadows)landscape?.setInteriorView?.(!showGarden);
@@ -247,7 +272,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function animate(ms) {
     raf = 0;
-    if (disposed || !visible || !renderingActive) return;
+    if (disposed || !visible || !studyActive || !renderingActive) return;
     const view = navigation.getState();
     const active = postureTransition || view.routeActive || movementHeld || dragging || home.deskActions?.isAnimating();
     const ambient = !paused && (cat?.model && cat.group.visible ||
@@ -255,7 +280,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if ((!active && !ambient) || ms - lastDraw >= (active ? 14 : 1000 / 26)) {
       lastDraw = ms; draw(ms);
     }
-    if (disposed || !visible || !renderingActive || raf) return;
+    if (disposed || !visible || !studyActive || !renderingActive || raf) return;
     if (active || ambient) raf = requestAnimationFrame(animate);
     else clockWake = scheduleClockWake(() => {
       clockWake = 0;
@@ -340,11 +365,17 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       updateProjection(); revision++; wake();
     } else { setMovement({ forward: delta < 0 ? 1 : -1 }); wheelInputUntil = performance.now() + 150; }
   }
+  function announceSubject(key,type) {
+    if(type==='hover' && lastHover===key)return;
+    if(type==='hover')lastHover=key;
+    canvas.dispatchEvent(new CustomEvent('studysubject',{bubbles:true,detail:{key,type}}));
+  }
   function interactDesk(id) {
     if (disposed || posture !== 'seated') return false;
     const animate = !paused && !reducedMotion;
     const status = home.deskActions?.trigger(id, animate);
     if (!status) return false;
+    if(id==='notebook')announceSubject('blog','select');
     deskAction = id; deskStatus = status; deskActionSequence++;
     if (!home.deskActions.isAnimating()) shadowDirty = true;
     revision++; wake(); emit(true); return true;
@@ -360,7 +391,8 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (posture === 'seated') {
       const id = home.deskActions?.pick(raycaster);
       if (id) { interactDesk(id); return; }
-      // Do not traverse thousands of ornamental triangles on a miss at the desk.
+      const key=destinations.pick(raycaster);
+      if(key)announceSubject(key,'select');
       return;
     }
     const roots = (landmarks?.targets || []).map(t => t.object); if (cat?.model) roots.push(cat.group);
@@ -383,7 +415,9 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (!dragging) {
       if (posture === 'seated' && event.pointerType === 'mouse') {
         aimPointer(event);
-        canvas.style.cursor = home.deskActions?.pick(raycaster) ? 'pointer' : '';
+        const key=destinations.pick(raycaster);
+        announceSubject(key,'hover');
+        canvas.style.cursor = key || home.deskActions?.pick(raycaster) ? 'pointer' : '';
       }
       return;
     }
@@ -399,7 +433,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (!cancel && !moved && down) select(event);
     dragging = down = null; if (cancel) stopMovement();
   }
-  listen(canvas, 'pointerleave', () => { canvas.style.cursor = ''; });
+  listen(canvas, 'pointerleave', () => { canvas.style.cursor = ''; announceSubject(null,'hover'); });
   listen(canvas, 'pointerup', event => endPointer(event)); listen(canvas, 'pointercancel', event => endPointer(event, true)); listen(canvas, 'lostpointercapture', event => endPointer(event, true));
   listen(canvas, 'wheel', event => { if (event.ctrlKey || event.metaKey || posture === 'seated' || postureTransition) return; event.preventDefault(); zoom(clamp(event.deltaY, -300, 300)); }, { passive: false });
   const keyMovement = () => setMovement({ forward: Number(pressed.has('w') || pressed.has('arrowup')) - Number(pressed.has('s') || pressed.has('arrowdown')), right: Number(pressed.has('d') || pressed.has('arrowright')) - Number(pressed.has('a') || pressed.has('arrowleft')), sprint: pressed.has('shift') });
@@ -440,24 +474,34 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     else stopMovement();
     emit();
   }
+  function setStudyActive(value) {
+    if(disposed || studyActive===!!value)return;
+    studyActive=!!value;
+    if(studyActive){releaseWaiters();revision++;wake();}
+    else {stopMovement();suspendFrames();announceSubject(null,'hover');}
+  }
   function dispose() {
-    if (disposed) return; disposed = true; sizeObserver?.disconnect(); abort.abort(); suspendFrames(); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose();surfaceOwners.forEach(owner=>owner.dispose()); home.dispose?.(); landmarks?.dispose(); landscape?.dispose(); boundary?.dispose(); skyOwner.dispose(); renderer.dispose();
+    if (disposed) return; disposed = true;releaseWaiters();finishPaint?.(); sizeObserver?.disconnect(); abort.abort(); suspendFrames(); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose();surfaceOwners.forEach(owner=>owner.dispose()); home.dispose?.(); landmarks?.dispose(); landscape?.dispose(); boundary?.dispose(); sash.dispose();skyOwner.dispose(); renderer.dispose();
   }
   listen(canvas, 'webglcontextlost', event => { event.preventDefault(); dispose(); onError(new Error('World graphics context lost')); });
   applyTime(true); resize(); draw(0, true);firstFrameReady=true; onReady(); onProgress({ phase: 'home' }); emit(true); raf = requestAnimationFrame(animate);
   async function defaultLoadCat(tier, options) { const { loadWorldCat } = await import('./world-cat-loader.js'); return loadWorldCat(tier, options); }
-  const afterPaint = () => new Promise(resolve => { paintRaf = requestAnimationFrame(() => { paintRaf = 0; paintTimer = setTimeout(() => { paintTimer = 0; resolve(); }, 0); }); });
-  afterPaint().then(() => {
-    if(disposed)return;
+  const afterPaint = () => new Promise(resolve => { finishPaint=resolve; paintRaf = requestAnimationFrame(() => { paintRaf = 0; paintTimer = setTimeout(() => { paintTimer = 0; resolve(); }, 0); }); });
+  afterPaint().then(async () => {
+    finishPaint=null;if(disposed||(!studyActive&&!await waitForStudy()))return;
     // Cat decoding and desk architecture have independent lifetimes. Neither
     // waits for a garden factory, surface image, or the other asset to finish.
     home.refine?.();refineSurfaces(home.group);
-    Promise.resolve().then(()=>(loadCat||defaultLoadCat)('world',{signal:abort.signal})).then(asset=>{
+    Promise.resolve().then(async ()=>{
+      if(disposed||(!studyActive&&!await waitForStudy()))return null;
+      return (loadCat||defaultLoadCat)('world',{signal:abort.signal});
+    }).then(async asset=>{
+      if(!studyActive)await waitForStudy();
       if(cat?.installAsset(asset)){applyCatShadowPolicy();invalidate();emit();onProgress({phase:'cat'});}
     }).catch(error=>{if(!disposed&&error.name!=='AbortError')console.warn('Room cat unavailable:',error);});
     home.loadMiniatures?.();
-    home.landmarksReady?.then(result=>{
-      if(disposed)return;miniaturesReady=!!result;
+    home.landmarksReady?.then(async result=>{
+      if(disposed||(!studyActive&&!await waitForStudy()))return;miniaturesReady=!!result;
       for(const target of home.targets||[])targets.set(target.id,target);
       if(result?.group)refineSurfaces(result.group);invalidate();emit();onProgress({phase:'miniatures'});
     }).catch(error=>console.warn('Desk landmarks unavailable:',error));
@@ -465,7 +509,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     // the garden. Desk readers never pay to decode geometry they cannot see.
   }).catch(error=>{if(!disposed)onError(error);});
   return {
-    getState: state, getPerformance: () => ({...performanceStats,outdoorsReady,miniaturesReady}), setRenderingActive, interactDesk, prewarmExterior, standUp, sitDown, focus, leave, returnHome, goToLandmark, reset: returnHome, zoom, setMovement, look, stopMovement,
+    getState: state, getPerformance: () => ({...performanceStats,outdoorsReady,miniaturesReady}), setRenderingActive, setStudyActive, interactDesk, prewarmExterior, standUp, sitDown, focus, leave, returnHome, goToLandmark, reset: returnHome, zoom, setMovement, look, stopMovement,
     setPaused(value) { paused = !!value; revision++; wake(); emit(); },
     setLightingMode(value) {
       if (!['day','night','auto'].includes(value)) return;
