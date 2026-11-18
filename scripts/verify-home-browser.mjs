@@ -71,7 +71,7 @@ async function checkIllustration(page, requests) {
   assert.deepEqual(await page.locator('#home-menu a').evaluateAll(items => items.map(el => new URL(el.href).pathname)),
     destinations.map(id => '/' + id + '.html'));
   const source = await page.locator('#study-image').evaluate(img => ({ path: new URL(img.currentSrc).pathname, width: img.naturalWidth, height: img.naturalHeight }));
-  assert.match(source.path, /^\/images\/study\/study-(640|960|1536)\.webp$/);
+  assert.match(source.path, /^\/images\/study\/study-(640|960|1200|1536)\.webp$/);
   assert(Math.abs(source.width / source.height - 1.5) < .01);
   assert(!requests.some(url => engineResource.test(url)), 'The illustrated home downloads no renderer, models or 3D geometry');
   assert.equal(await page.evaluate(() => window.__glCalls), 0);

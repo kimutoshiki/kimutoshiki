@@ -116,7 +116,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       hemisphere.color.set(snapshot.hemisphere.skyColor);hemisphere.groundColor.set(snapshot.hemisphere.groundColor);
       ambient.intensity=snapshot.ambientIntensity;ambient.color.set(snapshot.ambientColor);
       roomFill.intensity=snapshot.roomFillIntensity*.83;windowLight.intensity=snapshot.windowLightIntensity*1.30;
-      sash.light.intensity=10.4*snapshot.daylight + 1.35*snapshot.dusk;
+      sash.light.intensity=5.8*snapshot.daylight + 1.35*snapshot.dusk;
       home.setDaylight?.(snapshot.daylight);
       if(home.lampLight)home.lampLight.intensity=snapshot.deskLampIntensity;
       scene.environmentIntensity=snapshot.environmentIntensity;scene.backgroundIntensity=snapshot.backgroundIntensity;
@@ -196,7 +196,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function updateProjection() {
     camera.aspect = width / height;
-    camera.fov = worldFov(camera.aspect) + (posture === 'seated' ? seatedZoom : 0);
+    camera.fov = worldFov(camera.aspect,posture === 'seated') + (posture === 'seated' ? seatedZoom : 0);
     camera.updateProjectionMatrix();
   }
   function resize() {

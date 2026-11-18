@@ -197,7 +197,8 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
           const visibleWidth=(3.22/5.1)/(texture.image.width/texture.image.height);
           texture.repeat.x=Math.min(1,visibleWidth);texture.offset.x=(1-texture.repeat.x)*.48;
           setSeatedView(seatedView);
-        } else material.color.set(material===studyFinishes.veneer?'#efdbc4':'#ffffff');
+        } else if (material===mapMaterial) material.color.set('#c5b9ad');
+        else material.color.set(material===studyFinishes.veneer?'#efdbc4':'#ffffff');
         material.needsUpdate=true;onTextureLoad(file);onAssetChange();
       },undefined,()=>{});
     }
