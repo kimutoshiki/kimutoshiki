@@ -307,7 +307,7 @@ summary::-webkit-details-marker { display: none; }
   .studio-heading h2 { font-size: 25px; }
   .look-hint { gap: 5px; font-size: 13px; }
   .desk-view { height: clamp(230px, 65vw, 430px); }
-  .world:not(.is-walking) .world-canvas { touch-action: pan-y pinch-zoom; }
+  .world[data-display-mode="3d"] .world-canvas, .study-live-pin { touch-action: none; }
   .home-entry { padding: 12px 0; gap: 12px; }
   .home-panel { padding: 24px var(--gutter) 22px; overflow: visible; border: 0; }
   .home-intro h1 { font-size: 42px; }

@@ -1,11 +1,9 @@
-import { createStudyDestinations } from './study-destinations.js';
 import { createWindowLight } from './study-finishes.js';
 import * as T from './world-three.js';
-import { createHomeInterior } from './home-interior.js';
+import { createBlenderRoom } from './blender-room.js';
 import { createWalkNavigation } from './home-navigation.js';
 import { getWorldTime } from './world-time.js';
 import { createWorldSky } from './world-sky.js';
-import { loadSurfaceMaterials } from './surface-materials.js';
 import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS, OUTDOOR_VIEWS, REGION_BOUNDS, regionalHeight, districtAt, worldFov } from './world-layout.js';
 
 const clamp = T.MathUtils.clamp;
@@ -13,12 +11,10 @@ const pixelRatio = (w, h) => Math.min(globalThis.devicePixelRatio || 1, 2, Math.
 const collision = ({ id, box }) => ({ id, minX: box.min.x, maxX: box.max.x, minZ: box.min.z, maxZ: box.max.z });
 const inHome = p => p.x > HOME.bounds.minX && p.x < HOME.bounds.maxX && p.z > HOME.bounds.minZ && p.z < HOME.bounds.maxZ;
 
-// The entrance faces the promenade between the two sets of landmarks.
-const gardenEntrance = { x: HOME.door.x, z: 9, yaw: .04, pitch: .15 };
 const angle = value => Math.atan2(Math.sin(value), Math.cos(value));
 
 /** Start at the desk. Standing opens the same world at its garden entrance. */
-export async function mountWorld({ canvas, onReady = () => {}, onError = () => {}, onSelect = () => {}, onProgress = () => {}, rendererFactory, rendererContext, loadLandmarks, loadCat, loadLandscape, loadBoundary, loadRegion, loadPhoto, seated: startSeated = true, autoTime = true, now = () => new Date(), scheduleClockWake = (callback, delay) => setTimeout(callback, delay), cancelClockWake = token => clearTimeout(token), reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false } = {}) {
+export async function mountWorld({ canvas, onReady = () => {}, onError = () => {}, onSelect = () => {}, onProgress = () => {}, rendererFactory, rendererContext, loadLandmarks, loadRegion, seated: startSeated = true, autoTime = true, now = () => new Date(), scheduleClockWake = (callback, delay) => setTimeout(callback, delay), cancelClockWake = token => clearTimeout(token), reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false } = {}) {
   let renderer;
   try {
     renderer = rendererFactory ? rendererFactory(canvas) : new T.WebGLRenderer({ canvas, context: rendererContext, antialias: true, alpha: false, powerPreference: 'high-performance' });
@@ -36,22 +32,23 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     for (const resolve of assetWaiters) resolve(!disposed);
     assetWaiters.clear();
   }
-  let destinations, lastHover = null;
-  let landmarks, home, cat, landscape, boundary, navigation, skyOwner, shadowDirty = true, revision = 1, lightingMode = autoTime ? 'auto' : 'day', focusId = 'room', lastState = '', lastView = '';
-  let miniaturesReady=false,outdoorsReady=false,outdoorsLoading=false,outdoorsError=null,outdoorPromise,landmarkPromise;
+  let lastHover = null;
+  let landmarks, home, cat, navigation, skyOwner, shadowDirty = true, revision = 1, lightingMode = autoTime ? 'auto' : 'day', focusId = 'room', lastState = '', lastView = '';
+  let miniaturesReady=false,outdoorsReady=false,outdoorsLoading=false,outdoorsError=null;
   let clockWake = 0, firstFrameReady = false, performanceScale = 1, slowFrames = 0, lastPerformanceChange = 0;
   let pendingGardenArrival = false, movementHeld = false, seatedZoom = 0, placeRequest = 0;
-  let region=null,regionalScene=null,photo=null,photoKey=null,photoReady=false,photoDecoded=false,photoSerial=0,placeArtError=null;
+  let region = null, regionalScene = null, placeKey = null, geometryReady = false;
+  let regionAbort, requestedPlace = 'okuma-auditorium';
   let shadowAnchor={x:0,y:0,z:35};
-  let deskAction = null, deskStatus = '', deskActionSequence = 0;
-  const surfaceOwners=[],performanceStats={frames:0,lastRenderMs:0,drawCalls:0,triangles:0,pixelRatio:1,shadowRefreshes:0};
+  let pendingSubject = null, deskAction = null, deskStatus = '', deskActionSequence = 0;
+  const performanceStats={frames:0,lastRenderMs:0,drawCalls:0,triangles:0,pixelRatio:1,shadowRefreshes:0};
   let posture = startSeated ? 'seated' : 'walking', postureTransition = null, pendingSeat = false;
   let timeState, lastTimeSample = -Infinity, lastClockKey = '', lastLightKey = '';
   const seatPosition = HOME.seated.position, seatTarget = HOME.seated.target;
   const seatedSpawn = { x: seatPosition[0], z: seatPosition[2], yaw: Math.atan2(seatTarget[0]-seatPosition[0],seatTarget[2]-seatPosition[2]), pitch: Math.atan2(seatTarget[1]-seatPosition[1],Math.hypot(seatTarget[0]-seatPosition[0],seatTarget[2]-seatPosition[2])) };
   const seatLook = { x: seatTarget[0], y: seatTarget[1], z: seatTarget[2] };
   let width = 1, height = 1, down = null, dragging = null, moved = false, wheelInputUntil = 0;
-  const abort = new AbortController(), listeners = [], targets = new Map(), pressed = new Set(), activePointers = new Set();
+  const abort = new AbortController(), listeners = [], pressed = new Set(), activePointers = new Set();
   const scene = new T.Scene(), camera = new T.PerspectiveCamera(62, 1, .035, 700);
   const raycaster = new T.Raycaster(), pointer = new T.Vector2();
   function listen(target, name, handler, options) { target.addEventListener(name, handler, options); listeners.push(() => target.removeEventListener(name, handler, options)); }
@@ -71,11 +68,10 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function invalidate() { revision++; shadowDirty = true; wake(); }
   try {
-    home = createHomeInterior(T, { waitForStudy, onTextureLoad: invalidate, onAssetChange: () => { applyCatShadowPolicy(); invalidate(); }, loadCatDetail: () => (loadCat || defaultLoadCat)('full', { signal: abort.signal }) });
-    scene.add(home.group); destinations=createStudyDestinations(T,home.group); for (const target of home.targets || []) targets.set(target.id, target); cat = home.cat;
-    if (cat) { cat.group.scale.setScalar(1 / (1.8 * HOME.scale)); cat.group.userData.targetId = 'cat'; }
+    home=await createBlenderRoom(T,{signal:abort.signal,waitForStudy,onAssetChange:invalidate});
+    scene.add(home.group);
     navigation = createWalkNavigation({ camera, bounds: WORLD_BOUNDS, obstacles: [...(home.collisions || []).map(collision), ...LANDMARK_RESERVATIONS, loadingGate()], spawn: startSeated ? seatedSpawn : HOME.spawn, eyeHeight: startSeated ? seatPosition[1] : HOME.eyeHeight, radius: .20, speed: 2.4, waypoints: WAYPOINTS });
-  } catch (error) { home?.dispose?.(); landscape?.dispose?.(); boundary?.dispose?.(); renderer.dispose(); onError(error); return { getState: () => ({ webgl: false, catReady: false, landmarksReady: false }), dispose() {} }; }
+  } catch (error) { home?.dispose?.(); renderer.dispose(); onError(error); return { getState: () => ({ webgl: false, catReady: false, landmarksReady: false }), dispose() {} }; }
   scene.fog = new T.FogExp2('#dce0d1', .00165);
   skyOwner=createWorldSky(T);
   renderer.outputColorSpace = T.SRGBColorSpace; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12;
@@ -101,13 +97,6 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if(force || snapshot.secondKey!==lastClockKey) {
       lastClockKey=snapshot.secondKey;
       home.updateClock?.(snapshot);landmarks?.updateClock?.(snapshot);
-      if(home.clock) {
-        if(home.clock.hour)home.clock.hour.rotation.z=snapshot.clockAngles.hour;
-        if(home.clock.minute)home.clock.minute.rotation.z=snapshot.clockAngles.minute;
-        if(home.clock.second)home.clock.second.rotation.z=snapshot.clockAngles.second;
-        home.clock.group.userData.localTime=snapshot.label;
-        home.clock.group.userData.timeZone=snapshot.timeZone;
-      }
       revision++;
     }
     if(force || snapshot.lightingKey!==lastLightKey) {
@@ -126,50 +115,24 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       scene.environmentIntensity=snapshot.environmentIntensity;scene.backgroundIntensity=snapshot.backgroundIntensity;
       renderer.toneMappingExposure=snapshot.exposure;scene.fog.color.set(snapshot.fogColor);
       const sky=skyOwner.update(snapshot);scene.background=sky.background;scene.environment=sky.environment;
-      boundary?.setNightFactor(snapshot.nightMix);lampCell = '';landscape?.setTime?.(snapshot);invalidate();
+      invalidate();
     }
   }
   function loadingGate() {return {id:'garden-loading-threshold',minX:HOME.door.x-.7,maxX:HOME.door.x+.7,minZ:HOME.door.z-.04,maxZ:HOME.door.z+.12};}
-  function walkingObstacles(area=region,context=regionalScene) {
-    if(!area)return [...[...(home.collisions||[]),...(landscape?.collisions||[]),...(boundary?.collisions||[])].map(collision),
-      ...(!outdoorsReady?[loadingGate()]:[])];
-    const localSites=LANDMARK_SITES.filter(site=>site.region===area);
-    return [...context.collisions.map(collision),...localSites.map(site=>{
-      const target=landmarks?.targets.find(target=>target.id==='landmark-'+site.key);
-      return target?collision({id:target.id,box:new T.Box3().setFromObject(target.object)}):LANDMARK_RESERVATIONS.find(box=>box.id==='landmark-'+site.key);
-    })];
+  function walkingObstacles(area=region, context=regionalScene) {
+    if (!area) return [...(home.collisions || []).map(collision), loadingGate()];
+    const bounds = (context.architecture.targets || []).map(target => collision({id: target.id, box: target.bounds || new T.Box3().setFromObject(target.object)}));
+    return [...context.collisions.map(collision), ...bounds];
   }
-  function refreshObstacles(){navigation.setObstacles(walkingObstacles());}
-  function clearPhoto() {
-    photoSerial++;photo?.dispose?.();photo=null;photoKey=null;photoReady=false;photoDecoded=false;placeArtError=null;
-  }
-  function showPhoto(key) {
-    if(key===photoKey)return;
-    clearPhoto();if(!key)return;
-    photoKey=key;const serial=photoSerial;
-    const view=OUTDOOR_VIEWS[key],site=LANDMARK_SITES.find(s=>s.key===key);
-    // Keep the monument and the paving at the visitor's feet within the same
-    // high-resolution sun map, even at the wide angle across the gate street.
-    shadowAnchor={x:(view.eye[0]+site.position[0])*.5,
-      y:regionalHeight(view.region,...view.eye)+site.height*.18,z:(view.eye[1]+site.position[1])*.5};
+  function choosePlace(key) {
+    if (placeKey === key) return;
+    placeKey = key;
+    updateProjection();
+    if (!key) return;
+    const view = OUTDOOR_VIEWS[key], site = LANDMARK_SITES.find(site => site.key === key);
+    shadowAnchor = {x: (view.eye[0] + site.position[0]) * .5,
+      y: regionalHeight(view.region, ...view.eye) + site.height * .18, z: (view.eye[1] + site.position[1]) * .5};
     applyTime(true);
-    const isCurrent=()=>serial===photoSerial&&!disposed;
-    const ready=()=>{if(isCurrent()&&!photoDecoded){photoDecoded=true;revision++;wake();}};
-    Promise.resolve().then(async()=>{
-      const make=loadPhoto||(await import('./place-photo.js')).createPlacePhoto;
-      if(!isCurrent())return;
-      const result=await make(T,{key,view,site,onReady:ready});
-      if(!isCurrent()){result?.dispose?.();return;}
-      photo=result;
-      if(result?.ready) {
-        const accepted=await result.ready;
-        if(accepted===false)throw new Error('Place imagery unavailable');
-      }
-      if(result)ready();
-      if(isCurrent()){revision++;wake();}
-    }).catch(error=>{if(isCurrent()){
-      placeArtError=String(error?.message||error);photo?.dispose?.();photo=null;photoReady=false;revision++;wake();emit(true);
-    }});
   }
   function followPlace(x,z) {
     if(!region)return;
@@ -179,103 +142,66 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       const d=(x-view.eye[0])**2+(z-view.eye[1])**2;
       if(d<nearest){nearest=d;nearby=key;}
     }
-    if(nearest<39**2)showPhoto(nearby);
-    else if(photoKey){
-      const [px,pz]=OUTDOOR_VIEWS[photoKey].eye;
-      if((px-x)**2+(pz-z)**2>62**2)clearPhoto();
+    if(nearest<39**2)choosePlace(nearby);
+    else if(placeKey){
+      const [px,pz]=OUTDOOR_VIEWS[placeKey].eye;
+      if((px-x)**2+(pz-z)**2>62**2)choosePlace(null);
     }
   }
-  function visibilityForRegion() {
-    home.group.visible=!region;
-    if(landscape)landscape.group.visible=!region;if(boundary)boundary.group.visible=!region;
-    for(const target of landmarks?.targets||[]){
-      target.object.visible=LANDMARK_SITES.find(site=>target.id==='landmark-'+site.key)?.region===region;
+  function enterSpace(area, context, spawn) {
+    const next = createWalkNavigation({camera, bounds: area ? REGION_BOUNDS[area] : WORLD_BOUNDS,
+      waypoints: area ? [] : WAYPOINTS, obstacles: walkingObstacles(area, context),
+      spawn, eyeHeight: HOME.eyeHeight, groundHeight: (x,z) => regionalHeight(area,x,z), radius: .20, speed: 2.4});
+    navigation.dispose(); navigation = next;
+    regionalScene?.group.removeFromParent();
+    regionalScene?.dispose();
+    region = area; regionalScene = context; landmarks = context?.architecture;
+    if (context) {
+      scene.add(context.group);
+      landmarks.updateClock?.(timeState);
     }
-    roomFill.visible=windowLight.visible=sash.light.visible=!region;
+    home.group.visible = roomFill.visible = windowLight.visible = sash.light.visible = !area;
+    placeKey = null; geometryReady = false; outdoorsReady = !!context;
+    shadowAnchor = area ? {x:spawn.x,y:regionalHeight(area,spawn.x,spawn.z),z:spawn.z} : {x:0,y:0,z:35};
+    applyTime(true); updateProjection(); revision++; wake();
   }
-  function enterSpace(area,context,spawn) {
-    const next=createWalkNavigation({camera,bounds:area?REGION_BOUNDS[area]:WORLD_BOUNDS,
-      waypoints:area?[]:WAYPOINTS,obstacles:walkingObstacles(area,context),
-      spawn,eyeHeight:HOME.eyeHeight,groundHeight:(x,z)=>regionalHeight(area,x,z),radius:.20,speed:2.4});
-    navigation.dispose();navigation=next;
-    if(regionalScene!==context){regionalScene?.group.removeFromParent();regionalScene?.dispose?.();regionalScene=context;if(context)scene.add(context.group);}
-    region=area;visibilityForRegion();
-    shadowAnchor=area?{x:spawn.x,y:regionalHeight(area,spawn.x,spawn.z),z:spawn.z}:{x:0,y:0,z:35};
-    applyTime(true);revision++;wake();
+  function cancelRegionLoad() {
+    placeRequest++;
+    regionAbort?.abort(); regionAbort = null; outdoorsLoading = false;
   }
   function homeEntrance() {
-    if(region) {clearPhoto();enterSpace(null,null,gardenEntrance);}
+    cancelRegionLoad();
+    if (region) enterSpace(null, null, HOME.spawn);
   }
   function applyCatShadowPolicy() {
     // The animated contact plane follows every paw step. It avoids repeating
     // the entire static desk's shadow render for one small moving pet.
     cat?.model?.traverse(object=>{if(object.isMesh)object.castShadow=false;});
   }
-  function refineSurfaces(group) {
-    if(disposed)return;
-    surfaceOwners.push(loadSurfaceMaterials(T,group,{anisotropy:renderer.capabilities?.getMaxAnisotropy?.()||1,onLoad:invalidate}));
-  }
-  let lampCell = '';
-  function updateNearbyLights(position) {
-    if (!boundary) return;
-    const active = timeState?.nightMix > 0;
-    const cell = active ? Math.floor(position.x) + ',' + Math.floor(position.z) : 'day';
-    if (cell === lampCell) return;
-    lampCell = cell;
-    let first, second, near = Infinity, next = Infinity;
-    if (active) for (const lamp of boundary.lamps) {
-      const distance = (lamp.position[0]-position.x)**2 + (lamp.position[2]-position.z)**2;
-      if (distance < near) { second = first; next = near; first = lamp; near = distance; }
-      else if (distance < next) { second = lamp; next = distance; }
-    }
-    for (const lamp of boundary.lamps) lamp.light.visible = lamp === first || lamp === second;
-  }
-  function loadOutdoorLandmarks() {
-    if(landmarkPromise)return landmarkPromise;
-    landmarkPromise=(async()=>{
-      if(!studyActive && !await waitForStudy())return false;
-      const factory=loadLandmarks||(await import('./world-landmarks.js')).createWorldLandmarks;
-      if(disposed||(!studyActive&&!await waitForStudy()))return false;const result=await factory(T,{waitForStudy});
-      if(!studyActive)await waitForStudy();
-      if(disposed){result.dispose?.();return false;}
-      landmarks=result;result.updateClock?.(timeState);scene.add(result.group);result.targets.forEach(target=>targets.set(target.id,target));visibilityForRegion();
-      refreshObstacles();refineSurfaces(result.group);invalidate();emit();onProgress({phase:'architecture'});return true;
-    })().catch(error=>{landmarkPromise=null;if(!disposed){outdoorsError=String(error?.message||error);console.warn('Garden landmarks unavailable:',error);emit();}return false;});
-    return landmarkPromise;
-  }
   function prewarmExterior() {
-    if(disposed)return Promise.resolve(false);
-    if(outdoorsReady){if(landmarks)return Promise.resolve(true);if(landmarkPromise)return landmarkPromise;outdoorsError=null;outdoorsLoading=true;emit();return loadOutdoorLandmarks().then(ready=>{outdoorsLoading=false;emit();return ready;});}
-    if(outdoorPromise)return outdoorPromise;
-    outdoorsError=null;outdoorsLoading=true;emit();
-    outdoorPromise=(async()=>{
-      if(!studyActive && !await waitForStudy())return false;
-      const factories=await Promise.all([loadLandscape?Promise.resolve(loadLandscape):import('./world-landscape.js').then(module=>module.createWorldLandscape),loadBoundary?Promise.resolve(loadBoundary):import('./garden-boundary.js').then(module=>module.createGardenBoundary)]);
-      if(disposed||(!studyActive&&!await waitForStudy()))return false;
-      landscape=await factories[0](T);if(!studyActive)await waitForStudy();if(disposed){landscape.dispose?.();return false;}scene.add(landscape.group);landscape.setTime?.(timeState);
-      await new Promise(resolve=>setTimeout(resolve,0));if(disposed||(!studyActive&&!await waitForStudy()))return false;
-      boundary=await factories[1](T,{bounds:WORLD_BOUNDS});if(!studyActive)await waitForStudy();if(disposed){boundary.dispose?.();return false;}scene.add(boundary.group);boundary.setNightFactor(timeState.nightMix);
-      outdoorsReady=true;refreshObstacles();arriveInGarden();refineSurfaces(boundary.group);invalidate();emit();onProgress({phase:'garden'});
-      const architectureReady=await loadOutdoorLandmarks();outdoorsLoading=false;if(!disposed)emit();return architectureReady;
-    })().catch(error=>{if(disposed)return false;outdoorsLoading=false;outdoorPromise=null;if(!outdoorsReady){landscape?.group.removeFromParent();landscape?.dispose();landscape=undefined;boundary?.group.removeFromParent();boundary?.dispose();boundary=undefined;}if(!disposed){outdoorsError=String(error?.message||error);console.warn('Garden preparation unavailable:',error);emit();}return false;});
-    return outdoorPromise;
+    return explorePlace(requestedPlace);
   }
   function state() {
     const view = navigation.getState();
-    return { webgl: true, region,photoPlace:photoKey,placeArtReady:photoReady,placeArtError,district: inHome(view.position) ? '書斎' : districtAt(view.position), deskProps: home.deskActions?.getState() || {}, deskAction, deskStatus, deskActionSequence, catReady: !!cat?.model, landmarksReady: !!landmarks, miniaturesReady, outdoorsReady, outdoorsLoading, outdoorsError, renderingActive, readyPhase: !miniaturesReady || !cat?.model ? 'home' : !outdoorsReady ? 'study' : !landmarks ? 'garden' : 'complete', focus: focusId, paused, lightingMode, mode: inHome(view.position) ? 'inside' : 'outside', travel: !!view.routeActive || !!postureTransition, seated: posture === 'seated', standing: posture === 'walking' || posture === 'returning-to-seat', posture, time: timeState, position: { ...view.position } };
+    return { webgl: !renderer.isMeshRaster, renderer: renderer.isMeshRaster ? 'software' : 'webgl', geometrySource:'blender', region,placeKey,geometryReady,district: inHome(view.position) ? '書斎' : districtAt(view.position), deskProps: home.deskActions?.getState() || {}, deskAction, deskStatus, deskActionSequence, catReady: !!cat?.model, landmarksReady: !!landmarks, miniaturesReady, outdoorsReady, outdoorsLoading, outdoorsError, renderingActive, readyPhase: !miniaturesReady || !cat?.model ? 'home' : !outdoorsReady ? 'study' : !landmarks ? 'garden' : 'complete', focus: focusId, paused, lightingMode, mode: inHome(view.position) ? 'inside' : 'outside', travel: !!view.routeActive || !!postureTransition, seated: posture === 'seated', standing: posture === 'walking' || posture === 'returning-to-seat', posture, time: timeState, position: { ...view.position } };
   }
   function emit(force = false) {
     if(disposed)return;
-    const value = state(), key = [region,photoKey,photoReady,placeArtError,deskActionSequence, value.catReady, value.landmarksReady, value.miniaturesReady, value.outdoorsReady, value.outdoorsLoading, value.outdoorsError, value.renderingActive, value.focus, value.paused, value.lightingMode, value.mode, value.district, value.travel, value.posture, value.time?.label, value.time?.phase].join(',');
+    const value = state(), key = [region,placeKey,geometryReady,deskActionSequence, value.catReady, value.landmarksReady, value.miniaturesReady, value.outdoorsReady, value.outdoorsLoading, value.outdoorsError, value.renderingActive, value.focus, value.paused, value.lightingMode, value.mode, value.district, value.travel, value.posture, value.time?.label, value.time?.phase].join(',');
     if (force || key !== lastState) { lastState = key; canvas.dispatchEvent(new CustomEvent('worldstate', { detail: value })); }
   }
   function updateProjection() {
     camera.aspect = width / height;
-    camera.fov = worldFov(camera.aspect,posture === 'seated') + (posture === 'seated' ? seatedZoom : 0);
+    const arrival = region && OUTDOOR_VIEWS[placeKey];
+    camera.fov = arrival ? Math.min(91, 360 / Math.PI * Math.atan(Math.tan(arrival.fov * Math.PI / 360) * Math.max(1, 1.35 / camera.aspect)))
+      : worldFov(camera.aspect,posture === 'seated') + (posture === 'seated' ? seatedZoom : 0);
     camera.updateProjectionMatrix();
   }
   function resize() {
-    width = Math.max(1, canvas.clientWidth); height = Math.max(1, canvas.clientHeight);
+    // Hidden 2D and mobile layout transitions briefly report a zero viewport.
+    // Keep the last real 3D frame until there is a new visible size to draw.
+    if (!canvas.clientWidth || !canvas.clientHeight) return;
+    width = canvas.clientWidth; height = canvas.clientHeight;
     const ratio = Math.max(.65,pixelRatio(width, height)*performanceScale); if (renderer.getPixelRatio?.() !== ratio) renderer.setPixelRatio(ratio);
     renderer.setSize(width, height, false); performanceStats.pixelRatio=ratio; updateProjection(); revision++; wake();
   }
@@ -312,51 +238,47 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
         shadowAnchor={x:view.position.x,y:regionalHeight(region,view.position.x,view.position.z),z:view.position.z};applyTime(true);
       }
     }
-    const inside=inHome(view.position),showGarden=!inside || view.position.z>1 && Math.cos(view.yaw)>.15;
-    home.setSeatedView?.(posture==='seated');
+    if(posture==='seated'){
+      const turn=angle(view.yaw-seatedSpawn.yaw);
+      camera.position.x+=Math.sin(turn)*.31;
+      camera.position.y-=Math.sin(view.pitch-seatedSpawn.pitch)*.10;
+      camera.position.z+=(1-Math.cos(turn))*.31;
+      camera.updateMatrixWorld();
+    }
+    const inside=inHome(view.position);
     const catVisible=inside || Math.hypot(view.position.x,view.position.z)<9;
-    if(cat){cat.group.visible=catVisible;cat.contactShadow.visible=catVisible&&!!cat.model;}
-    landscape?.setInteriorView?.(!showGarden);
-    updateNearbyLights(view.position);
+    if(cat){cat.group.visible=catVisible;if(cat.contactShadow)cat.contactShadow.visible=catVisible&&!!cat.model;}
     const catMoved = cat?.update(delta, !paused && catVisible);
     const deskMoved = home.deskActions?.update(delta, !paused);
-    if (deskMoved && !home.deskActions.isAnimating()) shadowDirty = true;
+    if (deskMoved) shadowDirty = true;
     const blindsMoved = home.update?.(delta, !paused);
-    const landscapeMoved = !region&&landscape?.update?.(elapsed, !paused && !inside, view.position);
+    const movingScenery = !paused && !renderer.isMeshRaster && regionalScene?.wantsMotion?.(view.position);
     const key = [revision, view.position.x, view.position.y, view.position.z, view.yaw, view.pitch, width, height].join(',');
-    if (force || deskMoved || blindsMoved || landscapeMoved || catMoved || key !== lastView) {
-      const localPhoto=region && photo;
-      localPhoto?.update?.(camera,timeState);
-      const covered=localPhoto?.coversView===true;
-      const refreshShadows=shadowDirty && !covered;
-      if(refreshShadows) {
-        // Bake the complete exterior before hiding foliage behind opaque study
-        // walls. Cached sun shadows therefore remain correct at the doorway.
-        landscape?.setInteriorView?.(false);
-        sun.shadow.needsUpdate=true;windowLight.shadow.needsUpdate=true;
-        renderer.shadowMap.needsUpdate=true;shadowDirty=false;performanceStats.shadowRefreshes++;
+    if (force || deskMoved || blindsMoved || catMoved || movingScenery || key !== lastView) {
+      regionalScene?.update?.(view.position, movingScenery ? ms / 1000 : undefined);
+      const refreshShadows = shadowDirty;
+      if (refreshShadows) {
+        sun.shadow.needsUpdate = true; windowLight.shadow.needsUpdate = true;
+        renderer.shadowMap.needsUpdate = true; shadowDirty = false; performanceStats.shadowRefreshes++;
       }
-      const renderStart=performance.now();
-      if (!covered) renderer.render(scene,camera);
-      if (localPhoto){
-        const drew=localPhoto.render?.(renderer,camera,covered);
-        if(photoDecoded && drew!==false)photoReady=true;
-      }
+      const renderStart = performance.now();
+      renderer.render(scene,camera);
+      if (regionalScene) geometryReady = true;
       if(posture==='seated'){
-        const points=destinations.projectionChanged(camera);
+        const points=home.destinations.projectionChanged(camera);
         if(points)canvas.dispatchEvent(new CustomEvent('studyprojection',{bubbles:true,detail:{points}}));
       }
       performanceStats.lastRenderMs=performance.now()-renderStart;performanceStats.frameIntervalMs=elapsed*1000;performanceStats.frames++;
       performanceStats.drawCalls=renderer.info?.render?.calls||0;performanceStats.triangles=renderer.info?.render?.triangles||0;
-      if(refreshShadows)landscape?.setInteriorView?.(!showGarden);
       lastView=key;
       // Only sustained measured slow frames reduce resolution. Geometry, texture
       // detail and navigation stay intact; a new load never immediately downgrades.
-      if(!refreshShadows && firstFrameReady && elapsed < .5 && (movementHeld || view.routeActive || catMoved || deskMoved || landscapeMoved) && ms-lastPerformanceChange>3000) {
+      if(!refreshShadows && firstFrameReady && elapsed < .5 && (movementHeld || view.routeActive || catMoved || deskMoved) && ms-lastPerformanceChange>3000) {
         slowFrames=elapsed>.07 ? slowFrames+1 : Math.max(0,slowFrames-1);
         if(slowFrames>=8 && performanceStats.pixelRatio>.65) {performanceScale=Math.max(.4,performanceScale-.1);slowFrames=0;lastPerformanceChange=ms;resize();}
       }
     }
+    revealDeskSubject();
     emit();
   }
   function animate(ms) {
@@ -364,9 +286,8 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (disposed || !visible || !studyActive || !renderingActive) return;
     const view = navigation.getState();
     const active = postureTransition || view.routeActive || movementHeld || dragging || home.deskActions?.isAnimating();
-    const ambient = !paused && (cat?.model && cat.group.visible ||
-      !inHome(view.position) && landscape?.wantsMotion?.(view.position));
-    if ((!active && !ambient) || ms - lastDraw >= (active ? 14 : 1000 / 26)) {
+    const ambient = !paused && (cat?.model && cat.group.visible || !renderer.isMeshRaster && regionalScene?.wantsMotion?.(view.position));
+    if ((!active && !ambient) || ms - lastDraw >= (active ? 14 : 1000 / (region ? 14 : 26))) {
       lastDraw = ms; draw(ms);
     }
     if (disposed || !visible || !studyActive || !renderingActive || raf) return;
@@ -377,23 +298,19 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     }, Math.max(16, 1000 - (ms - lastTimeSample)));
   }
   function arriveInGarden() {
-    if (!pendingGardenArrival || !outdoorsReady || posture !== 'walking') return;
+    if (!pendingGardenArrival || posture !== 'walking') return;
     pendingGardenArrival = false;
-    if(navigation.relocate(gardenEntrance)){
-      focusId='outside';revision++;wake();
-      // Leave the desk in its own garden while the chosen campus landscape
-      // loads. Input or a new destination cancels this pending arrival.
-      void explorePlace('okuma-auditorium');
-    }
+    void explorePlace('okuma-auditorium');
   }
   function walk(points, focus, look) {
     if (disposed || posture === 'seated' || postureTransition) return false;
-    placeRequest++;pendingGardenArrival=false;pendingSeat=false;posture='walking';
+    cancelRegionLoad();pendingGardenArrival=false;pendingSeat=false;posture='walking';
     const accepted = navigation.walkRoute(points, look);
     if (accepted) { focusId = focus; pressed.clear(); movementHeld=false; revision++; wake(); emit(true); }
     return accepted;
   }
   function beginPosture(kind,to) {
+    pendingSubject=null;
     navigation.stop();pendingSeat=false;movementHeld=false;pressed.clear();posture=kind;seatedZoom=0;updateProjection();
     const current=navigation.getState();
     postureTransition={kind,from:current.position.y,to,fromPitch:current.pitch,toPitch:Math.atan2(seatTarget[1]-to,Math.hypot(seatTarget[0]-current.position.x,seatTarget[2]-current.position.z)),elapsed:0,duration:reducedMotion ? .01 : .9};
@@ -401,7 +318,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function standUp() {
     if(disposed || posture!=='seated')return false;
-    placeRequest++;canvas.style.cursor = '';pendingGardenArrival=true;beginPosture('standing-up',HOME.eyeHeight);void prewarmExterior();return true;
+    placeRequest++;canvas.style.cursor = '';pendingGardenArrival=true;beginPosture('standing-up',HOME.eyeHeight);return true;
   }
   function sitDown() {
     if(disposed || posture==='seated' || postureTransition)return false;
@@ -409,30 +326,52 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     const accepted=walk([{x:seatedSpawn.x,z:seatedSpawn.z}],'room',seatLook);
     if(accepted){pendingSeat=true;posture='returning-to-seat';emit(true);}return accepted;
   }
-  function leave() { homeEntrance();if(!outdoorsReady){void prewarmExterior();return false;} cat?.useRoomDetail?.(); return walk([{ x: HOME.door.x, z: 4.8 }, { x: HOME.door.x, z: 9 }], 'outside', { x: 0, y: 6.5, z: 40 }); }
+  function leave() {
+    if (disposed || posture === 'seated' || postureTransition) return false;
+    void explorePlace('okuma-auditorium'); return true;
+  }
   function returnHome() { homeEntrance();cat?.useRoomDetail?.(); return walk([{ x: seatedSpawn.x, z: seatedSpawn.z }], 'room', seatLook); }
   async function explorePlace(id) {
     const key = typeof id === 'string' ? id.replace(/^landmark-/, '') : '';
     const view = Object.hasOwn(OUTDOOR_VIEWS,key) && OUTDOOR_VIEWS[key];
     if (!view || disposed || !studyActive) return false;
-    const token=++placeRequest;
-    if (!await prewarmExterior() || token!==placeRequest || disposed || !studyActive) return false;
+    cancelRegionLoad();
+    const token = placeRequest, controller = new AbortController(); regionAbort = controller;
+    requestedPlace = key; outdoorsError = null; outdoorsLoading = view.region !== region; emit(true);
     const [x,z]=view.eye,[tx,ty,tz]=view.target;
     const eyeY=regionalHeight(view.region,x,z)+HOME.eyeHeight;
     const spawn={x,z,yaw:Math.atan2(tx-x,tz-z),pitch:Math.atan2(ty-eyeY,Math.hypot(tx-x,tz-z))};
     try{
       if(region!==view.region) {
-        const make=loadRegion||(await import('./place-settings.js')).createRegionalLandscape;
-        if(token!==placeRequest||disposed||!studyActive)return false;
-        const context=await make(T,view.region);
-        if(token!==placeRequest||disposed||!studyActive){context.dispose();return false;}
-        try{enterSpace(view.region,context,spawn);}catch(error){context.dispose();throw error;}
-      }else if(!navigation.relocate(spawn))return false;
-    }catch(error){
-      if(token===placeRequest&&!disposed){outdoorsError=String(error?.message||error);emit(true);}
+        const [{createRegionalLandscape}, {createWorldLandmarks}] = await Promise.all([
+          loadRegion ? {createRegionalLandscape: loadRegion} : import('./place-settings.js'),
+          loadLandmarks ? {createWorldLandmarks: loadLandmarks} : import('./world-landmarks.js'),
+        ]);
+        if (controller.signal.aborted) return false;
+        const result = await Promise.allSettled([
+          createRegionalLandscape(T, view.region, {signal: controller.signal}),
+          createWorldLandmarks(T, {region: view.region, signal: controller.signal}),
+        ]);
+        const failed = result.find(item => item.status === 'rejected');
+        if (failed || controller.signal.aborted) {
+          for (const item of result) if (item.status === 'fulfilled') item.value.dispose?.();
+          if (failed) throw failed.reason;
+          return false;
+        }
+        const [terrain, architecture] = result.map(item => item.value);
+        const group = new T.Group();
+        group.add(terrain.group, architecture.group);
+        const context = {...terrain, group, architecture, dispose() { architecture.dispose(); terrain.dispose(); }};
+        try { enterSpace(view.region, context, spawn); } catch (error) { context.dispose(); throw error; }
+        onProgress({phase:'garden'}); onProgress({phase:'architecture'});
+      } else if (!navigation.relocate(spawn)) return false;
+    } catch (error) {
+      if (token === placeRequest && !disposed) { outdoorsError = String(error?.message || error); emit(true); }
       return false;
+    } finally {
+      if (token === placeRequest) { outdoorsLoading = false; regionAbort = null; emit(); }
     }
-    outdoorsError=null;if(photoKey===key&&placeArtError)clearPhoto();showPhoto(key);
+    geometryReady = false; choosePlace(key);
     pendingGardenArrival=false;pendingSeat=false;postureTransition=null;
     pressed.clear();movementHeld=false;seatedZoom=0;posture='walking';focusId='landmark-'+key;
     navigation.setEyeHeight(HOME.eyeHeight); updateProjection();cat?.useRoomDetail?.();
@@ -440,7 +379,6 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function goToLandmark(id) {
     if(disposed||posture==='seated'||postureTransition)return false;
-    if(!outdoorsReady){void prewarmExterior();return false;}
     cat?.useRoomDetail?.();
     const key = id.replace(/^landmark-/, ''), site = LANDMARK_SITES.find(s => s.key === key); if (!site) return false;
     if(region!==site.region || Math.hypot(site.arrival[0]-navigation.getState().position.x,site.arrival[1]-navigation.getState().position.z)>220){
@@ -490,20 +428,28 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       updateProjection(); revision++; wake();
     } else { setMovement({ forward: delta < 0 ? 1 : -1 }); wheelInputUntil = performance.now() + 150; }
   }
-  function announceSubject(key,type) {
+  function announceSubject(key,type,source) {
     if(type==='hover' && lastHover===key)return;
     if(type==='hover')lastHover=key;
-    canvas.dispatchEvent(new CustomEvent('studysubject',{bubbles:true,detail:{key,type}}));
+    canvas.dispatchEvent(new CustomEvent('studysubject',{bubbles:true,detail:{key,type,source}}));
   }
-  function interactDesk(id) {
-    if (disposed || posture !== 'seated') return false;
+  function revealDeskSubject(){
+    if(!pendingSubject || posture!=='seated' || !studyActive)return;
+    const {id,key,source}=pendingSubject;
+    if(home.deskActions.finished && !home.deskActions.finished(id))return;
+    pendingSubject=null;announceSubject(key,'select',source);
+  }
+  function interactDesk(id,{reveal=true,source}={}) {
+    if (disposed || !studyActive || posture !== 'seated') return false;
     const animate = !paused && !reducedMotion;
     const status = home.deskActions?.trigger(id, animate);
     if (!status) return false;
-    if(id==='notebook')announceSubject('blog','select');
+    pendingSubject=null;
+    const key=id==='notebook'?'blog':id==='letter'?'contact':null;
+    if(key && reveal && home.deskActions.getState()[id])pendingSubject={id,key,source};
     deskAction = id; deskStatus = status; deskActionSequence++;
     if (!home.deskActions.isAnimating()) shadowDirty = true;
-    revision++; wake(); emit(true); return true;
+    revision++; wake(); emit(true); revealDeskSubject();return true;
   }
   function aimPointer(event) {
     const rect = canvas.getBoundingClientRect();
@@ -514,10 +460,14 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   function select(event) {
     aimPointer(event);
     if (posture === 'seated') {
-      const id = home.deskActions?.pick(raycaster);
-      if (id) { interactDesk(id); return; }
-      const key=destinations.pick(raycaster);
-      if(key)announceSubject(key,'select');
+      const key=home.pick(raycaster);
+      if(key==='cat' && cat){
+        deskAction='cat'; deskStatus=cat.react(!paused) || '猫がこちらを向きました。'; deskActionSequence++;
+        revision++;wake();emit(true);return;
+      }
+      if(!key)return;
+      if(Object.hasOwn(home.deskActions.getState(),key))interactDesk(key);
+      else announceSubject(key,'select');
       return;
     }
     const roots = (landmarks?.targets || []).map(t => t.object).filter(object=>object.visible); if (cat?.model) roots.push(cat.group);
@@ -540,9 +490,9 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (!dragging) {
       if (posture === 'seated' && event.pointerType === 'mouse') {
         aimPointer(event);
-        const key=destinations.pick(raycaster);
-        announceSubject(key,'hover');
-        canvas.style.cursor = key || home.deskActions?.pick(raycaster) ? 'pointer' : '';
+        const key=home.pick(raycaster);
+        announceSubject(key==='notebook'?'blog':key==='letter'?'contact':key,'hover');
+        canvas.style.cursor = key ? 'pointer' : '';
       }
       return;
     }
@@ -560,7 +510,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   listen(canvas, 'pointerleave', () => { canvas.style.cursor = ''; announceSubject(null,'hover'); });
   listen(canvas, 'pointerup', event => endPointer(event)); listen(canvas, 'pointercancel', event => endPointer(event, true)); listen(canvas, 'lostpointercapture', event => endPointer(event, true));
-  listen(canvas, 'wheel', event => { if (event.ctrlKey || event.metaKey || posture === 'seated' || postureTransition) return; event.preventDefault(); zoom(clamp(event.deltaY, -300, 300)); }, { passive: false });
+  listen(canvas, 'wheel', event => { if (event.ctrlKey || event.metaKey || postureTransition) return; event.preventDefault(); zoom(clamp(event.deltaY, -300, 300)); }, { passive: false });
   const keyMovement = () => setMovement({ forward: Number(pressed.has('w') || pressed.has('arrowup')) - Number(pressed.has('s') || pressed.has('arrowdown')), right: Number(pressed.has('d') || pressed.has('arrowright')) - Number(pressed.has('a') || pressed.has('arrowleft')), sprint: pressed.has('shift') });
   listen(canvas, 'keydown', event => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -581,7 +531,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(key)) { event.preventDefault(); pressed.add(key); keyMovement(); }
     else if (key === 'q' || key === 'e') { event.preventDefault(); look(key === 'q' ? .13 : -.13, 0); }
     else if (key === 'r' || key === 'f') { event.preventDefault(); look(0,key==='r' ? .10 : -.10); }
-    else if (key === 'escape') { event.preventDefault(); placeRequest++;pendingGardenArrival=false; stopMovement(); }
+    else if (key === 'escape') { event.preventDefault(); cancelRegionLoad();pendingGardenArrival=false; stopMovement(); }
     else if (key === 'home') { event.preventDefault(); returnHome(); }
   });
   listen(window, 'keyup', event => { if (pressed.delete(event.key.toLowerCase())) { keyMovement(); revision++; } });
@@ -602,36 +552,32 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function setStudyActive(value) {
     if(disposed || studyActive===!!value)return;
-    if(!value){placeRequest++;if(region&&!photoReady)clearPhoto();}
-    studyActive=!!value;
+    if (!value) cancelRegionLoad();
+    studyActive=!!value;if(!studyActive)pendingSubject=null;
     if(studyActive){releaseWaiters();revision++;wake();}
     else {stopMovement();suspendFrames();announceSubject(null,'hover');}
   }
   function dispose() {
-    if (disposed) return; disposed = true;clearPhoto();regionalScene?.dispose?.();releaseWaiters();finishPaint?.(); sizeObserver?.disconnect(); abort.abort(); suspendFrames(); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose();surfaceOwners.forEach(owner=>owner.dispose()); home.dispose?.(); landmarks?.dispose(); landscape?.dispose(); boundary?.dispose(); sash.dispose();skyOwner.dispose(); renderer.dispose();
+    if (disposed) return; disposed = true;cancelRegionLoad();regionalScene?.dispose?.();releaseWaiters();finishPaint?.(); sizeObserver?.disconnect(); abort.abort(); suspendFrames(); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose();home.dispose?.(); sash.dispose();skyOwner.dispose(); renderer.dispose();
   }
   listen(canvas, 'webglcontextlost', event => { event.preventDefault(); dispose(); onError(new Error('World graphics context lost')); });
   applyTime(true); resize(); draw(0, true);firstFrameReady=true; onReady(); onProgress({ phase: 'home' }); emit(true); raf = requestAnimationFrame(animate);
-  async function defaultLoadCat(tier, options) { const { loadWorldCat } = await import('./world-cat-loader.js'); return loadWorldCat(tier, options); }
   const afterPaint = () => new Promise(resolve => { finishPaint=resolve; paintRaf = requestAnimationFrame(() => { paintRaf = 0; paintTimer = setTimeout(() => { paintTimer = 0; resolve(); }, 0); }); });
   afterPaint().then(async () => {
     finishPaint=null;if(disposed||(!studyActive&&!await waitForStudy()))return;
     // Cat decoding and desk architecture have independent lifetimes. Neither
     // waits for a garden factory, surface image, or the other asset to finish.
-    home.refine?.();refineSurfaces(home.group);
     Promise.resolve().then(async ()=>{
-      if(disposed||(!studyActive&&!await waitForStudy()))return null;
-      return (loadCat||defaultLoadCat)('world',{signal:abort.signal});
-    }).then(async asset=>{
-      if(!studyActive)await waitForStudy();
-      if(cat?.installAsset(asset)){applyCatShadowPolicy();invalidate();emit();onProgress({phase:'cat'});}
+      if(disposed||(!studyActive&&!await waitForStudy()))return;
+      const [{createBlenderCat},{loadBlenderAsset}]=await Promise.all([import('./blender-cat.js'),import('./blender-assets.js')]);
+      const actor=await createBlenderCat(T,{load:loadBlenderAsset,signal:abort.signal,invalidate});
+      if(disposed||(!studyActive&&!await waitForStudy())){actor.dispose();return;}
+      cat=home.attachCat(actor);applyCatShadowPolicy();invalidate();emit();onProgress({phase:'cat'});
     }).catch(error=>{if(!disposed&&error.name!=='AbortError')console.warn('Room cat unavailable:',error);});
-    home.loadMiniatures?.();
-    home.landmarksReady?.then(async result=>{
-      if(disposed||(!studyActive&&!await waitForStudy()))return;miniaturesReady=!!result;
-      for(const target of home.targets||[])targets.set(target.id,target);
-      if(result?.group)refineSurfaces(result.group);invalidate();emit();onProgress({phase:'miniatures'});
-    }).catch(error=>console.warn('Desk landmarks unavailable:',error));
+    home.loadMiniatures().then(async ready=>{
+      if(disposed||(!studyActive&&!await waitForStudy()))return;
+      miniaturesReady=ready;invalidate();emit();onProgress({phase:'miniatures'});
+    }).catch(error=>{if(!disposed)console.warn('Desk landmarks unavailable:',error);});
     // Landscape and architecture are requested only when the visitor enters
     // the garden. Desk readers never pay to decode geometry they cannot see.
   }).catch(error=>{if(!disposed)onError(error);});
