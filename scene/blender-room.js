@@ -170,7 +170,7 @@ export async function createBlenderRoom(T,{signal,waitForStudy=async()=>true,onA
   function loadMiniatures(){
     if(!miniPending)miniPending=Promise.all(miniatureSpecs.map(async spec=>{
       if(disposed||!await waitForStudy())return false;
-      const asset=await load(spec.asset,{signal});if(disposed||!await waitForStudy()){asset.dispose();return false;}
+      const asset=await load('desk-'+spec.asset,{signal});if(disposed||!await waitForStudy()){asset.dispose();return false;}
       leases.push(asset);
       const root=asset.scene;root.name='desk-'+spec.asset;
       const box=new T.Box3().setFromObject(root),size=box.getSize(new T.Vector3()),mid=box.getCenter(new T.Vector3());

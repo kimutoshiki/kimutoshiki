@@ -113,13 +113,29 @@ def needle(batch,p,a,rise,length,width,tint):
     side=Vector((-s*width,c*width,width*.22))
     batch.part([tuple(start),tuple(mid+side),tuple(end),tuple(mid-side)],[(0,1,2),(0,2,3)],tint,True)
 
-def tree(pine,variant,barkmat,leafmat):
+def distant_spray(crown,points,pine,tint):
+    """Represent a terminal spray with a few leaves at its original positions."""
+    stride=4 if pine else 5
+    count=len(points)//stride
+    shades=(.66,.88,.75,.98) if pine else (.72,.92,.78)
+    for sample,shade in enumerate(shades):
+        start=(sample*count//len(shades)+count//9)*stride
+        stem,left,tip,right=map(Vector,points[start:start+4])
+        axis=tip-stem
+        center=stem+axis*.45
+        wing=(left-right)*(5.4 if pine else 1.38)
+        vertices=[center+axis*.69,center-axis*.53+wing,center-axis*.53-wing]
+        crown.part([tuple(point) for point in vertices],[(0,1,2)],tone(tint,shade))
+
+
+def tree(pine,variant,barkmat,leafmat,*,distant=False):
     rng=random.Random(20401+variant*167+int(pine)*673)
     prefix='Japanese black pine' if pine else 'Campus avenue tree'
     wood=SolidBatch(prefix+' · tapered trunk and live branches '+str(variant))
     crown=SolidBatch(prefix+' · outer leaf sprays '+str(variant))
     fill=SolidBatch(prefix+' · inner leaf sprays '+str(variant))
     tips=SolidBatch(prefix+' · fine growing branchlets '+str(variant))
+    proxy=SolidBatch('Distant tree crown '+str(variant)) if distant else None
     bark=srgb('#715a49' if pine else ['#776c58','#786d59','#82755e'][variant])
     twig=srgb('#5d6249' if pine else '#6c624a')
     palette=(['#3f6041','#50764f','#5c7b4d','#6a8752','#789060'] if pine else [
@@ -194,7 +210,15 @@ def tree(pine,variant,barkmat,leafmat):
                 third=twigpath(part,tip,radial(angle+.92,.051,.055),3)
                 path_tube(tips,third,[.022,.012,.0046],twig,4)
                 local=tones[(variant+rng.randrange(len(tones)))%len(tones)]
+                if proxy:
+                    outer_start=len(crown.v)
                 for n in range(4):
                     u=.13+.25*n;tipbase=third[0].lerp(third[1],u*2) if u<.5 else third[1].lerp(third[2],(u-.5)*2)
                     shoot(tipbase,angle+(-1 if n%2 else 1)*rng.uniform(.49,1.26),rng.uniform(.28,.56) if pine else rng.uniform(.34,.64),local,rng.uniform(.90,1.13))
+                if proxy:
+                    distant_spray(proxy,crown.v[outer_start:],pine,local)
+    if proxy:
+        obj=proxy.finish(leafmat)
+        obj['treeProxy']=variant
+        return obj
     return wood.finish(barkmat),crown.finish(leafmat),fill.finish(leafmat),tips.finish(barkmat)

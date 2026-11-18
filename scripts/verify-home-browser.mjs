@@ -27,6 +27,7 @@ const places = [
   { key:'karatsu-castle', name:'唐津城', detail:'本丸' },
   { key:'karatsu-bank', name:'旧唐津銀行', detail:'れんが' },
 ];
+const deskModels = ['cat', 'study-room', ...places.map(({key}) => 'desk-' + key)].sort();
 const outdoorResource = /\/assets\/models\/blender\/(?:waseda-campus|karatsu-town)\.glb|world-chunk-place-(?:photo|settings)-/;
 
 async function picture(page, name) {
@@ -102,6 +103,12 @@ async function checkIllustration(page, requests) {
   assert(!requests.some(url => /\/js\/notebook-(?:view|render|geometry)\.js/.test(url)), 'The close-up notebook is on demand');
   assert.equal(await page.evaluate(() => window.__glCalls), 0);
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  assert(!await page.locator('.world-stage').isVisible(), 'The renderer placeholder never covers the 2D artwork');
+  assert(!await page.locator('.desk-controls').isVisible(), 'The 2D study does not show inactive 3D controls');
+  const viewport = page.viewportSize();
+  const studio = await page.locator('.home-studio').boundingBox();
+  assert.equal(studio.width, viewport.width, 'The study spans the full page width');
+  if(viewport.width>=900)assert.ok(studio.height>=viewport.height,'The desktop study fills the initial viewport');
   return source.path;
 }
 
@@ -384,6 +391,7 @@ try {
 
     await live(page);
     assert.equal(await page.locator('#study-mode-3d').getAttribute('aria-pressed'), 'true');
+    assert(!await page.locator('#study-artwork').isVisible(), 'The original artwork yields to the live 3D room');
     assert.equal(await page.locator('.study-pin[data-live-link]').count(), 5);
     await numbers(page, true);
     await picture(page, name + '-3d');
@@ -511,7 +519,7 @@ try {
   const surface = cpu.locator('canvas[data-renderer="software"]');
   assert((await pixelSample(surface)).colors >= 12, 'Disabling WebGL activates a working perspective renderer');
   assert(unsupported.requests.some(url=>url.includes('/js/blender-software-world.js')));
-  assert.deepEqual(loadedModels(unsupported.requests).sort(),['cat','study-room','okuma-auditorium','okuma-statue','karatsu-castle','karatsu-bank'].sort(),'Without WebGL the same real desk, animated cat and four miniatures are decoded');
+  assert.deepEqual(loadedModels(unsupported.requests).sort(),deskModels,'Without WebGL the real desk, animated cat and four dedicated miniatures are decoded');
   assert(!unsupported.requests.some(url=>/\/images\/outdoors\//.test(url)),'The 3D desk does not request painted outdoor backdrops');
   await numbers(cpu, true);
   await picture(cpu, 'software-mobile-desk');

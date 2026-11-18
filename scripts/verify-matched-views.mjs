@@ -15,6 +15,9 @@ const origin=process.env.PREVIEW_URL||'http://127.0.0.1:4173';
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',
   args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const results=[], pairs=[], failures=[], reference=new Map();
+const outdoorModels=reviewViews.slice(1);
+const deskModels=['cat','study-room',...outdoorModels.map(key=>'desk-'+key)].sort();
+const regionalModels=['waseda-campus','karatsu-town','waseda-tree-crowns','karatsu-tree-crowns'];
 
 async function settle(page){
   await page.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
@@ -83,7 +86,7 @@ try{
           (key==='desk'?state.seated&&state.miniaturesReady&&state.catReady:
             state.landmarksReady&&state.geometryReady&&state.placeKey===key&&state.focus==='landmark-'+key);
       },key);
-      if(home)assert.deepEqual([...assets].sort(),['cat','study-room',...reviewViews.slice(1)].sort(),'Desk loads just the six Blender actor, room and miniature assets');
+      if(home)assert.deepEqual([...assets].sort(),deskModels,'Desk loads just the six Blender actor, room and miniature assets');
       else assert.ok(assets.has(view.region==='karatsu'?'karatsu-town':'waseda-campus'),'Regional Blender terrain was fetched');
       const state=await page.evaluate(()=>window.cameraReview.getState());
       assert.equal(state.webgl,renderer==='native');
@@ -142,7 +145,7 @@ try{
         {name:'turn',label:'Camera turned',image:turned},...surround]);
       console.log(renderer,key,JSON.stringify({triangles:performance.triangles,translation:translation.meanRgbError,rotation:rotation.meanRgbError,detail}));
     }
-    assert.deepEqual([...assets].sort(),['cat','study-room','waseda-campus','karatsu-town',...reviewViews.slice(1)].sort(),'Both backends load all eight production models');
+    assert.deepEqual([...assets].sort(),[...deskModels,...regionalModels,...outdoorModels].sort(),'Both backends load every expected room, miniature, building and district asset');
     assert.deepEqual(retiredViews,[],'Renderers use geometry and material maps without photographed views');
     assert.deepEqual(await page.evaluate(()=>window.viewErrors),[]);assert.deepEqual(errors,[]);
     await page.evaluate(()=>window.cameraReview.dispose());await page.close();

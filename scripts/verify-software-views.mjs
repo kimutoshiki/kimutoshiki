@@ -53,6 +53,18 @@ async function loadRegionAsset(key){
 function meshes(root){
   const result=[];root.traverse(node=>{if(node.isMesh)result.push(node);});return result;
 }
+function triangleCount(parts){
+  return parts.reduce((total,{geometry})=>total+(geometry.index?.count ?? geometry.attributes.position.count)/3,0);
+}
+function materialNames(parts){
+  return [...new Set(parts.flatMap(part=>[].concat(part.material).map(material=>material.name)))].sort();
+}
+function modelProportions(model){
+  const copy=model.clone();
+  copy.rotation.set(0,0,0);
+  const size=new T.Box3().setFromObject(copy).getSize(new T.Vector3());
+  return size.divideScalar(size.length()).toArray();
+}
 function activeTextures(scene){
   const images=new Set();
   scene.traverseVisible(node=>{
@@ -111,8 +123,13 @@ for(const key of reviewViews){
     subject=architecture.targets.find(t=>t.id==='landmark-'+key).object;
     const miniature=room.group.getObjectByName('desk-'+key);
     const actual=meshes(subject),small=meshes(miniature);
-    assert.ok(actual.length>=4 && actual.length===small.length,key+' has modelled parts at both scales');
-    actual.forEach((mesh,i)=>assert.equal(mesh.geometry,small[i].geometry,'The desk and street instances share every vertex/index buffer for '+key));
+    assert.ok(actual.length>=4 && small.length>=4,key+' has modelled parts at both scales');
+    assert.ok(triangleCount(small)<triangleCount(actual),key+' uses fewer triangles at desk scale');
+    assert.deepEqual(materialNames(small),materialNames(actual),key+' retains the authored material palette at both scales');
+    const originalProportions=modelProportions(subject);
+    modelProportions(miniature).forEach((proportion,axis)=>{
+      assert.ok(Math.abs(proportion-originalProportions[axis])<.015,key+' preserves model proportions at desk scale');
+    });
     const size=new T.Box3().setFromObject(subject).getSize(new T.Vector3());
     assert.ok(Math.min(size.x,size.y,size.z)>1,key+' occupies all three dimensions');
   }

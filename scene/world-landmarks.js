@@ -2,8 +2,8 @@ import {loadBlenderAsset} from './blender-assets.js';
 import {LANDMARK_SITES} from './world-layout.js';
 
 /** Place grounded, metre-scale Blender exports without re-fitting their shapes. */
-export async function createWorldLandmarks(T, {region, signal, loadAsset = loadBlenderAsset} = {}) {
-  const sites = LANDMARK_SITES.filter(site => !region || site.region === region);
+export async function createWorldLandmarks(T, {region, key, signal, loadAsset = loadBlenderAsset} = {}) {
+  const sites = LANDMARK_SITES.filter(site => (!region || site.region === region) && (!key || site.key === key));
   const results = await Promise.allSettled(sites.map(site => loadAsset(site.key, {signal})));
   const loaded = results.filter(result => result.status === 'fulfilled').map(result => result.value);
   const dispose = () => loaded.forEach(asset => asset.dispose());
@@ -49,4 +49,45 @@ export async function createWorldLandmarks(T, {region, signal, loadAsset = loadB
       return changed;
     }, dispose};
   } catch (error) { dispose(); throw error; }
+}
+
+/** Keep a separate request for each landmark, so reaching the bank need not
+ * decode the castle. A district owns its landmarks until the visitor leaves. */
+export function createRegionalLandmarks(T, region, createLandmarks = createWorldLandmarks) {
+  const group = new T.Group(), targets = [], requests = new Map(), loaded = new Map();
+  const controller = new AbortController();
+  const sites = LANDMARK_SITES.filter(site => site.region === region);
+  let clock;
+  group.name = 'Blender landmark architecture';
+  function ensure(key) {
+    if (controller.signal.aborted) return Promise.reject(controller.signal.reason);
+    if (!sites.some(site => site.key === key)) return Promise.reject(new RangeError('Unknown landmark in ' + region));
+    if (!requests.has(key)) {
+      const pending = Promise.resolve().then(() => createLandmarks(T, {region, key, signal: controller.signal})).then(asset => {
+        if (controller.signal.aborted) { asset.dispose(); throw controller.signal.reason; }
+        loaded.set(key, asset);
+        targets.push(...asset.targets);
+        group.add(asset.group);
+        if (clock) asset.updateClock?.(clock);
+        return asset;
+      }).catch(error => { requests.delete(key); throw error; });
+      requests.set(key, pending);
+    }
+    return requests.get(key);
+  }
+  return {
+    group, targets, sites, ensure,
+    has: key => loaded.has(key),
+    hasRequested: key => requests.has(key),
+    updateClock(snapshot) {
+      clock = snapshot;
+      for (const asset of loaded.values()) asset.updateClock?.(snapshot);
+    },
+    dispose() {
+      if (controller.signal.aborted) return;
+      controller.abort();
+      for (const asset of loaded.values()) asset.dispose();
+      loaded.clear(); requests.clear(); group.clear(); targets.length = 0;
+    },
+  };
 }

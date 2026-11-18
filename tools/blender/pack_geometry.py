@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 
 
-def pack_static_glb(path):
+def pack_static_glb(path, *, preserve_detail=False):
     path=Path(path)
     original=path.read_bytes()
     json_size,=struct.unpack_from('<I',original,12)
@@ -29,9 +29,8 @@ def pack_static_glb(path):
     owners={}
     for index,mesh in enumerate(doc['meshes']):
         for primitive in mesh['primitives']:
-            if 'targets' in primitive:
-                raise ValueError('Morph-target meshes require paired delta quantization.')
-            for aid in primitive['attributes'].values():owners.setdefault(aid,set()).add(index)
+            for attributes in [primitive['attributes'],*primitive.get('targets',[])]:
+                for aid in attributes.values():owners.setdefault(aid,set()).add(index)
     view_uses={}
     for accessor in accessors:
         v=accessor.get('bufferView')
@@ -41,7 +40,7 @@ def pack_static_glb(path):
         acc=accessors[aid];idx=acc['bufferView'];view=views[idx]
         if acc['componentType']!=5126 or view_uses[idx]!=1 or 'sparse' in acc or 'byteStride' in view or acc.get('byteOffset',0):
             return None
-        dims={'VEC3':3,'VEC4':4}.get(acc['type'])
+        dims={'VEC2':2,'VEC3':3,'VEC4':4}.get(acc['type'])
         if not dims or view['byteLength']!=acc['count']*dims*4:return None
         return np.frombuffer(binary,'<f4',count=acc['count']*dims,offset=view.get('byteOffset',0)).reshape(-1,dims)
 
@@ -60,6 +59,9 @@ def pack_static_glb(path):
         processed.add(aid)
 
     for i,mesh in enumerate(doc['meshes']):
+        # A flexing journal page keeps its base vertices and deltas in the
+        # same coordinate space. Other rigid meshes in the file can be packed.
+        if any(p.get('targets') for p in mesh['primitives']):continue
         nodes=nodes_by_mesh.get(i,[])
         positions={p['attributes']['POSITION'] for p in mesh['primitives']}
         arrays={aid:source(aid) for aid in positions}
@@ -78,13 +80,19 @@ def pack_static_glb(path):
                     else:node['scale']=[s*factor for s in node.get('scale',[1.,1.,1.])]
         for primitive in mesh['primitives']:
             for kind,aid in primitive['attributes'].items():
-                if aid in processed:continue
+                if aid in processed or owners[aid]!={i}:continue
                 data=source(aid)
                 if data is None:continue
                 if kind=='NORMAL':
-                    install(aid,np.rint(np.clip(data,-1,1)*127).astype('i1'),5120,True)
+                    normals=np.clip(data,-1,1)
+                    if preserve_detail:
+                        install(aid,np.rint(normals*32767).astype('<i2'),5122,True)
+                    else:
+                        install(aid,np.rint(normals*127).astype('i1'),5120,True)
                 if kind=='COLOR_0' and data.min()>=0 and data.max()<=1:
                     install(aid,np.rint(data*255).astype('u1'),5121,True)
+                if preserve_detail and kind.startswith('TEXCOORD_') and data.min()>=0 and data.max()<=1:
+                    install(aid,np.rint(data*65535).astype('<u2'),5123,True)
     if not replacements:return
     out=bytearray()
     for i,view in enumerate(views):

@@ -278,7 +278,11 @@ engine.setStudyActive(false);step(3);
 assert.deepEqual(assetReads,['study-room.glb']);engine.setStudyActive(true);
 await until(()=>state().miniaturesReady&&state().catReady,'Decoded desktop and articulated cat');
 step(2);
-assert.equal(new Set(assetReads).size,6);assert.deepEqual(regionLoads,[]);
+assert.deepEqual([...new Set(assetReads)].sort(), [
+  'cat.glb', 'desk-karatsu-bank.glb', 'desk-karatsu-castle.glb',
+  'desk-okuma-auditorium.glb', 'desk-okuma-statue.glb', 'study-room.glb',
+], 'The study decodes four desk-scale models without fetching street-scale architecture');
+assert.deepEqual(regionLoads,[]);
 assert.ok(room.getObjectByName('Tabby|articulated')||room.getObjectByName('Tabby | articulated'));
 const countHands=group=>{
   let count=0;

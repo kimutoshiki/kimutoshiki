@@ -39,5 +39,34 @@ for(let order=0;order<2;order++){
   assert(near[1]>near[0]*2&&near[1]>near[2]*2,'The closer solid mesh occludes the transparent surface');
   scene.children.reverse();
 }
-raster.dispose();texture.dispose();for(const mesh of [cutout,back,glass,foreground]){mesh.geometry.dispose();mesh.material.dispose();}
-console.log('The production mesh raster preserves UV cutouts, transparent blending and depth order at two camera positions.');
+const actor=new T.Group();actor.add(foreground);scene.add(actor);
+const pixels=()=>ctx.getImageData(0,0,width,height).data;
+const renderOptions={staticFrameKey:1,dynamicRoot:actor};
+raster.render(scene,camera,renderOptions);
+const firstCalls=raster.info.render.calls;
+foreground.position.x=.12;
+raster.render(scene,camera,renderOptions);
+assert.ok(raster.info.render.calls<firstCalls,'A stable study draws only its moving object and glass');
+const composed=pixels();
+raster.render(scene,camera);
+assert.deepEqual(composed,pixels(),'A moving object preserves its occlusion and translucent colour when reusing the background');
+raster.render(scene,camera,renderOptions);
+back.material.color.set('#a738c3');
+renderOptions.staticFrameKey++;
+raster.render(scene,camera,renderOptions);
+const relit=pixels();
+raster.render(scene,camera);
+assert.deepEqual(relit,pixels(),'A changed scene revision redraws the opaque background');
+const clipScene=new T.Scene();clipScene.background=new T.Color('#383838');
+const slope=new T.Mesh(new T.PlaneGeometry(10,7.2),new T.MeshBasicMaterial({color:'#20df36'}));
+slope.position.z=-5;slope.rotation.y=.54;clipScene.add(slope);
+camera.far=5;camera.updateProjectionMatrix();raster.render(clipScene,camera);
+const nearHalf=sample(.36),farHalf=sample(.64);
+assert(nearHalf[1]>nearHalf[0]*2,'The part of a large surface inside the draw distance remains visible');
+assert.equal(farHalf[0],farHalf[1],'The part of a large surface beyond the draw distance is clipped');
+clipScene.fog=new T.Fog('#d2c6b1',3,5);
+raster.render(clipScene,camera);
+const mist=sample(.49);
+assert(mist[0]>135 && mist[0]>mist[2],'Distant scenery fades into the shared sky colour near the draw limit');
+raster.dispose();texture.dispose();for(const mesh of [cutout,back,glass,foreground,slope]){mesh.geometry.dispose();mesh.material.dispose();}
+console.log('The production mesh raster preserves UV cutouts, transparency and depth during direct and cached rendering.');

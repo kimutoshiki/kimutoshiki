@@ -299,7 +299,7 @@
   async function openGarden(key) {
     const revision = modeRevision;
     try {
-      tourImport ??= import('./study-tour.js?v=20261118-atelier1');
+      tourImport ??= import('./study-tour.js?v=20261118-study2');
       const { createGardenTour } = await tourImport;
       if (disposed || mode !== '2d' || revision !== modeRevision) return;
       tour ??= createGardenTour(stand, { onExplore: key => {
@@ -384,11 +384,11 @@
       if (kind === 'native') {
         rendererContext ??= canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
         if (!rendererContext || rendererContext.isContextLost?.()) throw new Error('WebGL2 is unavailable');
-        const url = '../scene/world.bundle.js?v=20261118-atelier1' + (loadFailures ? '&retry=' + loadFailures : '');
+        const url = '../scene/world.bundle.js?v=20261118-study2' + (loadFailures ? '&retry=' + loadFailures : '');
         const { mountWorld } = await import(url);
         mount = mountWorld;
       } else {
-        const url = './blender-software-world.js?v=20261118-atelier1' + (loadFailures ? '&retry=' + loadFailures : '');
+        const url = './blender-software-world.js?v=20261118-study2' + (loadFailures ? '&retry=' + loadFailures : '');
         const { mountSoftwareWorld } = await import(url);
         mount = mountSoftwareWorld;
       }

@@ -5,7 +5,7 @@ export {
   BufferAttribute, BufferGeometry, CanvasTexture, CapsuleGeometry, CatmullRomCurve3, CircleGeometry,
   Color, ConeGeometry, CylinderGeometry, DataTexture, DirectionalLight, DoubleSide,
   DynamicDrawUsage, EquirectangularReflectionMapping, ExtrudeGeometry,
-  Float32BufferAttribute, FogExp2, Group, HemisphereLight, IcosahedronGeometry,
+  Float32BufferAttribute, Fog, FogExp2, Group, HemisphereLight, IcosahedronGeometry,
   InstancedMesh, LatheGeometry, LineBasicMaterial, LineSegments, LinearFilter,
   LinearMipmapLinearFilter, LoopOnce, Material, MathUtils, Matrix4, Mesh,
   MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, NoColorSpace,

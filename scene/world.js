@@ -7,9 +7,10 @@ import { createWorldSky } from './world-sky.js';
 import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS, OUTDOOR_VIEWS, REGION_BOUNDS, regionalHeight, districtAt, worldFov } from './world-layout.js';
 
 const clamp = T.MathUtils.clamp;
-const pixelRatio = (w, h) => Math.min(globalThis.devicePixelRatio || 1, 2, Math.max(.7, Math.sqrt(3000000 / Math.max(1, w * h))));
+const pixelRatio = (w, h) => Math.min(globalThis.devicePixelRatio || 1, 2, Math.max(.7, Math.sqrt(2500000 / Math.max(1, w * h))));
 const collision = ({ id, box }) => ({ id, minX: box.min.x, maxX: box.max.x, minZ: box.min.z, maxZ: box.max.z });
 const inHome = p => p.x > HOME.bounds.minX && p.x < HOME.bounds.maxX && p.z > HOME.bounds.minZ && p.z < HOME.bounds.maxZ;
+const sight = { room: [24, 11, 22], waseda: [330, 205, 315], karatsu: [570, 340, 550] };
 
 const angle = value => Math.atan2(Math.sin(value), Math.cos(value));
 
@@ -35,11 +36,12 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   let lastHover = null;
   let landmarks, home, cat, navigation, skyOwner, shadowDirty = true, revision = 1, lightingMode = autoTime ? 'auto' : 'day', focusId = 'room', lastState = '', lastView = '';
   let miniaturesReady=false,outdoorsReady=false,outdoorsLoading=false,outdoorsError=null;
-  let clockWake = 0, firstFrameReady = false, performanceScale = 1, slowFrames = 0, lastPerformanceChange = 0;
+  let clockWake = 0, firstFrameReady = false, performanceScale = 1, slowFrames = 0, fastFrames = 0, lastPerformanceChange = 0;
   let pendingGardenArrival = false, movementHeld = false, seatedZoom = 0, placeRequest = 0;
   let region = null, regionalScene = null, placeKey = null, geometryReady = false;
   let regionAbort, requestedPlace = 'okuma-auditorium';
   let shadowAnchor={x:0,y:0,z:35};
+  let lastShadowRefresh = -Infinity, hoverEvent;
   let pendingSubject = null, deskAction = null, deskStatus = '', deskActionSequence = 0;
   const performanceStats={frames:0,lastRenderMs:0,drawCalls:0,triangles:0,pixelRatio:1,shadowRefreshes:0};
   let posture = startSeated ? 'seated' : 'walking', postureTransition = null, pendingSeat = false;
@@ -49,7 +51,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   const seatLook = { x: seatTarget[0], y: seatTarget[1], z: seatTarget[2] };
   let width = 1, height = 1, down = null, dragging = null, moved = false, wheelInputUntil = 0;
   const abort = new AbortController(), listeners = [], pressed = new Set(), activePointers = new Set();
-  const scene = new T.Scene(), camera = new T.PerspectiveCamera(62, 1, .035, 700);
+  const scene = new T.Scene(), camera = new T.PerspectiveCamera(62, 1, .035, sight.room[0]);
   const raycaster = new T.Raycaster(), pointer = new T.Vector2();
   function listen(target, name, handler, options) { target.addEventListener(name, handler, options); listeners.push(() => target.removeEventListener(name, handler, options)); }
   function wake() {
@@ -70,13 +72,14 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   try {
     home=await createBlenderRoom(T,{signal:abort.signal,waitForStudy,onAssetChange:invalidate});
     scene.add(home.group);
+    sharpenTextures(home.group);
     navigation = createWalkNavigation({ camera, bounds: WORLD_BOUNDS, obstacles: [...(home.collisions || []).map(collision), ...LANDMARK_RESERVATIONS, loadingGate()], spawn: startSeated ? seatedSpawn : HOME.spawn, eyeHeight: startSeated ? seatPosition[1] : HOME.eyeHeight, radius: .20, speed: 2.4, waypoints: WAYPOINTS });
   } catch (error) { home?.dispose?.(); renderer.dispose(); onError(error); return { getState: () => ({ webgl: false, catReady: false, landmarksReady: false }), dispose() {} }; }
-  scene.fog = new T.FogExp2('#dce0d1', .00165);
+  scene.fog = new T.Fog('#dce0d1', sight.room[1], sight.room[2]);
   skyOwner=createWorldSky(T);
   renderer.outputColorSpace = T.SRGBColorSpace; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false;
-  const sun = new T.DirectionalLight('#ffe4bd', 2.6); sun.position.set(-38, 55, -12); sun.target.position.set(0, 0, 35); sun.castShadow = true;
+  const sun = new T.DirectionalLight('#ffe4bd', 2.6); sun.position.set(-38, 55, -12); sun.target.position.set(0, 0, 35);
   const shadowResolution = Math.min(2048, renderer.capabilities?.maxTextureSize || 2048); sun.shadow.mapSize.set(shadowResolution, shadowResolution);
   Object.assign(sun.shadow.camera, { left: -65, right: 65, top: 68, bottom: -68, near: 1, far: 185 }); sun.shadow.camera.updateProjectionMatrix();
   sun.shadow.normalBias = .025; sun.shadow.bias = -.00008; sun.shadow.radius = 2;
@@ -90,6 +93,18 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   const sash = createWindowLight(T);
   scene.add(sash.light,sash.light.target);
   scene.add(sun, sun.target, hemisphere, ambient, roomFill, windowLight, windowLight.target);
+
+  function sharpenTextures(group) {
+    const quality = Math.min(8, renderer.capabilities?.getMaxAnisotropy?.() || 1);
+    if (quality <= 1) return;
+    group.traverse(node => {
+      for (const material of [].concat(node.material || [])) {
+        for (const texture of [material.map, material.normalMap, material.roughnessMap]) {
+          if (texture && texture.anisotropy < quality) { texture.anisotropy = quality; texture.needsUpdate = true; }
+        }
+      }
+    });
+  }
 
   function applyTime(force=false) {
     const snapshot=getWorldTime(now(),lightingMode);
@@ -121,8 +136,8 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   function loadingGate() {return {id:'garden-loading-threshold',minX:HOME.door.x-.7,maxX:HOME.door.x+.7,minZ:HOME.door.z-.04,maxZ:HOME.door.z+.12};}
   function walkingObstacles(area=region, context=regionalScene) {
     if (!area) return [...(home.collisions || []).map(collision), loadingGate()];
-    const bounds = (context.architecture.targets || []).map(target => collision({id: target.id, box: target.bounds || new T.Box3().setFromObject(target.object)}));
-    return [...context.collisions.map(collision), ...bounds];
+    const ids = new Set(context.architecture.sites.map(site => 'landmark-' + site.key));
+    return [...context.collisions.map(collision), ...LANDMARK_RESERVATIONS.filter(reservation => ids.has(reservation.id))];
   }
   function choosePlace(key) {
     if (placeKey === key) return;
@@ -161,6 +176,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       landmarks.updateClock?.(timeState);
     }
     home.group.visible = roomFill.visible = windowLight.visible = sash.light.visible = !area;
+    sun.castShadow = !!area;
     placeKey = null; geometryReady = false; outdoorsReady = !!context;
     shadowAnchor = area ? {x:spawn.x,y:regionalHeight(area,spawn.x,spawn.z),z:spawn.z} : {x:0,y:0,z:35};
     applyTime(true); updateProjection(); revision++; wake();
@@ -192,6 +208,9 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function updateProjection() {
     camera.aspect = width / height;
+    const [far, fogNear, fogFar] = sight[region || 'room'];
+    camera.near = region ? .12 : .035; camera.far = far;
+    scene.fog.near = fogNear; scene.fog.far = fogFar;
     const arrival = region && OUTDOOR_VIEWS[placeKey];
     camera.fov = arrival ? Math.min(91, 360 / Math.PI * Math.atan(Math.tan(arrival.fov * Math.PI / 360) * Math.max(1, 1.35 / camera.aspect)))
       : worldFov(camera.aspect,posture === 'seated') + (posture === 'seated' ? seatedZoom : 0);
@@ -249,20 +268,26 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     const catVisible=inside || Math.hypot(view.position.x,view.position.z)<9;
     if(cat){cat.group.visible=catVisible;if(cat.contactShadow)cat.contactShadow.visible=catVisible&&!!cat.model;}
     const catMoved = cat?.update(delta, !paused && catVisible);
-    const deskMoved = home.deskActions?.update(delta, !paused);
+    const deskMoved = !region && home.deskActions?.update(delta, !paused);
     if (deskMoved) shadowDirty = true;
     const blindsMoved = home.update?.(delta, !paused);
-    const movingScenery = !paused && !renderer.isMeshRaster && regionalScene?.wantsMotion?.(view.position);
+    const movingScenery = !paused && !renderer.isMeshRaster && regionalScene?.wantsMotion?.(view.position, view.yaw);
     const key = [revision, view.position.x, view.position.y, view.position.z, view.yaw, view.pitch, width, height].join(',');
     if (force || deskMoved || blindsMoved || catMoved || movingScenery || key !== lastView) {
-      regionalScene?.update?.(view.position, movingScenery ? ms / 1000 : undefined);
-      const refreshShadows = shadowDirty;
+      if (regionalScene?.update?.(view.position, movingScenery ? ms / 1000 : undefined)) shadowDirty = true;
+      // During a desk animation, preserve the moving object every frame and
+      // resample its shadow at intervals. Always settle on an exact final shadow.
+      const refreshShadows = shadowDirty && (!deskMoved || !home.deskActions.isAnimating() || ms - lastShadowRefresh >= 85);
       if (refreshShadows) {
-        sun.shadow.needsUpdate = true; windowLight.shadow.needsUpdate = true;
+        if (region) sun.shadow.needsUpdate = true;
+        else windowLight.shadow.needsUpdate = true;
+        lastShadowRefresh = ms;
         renderer.shadowMap.needsUpdate = true; shadowDirty = false; performanceStats.shadowRefreshes++;
       }
       const renderStart = performance.now();
-      renderer.render(scene,camera);
+      const reuseStudy = renderer.isMeshRaster && !region && cat?.group.visible && !deskMoved && !blindsMoved;
+      if (reuseStudy) renderer.render(scene, camera, {staticFrameKey: key, dynamicRoot: cat.group});
+      else renderer.render(scene, camera);
       if (regionalScene) geometryReady = true;
       if(posture==='seated'){
         const points=home.destinations.projectionChanged(camera);
@@ -273,11 +298,22 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       lastView=key;
       // Only sustained measured slow frames reduce resolution. Geometry, texture
       // detail and navigation stay intact; a new load never immediately downgrades.
-      if(!refreshShadows && firstFrameReady && elapsed < .5 && (movementHeld || view.routeActive || catMoved || deskMoved) && ms-lastPerformanceChange>3000) {
-        slowFrames=elapsed>.07 ? slowFrames+1 : Math.max(0,slowFrames-1);
-        if(slowFrames>=8 && performanceStats.pixelRatio>.65) {performanceScale=Math.max(.4,performanceScale-.1);slowFrames=0;lastPerformanceChange=ms;resize();}
+      if (!refreshShadows && firstFrameReady && (movementHeld || view.routeActive || dragging || catMoved || deskMoved)) {
+        const busy = movementHeld || view.routeActive || dragging || deskMoved;
+        slowFrames = elapsed > (busy ? .038 : .065) ? slowFrames + 1 : Math.max(0, slowFrames - 1);
+        fastFrames = elapsed < (busy ? .024 : .042) ? fastFrames + 1 : Math.max(0, fastFrames - 2);
+        const minimumScale = renderer.isMeshRaster ? .55 : .65;
+        if (slowFrames >= 6 && ms - lastPerformanceChange > 1800 && performanceScale > minimumScale) {
+          performanceScale = Math.max(minimumScale, performanceScale - .13);
+          fastFrames = slowFrames = 0; lastPerformanceChange = ms; resize();
+        } else if (fastFrames >= 90 && ms - lastPerformanceChange > 8000 && performanceScale < 1) {
+          performanceScale = Math.min(1, performanceScale + .1);
+          fastFrames = slowFrames = 0; lastPerformanceChange = ms; resize();
+        }
       }
+      prefetchNearby(view.position);
     }
+    processHover();
     revealDeskSubject();
     emit();
   }
@@ -286,7 +322,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (disposed || !visible || !studyActive || !renderingActive) return;
     const view = navigation.getState();
     const active = postureTransition || view.routeActive || movementHeld || dragging || home.deskActions?.isAnimating();
-    const ambient = !paused && (cat?.model && cat.group.visible || !renderer.isMeshRaster && regionalScene?.wantsMotion?.(view.position));
+    const ambient = !paused && (cat?.model && cat.group.visible || !renderer.isMeshRaster && regionalScene?.wantsMotion?.(view.position, view.yaw));
     if ((!active && !ambient) || ms - lastDraw >= (active ? 14 : 1000 / (region ? 14 : 26))) {
       lastDraw = ms; draw(ms);
     }
@@ -331,40 +367,62 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     void explorePlace('okuma-auditorium'); return true;
   }
   function returnHome() { homeEntrance();cat?.useRoomDetail?.(); return walk([{ x: seatedSpawn.x, z: seatedSpawn.z }], 'room', seatLook); }
+  function prefetchNearby(eye) {
+    if (!regionalScene || outdoorsLoading) return;
+    const context = regionalScene;
+    for (const site of context.architecture.sites) {
+      const [x, z] = site.position;
+      if (context.architecture.hasRequested(site.key) || context.prefetched.has(site.key) || (eye.x - x) ** 2 + (eye.z - z) ** 2 > 215 ** 2) continue;
+      context.prefetched.add(site.key);
+      context.architecture.ensure(site.key).then(asset => {
+        if (context === regionalScene) { sharpenTextures(asset.group); invalidate(); }
+      }).catch(() => {}); // An explicit visit can retry a background download.
+    }
+  }
   async function explorePlace(id) {
     const key = typeof id === 'string' ? id.replace(/^landmark-/, '') : '';
     const view = Object.hasOwn(OUTDOOR_VIEWS,key) && OUTDOOR_VIEWS[key];
     if (!view || disposed || !studyActive) return false;
     cancelRegionLoad();
     const token = placeRequest, controller = new AbortController(); regionAbort = controller;
-    requestedPlace = key; outdoorsError = null; outdoorsLoading = view.region !== region; emit(true);
+    requestedPlace = key; outdoorsError = null; outdoorsLoading = view.region !== region || !landmarks?.has(key); emit(true);
     const [x,z]=view.eye,[tx,ty,tz]=view.target;
     const eyeY=regionalHeight(view.region,x,z)+HOME.eyeHeight;
     const spawn={x,z,yaw:Math.atan2(tx-x,tz-z),pitch:Math.atan2(ty-eyeY,Math.hypot(tx-x,tz-z))};
     try{
       if(region!==view.region) {
-        const [{createRegionalLandscape}, {createWorldLandmarks}] = await Promise.all([
+        const [{createRegionalLandscape}, {createRegionalLandmarks}] = await Promise.all([
           loadRegion ? {createRegionalLandscape: loadRegion} : import('./place-settings.js'),
-          loadLandmarks ? {createWorldLandmarks: loadLandmarks} : import('./world-landmarks.js'),
+          import('./world-landmarks.js'),
         ]);
         if (controller.signal.aborted) return false;
+        const architecture = createRegionalLandmarks(T, view.region, loadLandmarks);
+        const abandon = () => architecture.dispose();
+        controller.signal.addEventListener('abort', abandon, {once: true});
         const result = await Promise.allSettled([
           createRegionalLandscape(T, view.region, {signal: controller.signal}),
-          createWorldLandmarks(T, {region: view.region, signal: controller.signal}),
+          architecture.ensure(key),
         ]);
+        controller.signal.removeEventListener('abort', abandon);
         const failed = result.find(item => item.status === 'rejected');
         if (failed || controller.signal.aborted) {
-          for (const item of result) if (item.status === 'fulfilled') item.value.dispose?.();
+          architecture.dispose();
+          if (result[0].status === 'fulfilled') result[0].value.dispose();
           if (failed) throw failed.reason;
           return false;
         }
-        const [terrain, architecture] = result.map(item => item.value);
+        const [terrain, primary] = result.map(item => item.value);
+        sharpenTextures(terrain.group); sharpenTextures(primary.group);
         const group = new T.Group();
         group.add(terrain.group, architecture.group);
-        const context = {...terrain, group, architecture, dispose() { architecture.dispose(); terrain.dispose(); }};
+        const context = {...terrain, group, architecture, prefetched: new Set(), dispose() { architecture.dispose(); terrain.dispose(); }};
         try { enterSpace(view.region, context, spawn); } catch (error) { context.dispose(); throw error; }
         onProgress({phase:'garden'}); onProgress({phase:'architecture'});
-      } else if (!navigation.relocate(spawn)) return false;
+      } else {
+        const asset = await landmarks.ensure(key);
+        if (controller.signal.aborted || !navigation.relocate(spawn)) return false;
+        sharpenTextures(asset.group);
+      }
     } catch (error) {
       if (token === placeRequest && !disposed) { outdoorsError = String(error?.message || error); emit(true); }
       return false;
@@ -381,7 +439,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if(disposed||posture==='seated'||postureTransition)return false;
     cat?.useRoomDetail?.();
     const key = id.replace(/^landmark-/, ''), site = LANDMARK_SITES.find(s => s.key === key); if (!site) return false;
-    if(region!==site.region || Math.hypot(site.arrival[0]-navigation.getState().position.x,site.arrival[1]-navigation.getState().position.z)>220){
+    if(region!==site.region || !landmarks?.has(key) || Math.hypot(site.arrival[0]-navigation.getState().position.x,site.arrival[1]-navigation.getState().position.z)>220){
       void explorePlace(key);return true;
     }
     return walk([{ x: site.arrival[0], z: site.arrival[1] }], 'landmark-' + key, { x: site.position[0], y: site.lookHeight, z: site.position[1] });
@@ -457,6 +515,13 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       -(event.clientY - rect.top) / rect.height * 2 + 1);
     raycaster.setFromCamera(pointer, camera);
   }
+  function processHover() {
+    if (!hoverEvent || dragging || posture !== 'seated') return;
+    aimPointer(hoverEvent); hoverEvent = undefined;
+    const key = home.pick(raycaster);
+    announceSubject(key === 'notebook' ? 'blog' : key === 'letter' ? 'contact' : key, 'hover');
+    canvas.style.cursor = key ? 'pointer' : '';
+  }
   function select(event) {
     aimPointer(event);
     if (posture === 'seated') {
@@ -470,9 +535,9 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       else announceSubject(key,'select');
       return;
     }
-    const roots = (landmarks?.targets || []).map(t => t.object).filter(object=>object.visible); if (cat?.model) roots.push(cat.group);
+    const roots = (landmarks?.targets || []).map(t => t.object).filter(object=>object.visible); if (!region && cat?.model) roots.push(cat.group);
     // Wall/furniture intersections occlude selectable geometry outside the home.
-    const hits = raycaster.intersectObjects([home.group, ...roots], true);
+    const hits = raycaster.intersectObjects(region ? roots : [home.group, ...roots], true);
     const hit = hits.find(h => h.object.visible && !(Array.isArray(h.object.material) ? h.object.material.every(m => m.transparent && m.opacity < .15) : h.object.material?.transparent && h.object.material.opacity < .15));
     if (!hit) return;
     let id; for (let object = hit.object; object; object = object.parent) if (object.userData.targetId) { id = object.userData.targetId; break; }
@@ -482,6 +547,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   listen(canvas, 'pointerdown', event => {
     if (event.button !== 0 || postureTransition) return;
+    hoverEvent = undefined;
     canvas.style.cursor = '';canvas.focus?.({ preventScroll: true }); canvas.setPointerCapture?.(event.pointerId);
     activePointers.add(event.pointerId); if (activePointers.size > 1) { moved = true; return; }
     if (dragging) return; wake(); dragging = { id: event.pointerId, x: event.clientX, y: event.clientY }; down = { ...dragging }; moved = false;
@@ -489,10 +555,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   listen(canvas, 'pointermove', event => {
     if (!dragging) {
       if (posture === 'seated' && event.pointerType === 'mouse') {
-        aimPointer(event);
-        const key=home.pick(raycaster);
-        announceSubject(key==='notebook'?'blog':key==='letter'?'contact':key,'hover');
-        canvas.style.cursor = key ? 'pointer' : '';
+        hoverEvent = event; wake();
       }
       return;
     }
@@ -508,7 +571,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (!cancel && !moved && down) select(event);
     dragging = down = null; if (cancel) stopMovement();
   }
-  listen(canvas, 'pointerleave', () => { canvas.style.cursor = ''; announceSubject(null,'hover'); });
+  listen(canvas, 'pointerleave', () => { hoverEvent = undefined; canvas.style.cursor = ''; announceSubject(null,'hover'); });
   listen(canvas, 'pointerup', event => endPointer(event)); listen(canvas, 'pointercancel', event => endPointer(event, true)); listen(canvas, 'lostpointercapture', event => endPointer(event, true));
   listen(canvas, 'wheel', event => { if (event.ctrlKey || event.metaKey || postureTransition) return; event.preventDefault(); zoom(clamp(event.deltaY, -300, 300)); }, { passive: false });
   const keyMovement = () => setMovement({ forward: Number(pressed.has('w') || pressed.has('arrowup')) - Number(pressed.has('s') || pressed.has('arrowdown')), right: Number(pressed.has('d') || pressed.has('arrowright')) - Number(pressed.has('a') || pressed.has('arrowleft')), sprint: pressed.has('shift') });
@@ -555,7 +618,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     if (!value) cancelRegionLoad();
     studyActive=!!value;if(!studyActive)pendingSubject=null;
     if(studyActive){releaseWaiters();revision++;wake();}
-    else {stopMovement();suspendFrames();announceSubject(null,'hover');}
+    else {hoverEvent = undefined;stopMovement();suspendFrames();announceSubject(null,'hover');}
   }
   function dispose() {
     if (disposed) return; disposed = true;cancelRegionLoad();regionalScene?.dispose?.();releaseWaiters();finishPaint?.(); sizeObserver?.disconnect(); abort.abort(); suspendFrames(); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose();home.dispose?.(); sash.dispose();skyOwner.dispose(); renderer.dispose();
@@ -572,11 +635,11 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       const [{createBlenderCat},{loadBlenderAsset}]=await Promise.all([import('./blender-cat.js'),import('./blender-assets.js')]);
       const actor=await createBlenderCat(T,{load:loadBlenderAsset,signal:abort.signal,invalidate});
       if(disposed||(!studyActive&&!await waitForStudy())){actor.dispose();return;}
-      cat=home.attachCat(actor);applyCatShadowPolicy();invalidate();emit();onProgress({phase:'cat'});
+      cat=home.attachCat(actor);sharpenTextures(cat.group);applyCatShadowPolicy();invalidate();emit();onProgress({phase:'cat'});
     }).catch(error=>{if(!disposed&&error.name!=='AbortError')console.warn('Room cat unavailable:',error);});
     home.loadMiniatures().then(async ready=>{
       if(disposed||(!studyActive&&!await waitForStudy()))return;
-      miniaturesReady=ready;invalidate();emit();onProgress({phase:'miniatures'});
+      miniaturesReady=ready;sharpenTextures(home.group);invalidate();emit();onProgress({phase:'miniatures'});
     }).catch(error=>{if(!disposed)console.warn('Desk landmarks unavailable:',error);});
     // Landscape and architecture are requested only when the visitor enters
     // the garden. Desk readers never pay to decode geometry they cannot see.

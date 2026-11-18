@@ -15,10 +15,10 @@ function interpolate(a,b,f) {
   for(let j=0;j<stride;j++)r[j]=a[j]+(b[j]-a[j])*f;
   return r;
 }
-function clipNear(points) {
-  const output=[];let p=points.at(-1),distance=p[2]+p[3];
+function clipDepth(points,direction) {
+  const output=[];let p=points.at(-1),distance=p[3]+p[2]*direction;
   for(const q of points) {
-    const d=q[2]+q[3];
+    const d=q[3]+q[2]*direction;
     if((d<0)!==(distance<0)) output.push(interpolate(p,q,distance/(distance-d)));
     if(d>=0)output.push(q);
     p=q;distance=d;
@@ -59,8 +59,9 @@ export function createMeshRaster(canvas) {
   const viewProj=new Matrix4(),mvp=new Matrix4(),world=new Matrix4(),instance=new Matrix4(),normalMatrix=new Matrix3();
   const frustum=new Frustum(),sphere=new Sphere(),normal=new Vector3(),point=new Vector3(),tint=new Vector3();
   const sunVec=new Vector3(),info={render:{calls:0,triangles:0}};
-  let projected=new Float32Array(0),flags=new Uint8Array(0);
-  let skyTop,skyBottom;
+  let projected=new Float32Array(0),flags=new Uint8Array(0),shaded=new Uint8Array(0);
+  let skyTop,skyBottom,backdrop;
+  let fogNear=0,fogScale=0,fogDepth=0,fogRed=0,fogGreen=0,fogBlue=0;
   function background(scene) {
     const tone=scene.backgroundIntensity??1;
     if(scene.background?.isColor) {
@@ -73,12 +74,14 @@ export function createMeshRaster(canvas) {
       skyBottom=context.getImageData(bg.width>>1,bg.height>>1,1,1).data;
     }
     const top=skyTop?.color||[103,155,191],bot=skyBottom||[206,217,212];
+    const exposure=Math.sqrt(tone);
+    const channel=(i,k)=>clamp(Math.round((top[i]+(bot[i]-top[i])*k)*exposure),0,255);
     for(let y=0;y<h;y++) {
       const k=clamp(y/h*1.6,0,1);
-      pixels.fill(pack(...[0,1,2].map(j=>clamp(Math.round((top[j]+(bot[j]-top[j])*k)*Math.sqrt(tone)),0,255))),y*w,(y+1)*w);
+      pixels.fill(pack(channel(0,k),channel(1,k),channel(2,k)),y*w,(y+1)*w);
     }
   }
-  function triangles(data,ia,ib,ic,mat,tex) {
+  function triangle(data,ia,ib,ic,mat,tex,prepare) {
     const aw=1/data[ia+3],bw=1/data[ib+3],cw=1/data[ic+3];
     const ax=(data[ia]*aw+1)*.5*w,ay=(1-data[ia+1]*aw)*.5*h;
     const bx=(data[ib]*bw+1)*.5*w,by=(1-data[ib+1]*bw)*.5*h;
@@ -88,9 +91,14 @@ export function createMeshRaster(canvas) {
     const x0=Math.max(0,Math.ceil(Math.min(ax,bx,cx)-.5)),x1=Math.min(w-1,Math.floor(Math.max(ax,bx,cx)-.5));
     const y0=Math.max(0,Math.ceil(Math.min(ay,by,cy)-.5)),y1=Math.min(h-1,Math.floor(Math.max(ay,by,cy)-.5));
     if(x1<x0||y1<y0)return;
+    if(prepare){prepare(ia);prepare(ib);prepare(ic);}
     const da=(by-cy)/area,db=(cy-ay)/area,ea=(cx-bx)/area,eb=(ax-cx)/area;
+    const dc=-da-db, wide=x1-x0>12, tolerance=.00001;
+    const iaStep=Math.abs(da)>1e-12?1/da:0,ibStep=Math.abs(db)>1e-12?1/db:0,icStep=Math.abs(dc)>1e-12?1/dc:0;
     const ua=data[ia+4],ub=data[ib+4],uc=data[ic+4],va=data[ia+5],vb=data[ib+5],vc=data[ic+5];
-    const alpha=mat.opacity??1;
+    const alpha=mat.opacity??1, alphaCutoff=Math.max(.015,mat.alphaTest||0);
+    const blend=mat.transparent, writeDepth=mat.depthWrite!==false;
+    const canFog=mat.fog!==false && fogDepth>Math.min(aw,bw,cw);
     let level;
     if(tex) {
       const first=tex.levels[0],du=Math.abs((ua-uc)*da+(ub-uc)*db)*first.width,dv=Math.abs((va-vc)*ea+(vb-vc)*eb)*first.height;
@@ -99,11 +107,23 @@ export function createMeshRaster(canvas) {
     let rowA=((by-cy)*(x0+.5-cx)+(cx-bx)*(y0+.5-cy))/area;
     let rowB=((cy-ay)*(x0+.5-cx)+(ax-cx)*(y0+.5-cy))/area;
     for(let y=y0;y<=y1;y++,rowA+=ea,rowB+=eb) {
-      let a=rowA,b=rowB;
-      for(let x=x0;x<=x1;x++,a+=da,b+=db) {
+      let first=0,last=x1-x0;
+      if(wide){
+        // Each barycentric weight is linear across a row. Visit only the
+        // columns where all three weights may be inside the same triangle.
+        // Round outwards, then retain the original per-pixel edge test.
+        const edgeA=(-tolerance-rowA)*iaStep,edgeB=(-tolerance-rowB)*ibStep;
+        const edgeC=(rowA+rowB-1-tolerance)*icStep;
+        if(iaStep>0)first=Math.max(first,Math.floor(edgeA));else if(iaStep<0)last=Math.min(last,Math.ceil(edgeA));
+        if(ibStep>0)first=Math.max(first,Math.floor(edgeB));else if(ibStep<0)last=Math.min(last,Math.ceil(edgeB));
+        if(icStep>0)first=Math.max(first,Math.floor(edgeC));else if(icStep<0)last=Math.min(last,Math.ceil(edgeC));
+      }
+      let a=rowA+first*da,b=rowB+first*db;
+      const end=y*w+x0+last;
+      for(let idx=y*w+x0+first;idx<=end;idx++,a+=da,b+=db) {
         const c=1-a-b;
-        if(a<-.00001||b<-.00001||c<-.00001)continue;
-        const q=a*aw+b*bw+c*cw, idx=y*w+x;
+        if(a< -tolerance||b< -tolerance||c< -tolerance)continue;
+        const q=a*aw+b*bw+c*cw;
         if(q<=depth[idx])continue;
         let r=255,g=255,blue=255,opacity=alpha;
         if(tex) {
@@ -119,15 +139,20 @@ export function createMeshRaster(canvas) {
           blue=(M>>16&255)*k+(N>>16&255)*l+(O>>16&255)*m+(P>>16&255)*n;
           opacity*=((M>>>24)*k+(N>>>24)*l+(O>>>24)*m+(P>>>24)*n)/255;
         }
-        if(opacity<Math.max(.015,mat.alphaTest||0))continue;
+        if(opacity<alphaCutoff)continue;
         r=clamp(r*(a*data[ia+6]+b*data[ib+6]+c*data[ic+6]),0,255);
         g=clamp(g*(a*data[ia+7]+b*data[ib+7]+c*data[ic+7]),0,255);
         blue=clamp(blue*(a*data[ia+8]+b*data[ib+8]+c*data[ic+8]),0,255);
-        if(mat.transparent && opacity<.995) {
+        if(canFog && q<fogDepth){
+          const distance=clamp((1/q-fogNear)*fogScale,0,1);
+          const amount=distance*distance*(3-2*distance);
+          r+=(fogRed-r)*amount;g+=(fogGreen-g)*amount;blue+=(fogBlue-blue)*amount;
+        }
+        if(blend && opacity<.995) {
           const prev=pixels[idx];r=r*opacity+(prev&255)*(1-opacity);g=g*opacity+(prev>>8&255)*(1-opacity);blue=blue*opacity+(prev>>16&255)*(1-opacity);
         }
         pixels[idx]=pack(r,g,blue);
-        if(mat.depthWrite!==false)depth[idx]=q;
+        if(writeDepth)depth[idx]=q;
       }
     }
   }
@@ -140,7 +165,8 @@ export function createMeshRaster(canvas) {
     const pos=geometry.attributes.position,uv=geometry.attributes.uv,colors=mat.vertexColors&&geometry.attributes.color;
     if(!pos)return;
     const count=pos.count,norm=geometry.attributes.normal,idx=geometry.index;
-    if(projected.length<count*stride){projected=new Float32Array(count*stride);flags=new Uint8Array(count);}
+    if(projected.length<count*stride){projected=new Float32Array(count*stride);flags=new Uint8Array(count);shaded=new Uint8Array(count);}
+    shaded.fill(0,0,count);
     mvp.multiplyMatrices(viewProj,model);normalMatrix.getNormalMatrix(model);
     const e=mvp.elements,tex=pixelTexture(mat.map,textureCache);
     const color=mat.color||{r:1,g:1,b:1},em=mat.emissive,ei=mat.emissiveIntensity??1;
@@ -152,10 +178,18 @@ export function createMeshRaster(canvas) {
       const px=e[0]*x+e[4]*y+e[8]*z+e[12],py=e[1]*x+e[5]*y+e[9]*z+e[13],pz=e[2]*x+e[6]*y+e[10]*z+e[14],pw=e[3]*x+e[7]*y+e[11]*z+e[15];
       projected[j]=px;projected[j+1]=py;projected[j+2]=pz;projected[j+3]=pw;
       flags[i]=(px< -pw?1:0)|(px>pw?2:0)|(py< -pw?4:0)|(py>pw?8:0)|(pz< -pw?16:0)|(pz>pw?32:0);
+    }
+    function prepare(j) {
+      const i=j/stride;
+      if(shaded[i])return;
+      shaded[i]=1;
       projected[j+4]=uv?.getX(i)||0;projected[j+5]=uv?.getY(i)||0;
-      if(norm)normal.fromBufferAttribute(norm,i).applyNormalMatrix(normalMatrix);else normal.set(0,1,0);
-      const lambert=Math.max(0,normal.dot(sunVec));
-      const light=basic?1:clamp(ambientLight*(.65+.32*(normal.y+1)*.5)+sunPower*lambert,.16,1.75);
+      let light=1;
+      if(!basic){
+        if(norm)normal.fromBufferAttribute(norm,i).applyNormalMatrix(normalMatrix);else normal.set(0,1,0);
+        const lambert=Math.max(0,normal.dot(sunVec));
+        light=clamp(ambientLight*(.65+.32*(normal.y+1)*.5)+sunPower*lambert,.16,1.75);
+      }
       if(colors)tint.fromBufferAttribute(colors,i);else tint.set(1,1,1);
       projected[j+6]=srgb(color.r*tint.x*light+(em?.r||0)*ei)/255;
       projected[j+7]=srgb(color.g*tint.y*light+(em?.g||0)*ei)/255;
@@ -165,14 +199,57 @@ export function createMeshRaster(canvas) {
     for(let i=start;i+2<end;i+=3) {
       const a=idx?idx.getX(i):i,b=idx?idx.getX(i+1):i+1,c=idx?idx.getX(i+2):i+2;
       if(flags[a]&flags[b]&flags[c])continue;
-      if((flags[a]|flags[b]|flags[c])&16) {
-        const pts=clipNear([a,b,c].map(k=>data.subarray(k*stride,k*stride+stride)));
+      const ia=a*stride,ib=b*stride,ic=c*stride;
+      const clipFlags=(flags[a]|flags[b]|flags[c])&48;
+      if(clipFlags) {
+        prepare(ia);prepare(ib);prepare(ic);
+        let pts=[data.subarray(ia,ia+stride),data.subarray(ib,ib+stride),data.subarray(ic,ic+stride)];
+        if(clipFlags&16)pts=clipDepth(pts,1);
+        if(pts.length>=3 && clipFlags&32)pts=clipDepth(pts,-1);
         if(pts.length<3)continue;
         const packed=new Float32Array(pts.length*stride);pts.forEach((p,j)=>packed.set(p,j*stride));
-        for(let j=1;j<pts.length-1;j++)triangles(packed,0,j*stride,(j+1)*stride,mat,tex);
-      }else triangles(data,a*stride,b*stride,c*stride,mat,tex);
+        for(let j=1;j<pts.length-1;j++)triangle(packed,0,j*stride,(j+1)*stride,mat,tex);
+      }else triangle(data,ia,ib,ic,mat,tex,prepare);
     }
     info.render.calls++;info.render.triangles+=(end-start)/3;
+  }
+  function collectMeshes(scope,camera,submit,skip) {
+    function visit(mesh) {
+      if(!mesh.visible || mesh===skip)return;
+      if(mesh.isMesh && mesh.layers.test(camera.layers)) {
+        const g=mesh.geometry;
+        if(g?.attributes.position){
+          const m=mesh.material,total=g.index?.count||g.attributes.position.count;
+          const from=Math.max(0,g.drawRange.start),to=Math.min(total,from+g.drawRange.count);
+          if(mesh.isSkinnedMesh)mesh.skeleton.update();
+          const copies=mesh.isInstancedMesh?mesh.count:1;
+          for(let i=0;i<copies;i++) {
+            if(mesh.isInstancedMesh){mesh.getMatrixAt(i,instance);world.multiplyMatrices(mesh.matrixWorld,instance);}else world.copy(mesh.matrixWorld);
+            if(Array.isArray(m)){for(const group of g.groups)submit(mesh,world,g,m[group.materialIndex],Math.max(from,group.start),Math.min(to,group.start+group.count));}
+            else submit(mesh,world,g,m,from,to);
+          }
+        }
+      }
+      for(const child of mesh.children)visit(child);
+    }
+    visit(scope);
+  }
+  function updateLights(scene) {
+    ambientLight=.63;sunPower=.65;sunVec.set(-.48,.76,.43).normalize();
+    let best=0;
+    scene.traverseVisible(n=>{
+      if(n.isHemisphereLight)ambientLight=clamp(.50+.18*n.intensity,.45,.90);
+      if(n.isDirectionalLight && n.intensity>best) {
+        best=n.intensity;sunPower=clamp(.22+best*.24,.25,.95);
+        sunVec.setFromMatrixPosition(n.matrixWorld).sub(point.setFromMatrixPosition(n.target.matrixWorld)).normalize();
+      }
+    });
+  }
+  function updateFog(fog) {
+    fogDepth=0;
+    if(!fog?.isFog || fog.near<=0 || fog.far<=fog.near)return;
+    fogNear=fog.near;fogScale=1/(fog.far-fogNear);fogDepth=1/fogNear;
+    fogRed=srgb(fog.color.r);fogGreen=srgb(fog.color.g);fogBlue=srgb(fog.color.b);
   }
   return {
     info,shadowMap:{},capabilities:{maxTextureSize:2048,getMaxAnisotropy:()=>1},isMeshRaster:true,
@@ -181,48 +258,53 @@ export function createMeshRaster(canvas) {
       const scale=Math.min(ratio,Math.sqrt(1500000/Math.max(1,width*height)));
       nextW=Math.max(1,Math.round(width*scale));nextH=Math.max(1,Math.round(height*scale));
     },
-    render(scene,camera) {
+    render(scene,camera,{staticFrameKey,dynamicRoot}={}) {
       // Resizing a canvas clears its pixels immediately. Allocate only in
       // the render which replaces those pixels with the next complete frame.
       if (!image || w!==nextW || h!==nextH) {
         w=nextW;h=nextH;surface.width=w;surface.height=h;
         image=ctx.createImageData(w,h);pixels=new Uint32Array(image.data.buffer);depth=new Float32Array(w*h);
+        backdrop=undefined;
       }
-      scene.updateMatrixWorld();camera.updateWorldMatrix(true,false);
-      viewProj.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(viewProj);
-      depth.fill(0);background(scene);info.render.calls=info.render.triangles=0;
-      ambientLight=.63;sunPower=.65;sunVec.set(-.48,.76,.43).normalize();
-      let best=0;
-      scene.traverseVisible(n=>{
-        if(n.isHemisphereLight)ambientLight=clamp(.50+.18*n.intensity,.45,.90);
-        if(n.isDirectionalLight && n.intensity>best) {
-          best=n.intensity;sunPower=clamp(.22+best*.24,.25,.95);
-          sunVec.setFromMatrixPosition(n.matrixWorld).sub(point.setFromMatrixPosition(n.target.matrixWorld)).normalize();
-        }
-      });
-      const transparent=[];
+      // The caller's key describes the camera and the static scene revision.
+      // The cat is the only moving subtree in this mode. Keep opaque colour
+      // and depth, then redraw the cat and depth-sort all glass in the same pass.
+      const canCache=dynamicRoot && staticFrameKey!==undefined;
+      const reuse=canCache && backdrop?.key===staticFrameKey && backdrop.scene===scene && backdrop.camera===camera && backdrop.root===dynamicRoot;
+      const transparent=reuse?backdrop.transparent.slice():[];
+      info.render.calls=info.render.triangles=0;
       function submit(mesh,model,g,m,start,end) {
+        if(!m?.visible || m.opacity<=.005 || end<=start)return;
         if(m.transparent){sphere.copy(g.boundingSphere || (g.computeBoundingSphere(),g.boundingSphere)).applyMatrix4(model);
           transparent.push({mesh,model:model.clone(),g,m,start,end,d:sphere.center.distanceToSquared(camera.position)});}
         else draw(mesh,model,g,m,start,end);
       }
-      scene.traverseVisible(mesh=>{
-        if(!mesh.isMesh||!mesh.layers.test(camera.layers))return;
-        const g=mesh.geometry;if(!g?.attributes.position)return;
-        const m=mesh.material,total=g.index?.count||g.attributes.position.count;
-        const from=Math.max(0,g.drawRange.start),to=Math.min(total,from+g.drawRange.count);
-        if(mesh.isSkinnedMesh)mesh.skeleton.update();
-        const copies=mesh.isInstancedMesh?mesh.count:1;
-        for(let i=0;i<copies;i++) {
-          if(mesh.isInstancedMesh){mesh.getMatrixAt(i,instance);world.multiplyMatrices(mesh.matrixWorld,instance);}else world.copy(mesh.matrixWorld);
-          if(Array.isArray(m)){for(const group of g.groups)submit(mesh,world,g,m[group.materialIndex],Math.max(from,group.start),Math.min(to,group.start+group.count));}
-          else submit(mesh,world,g,m,from,to);
-        }
-      });
+      if(reuse){
+        pixels.set(backdrop.color);depth.set(backdrop.depth);
+        // updateMatrixWorld also refreshes each skinned mesh's bind inverse.
+        dynamicRoot.updateMatrixWorld(true);
+      }else{
+        scene.updateMatrixWorld();camera.updateWorldMatrix(true,false);
+        viewProj.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(viewProj);
+        depth.fill(0);background(scene);updateLights(scene);updateFog(scene.fog);
+        collectMeshes(scene,camera,submit,canCache?dynamicRoot:null);
+        if(canCache){
+          backdrop??={color:new Uint32Array(pixels.length),depth:new Float32Array(depth.length)};
+          Object.assign(backdrop,{key:staticFrameKey,scene,camera,root:dynamicRoot,transparent:transparent.slice()});
+          backdrop.color.set(pixels);backdrop.depth.set(depth);
+        }else backdrop=undefined;
+      }
+      if(canCache){
+        // A hidden ancestor suppresses the entire animated subtree, as it does
+        // for a full traversal. The caller normally hides the cat off-screen.
+        let ancestor=dynamicRoot.parent;
+        while(ancestor?.visible)ancestor=ancestor.parent;
+        if(!ancestor)collectMeshes(dynamicRoot,camera,submit);
+      }
       transparent.sort((a,b)=>b.d-a.d);
       for(const t of transparent)draw(t.mesh,t.model,t.g,t.m,t.start,t.end);
       ctx.putImageData(image,0,0);
     },
-    dispose(){textureCache=new WeakMap();if(surface!==canvas){surface.remove();canvas.style.opacity='';}delete surface.dataset.renderer;}
+    dispose(){backdrop=undefined;textureCache=new WeakMap();if(surface!==canvas){surface.remove();canvas.style.opacity='';}delete surface.dataset.renderer;}
   };
 }

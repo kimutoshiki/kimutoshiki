@@ -23,7 +23,8 @@ function releaseSource(asset) {
 }
 
 async function readAsset(key, signal) {
-  const response = await fetch(new URL(key + '.glb?v=atelier1', directory), {signal});
+  const revision = key === 'study-room' ? '20261118-study2' : 'atelier1';
+  const response = await fetch(new URL(key + '.glb?v=' + revision, directory), {signal});
   if (!response.ok) throw new Error(key + ' model: HTTP ' + response.status);
   const bytes = await response.arrayBuffer();
   const header = new DataView(bytes);

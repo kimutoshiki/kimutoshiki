@@ -16,6 +16,7 @@ sys.dont_write_bytecode=True
 sys.path.insert(0,str(HERE))
 from study_mesh import Mesh,group,text_mesh,material
 from study_textures import prepare
+from pack_geometry import pack_static_glb
 
 p=argparse.ArgumentParser()
 p.add_argument('--preview',type=Path)
@@ -471,6 +472,7 @@ out=args.output;out.parent.mkdir(parents=True,exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=str(out),export_format='GLB',export_yup=True,export_extras=True,
     export_animations=False,export_morph=True,export_morph_normal=False,export_lights=False,export_cameras=False,
     export_image_format='JPEG',export_image_quality=84,export_jpeg_quality=84)
+pack_static_glb(out,preserve_detail=True)
 print('STUDY MODEL',out,out.stat().st_size,flush=True)
 if args.blend:
     bpy.ops.file.pack_all();bpy.ops.wm.save_as_mainfile(filepath=str(args.blend))
