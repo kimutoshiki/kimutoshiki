@@ -2,7 +2,7 @@ import { surface } from './surface-materials.js';
 import { mergeStaticDraws, cacheStaticLocalMatrices, staticDrawStats } from './static-batching.js';
 
 export const GARDEN_BOUNDARY_BOUNDS = Object.freeze({minX:-48,maxX:48,minZ:-8,maxZ:90});
-export const GARDEN_LAMP_POSITIONS = Object.freeze([[2.4,7.2],[-4.4,18],[4.4,31],[-4.4,45],[4.4,61],[-4.4,78]].map(p=>Object.freeze(p)));
+export const GARDEN_LAMP_POSITIONS = Object.freeze([[2.4,7.2],[-4.4,13.6],[4.4,31],[-4.4,45],[4.4,61],[-4.4,78]].map(p=>Object.freeze(p)));
 
 /** A grounded garden enclosure inspired by the Former Karatsu Bank's brick
  * and pale masonry, with shallow decorative arch reliefs, never false exits.

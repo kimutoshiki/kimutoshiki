@@ -5,6 +5,8 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { resolve, sep } from 'node:path';
+import { OUTDOOR_VIEWS, districtAt } from '../scene/world-layout.js';
+import { SOFTWARE_PLACES } from '../js/software-garden.js';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 
 const base = process.env.PREVIEW_URL || 'http://127.0.0.1:4173';
@@ -16,8 +18,15 @@ const browser = await chromium.launch({
 });
 const report = { browser: await browser.version(), renderer: 'ANGLE SwiftShader', cases: [] };
 const destinations = ['profile', 'research', 'blog', 'photos', 'contact'];
-const engineResource = /\/(?:scene|models|js\/vendor)\//;
-const outdoorResource = /world-chunk-(?:world-landscape|garden-boundary|world-landmarks)-/;
+const engineResource = /\/(?:scene|models|js\/vendor)\/|\/js\/software-(?:world|renderer|garden|desk)\.js/;
+const galleryResource = /\/images\/outdoors\//;
+const places = [
+  { key:'okuma-auditorium', name:'大隈講堂', detail:'時計塔' },
+  { key:'okuma-statue', name:'大隈重信像', detail:'杖' },
+  { key:'karatsu-castle', name:'唐津城', detail:'唐津湾' },
+  { key:'karatsu-bank', name:'旧唐津銀行', detail:'れんが' },
+];
+const outdoorResource = /world-chunk-(?:world-landscape|garden-boundary|world-landmarks)-|software-garden\.js/;
 
 async function picture(page, name) {
   await page.evaluate(() => document.fonts.ready.then(() => true));
@@ -74,16 +83,148 @@ async function checkIllustration(page, requests) {
   assert.match(source.path, /^\/images\/study\/study-(640|960|1200|1536)\.webp$/);
   assert(Math.abs(source.width / source.height - 1.5) < .01);
   assert(!requests.some(url => engineResource.test(url)), 'The illustrated home downloads no renderer, models or 3D geometry');
+  assert(!requests.some(url => galleryResource.test(url)), 'No outdoor gallery images are downloaded on initial entry');
+  assert(!requests.some(url => /\/js\/notebook-(?:view|render|geometry)\.js/.test(url)), 'The close-up notebook is on demand');
   assert.equal(await page.evaluate(() => window.__glCalls), 0);
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   return source.path;
 }
 
+async function numbers(page, liveMode = false) {
+  const menuNumbers = await page.locator('#home-menu [data-study-link]').evaluateAll(items =>
+    items.map(item => [item.dataset.studyLink, item.querySelector('.menu-symbol')?.textContent.trim()]));
+  const selector = liveMode ? '[data-live-link]' : '[data-illustration-link]';
+  const pinNumbers = await page.locator(selector).evaluateAll(items =>
+    items.map(item => [item.dataset.liveLink || item.dataset.illustrationLink, item.querySelector('.pin-dot')?.textContent.trim()]));
+  const expected = destinations.map((key, index) => [key, String(index + 1)]);
+  assert.deepEqual(menuNumbers, expected);
+  assert.deepEqual(pinNumbers, expected, 'The five actual menu and object numbers agree in order');
+}
+async function pixelSample(canvas) {
+  return canvas.evaluate(view => {
+    const context = view.getContext('2d');
+    const { width, height } = view;
+    const data = context.getImageData(0, 0, width, height).data;
+    const colors = new Set();
+    let hash = 2166136261;
+    for (let y = 0; y < height; y += Math.max(1, Math.floor(height / 120))) {
+      for (let x = 0; x < width; x += Math.max(1, Math.floor(width / 160))) {
+        const at = 4 * (y * width + x);
+        const rgb = (data[at] << 16) + (data[at + 1] << 8) + data[at + 2];
+        colors.add(rgb);
+        hash = Math.imul(hash ^ rgb, 16777619);
+      }
+    }
+    return { colors: colors.size, hash: hash >>> 0, width, height };
+  });
+}
+async function inspectNotebook(page, name, capture = false) {
+  const dialog = page.getByRole('dialog', {name:'旅の手帖'});
+  const stage = dialog.locator('.notebook-stage');
+  const canvas = stage.locator('canvas');
+  await dialog.waitFor();
+  await canvas.waitFor();
+  await page.waitForFunction(() => document.querySelector('.notebook-stage canvas')?.width > 320 ||
+    document.querySelector('.notebook-stage canvas')?.clientWidth > 150);
+  assert.match(await canvas.getAttribute('aria-label'), /大隈講堂.*唐津城/);
+  assert.equal(await stage.getAttribute('data-position'), 'spread');
+  const onIllustration = name.endsWith('-2d');
+  if (onIllustration) assert.equal(await page.locator('#study-artwork .notebook-on-desk').count(), 0, 'Reduced motion opens the spread immediately without animating the desk');
+  const open = await pixelSample(canvas);
+  assert(open.colors > 32 && open.width > 100 && open.height > 80, 'The open spread contains drawn, varied artwork');
+  if (capture) await picture(page, name + '-sketchbook');
+  await dialog.getByRole('button', {name:'前のページ'}).click();
+  assert.equal(await stage.getAttribute('data-position'), 'first');
+  const pageOne = await pixelSample(canvas);
+  assert.notEqual(pageOne.hash, open.hash, 'Turning a page changes the pixels, as well as the accessible state');
+  await dialog.getByRole('button', {name:'表紙を閉じる'}).click();
+  assert.equal(await stage.getAttribute('data-position'), 'closed');
+  assert(await dialog.getByRole('button', {name:'次のページ'}).isDisabled());
+  if (!onIllustration) assert.equal(await page.evaluate(() => window.__worldState.deskProps.notebook), false, 'Closing the cover also closes the real desk prop');
+  const closed = await pixelSample(canvas);
+  assert.notEqual(closed.hash, pageOne.hash);
+  if (capture && name === 'desktop-2d') await picture(page, name + '-book-cover');
+  await dialog.getByRole('button', {name:'表紙を開く'}).click();
+  assert.equal(await stage.getAttribute('data-position'), 'spread');
+  if (!onIllustration) assert.equal(await page.evaluate(() => window.__worldState.deskProps.notebook), true);
+  assert.equal(new URL(await dialog.locator('.study-link-go').getAttribute('href'), page.url()).pathname, '/blog.html');
+  await page.keyboard.press('Escape');
+  await dialog.waitFor({state:'hidden'});
+}
+async function galleryView(page, scene, index, viewportWidth) {
+  const garden = page.locator('.study-tour[open]');
+  await garden.waitFor();
+  await page.waitForFunction(key => {
+    const img = document.querySelector('.study-tour[open] .tour-view img');
+    return img && !img.hidden && img.complete && img.naturalWidth > 0 && img.currentSrc.includes('/' + key + '-');
+  }, scene.key);
+  assert.equal(await garden.locator('.tour-place h3').textContent(), scene.name);
+  assert.equal(await garden.locator('.tour-count').textContent(), (index + 1) + ' / 4');
+  const image = garden.locator('.tour-view img');
+  assert((await image.getAttribute('alt')).includes(scene.detail), 'Outdoor illustration has a scene-specific text alternative');
+  const src = await image.evaluate(img => new URL(img.currentSrc).pathname);
+  assert.match(src, new RegExp('^/images/outdoors/' + scene.key + '-(768|1280|1536)\\.webp$'));
+  if (viewportWidth <= 620) assert(src.endsWith('-768.webp'));
+  return garden;
+}
+async function seekGallery(page, index, viewportWidth) {
+  const counter = page.locator('.study-tour[open] .tour-count');
+  await counter.waitFor();
+  const current = Number((await counter.textContent()).split('/')[0]) - 1;
+  for (let step = 0; step < (index - current + places.length) % places.length; step++) await page.locator('.tour-next').click();
+  return galleryView(page, places[index], index, viewportWidth);
+}
+async function exploreAndReturn(page, scene, renderer, capture) {
+  await page.locator('.tour-explore').click();
+  await page.waitForFunction(key => {
+    const s = window.__worldState;
+    return s?.standing && s.mode === 'outside' && s.landmarksReady && s.focus === 'landmark-' + key;
+  }, scene.key, { timeout: 180000 });
+  const state = await page.evaluate(() => window.__worldState);
+  const nativeEye = OUTDOOR_VIEWS[scene.key].eye, simulated = SOFTWARE_PLACES['landmark-' + scene.key];
+  const eye = renderer === 'software' ? [simulated.x,simulated.z] : nativeEye;
+  assert(Math.hypot(state.position.x-eye[0],state.position.z-eye[1]) < .12, 'The camera starts physically at the depicted site');
+  assert.equal(state.district, districtAt({x:nativeEye[0],z:nativeEye[1]}));
+  assert.equal(await page.locator('#world-location-name').textContent(), state.district);
+  const veil = page.locator('.tour-arrival');
+  if (await veil.count()) await veil.waitFor({state:'hidden',timeout:15000});
+  if (capture) await picture(page, renderer + '-place-' + scene.key);
+  await page.locator('#study-mode-2d').click();
+  const returnView = await galleryView(page, scene, places.indexOf(scene), page.viewportSize().width);
+  assert.equal(await page.locator('#main').getAttribute('data-display-mode'), '2d');
+  await returnView.locator('.tour-close').click();
+  await returnView.waitFor({state:'hidden'});
+  assert(await page.locator('#study-artwork').isVisible(), 'Closing the returned illustration reveals the native desk');
+  await page.locator('#study-mode-3d').click();
+  await page.waitForFunction(district => document.querySelector('#main.is-rendered.is-walking[data-display-mode="3d"]') &&
+    window.__worldState?.mode === 'outside' && window.__worldState?.district === district, state.district, {timeout:180000});
+  if (renderer === 'software') {
+    const surface = page.locator('canvas[data-renderer="software"]');
+    const before = await pixelSample(surface);
+    assert(before.colors >= 12, 'The CPU renderer paints the actual exterior');
+    await page.locator('#world-canvas').focus();
+    await page.keyboard.down('w');
+    try {
+      await page.waitForFunction(start => {
+        const p = window.__worldState.position;
+        return Math.hypot(p.x-start.x, p.z-start.z) > .005;
+      },state.position);
+    } finally { await page.keyboard.up('w'); }
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const after = await pixelSample(surface);
+    assert.notEqual(after.hash, before.hash, 'Manual walking changes the perspective-rendered exterior');
+  }
+  await page.locator('#world-seat').click();
+  await page.waitForFunction(() => window.__worldState?.seated && !document.getElementById('main').classList.contains('is-walking'), null, {timeout:180000});
+  assert(await page.locator('#home-menu').isVisible());
+  return state.district;
+}
 try {
   for (const [name, viewport] of [['desktop', { width: 1440, height: 900 }], ['mobile', { width: 390, height: 844 }], ['narrow', { width: 320, height: 740 }]]) {
     const { page, requests, errors, failures } = await open(viewport);
     await goHome(page);
     const image = await checkIllustration(page, requests);
+    await numbers(page);
     if (viewport.width <= 640) assert(image.endsWith('study-640.webp'), 'A phone gets the 640px illustration at DPR 1');
     assert.equal(await page.locator('#study-mode-2d').getAttribute('aria-pressed'), 'true');
     await picture(page, name + '-2d');
@@ -96,8 +237,8 @@ try {
     for (const id of destinations) {
       const pin = '[data-illustration-link="' + id + '"]';
       const card = await choose(page, pin, id);
-      if (name === 'desktop' && id === 'blog') await picture(page, 'desktop-2d-linked-notebook');
-      await card.locator('.study-link-close').click();
+      if (id === 'blog') await inspectNotebook(page, name + '-2d', name !== 'narrow');
+      else await card.locator('.study-link-close').click();
       await card.waitFor({ state: 'hidden' });
     }
     assert(!requests.some(url => engineResource.test(url)), 'Previewing all five destinations stays in 2D');
@@ -113,10 +254,14 @@ try {
     }
     await page.locator('#world-stand').click();
     const garden = page.getByRole('dialog');
-    await garden.waitFor();
-    await page.waitForFunction(() => document.querySelector('.tour-view img')?.naturalWidth > 0);
-    await page.keyboard.press('ArrowRight');
-    assert.equal(await garden.locator('.tour-count').textContent(), '2 / 4');
+    for (const [i,scene] of places.entries()) {
+      await galleryView(page, scene, i, viewport.width);
+      if (name === 'desktop') await picture(page, 'gallery-' + scene.key);
+      if (name === 'desktop' && i === 0) {
+        assert(!places.slice(1).some(other => requests.some(url => url.includes('/images/outdoors/' + other.key))), 'Opening one outdoor illustration does not fetch the following stops');
+      }
+      if (i + 1 < places.length) await page.keyboard.press('ArrowRight');
+    }
     await page.keyboard.press('Escape');
     await garden.waitFor({ state:'hidden' });
     assert(!requests.some(url => engineResource.test(url)));
@@ -126,14 +271,14 @@ try {
     await live(page);
     assert.equal(await page.locator('#study-mode-3d').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('.study-pin[data-live-link]').count(), 5);
+    await numbers(page, true);
     await picture(page, name + '-3d');
     const card = await choose(page, '[data-live-link="blog"]', 'blog');
     assert.equal(await page.evaluate(() => window.__worldState.deskProps.notebook), true, 'The live notebook actually opens on selection');
     if (name === 'desktop') {
       assert(await page.locator('#home-menu [data-study-link="blog"]').evaluate(link => link.classList.contains('is-linked')), 'The selected live object highlights its matching menu entry');
-      await picture(page, 'desktop-3d-linked-notebook');
     }
-    await page.keyboard.press('Escape');
+    await inspectNotebook(page, name + '-3d', true);
     await card.waitFor({ state:'hidden' });
     assert(!requests.some(url => outdoorResource.test(url)), 'Desk inspection does not load the exterior');
     const contexts = await page.evaluate(() => window.__glCalls);
@@ -160,9 +305,45 @@ try {
       assert(await page.locator('#home-menu').isVisible());
       assert.equal(await page.evaluate(() => window.__glCalls), contexts);
       report.cases.push({name:'Garden entrance and continuous return to the same desk', retainedContext:true});
+      await page.locator('#study-mode-2d').click();
+      await page.locator('#world-stand').click();
+      const castle = places[2];
+      await seekGallery(page, 2, 480);
+      await page.setViewportSize({width:800,height:560});
+      const district = await exploreAndReturn(page, castle, 'webgl', true);
+      report.cases.push({name:'Illustrated castle to its native 3D viewpoint and back', district});
+
     }
     assert.deepEqual(errors, []); assert.deepEqual(failures, []); await page.close();
   }
+
+  // Observe the physically hinged book on the actual illustration before
+  // its close-up opens. Tests above use reduced motion for deterministic poses.
+  const animated = await open({width: 1280, height: 800}, {reducedMotion:'no-preference'});
+  await goHome(animated.page);
+  await animated.page.evaluate(() => {
+    window.__deskBookFrames = new Set();
+    const end = performance.now() + 8000;
+    function sample() {
+      const overlay = document.querySelector('#study-artwork .notebook-on-desk');
+      if (overlay?.width > 12) {
+        const ctx = overlay.getContext('2d'), {data} = ctx.getImageData(0, 0, overlay.width, overlay.height);
+        let hash = 2166136261;
+        for (let i = 0; i < data.length; i += 28) hash = Math.imul(hash ^ (data[i] + data[i+3] * 256), 16777619);
+        window.__deskBookFrames.add(hash);
+      }
+      if (window.__deskBookFrames.size < 3 && performance.now() < end) requestAnimationFrame(sample);
+    }
+    requestAnimationFrame(sample);
+  });
+  await animated.page.locator('[data-illustration-link="blog"]').click();
+  await animated.page.waitForFunction(() => window.__deskBookFrames.size >= 3, null, {timeout:10000});
+  await animated.page.getByRole('dialog', {name:'旅の手帖'}).waitFor();
+  await animated.page.keyboard.press('Escape');
+  await animated.page.locator('.notebook-on-desk').waitFor({state:'detached'});
+  assert.deepEqual(animated.errors, []);
+  await animated.page.close();
+  report.cases.push({name:'Photographed cover visibly rises on the actual illustrated desktop'});
 
   const slow = await open({ width: 960, height: 720 });
   let release;
@@ -186,15 +367,39 @@ try {
     HTMLCanvasElement.prototype.getContext = function(type, ...args) { return type === 'webgl2' ? null : native.call(this, type, ...args); };
   });
   await goHome(unsupported.page);
-  const illustration = await unsupported.page.locator('#study-image').evaluate(img => img.currentSrc);
-  await unsupported.page.locator('#study-mode-3d').click();
-  await unsupported.page.waitForFunction(() => document.getElementById('main').dataset.displayMode === '2d' && document.getElementById('study-mode-status').textContent.trim());
-  assert.equal(await unsupported.page.locator('#study-image').evaluate(img => img.currentSrc), illustration);
-  assert(await unsupported.page.locator('#home-menu').isVisible());
-  assert(await unsupported.page.locator('#study-mode-3d').isEnabled(), 'An explicit retry remains available');
-  await choose(unsupported.page, '[data-illustration-link="profile"]', 'profile');
-  await unsupported.page.close();
-  report.cases.push({name:'Canceled or unavailable WebGL leaves the illustration usable'});
+  const cpu = unsupported.page;
+  await checkIllustration(cpu, unsupported.requests);
+  await cpu.locator('#study-mode-3d').click();
+  await cpu.waitForFunction(() => window.__worldState?.renderer === 'software' && window.__worldState.seated &&
+    !!document.querySelector('#main.is-rendered[data-display-mode="3d"]'));
+  const surface = cpu.locator('canvas[data-renderer="software"]');
+  assert((await pixelSample(surface)).colors >= 12, 'Disabling WebGL activates a working perspective renderer');
+  assert(!unsupported.requests.some(url => /world\.bundle|cat-world.*\.glb/.test(url)), 'The CPU-only path does not load WebGL or its model');
+  await numbers(cpu, true);
+  await picture(cpu, 'software-mobile-desk');
+  await cpu.locator('[data-desk-action="notebook"]').click();
+  await inspectNotebook(cpu, 'software-mobile', true);
+  assert.equal(await cpu.evaluate(() => window.__worldState.deskProps.notebook), true);
+  for (const [index,scene] of places.entries()) {
+    await cpu.locator('#study-mode-2d').click();
+    await cpu.locator('#world-stand').click();
+    await seekGallery(cpu, index, 390);
+    const district = await exploreAndReturn(cpu, scene, 'software', true);
+    report.cases.push({name:'Software 3D gallery arrival, movement and return', site:scene.name, district});
+  }
+  assert.deepEqual(unsupported.errors, []); assert.deepEqual(unsupported.failures, []);
+  await cpu.close();
+  const failure = await open({width:390,height:844});
+  await failure.page.addInitScript(() => { HTMLCanvasElement.prototype.getContext = () => null; });
+  await goHome(failure.page);
+  const illustration = await failure.page.locator('#study-image').evaluate(img => img.currentSrc);
+  await failure.page.locator('#study-mode-3d').click();
+  await failure.page.waitForFunction(() => document.getElementById('main').dataset.displayMode === '2d' && document.getElementById('study-mode-status').textContent.includes('3D'));
+  assert.equal(await failure.page.locator('#study-image').evaluate(img => img.currentSrc), illustration);
+  assert(await failure.page.locator('#study-mode-3d').isEnabled());
+  await choose(failure.page, '[data-illustration-link="profile"]', 'profile');
+  await failure.page.close();
+  report.cases.push({name:'Canceled or unavailable renderers leave the illustrated menu usable'});
 
   const nojs = await browser.newPage({ javaScriptEnabled:false, viewport:{width:390,height:844} });
   await nojs.goto(base, { waitUntil:'networkidle' });

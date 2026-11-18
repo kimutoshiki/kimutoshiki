@@ -83,18 +83,25 @@ export function mountStudyLinks(world) {
     const key=hovered || focused || selected;
     for(const el of all) el.classList.toggle('is-linked',!!key && keyOf(el)===key);
   }
+  let viewer=null, revision=0, loadingNotebook=false;
+  function releaseNotebook() {
+    revision++;loadingNotebook=false;
+    viewer?.();viewer=null;
+  }
   function hideCard(returnFocus=false) {
+    releaseNotebook();
     if (returnFocus && selected && opener?.isConnected) opener.focus({preventScroll:true});
     selected=null;opener=null;card.hidden=true;artwork.removeAttribute('data-notebook-open');
     for(const pin of pins) pin.setAttribute('aria-expanded','false');
     highlight();
   }
   function select(key,source,moveFocus=false) {
-    if (!pages[key] || mode==='off') return;
+    if (!pages[key] || mode==='off' || key==='blog' && selected===key && viewer) return;
     const link=menuLinks.find(el=>keyOf(el)===key);
     if (!link) return;
     hovered=null;
     if(focused!==key) focused=null;
+    if(selected!==key) releaseNotebook();
     selected=key;opener=source || (mode==='live' ? live.get(key) : illustrated.find(el=>keyOf(el)===key));
     card.setAttribute('aria-label',pages[key].object+'の案内');
     object.textContent=pages[key].object;
@@ -103,7 +110,18 @@ export function mountStudyLinks(world) {
     artwork.toggleAttribute('data-notebook-open',mode==='illustration' && key==='blog');
     for(const pin of pins) pin.setAttribute('aria-expanded',String(key===keyOf(pin)));
     highlight();
-    if (moveFocus) go.focus({preventScroll:true});
+    if(key==='blog' && !viewer && !loadingNotebook) {
+      const request=++revision;
+      loadingNotebook=true;
+      // Keep the ordinary card and its native link usable while importing.
+      import('./notebook-view.js').then(({presentNotebook})=>{
+        if(request!==revision || selected!=='blog' || signal.aborted)return;
+        loadingNotebook=false;
+        const setCover=mode==='live' ? open=>canvas.dispatchEvent(new CustomEvent('study-notebook-set',{detail:{open}})) : null;
+        viewer=presentNotebook({card,artwork:mode==='illustration' ? artwork : null,setCover,dismiss:()=>hideCard(true),keyboard:moveFocus});
+      }).catch(()=>{if(request===revision)loadingNotebook=false;});
+    }
+    if (moveFocus && !viewer) go.focus({preventScroll:true});
   }
   function updateLivePositions() {
     if (mode!=='live') return;
@@ -114,7 +132,7 @@ export function mountStudyLinks(world) {
       button.style.left=(point[0]*100)+'%';button.style.top=(point[1]*100)+'%';
       button.dataset.side=point[0]>.64 ? 'right' : 'left';
     }
-    if (selected && !points[selected]) hideCard();
+    if (selected && !points[selected] && !viewer) hideCard();
   }
   function synchronizeMode() {
     const walking=world.classList.contains('is-walking');
@@ -164,6 +182,7 @@ export function mountStudyLinks(world) {
   });
   on(close,'click',()=>hideCard(true));
   on(document,'keydown',e=>{if(e.key==='Escape' && !card.hidden){e.preventDefault();hideCard(true);}});
+  on(canvas,'study-notebook-open',event=>{if(mode==='live')select('blog',event.detail?.source || canvas);});
   on(canvas,'studyprojection',({detail})=>{points=detail?.points || {};updateLivePositions();});
   on(canvas,'studysubject',({detail})=>{
     if(mode!=='live' || !detail) return;
@@ -179,7 +198,7 @@ export function mountStudyLinks(world) {
   observer.observe(world,{attributes:true,attributeFilter:['class','data-display-mode']});
   observer.observe(artwork,{attributes:true,attributeFilter:['hidden','aria-hidden','class']});
   synchronizeMode();
-  return ()=>{controller.abort();observer.disconnect();card.remove();layer.remove();};
+  return ()=>{controller.abort();observer.disconnect();releaseNotebook();card.remove();layer.remove();};
 }
 
 if(typeof document!=='undefined'){

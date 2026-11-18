@@ -1,3 +1,5 @@
+import {branchCards,createLeafSprays} from './grove-foliage.js';
+import {createPlaceSettings} from './place-settings.js';
 /** Small, authored outdoor details. All dimensions are in walking metres.
  * The arcade and harbour are imagined settings around the original landmarks.
  * No image, GLB, light, or reflection pass is needed for either district. */
@@ -52,6 +54,10 @@ function coloredGeometry(T) {
 
 const HARBOUR = { left: 10.5, right: 44.5, near: 41.6, far: 48.6 };
 const BOAT = [17.8, 45.25];
+// Curved intertidal edge leading from the boat basin around the castle hill.
+// Rows are [z, west bank x, east bank x], in real walking coordinates.
+const COAST = [[48.6,10.5,26],[50.4,9.8,26.7],[53,9.45,28.6],[57,8.2,31.1],
+  [61,7.45,33.2],[65,7.65,35.4],[69,9.7,35],[73,15.2,32]];
 const brick = '#9a5143', granite = '#d4c2a6', limestone = '#e9d8b9', slate = '#495957';
 
 function campusArcade(geometry, obstacle) {
@@ -107,11 +113,12 @@ function harbourQuay(geometry, obstacle) {
       box(ax+(bx-ax)*t,.115,az+(bz-az)*t,ax===bx?.44:length-.025,.23,az===bz?.44:length-.025,stoneColors[i%4]);
     }
   }
-  edge(left,near,right,near); edge(left,far,right,far); edge(left,near,left,far); edge(right,near,right,far);
+  edge(left,near,right,near); edge(COAST[0][2],far,right,far); edge(left,near,left,far); edge(right,near,right,far);
   obstacle('karatsu-waterfront-basin', (left+right)/2,(near+far)/2,right-left+.44,far-near+.44,.23);
   for(const z of [near-.57,far+.57]) {
     let last;
     for(const x of [left+.6,left+5.4,left+10.2,left+15,left+19.8,left+24.6,left+29.4,right-.6]) {
+      if(z>far && x<COAST[0][2])continue;
       box(x,.325,z,.20,.65,.20,'#455851');box(x,.64,z,.24,.065,.24,'#a39470');
       obstacle('harbour-bollard-'+x+'-'+z,x,z,.24,.24,.68);
       if(last!==undefined) {
@@ -121,7 +128,19 @@ function harbourQuay(geometry, obstacle) {
       last=x;
     }
     // The low ropes follow the continuous quay and enclose the water.
-    obstacle('harbour-rope-'+z,(left+right)/2,z,right-left-1.2,.12,.65);
+    const ropeStart=z>far?COAST[0][2]:left;
+    obstacle('harbour-rope-'+z,(ropeStart+right)/2,z,right-ropeStart-1.2,.12,.65);
+  }
+  for(let i=1;i<COAST.length;i++){
+    const [za,xa,ea]=COAST[i-1],[zb,xb,eb]=COAST[i];
+    const mid=(za+zb)/2,bank=(xa+xb)/2;
+    // These low irregular shoreline stones retain the promenade on the dry west bank.
+    for(let j=0;j<3;j++){
+      const a=j/3+.012,b=(j+1)/3-.012;
+      beam([xa+(xb-xa)*a,.045,za+(zb-za)*a],[xa+(xb-xa)*b,.045,za+(zb-za)*b],.20,.18,stoneColors[(j+i)%4],6);
+    }
+    const east=Math.max(ea,eb);
+    obstacle('karatsu-coastal-inlet-'+i,(bank+east)/2,mid,east-bank+.38,zb-za+.05,.22);
   }
 }
 
@@ -148,11 +167,10 @@ function sailingBoat(geometry) {
 }
 
 function treeGeometry(T, pine) {
-  const geometry = coloredGeometry(T), {rings,beam} = geometry;
+  const geometry=coloredGeometry(T), canopy=branchCards(T), {beam}=geometry;
   let seed = pine ? 205 : 937;
   const random = () => { seed = (Math.imul(seed,1664525)+1013904223)>>>0; return seed/4294967296; };
   const trunk=pine?'#685346':'#726557';
-  const palette = pine ? ['#365b51','#416d5c','#497860','#577b60','#638268'] : ['#c8aa4d','#d3ba58','#e4c76b','#dcc25c','#b9b256','#c8bf61'];
   const joints=pine?[[0,0,0],[-.28,1.05,.12],[.03,2.1,.19],[.52,2.95,.12],[.73,3.83,-.1],[1.03,4.52,-.04]]:[[0,0,0],[.05,1.6,0],[-.1,2.7,.1],[.05,3.8,.12],[-.04,5.1,.14],[.10,6.0,.05]];
   for(let i=1;i<joints.length;i++)beam(joints[i-1],joints[i],.23-(i-1)*.035,.23-i*.035,trunk,8);
   const branches=pine?8:13;
@@ -164,25 +182,19 @@ function treeGeometry(T, pine) {
     const cy=(pine?1.75:2.18)+frac*(pine?2.77:3.91);
     const bend=[(root[0]+cx)/2,cy-(pine?.62:.76),(root[2]+cz)/2];
     beam(root,bend,.105,.073,trunk);beam(bend,[cx,cy,cz],.073,.034,trunk);
-    const lobes=pine?4:3;
-    for(let j=0;j<lobes;j++) {
-      const angle=ang+j*2.1, extent=(pine?.47:.40)*(.72+random());
-      const lx=cx+Math.cos(angle)*extent,lz=cz+Math.sin(angle)*extent,ly=cy+random()*(pine?.20:.62);
-      const width=(pine?.92:.90)*(.82+random()*.56)*(1-frac*.24), depth=width*(.76+random()*.22), height=width*(pine?.44:.96);
-      const ring=(s,h)=>Array.from({length:6},(_,k)=>{
-        const theta=(k+.22*j)*Math.PI*2/6,sc=s*(.83+random()*.24);
-        return [lx+Math.cos(theta)*width*sc,ly+h*height,lz+Math.sin(theta)*depth*sc];
-      });
-      const lower=ring(.56,-.36),outer=ring(1,.08),upper=ring(.44,.79);
-      const sides=outer.length,face=outer.map((_,k)=>k),faces=[face,face.map(k=>sides*2+k)];
-      for(let k=0;k<sides;k++){
-        const next=(k+1)%sides;
-        faces.push([k,next,sides+next,sides+k],[sides+k,sides+next,sides*2+next,sides*2+k]);
-      }
-      geometry.solid([...lower,...outer,...upper],faces,palette[(i+j)%palette.length]);
+    const sprays=pine?18:22;
+    for(let j=0;j<sprays;j++) {
+      const azimuth=j*2.399+ang+random()*.53;
+      const u=random(),reach=(pine?1.36:1.16)*Math.sqrt(u)*(1-frac*.28);
+      const lx=cx+Math.cos(azimuth)*reach,lz=cz+Math.sin(azimuth)*reach;
+      const ly=cy+(pine?.35:.85)*(1-u)+(random()-.5)*(pine?.28:.64);
+      const size=(pine?.94:1.02)*(.78+random()*.58);
+      const tilt=pine?.26+random()*.70:.58+random()*.82;
+      if(j%6===0)beam([cx,cy-.14,cz],[lx,ly,lz],.031,.011,trunk,4);
+      canopy.add(lx,ly,lz,size*(pine?.94:.92),size,azimuth,tilt);
     }
   }
-  return geometry.finish();
+  return {wood:geometry.finish(),leaves:canopy.finish()};
 }
 
 function makeWater(T) {
@@ -195,7 +207,7 @@ function makeWater(T) {
     const glint=Math.pow(Math.max(0,crest),12)*(.52+.48*Math.sin(u*3-v));
     const depth=.5+.5*Math.sin(v*2+Math.sin(u));
     const off=(j*size+i)*4;
-    bytes.set([65+depth*11+glint*95,127+depth*8+glint*65,132+depth*10+glint*57,255],off);
+    bytes.set([39+depth*11+glint*117,113+depth*11+glint*80,143+depth*15+glint*59,255],off);
   }
   const texture=new T.DataTexture(bytes,size,size);texture.colorSpace=T.SRGBColorSpace;
   texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.repeat.set(6,1.3);
@@ -211,24 +223,44 @@ export function createWalkDistricts(T, {obstacle, materials, geometries, texture
   const architecture=coloredGeometry(T);
   campusArcade(architecture,obstacle);harbourQuay(architecture,obstacle);
   add(new T.Mesh(architecture.finish(),material)).name='Open campus arcade and mooring quay';
+  const settings=createPlaceSettings(T,{root,obstacle,materials,geometries,textures,makeGeometry:coloredGeometry});
   const transform=new T.Object3D();
   let trees=0;
   function grove(name,pine,sites) {
     trees+=sites.length;
-    const geo=treeGeometry(T,pine),instances=add(new T.InstancedMesh(geo,material,sites.length));instances.name=name;
-    sites.forEach(([x,z,scale,angle],i)=>{
-      transform.position.set(x,0,z);transform.rotation.y=angle;transform.scale.setScalar(scale);transform.updateMatrix();
-      instances.setMatrixAt(i,transform.matrix);obstacle(name+'-'+i,x,z,.46*scale,.46*scale,2);
+    const geo=treeGeometry(T,pine),foliage=createLeafSprays(T,pine);
+    materials.add(foliage.material);textures.add(foliage.texture);
+    const instances=add(new T.InstancedMesh(geo.wood,material,sites.length));instances.name=name;
+    const leaves=add(new T.InstancedMesh(geo.leaves,foliage.material,sites.length));leaves.name=name+' · foliage';
+    sites.forEach(([x,z,scale,angle,elevation=0],i)=>{
+      transform.position.set(x,elevation,z);transform.rotation.y=angle;transform.scale.setScalar(scale);transform.updateMatrix();
+      instances.setMatrixAt(i,transform.matrix);leaves.setMatrixAt(i,transform.matrix);obstacle(name+'-'+i,x,z,.46*scale,.46*scale,2);
     });
-    instances.computeBoundingSphere();
+    instances.computeBoundingSphere();leaves.computeBoundingSphere();
   }
-  grove('Ginkgo trees on the campus walk',false,[[-7.4,13,1.11,.1],[-8.6,18.4,1.23,2.1],[-9.7,26.1,1.17,.7],[-7.0,31.3,1.24,4.1],[-13,74,1.28,1.1],[-19,79,1.2,2.8]]);
-  grove('Windswept coastal pines',true,[[7.7,10.5,.99,2.2],[8.0,16.0,1.07,1.3],[8.8,38.9,1.28,.5],[11.8,49.8,1.08,2.2],[31.4,50,1.25,1.1],[38.5,49.8,1.19,3.65],[43,54,1.18,1.4],[17.0,86.2,1.3,3.1]]);
+  grove('Ginkgo trees on the campus walk',false,[[-7.4,13,1.11,.1],[-10.45,17.8,1.16,2.1],[-9.7,26.1,1.17,.7],[-11.4,30.3,1.12,4.1],[-13,74,1.28,1.1],[-19,79,1.2,2.8],[-12.2,11.0,1.28,2.7],[-1.93,23.0,1.19,.6],[-6.1,25.95,1.04,3.2],[-14.8,26.15,1.34,1.5]]);
+  grove('Windswept coastal pines',true,[[7.7,10.5,.99,2.2],[8.0,16.0,1.07,1.3],[14.7,39.9,1.25,.5],[22.9,50.8,1.08,2.2],[31.4,50,1.25,1.1],[38.5,49.8,1.19,3.65],[43,54,1.18,1.4],[17.0,86.2,1.3,3.1],
+    ...[.18,.50,.92,1.48,1.88,2.39,2.90,3.37,3.90,4.42,4.91,5.45,5.92].map((angle,i)=>{
+      const [x,z,elevation]=settings.hillPine(angle,.84+(i%3)*.035);
+      return [x,z,.71+(i%4)*.075,angle+.55,elevation];
+    })]);
   const {left,right,near,far}=HARBOUR;
   const waterMap=makeWater(T);textures.add(waterMap);
   const waterMaterial=new T.MeshStandardMaterial({map:waterMap,roughness:.43,metalness:.10});
   waterMaterial.name='Ripples on the Karatsu waterfront';materials.add(waterMaterial);
-  const waterGeometry=new T.PlaneGeometry(right-left,far-near);waterGeometry.rotateX(-Math.PI/2);
+  const waterGeometry=new T.BufferGeometry(),points=[],uv=[],indices=[];
+  const xc=(left+right)/2,zc=(near+far)/2;
+  function waterStrip(za,xa,ea,zb,xb,eb) {
+    const first=points.length/3;
+    for(const [x,z] of [[xa,za],[ea,za],[eb,zb],[xb,zb]]){
+      points.push(x-xc,0,z-zc);uv.push((x-left)/(right-left),(z-near)/(far-near));
+    }
+    indices.push(first,first+2,first+1,first,first+3,first+2);
+  }
+  waterStrip(near,left,right,far,left,right);
+  for(let i=1;i<COAST.length;i++)waterStrip(...COAST[i-1],...COAST[i]);
+  waterGeometry.setAttribute('position',new T.Float32BufferAttribute(points,3));
+  waterGeometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));waterGeometry.setIndex(indices);waterGeometry.computeVertexNormals();
   const water=add(new T.Mesh(waterGeometry,waterMaterial));water.name='Sheltered water';water.castShadow=false;water.position.set((left+right)/2,.006,(near+far)/2);
   const skiff=coloredGeometry(T);sailingBoat(skiff);
   const boat=add(new T.Mesh(skiff.finish(),material));boat.name='Moored wooden sailing skiff';

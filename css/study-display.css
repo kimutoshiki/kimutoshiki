@@ -230,46 +230,6 @@
   .study-link-go { min-height: 32px; font-size: 15px; }
 }
 
-/* The photographed notebook lies flat in perspective. Its paper and cover
-   share that footprint; no second illustration download is needed to open it. */
-.study-illustration::before, .study-illustration::after {
-  content: "";
-  position: absolute;
-  z-index: 1;
-  left: 34.95%;
-  top: 48.75%;
-  width: 16.45%;
-  height: 5.35%;
-  clip-path: polygon(8% 0, 91% 0, 99% 98%, 1% 98%);
-  pointer-events: none;
-  opacity: 0;
-}
-.study-illustration::before {
-  background:
-    linear-gradient(90deg, #948265, #dfd2b1 5%, transparent 9%),
-    repeating-linear-gradient(0deg, transparent 0 15%, #96896d55 15.5% 16.5%, transparent 17% 19%),
-    linear-gradient(172deg, #cbb991, #f5ebce 72%, #d9c8a4);
-}
-.study-illustration::after {
-  transform-origin: 8% 50%;
-  background:
-    repeating-linear-gradient(98deg, #c5b68c15 0 1px, transparent 1px 3px),
-    linear-gradient(100deg, #283324, #626a4e 8%, #454e35 35%, #2f392b 92%, #8f8257);
-  box-shadow: inset 0 0 0 2px #ac935b;
-}
-.study-illustration[data-notebook-open]::before { opacity: 1; }
-.study-illustration[data-notebook-open]::after {
-  opacity: 1;
-  animation: lift-notebook-cover .55s cubic-bezier(.2,.72,.3,1) both;
-}
-@keyframes lift-notebook-cover {
-  from { transform: perspective(260px) rotateY(0); }
-  to { transform: perspective(260px) rotateY(-113deg) skewY(-6deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .study-illustration[data-notebook-open]::after { animation: none; transform: perspective(260px) rotateY(-113deg) skewY(-6deg); }
-}
-
 @media (max-width: 380px) {
   .world-header { padding-inline: 10px; }
   .world:not(.is-walking) .mobile-menu-shortcut { font-size: 13px; }

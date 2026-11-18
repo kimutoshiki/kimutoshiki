@@ -46,7 +46,7 @@ function prepareSurfaces(T, root) {
  * factories so a moving camera / loading UI keeps receiving frame callbacks. */
 export async function createWorldLandmarks(T, { onTextureLoad, waitForStudy } = {}) {
   const group = new T.Group(); group.name = 'Waseda and Karatsu · life-size garden landmarks';
-  const targets = [], stats = { models: [], geometryPolicy: 'Original architecture at approximate real-world height, uniformly scaled and grounded at y=0; continuous garden.' };
+  const targets = [], stats = { models: [], geometryPolicy: 'Original architecture at approximate real-world height, uniformly scaled and grounded on their garden foundations.' };
   const ownedTextures = new Set(), clocks = [], protectedHands = new Set();
   let disposed = false;
   try {
@@ -65,7 +65,7 @@ export async function createWorldLandmarks(T, { onTextureLoad, waitForStudy } = 
       retained.textures.forEach(texture => ownedTextures.add(texture));
 
       const monument = new T.Group(); monument.name = site.title + ' · landscape monument';
-      monument.position.set(site.position[0], 0, site.position[1]);
+      monument.position.set(site.position[0], site.foundationY || 0, site.position[1]);
       monument.rotation.y = site.rotation;
       monument.userData = { targetId: 'landmark-' + site.key, landmarkId: site.key, title: site.title };
       group.add(monument);
@@ -78,9 +78,6 @@ export async function createWorldLandmarks(T, { onTextureLoad, waitForStudy } = 
       body.scale.setScalar(scale);
       body.position.set(-nativeCenter.x * scale, -nativeBounds.min.y * scale, -nativeCenter.z * scale);
       body.add(architecture); monument.add(body);
-
-      // The original architecture meets grade directly. No presentation plinth,
-      // bronze frame or independent island sits beneath a life-size building.
 
       monument.traverse(object => {
         if (object.isMesh || object.isLine) {
@@ -104,7 +101,7 @@ export async function createWorldLandmarks(T, { onTextureLoad, waitForStudy } = 
         architecture: { before: architectureBatch.before, after: architectureBatch.after },
         nativeSize: nativeSize.toArray(), height: nativeSize.y * scale,
         width: nativeSize.x * scale, depth: nativeSize.z * scale,
-        baseHeight: 0, worldBounds: { min: finalBounds.min.toArray(), max: finalBounds.max.toArray() },
+        baseHeight: site.foundationY || 0, worldBounds: { min: finalBounds.min.toArray(), max: finalBounds.max.toArray() },
       });
     }
     cacheStaticLocalMatrices(group, { movable: new Set([group, ...protectedHands]) });
