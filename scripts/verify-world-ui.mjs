@@ -258,7 +258,7 @@ for (const context of ['null', 'throw']) {
   h.options.onReady(); await h.attach();
   assert.equal(h.byId('main').dataset.displayMode, '3d');
   assert.equal(h.byId('world-stand').disabled, false);
-  assert.match(h.byId('study-mode-status').textContent, /軽量3D/);
+  assert.match(h.byId('study-mode-status').textContent, /3Dモデル/);
   await h.requestStand(); assert.equal(h.count('standUp'), 1);
   h.select2d(); await h.select3d();
   assert.equal(h.contextRequests, 1); assert.equal(h.softwareImports, 1, 'The same software engine resumes without probing the GPU again');

@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [interactions, perspectives]
+        suite: [interactions, perspectives, resume]
     env:
       PREVIEW_URL: http://127.0.0.1:4173
       REVIEW_OUTPUT: ${{ github.workspace }}/browser-review
@@ -37,6 +37,17 @@ jobs:
         run: npm test
       - if: matrix.suite == 'interactions' && !cancelled()
         run: npm run test:browser
+      - if: matrix.suite == 'resume'
+        run: |
+          python - <<'PYTEST'
+          from pathlib import Path
+          p=Path('scripts/verify-home-browser.mjs')
+          s=p.read_text()
+          a=s.index('  for (const [name, viewport]')
+          b=s.index('  const unsupported =',a) if '  const unsupported =' in s[a:] else s.index('  const unsupported=',a)
+          p.with_name('browser-resume.mjs').write_text(s[:a]+s[b:])
+          PYTEST
+          node scripts/browser-resume.mjs
       - if: matrix.suite == 'perspectives'
         run: npm run test:views
       - if: always()

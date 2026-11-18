@@ -299,6 +299,19 @@ async function exploreAndReturn(page, scene, renderer, capture) {
     window.__worldState?.mode === 'outside' && window.__worldState?.district === district, state.district, {timeout:180000});
   if (renderer === 'software') {
     const surface = page.locator('canvas[data-renderer="software"]');
+    // Reopening the saved viewpoint waits for layout/IntersectionObserver and
+    // the next complete physical frame, even when the canvas was hidden.
+    await page.waitForFunction(() => {
+      const target=document.querySelector('canvas[data-renderer="software"]');
+      if (!target || target.width<100 || target.height<100) return false;
+      const {data}=target.getContext('2d').getImageData(0,0,target.width,target.height);
+      const samples=new Set();
+      for(let i=0;i<data.length;i+=4*107) {
+        samples.add((data[i]<<16)|(data[i+1]<<8)|data[i+2]);
+        if(samples.size>=12)return true;
+      }
+      return false;
+    },null,{timeout:30000});
     const before = await pixelSample(surface);
     assert(before.colors >= 12, 'The CPU renderer paints the actual exterior');
     await page.locator('#world-canvas').focus();

@@ -55,7 +55,7 @@ export function createMeshRaster(canvas) {
     canvas.before(surface);canvas.style.opacity='0';
   }
   surface.dataset.renderer='software';
-  let w=1,h=1,ratio=1,image,pixels,depth,textureCache=new WeakMap();
+  let w=1,h=1,nextW=1,nextH=1,ratio=1,image,pixels,depth,textureCache=new WeakMap();
   const viewProj=new Matrix4(),mvp=new Matrix4(),world=new Matrix4(),instance=new Matrix4(),normalMatrix=new Matrix3();
   const frustum=new Frustum(),sphere=new Sphere(),normal=new Vector3(),point=new Vector3(),tint=new Vector3();
   const sunVec=new Vector3(),info={render:{calls:0,triangles:0}};
@@ -179,12 +179,15 @@ export function createMeshRaster(canvas) {
     getPixelRatio:()=>ratio,setPixelRatio(value){ratio=value;},
     setSize(width,height) {
       const scale=Math.min(ratio,Math.sqrt(1500000/Math.max(1,width*height)));
-      w=Math.max(1,Math.round(width*scale));h=Math.max(1,Math.round(height*scale));
-      surface.width=w;surface.height=h;image=ctx.createImageData(w,h);
-      pixels=new Uint32Array(image.data.buffer);depth=new Float32Array(w*h);
+      nextW=Math.max(1,Math.round(width*scale));nextH=Math.max(1,Math.round(height*scale));
     },
     render(scene,camera) {
-      if(!image)return;
+      // Resizing a canvas clears its pixels immediately. Allocate only in
+      // the render which replaces those pixels with the next complete frame.
+      if (!image || w!==nextW || h!==nextH) {
+        w=nextW;h=nextH;surface.width=w;surface.height=h;
+        image=ctx.createImageData(w,h);pixels=new Uint32Array(image.data.buffer);depth=new Float32Array(w*h);
+      }
       scene.updateMatrixWorld();camera.updateWorldMatrix(true,false);
       viewProj.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(viewProj);
       depth.fill(0);background(scene);info.render.calls=info.render.triangles=0;

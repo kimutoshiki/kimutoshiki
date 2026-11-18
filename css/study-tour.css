@@ -128,8 +128,7 @@
   .tour-area { display: none; }
 }
 
-.tour-arrival { position: absolute; inset: 0; z-index: 3; overflow: hidden; background: #282923; pointer-events: none; opacity: 1; transition: opacity .42s ease-out; }
-.tour-arrival img { width: 100%; height: 100%; object-fit: cover; }
+.tour-arrival { position: absolute; inset: 0; z-index: 3; overflow: hidden; background: transparent; pointer-events: none; opacity: 1; transition: opacity .42s ease-out; }
 .tour-arrival span { position: absolute; left: 50%; bottom: 12%; width: max-content; max-width: 95%; transform: translateX(-50%); padding: .45em 1em; border-radius: 3px; background: #2a2320dc; color: #fff9ee; font: 500 1rem/1.5 var(--sans, sans-serif); }
 .tour-arrival.is-arrived { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .tour-arrival { transition: none; } }

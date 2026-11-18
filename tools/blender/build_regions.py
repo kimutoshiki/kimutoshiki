@@ -5,12 +5,13 @@ Optional arguments after --: --only waseda|karatsu, --blend-dir PATH.
 import argparse,importlib.util,json,math,random,subprocess,sys,tempfile
 from pathlib import Path
 import bpy
+from mathutils import Vector
 import numpy as np
 
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parent.parent
 parser=argparse.ArgumentParser()
-parser.add_argument('--only',choices=('waseda','karatsu'));parser.add_argument('--blend-dir',type=Path)
+parser.add_argument('--output-dir',type=Path);parser.add_argument('--only',choices=('waseda','karatsu'));parser.add_argument('--blend-dir',type=Path)
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 sp=importlib.util.spec_from_file_location('region_solids',HERE/'region-solids.py')
 solids=importlib.util.module_from_spec(sp);sp.loader.exec_module(solids)
@@ -81,20 +82,40 @@ def extras(key,origin,mat,root):
     def drain(g,x,z,w=.60):
         box(g,x,z,.025,w,.26,.047,gray)
         for i in range(10):box(g,x+(i/9-.5)*w*.90,z,.055,.021,.194,.017,metal)
+    def shrub(g,x,z,spread,height,base=0,dense=False):
+        # Glossy oval evergreen leaflets fan in opposite pairs from actual
+        # branching stems. Dark interior growth and outward-facing new tips
+        # produce the uneven trimmed silhouette around the bronze monument.
+        count=10 if dense else 6
+        for j in range(count):
+            a=j*math.tau/count+rng.uniform(-.23,.23)
+            r=spread*rng.uniform(.51,1.02);h=height*rng.uniform(.69,1.00)
+            pos=Vector(center(x,z,base))
+            bend=pos+Vector((math.cos(a)*r*.62,math.sin(a)*r*.62,h*.37))
+            end=pos+Vector((math.cos(a)*r,math.sin(a)*r,h))
+            g.taper(pos,bend,.0125,.008,rgb('#76684b'),4)
+            g.taper(bend,end,.008,.003,rgb('#635b45'),3)
+            for k in range(7 if dense else 5):
+                f=(k+.3)/(7 if dense else 5);branch=bend.lerp(end,f)
+                for sign in (-1,1):
+                    aa=a+sign*rng.uniform(.70,1.43)
+                    length=rng.uniform(.058,.11)*(1.12 if not dense else 1)
+                    shade=solids.tone(rng.choice(leaves),.74+.41*f+rng.uniform(-.08,.12))
+                    solids.leaf(g,branch,aa,rng.uniform(.02,.86),length,length*rng.uniform(.27,.40),rng.uniform(-.83,.83),shade)
     def shrubs(g,x,z,w,d):
-        for j in range(max(8,int(w*d*1.55))):
-            xx=x+rng.uniform(-.5,.5)*w;zz=z+rng.uniform(-.5,.5)*d
-            sy=rng.uniform(.25,.43);g.tuft(center(xx,zz,.39+sy*.32),(.31,.29,sy),rng.choice(leaves),rng,6)
+        for j in range(max(8,int(w*d*1.40))):
+            xx=x+rng.uniform(-.50,.50)*w;zz=z+rng.uniform(-.50,.50)*d
+            shrub(g,xx,zz,rng.uniform(.32,.46),rng.uniform(.40,.61))
     if key=='waseda':
         g=Batch('Waseda · cut stone curbs, gate hardware, approach and garden details')
-        # Small real, rounded leafy clusters along the four faces of the planted plinth.
-        for i in range(25):
-            for side in [-1,1]:
-                z=230+(i/24-.5)*4.78
-                g.tuft(center(side*1.98,z,.50),(.33,.26,.22),rng.choice(leaves),rng,6)
-        for i in range(18):
-            for side in [-1,1]:
-                g.tuft(center((i/17-.5)*3.87,230+side*2.48,.49),(.26,.30,.24),rng.choice(leaves),rng,6)
+        # Follow the rounded granite kerb, leaving the centre around the
+        # plinth open. New leaves along the top mask the dark interior stems.
+        for i in range(92):
+            t=i/92*math.tau
+            # A superellipse fits the long straight flanks and curved corners.
+            xx=math.copysign(abs(math.cos(t))**.44,math.cos(t))*1.88
+            zz=230+math.copysign(abs(math.sin(t))**.44,math.sin(t))*2.30
+            shrub(g,xx,zz,rng.uniform(.22,.36),rng.uniform(.36,.49),.155,True)
         for z in [221,239]:
             box(g,132,z,2.63,1.25,1.25,.11,stone);box(g,131.49,z,1.53,.055,.43,.63,rgb('#5e5840'))
             for yy in [.52,2.43]:box(g,132,z,yy,1.03,1.03,.13,rgb('#c2b8a6'))
@@ -235,7 +256,7 @@ def extras(key,origin,mat,root):
 
 with tempfile.TemporaryDirectory(prefix='kim-region-builder-') as folder:
     scratch=Path(folder);subprocess.run(['node',str(HERE/'region-input.mjs'),str(scratch)],check=True,cwd=ROOT)
-    out=ROOT/'assets/models/blender';out.mkdir(exist_ok=True,parents=True)
+    out=args.output_dir or ROOT/'assets/models/blender';out.mkdir(exist_ok=True,parents=True)
     for key in ([args.only] if args.only else ['waseda','karatsu']):
         bpy.ops.wm.read_factory_settings(use_empty=True)
         doc=json.loads((scratch/(key+'.json')).read_text());binary=(scratch/(key+'.bin')).read_bytes();origin=doc['origin']
@@ -250,12 +271,17 @@ with tempfile.TemporaryDirectory(prefix='kim-region-builder-') as folder:
                 if kind not in surfaces:surfaces[kind]=ground_material(kind,scratch)
                 mat=surfaces[kind]
             guide_mesh(item,binary,mat,root)
-        prototypes=[solids.tree(key=='karatsu',i,paint) for i in range(3)]
+        bark,barkshader=material('Weathered bark and growing twigs',True)
+        barkshader.inputs['Roughness'].default_value=.91
+        leaf,leafshader=material('Seasonal foliage · waxed leaf surfaces',True)
+        leafshader.inputs['Roughness'].default_value=.62
+        leaf.use_backface_culling=False
+        prototypes=[solids.tree(key=='karatsu',i,bark,leaf) for i in range(3)]
         for i,(x,z,y,scale,angle,species) in enumerate(doc['trees']):
             for level,source in enumerate(prototypes[i%3]):
                 part=bpy.data.objects.new(source.name+' planting '+str(i),source.data);bpy.context.collection.objects.link(part)
                 part.parent=root;part.location=(x,-z,y);part.rotation_euler.z=angle;part.scale=(scale,)*3
-                if level:part['leafDetail']=True
+                if level>=2:part['leafDetail']=True
         for pair in prototypes:
             for obj in pair:bpy.data.objects.remove(obj,do_unlink=True)
         extras(key,origin,paint,root)

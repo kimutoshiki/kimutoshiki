@@ -166,7 +166,7 @@
     if (mode !== '3d') return;
     canvas.tabIndex = 0; canvas.removeAttribute('aria-hidden');
     world.classList.add('is-rendered'); world.classList.remove('is-loading');
-    modeStatus.textContent = backend === 'software' ? '軽量3Dで表示しています。' : ''; entryNote.hidden = true;
+    modeStatus.textContent = backend === 'software' ? '3Dモデルを表示しています。' : ''; entryNote.hidden = true;
     syncState(); modeChanged();
     visitRequestedPlace();
   }
@@ -369,7 +369,7 @@
     showHome(true); stand.disabled = true;
     canvas.tabIndex = -1; canvas.setAttribute('aria-hidden', 'true');
     for (const button of [...deskButtons, ...walkButtons, ...focusButtons, seat, travel, retry]) button.disabled = true;
-    modeStatus.textContent = '軽量3Dの書斎を読み込んでいます…';
+    modeStatus.textContent = '書斎の3Dモデルを読み込んでいます…';
     if (!pageSuspended && !document.hidden) launch();
   }
   // Some browsers offer WebGL2 through a CPU driver. The textured Canvas

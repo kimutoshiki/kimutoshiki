@@ -71,15 +71,32 @@ export function createRegionalLandscape(T,region) {
       mesh.castShadow=mesh.receiveShadow=true;mesh.computeBoundingSphere();geometries.add(mesh.geometry);group.add(mesh);
     }
   }
-  function building(g,{x,z,w,d,h,floors,bays,front=1,color='#ab9a87',window='#5e7476',pilasters=false,road=false}) {
+  function building(g,{x,z,w,d,h,floors,bays,front=1,color='#ab9a87',window='#5e7476',pilasters=false,road=false,offsite=false}) {
     const face=z+front*d/2,corner='#c7c1ad',timber=road?'#6f675c':'#8a8173';
     const facade=(px,py,offset,bw,bh,bd,bcolor)=>g.box(px,py,face+offset*front,bw,bh,bd,bcolor);
-    g.box(x,h/2,z,w,h,d,color);g.box(x,.34,z,w+.20,.68,d+.20,'#a8a699');
+    // The occupied glass line sits inside the masonry, so a low side view
+    // sees the jamb, sill and soffit of each opening, with accurate shadows.
+    const campusFront=!road&&floors<8, recess=campusFront?.51:0;
+    g.box(x,h/2,z-front*recess/2,w,h,d-recess,color);
+    g.box(x,.25,z-front*recess/2,w+.12,.50,d-recess+.12,'#a6a093');
     g.box(x,h+.16,z,w+.45,.32,d+.42,corner);g.box(x,h+.43,z,w-.45,.28,d-.42,'#717974');
-    obstacle('Building '+x+','+z,x,z,w,d,h);
+    if(!offsite)obstacle('Building '+x+','+z,x,z,w,d,h);
+    if(campusFront) {
+      for(const sign of [-1,1]){
+        g.box(x,h+.58,z+sign*(d*.5-.15),w+.1,.65,.29,color);
+        g.box(x,h+.94,z+sign*(d*.5-.15),w+.3,.12,.46,'#bcb4a0');
+        g.box(x+sign*(w*.5-.15),h+.59,z,.29,.67,d-.54,color);
+        g.box(x+sign*(w*.5-.15),h+.93,z,.43,.11,d-.44,'#bcb4a0');
+      }
+      for(const off of [-.43,.44]){
+        const xx=x+w*off;
+        g.beam([xx,.37,face+front*.21],[xx,h+.35,face+front*.21],.083,.083,'#6a7170',7);
+        for(let yy=1.6;yy<h;yy+=3.1)facade(xx,yy,.20,.23,.065,.22,'#595d56');
+      }
+    }
     for(let n=0;n<floors;n++) {
       const sh=h/floors,yy=(n+.51)*sh;
-      facade(x,(n+.03)*sh,.075,w+.19,.18,.27,corner);
+      if(!campusFront || n>0)facade(x,(n+.03)*sh,.075,w+.19,.18,.27,corner);
       // Window reveals on both ends matter when circling buildings on foot.
       const ends=Math.max(2,Math.round(d/4.6));
       for(const sign of [-1,1]) for(let j=0;j<ends;j++){
@@ -96,6 +113,41 @@ export function createRegionalLandscape(T,region) {
       }
       for(let i=0;i<bays;i++){
         const pitch=w/bays,bw=pitch*(road?.67:.59),xx=x+(i+.5-bays*.5)*pitch,wh=sh*.59;
+        if(campusFront){
+          const door=n===0 && i===Math.floor((bays-1)/2);
+          const opening=door?Math.min(pitch*.72,3.25):bw;
+          const sill=door?.12:yy-wh*.5,head=door?Math.min(sh-.30,3.32):yy+wh*.5;
+          const halfPier=(pitch-opening)/2,glassDepth=-.30;
+          facade(xx,(n+1)*sh-((n+1)*sh-head)/2,-recess/2,pitch,(n+1)*sh-head,recess,color);
+          for(const side of [-1,1]){
+            facade(xx+side*(opening+halfPier)/2,(n+.5)*sh,-recess/2,halfPier,sh,recess,color);
+            facade(xx+side*(opening/2+.015),(sill+head)/2,-.165,.10,head-sill,.34,corner);
+          }
+          if(n*sh<sill)facade(xx,(n*sh+sill)/2,-recess/2,opening,sill-n*sh,recess,color);
+          const pane=door?'#455a59':[window,'#7c8988','#63797d','#87938d'][(n*3+i+Math.floor(Math.abs(x)))%4];
+          facade(xx,(sill+head)/2,glassDepth,opening-.08,head-sill-.04,.075,pane);
+          facade(xx,head-.04,-.08,opening+.22,.15,.46,corner);
+          facade(xx,sill+.01,-.07,opening+.20,.12,.51,'#afa897');
+          const inner=door?'#645746':'#696d65',light=head-(door?.57:.32*(head-sill));
+          facade(xx,(sill+head)/2,glassDepth+.09,.069,head-sill,.095,inner);
+          facade(xx,light,glassDepth+.09,opening-.04,.077,.085,inner);
+          if(door){
+            for(const side of [-1,1]){
+              facade(xx+side*opening*.245,sill+.18,glassDepth+.075,opening*.46,.32,.083,'#74766a');
+              facade(xx+side*.13,1.18,glassDepth+.19,.035,.45,.055,'#b3a28b');
+            }
+            facade(xx,head+.24,.30,opening+1.14,.21,1.48,'#6f7168');
+            facade(xx,head+.39,.33,opening+1.22,.085,1.55,'#aea994');
+            for(const side of [-1,1])g.beam([xx+side*opening*.43,head+.97,face],[xx+side*opening*.43,head+.41,face+front*.94],.027,.026,'#656963',5);
+            for(let step=0;step<2;step++)facade(xx,.035+step*.05,.47-step*.20,opening+.55-step*.12,.07+step*.065,.78-step*.32,'#b9b6a5');
+          }else if(pilasters && n===0){
+            const pierX=xx-pitch/2+.18;
+            facade(pierX,h*.5,.075,.35,h-.22,.37,'#baa58a');
+            facade(pierX,.37,.135,.59,.68,.44,'#b0a58e');
+            facade(pierX,h-.27,.145,.59,.25,.50,corner);
+          }
+          continue;
+        }
         facade(xx,yy,.089,bw+.25,wh+.26,.22,corner);
         facade(xx,yy,.213,bw,wh,.065,window);
         facade(xx+bw*.22,yy+wh*.18,.253,bw*.27,wh*.47,.02,'#92a3a3');
@@ -128,6 +180,24 @@ export function createRegionalLandscape(T,region) {
       building(g,{x:52,z:273.8,w:36,d:46,h:14.1,floors:3,bays:10,front:-1,color:'#9f8873',pilasters:true});
       building(g,{x:-7,z:191.7,w:39,d:44,h:18.7,floors:5,bays:8,front:1,color:'#b9b3a4'});
       building(g,{x:-9,z:276.1,w:44,d:43,h:19.4,floors:5,bays:8,front:-1,color:'#b3b2a8'});
+      // The avenue continues between two side elevations on its westward
+      // sightline. These offsite shells sit beyond the walking boundary.
+      building(g,{x:-77.5,z:207.5,w:34,d:26.5,h:12.4,floors:3,bays:6,front:1,color:'#ae9b85',window:'#71837f',offsite:true});
+      building(g,{x:-82,z:260,w:38,d:33,h:16.2,floors:4,bays:7,front:-1,color:'#b8b0a0',window:'#72878a',offsite:true});
+      // Low-rise street elevations beyond the auditorium grounds break up
+      // the distant city blocks between the trees and the tower silhouette.
+      building(g,{x:240,z:247,w:28,d:19.2,h:11.6,floors:3,bays:6,front:1,color:'#b7ac96',offsite:true});
+      // The flagstones change direction at the campus intersection. Keep a
+      // continuous level surface with pairs of slender stone sett bands.
+      for(const zz of [223.75,236.25]){
+        for(const [begin,end] of [[-51,-5.8],[5.8,131.1]]){
+          const count=Math.ceil((end-begin)/3.2),span=(end-begin)/count;
+          for(let j=0;j<count;j++)g.box(begin+(j+.5)*span,.014,zz,span-.022,.022,.16,j%4===0?'#aaa79a':'#b3afa2');
+        }
+      }
+      for(const xx of [129.4,134.1]){
+        for(let j=0;j<9;j++)g.box(xx,.017,221.1+j*2.04,.23,.021,2.01,j%2?'#b7b2a2':'#afa997');
+      }
       // Low gateposts and the iron fence stop at the open central path.
       for(const zz of [221,239]){
         g.box(132,.24,zz,1.14,.48,1.14,'#999286');g.box(132,1.43,zz,.91,2.14,.91,'#a79a87');
@@ -144,8 +214,7 @@ export function createRegionalLandscape(T,region) {
         return [xx+Math.cos(a)*r,h,230+zz+Math.sin(a)*r];
       });
       g.rings(rounded(4.54,5.45,.75,.01),rounded(4.54,5.45,.75,.14),'#918e7c');
-      g.rings(rounded(4.4,5.3,.75,.14),rounded(4.45,5.32,.76,.52),'#405538');
-      g.rings(rounded(4.45,5.32,.76,.52),rounded(4.12,4.99,.68,.64),'#566e45');
+      g.rings(rounded(4.36,5.27,.70,.139),rounded(4.36,5.27,.70,.16),'#554c3c');
       obstacle('Planted statue bed',0,230,4.54,5.45,.65);
       for(const x of [-14,20,46,74]){bench(g,x,220.3,1);bench(g,x+3,239.2,-1);}
     });

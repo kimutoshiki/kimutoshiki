@@ -72,48 +72,129 @@ class SolidBatch:
         if parent:obj.parent=parent
         return obj
 
-def tree(pine,variant,mat):
-    rng=random.Random(7841+variant*71+int(pine)*73)
-    tree=SolidBatch(('Black pine' if pine else 'Avenue tree')+' structure '+str(variant))
-    detail=SolidBatch(('Pine sprays' if pine else 'Cupped leaves')+' '+str(variant))
-    bark=srgb('#735942' if pine else '#726050')
+def path_tube(batch, points, radii, tint, sides=7):
+    """Parallel-transport rings along the branch without the seams of stacked cylinders."""
+    rings=[];previous=None
+    for i,(p,radius) in enumerate(zip(points,radii)):
+        t=(points[min(i+1,len(points)-1)]-points[max(0,i-1)]).normalized()
+        if previous is None:
+            previous=t.cross(Vector((0,0,1)) if abs(t.z)<.88 else Vector((1,0,0))).normalized()
+        previous=(previous-t*t.dot(previous)).normalized()
+        side=t.cross(previous)
+        for j in range(sides):
+            a=TAU*j/sides
+            rings.append(tuple(p+(previous*math.cos(a)+side*math.sin(a))*radius*(1+.035*math.sin(a*5+.21*i))))
+    faces=[];colors=[]
+    for i in range(len(points)-1):
+        for j in range(sides):
+            k=i*sides;jj=(j+1)%sides
+            faces.append((k+j,k+jj,k+jj+sides,k+j+sides))
+            colors.append(tone(tint,.87+.14*math.sin(j*2.45+i*.31)))
+    base=(len(points)-1)*sides
+    faces.extend([tuple(reversed(range(sides))),tuple(base+i for i in range(sides))]);colors.extend([tint,tint])
+    batch.part(rings,faces,colors,True)
+
+def leaf(batch,stem,angle,rise,length,width,roll,tint):
+    # Real cupped leaves whose petiole, two shoulders, midrib and tip are in
+    # different planes. No transparent foliage cards, opaque hulls or crown shells.
+    aim=Vector((math.cos(angle),math.sin(angle),rise)).normalized()
+    across=Vector((-math.sin(angle),math.cos(angle),0))
+    across=across*math.cos(roll)+aim.cross(across)*math.sin(roll)
+    p=Vector(stem);end=p+aim*length;end.z-=length*.10
+    heart=p+aim*(length*.49);heart.z+=width*.31
+    left=p+aim*(length*.34)+across*width;right=p+aim*(length*.38)-across*(width*.95)
+    verts=[tuple(v) for v in [p,left,end,right,heart]]
+    batch.part(verts,[(0,1,4),(1,2,4),(2,3,4),(3,0,4)],tint,True)
+
+def needle(batch,p,a,rise,length,width,tint):
+    c,s=math.cos(a),math.sin(a)
+    start=Vector(p);mid=start+Vector((c*length*.47,s*length*.47,rise*length*.53))
+    end=start+Vector((c*length,s*length,(rise-.14)*length))
+    side=Vector((-s*width,c*width,width*.22))
+    batch.part([tuple(start),tuple(mid+side),tuple(end),tuple(mid-side)],[(0,1,2),(0,2,3)],tint,True)
+
+def tree(pine,variant,barkmat,leafmat):
+    rng=random.Random(20401+variant*167+int(pine)*673)
+    prefix='Japanese black pine' if pine else 'Campus avenue tree'
+    wood=SolidBatch(prefix+' · tapered trunk and live branches '+str(variant))
+    crown=SolidBatch(prefix+' · outer leaf sprays '+str(variant))
+    fill=SolidBatch(prefix+' · inner leaf sprays '+str(variant))
+    tips=SolidBatch(prefix+' · fine growing branchlets '+str(variant))
+    bark=srgb('#715a49' if pine else ['#776c58','#786d59','#82755e'][variant])
+    twig=srgb('#5d6249' if pine else '#6c624a')
+    palette=(['#3f6041','#50764f','#5c7b4d','#6a8752','#789060'] if pine else [
+        ['#688044','#8a9a49','#a4a957','#c1aa57','#b9ac57','#c6b66a'],
+        ['#4c713d','#668445','#809648','#94a357','#a5aa61','#80964f'],
+        ['#978446','#ac8f46','#b99950','#c2a05a','#c1a15b','#d1b367'],
+    ][variant])
+    tones=list(map(srgb,palette))
+    def radial(a,r,z):return Vector((math.cos(a)*r,math.sin(a)*r,z))
+    def twigpath(start,end,bend,n=5):
+        d=end-start
+        return [start+d*(i/(n-1))+bend*(4*i/(n-1)*(1-i/(n-1))) for i in range(n)]
+    def limb(points,radius,tip,shade,sides=6):
+        radii=[tip+(radius-tip)*(1-i/(len(points)-1))**.85 for i in range(len(points))]
+        path_tube(wood,points,radii,shade,sides)
     if pine:
-        palette=['#3f6243','#456c48','#587651','#4f7050']
-        path=[(0,0,0),(-.31,.06,.98),(-.19,.13,2.1),(.32,.17,2.9),(.81,.02,3.68),(1.01,.04,4.62),(1.15,.16,5.23)]
+        trunk=[Vector(v) for v in [(0,0,0),(-.12,.02,.63),(-.30,.10,1.38),(-.17,.17,2.04),(.26,.20,2.71),(.57,.09,3.39),(.67,.05,4.17),(.99,-.08,4.87),(1.23,-.05,5.51)]]
     else:
-        palette=[['#707c42','#9e9144','#aba34e','#9a8e48'],['#657b42','#81914b','#939e4e','#ac9c54'],['#9b773c','#b48643','#b99a4e','#98723e']][variant%3]
-        path=[(0,0,0),(.07,-.02,1.4),(-.05,.1,2.65),(.19,.06,3.75),(.12,.22,5.09),(.31,.16,6.02),(.44,.11,7.08)]
-    greens=list(map(srgb,palette))
-    for i in range(1,len(path)):
-        tree.taper(path[i-1],path[i],.31-(i-1)*.044,.31-i*.044,bark,10)
-    for j in range(7):
-        ang=j*TAU/7
-        tree.taper((.05,0,.56),(math.cos(ang)*.54,math.sin(ang)*.54,.027),.14,.041,tone(bark,.85),7)
-    branches=12 if pine else 16
-    for j in range(branches):
-        f=j/(branches-1);ang=(j*2.399+rng.uniform(-.45,.45))
-        by=(1.68+f*(2.98 if pine else 4.61))
-        reach=(2.57 if pine else 2.93)*(1-f*.71)*rng.uniform(.83,1.16)
-        r=path[1+min(4,int(f*5))];origin=Vector(r)
-        elbow=Vector((origin.x+reach*.46*math.cos(ang),origin.y+reach*.46*math.sin(ang),by-(.43 if pine else .78)))
-        end=Vector((origin.x+reach*math.cos(ang),origin.y+reach*math.sin(ang),by+.36))
-        tree.taper(origin,elbow,.142*(1-f*.56),.086*(1-f*.49),bark,8)
-        tree.taper(elbow,end,.089*(1-f*.47),.032,bark,7)
-        for k in range(4):
-            t=ang+(k-1.5)*.79+rng.uniform(-.29,.29)
-            fork=end+Vector((math.cos(t)*rng.uniform(.28,.91),math.sin(t)*rng.uniform(.28,.91),rng.uniform(.06,.48 if pine else 1.04)))
-            tree.taper(end,fork,.042,.013,bark,5)
-            r0=rng.uniform(.49,.91)*(1-f*.20);ry=r0*rng.uniform(.65,1)
-            rz=r0*(rng.uniform(.32,.49) if pine else rng.uniform(.69,1.05))
-            col=rng.choice(greens)
-            tree.tuft(fork,(r0*.81,ry*.87,rz*.84),col,rng,7)
-            for lf in range(44 if pine else 34):
-                a=rng.random()*TAU;v=rng.uniform(-1,1);k2=math.sqrt(1-v*v)*(rng.uniform(.77,1.37))
-                x=fork.x+math.cos(a)*r0*k2;y=fork.y+math.sin(a)*ry*k2;z=fork.z+v*rz*rng.uniform(.68,1.2)
-                if pine:
-                    for h in range(2):
-                        detail.blade(x,y,z,a+rng.uniform(-1.17,1.17),rng.uniform(-.31,.80),rng.uniform(.17,.35),rng.uniform(.029,.047),tone(col,rng.uniform(.83,1.43)))
-                else:
-                    detail.blade(x,y,z,a+rng.uniform(-.78,.78),rng.uniform(-.68,.83),rng.uniform(.15,.32),rng.uniform(.060,.093),tone(col,rng.uniform(.79,1.44)))
-    wood=tree.finish(mat);leaves=detail.finish(mat)
-    return wood,leaves
+        trunk=[Vector(v) for v in [(0,0,0),(.02,-.02,.66),(-.025,-.03,1.35),(.016,.025,1.98),(.12,.03,2.79),(.15,.11,3.65),(.23,.13,4.76),(.34,.23,5.64),(.43,.32,6.62),(.50,.49,7.08)]]
+    if variant==1:
+        for p in trunk:p.x*=1.28;p.y-=.05*p.z
+    limb(trunk,.205 if pine else .217,.014,bark,12)
+    # Subtle root flaring and intermittent lichen follow the bole, keeping the
+    # ground profile of a street tree rather than a ring of radiating cones.
+    for j in range(5):
+        a=TAU*j/5+rng.uniform(-.28,.28)
+        root=[radial(a,.13,.51),radial(a,.17,.27),radial(a+.05,.26,.09),radial(a+.11,.40,.013)]
+        limb(root,.061,.018,tone(bark,.86),7)
+    def shoot(base,axis,full_length,cluster_tone,scale):
+        angle=axis+rng.uniform(-.31,.31);slope=rng.uniform(-.12,.56) if pine else rng.uniform(-.55,.85)
+        end=base+radial(angle,full_length,slope*full_length)
+        mid=(base+end)*.5+radial(angle+.8,.055,.072)
+        # The twig is part of the same continuously visible solid as the tree.
+        # Thin terminal rachises use triangular sections for fast instanced drawing.
+        tips.taper(base,end,.009,.0021,twig,3)
+        for j in range(7 if pine else 6):
+            f=.10+.136*j
+            at=base.lerp(mid,f*2) if f<.5 else mid.lerp(end,(f-.5)*2)
+            if pine:
+                for h in range(6):
+                    dest=crown if (j+h)%3==0 else fill
+                    a=angle+(h-2.5)*.39+rng.uniform(-.35,.35);pitch=rng.uniform(-.30,.91)
+                    needle(dest,at,a,pitch,rng.uniform(.13,.27)*scale,rng.uniform(.006,.014)*scale,tone(cluster_tone,rng.uniform(.77,1.31)))
+            else:
+                for side in (-1,1):
+                    a=angle+side*rng.uniform(.53,1.38)
+                    dest=crown if (j+side+4)%3==0 else fill
+                    length=rng.uniform(.113,.190)*scale*(1.12 if dest is crown else 1)
+                    tilt=rng.uniform(-.84,.84);pitch=slope+rng.uniform(-.65,.44)
+                    leaf(dest,at,a,pitch,length,length*rng.uniform(.26,.37),tilt,tone(cluster_tone,rng.uniform(.80,1.21)))
+    count=8 if pine else 9
+    for j in range(count):
+        f=j/(count-1);a=j*2.40+rng.uniform(-.37,.37)
+        i=2+int(f*(len(trunk)-5));start=trunk[i].lerp(trunk[i+1],rng.uniform(.05,.52))
+        reach=(2.4 if pine else 2.7)*(1-.53*f)*rng.uniform(.87,1.17)
+        rise=(.65 if pine else 1.47)+(1-f)*(.23 if pine else .57)
+        outer=start+radial(a,reach,rise)
+        arch=radial(a+.69,reach*.15,-.21 if pine else .26)
+        arm=twigpath(start,outer,arch,7)
+        limb(arm,(.107 if pine else .125)*(1-f*.43),.016,bark,8)
+        for k in range(5):
+            t=.20+.15*k;pos=t*(len(arm)-1);ik=int(pos);sub=arm[ik].lerp(arm[ik+1],pos-ik)
+            turn=a+(1 if k%2 else -1)*rng.uniform(.47,1.28)
+            span=(.69+reach*.28)*rng.uniform(.77,1.22)
+            end=sub+radial(turn,span,rng.uniform(.08,.39) if pine else rng.uniform(.40,1.04))
+            sec=twigpath(sub,end,radial(turn-.65,.10,.09),5);limb(sec,.047*(1-.38*t),.0095,tone(bark,1.07),6)
+            for l in range(4):
+                u=.27+.215*l;iv=min(3,int(u*4));part=sec[iv].lerp(sec[iv+1],u*4-iv)
+                angle=turn+(-1 if l%2 else 1)*rng.uniform(.63,1.26)
+                reach3=rng.uniform(.39,.78)
+                tip=part+radial(angle,reach3,rng.uniform(-.12,.27) if pine else rng.uniform(.09,.66))
+                third=twigpath(part,tip,radial(angle+.92,.051,.055),3)
+                path_tube(tips,third,[.022,.012,.0046],twig,4)
+                local=tones[(variant+rng.randrange(len(tones)))%len(tones)]
+                for n in range(4):
+                    u=.13+.25*n;tipbase=third[0].lerp(third[1],u*2) if u<.5 else third[1].lerp(third[2],(u-.5)*2)
+                    shoot(tipbase,angle+(-1 if n%2 else 1)*rng.uniform(.49,1.26),rng.uniform(.28,.56) if pine else rng.uniform(.34,.64),local,rng.uniform(.90,1.13))
+    return wood.finish(barkmat),crown.finish(leafmat),fill.finish(leafmat),tips.finish(barkmat)

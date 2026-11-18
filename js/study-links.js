@@ -34,6 +34,7 @@ function illustratedObjectAt(artwork,event) {
   }
   const x=(event.clientX-rect.left-offset(px,rect.width-width))/width;
   const y=(event.clientY-rect.top-offset(py,rect.height-height))/height;
+  if(x>=.141 && x<=.237 && y>=.47 && y<=.532) return 'profile';
   for(const [key,polygon] of Object.entries(outlines)) {
     let inside=false;
     for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){

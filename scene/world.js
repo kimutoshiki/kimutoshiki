@@ -198,7 +198,10 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     camera.updateProjectionMatrix();
   }
   function resize() {
-    width = Math.max(1, canvas.clientWidth); height = Math.max(1, canvas.clientHeight);
+    // Hidden 2D and mobile layout transitions briefly report a zero viewport.
+    // Keep the last real 3D frame until there is a new visible size to draw.
+    if (!canvas.clientWidth || !canvas.clientHeight) return;
+    width = canvas.clientWidth; height = canvas.clientHeight;
     const ratio = Math.max(.65,pixelRatio(width, height)*performanceScale); if (renderer.getPixelRatio?.() !== ratio) renderer.setPixelRatio(ratio);
     renderer.setSize(width, height, false); performanceStats.pixelRatio=ratio; updateProjection(); revision++; wake();
   }

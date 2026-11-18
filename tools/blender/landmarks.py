@@ -46,7 +46,19 @@ def rgb(hex_value):
     return tuple(linear(int(raw[i:i+2],16)/255.) for i in (0,2,4))
 
 
-def material(record,cache,work):
+# Buff fired clay and paler architectural terracotta on the 1927 auditorium.
+# A sampled neutral value is applied to a single repeatable material field,
+# preserving fine surface grain at every face orientation and time of day.
+HALL_FINISH={'b59a66':(174,151,116),'ccb78b':(192,173,143),'e3ce9d':(214,195,161)}
+
+
+def bronze_albedo(linear_color):
+    """Weathered bronze has a diffuse patina above the still-reflective metal."""
+    color=np.asarray(linear_color,dtype=np.float32)
+    return np.clip(color*np.array([1.82,1.63,1.45],dtype=np.float32)+.008,0.,1.)
+
+
+def material(record,cache,work,landmark):
     source=record.get('surface')
     hex_value=record['hex']
     name=(source.title() if source else 'Finish')+' '+hex_value
@@ -56,9 +68,13 @@ def material(record,cache,work):
     nodes,links=mat.node_tree.nodes,mat.node_tree.links
     shader=nodes.get('Principled BSDF')
     base=record['rgb']
+    bronze=landmark=='okuma-statue' and record['metalness']>.3
+    if bronze and not record['vertexColors']:
+        base=bronze_albedo(base)
+        mat.diffuse_color=(*base,1)
     shader.inputs['Base Color'].default_value=(*base,1)
-    shader.inputs['Roughness'].default_value=record['roughness']
-    shader.inputs['Metallic'].default_value=record['metalness']
+    shader.inputs['Roughness'].default_value=record['roughness']*.85+.02 if bronze else record['roughness']
+    shader.inputs['Metallic'].default_value=record['metalness']*.64 if bronze else record['metalness']
     mat.use_backface_culling=not record['doubleSided']
     if record['vertexColors']:
         attribute=nodes.new('ShaderNodeVertexColor')
@@ -77,7 +93,20 @@ def material(record,cache,work):
             pixels=np.empty(side*side*4,dtype=np.float32)
             image.pixels.foreach_get(pixels)
             pixels=pixels.reshape(-1,4)
-            pixels[:,:3]*=np.array(rgb(tint),dtype=np.float32)
+            if landmark=='okuma-auditorium' and hex_value in HALL_FINISH:
+                # Source JPEG byte images expose encoded RGB samples. Retain
+                # measured luminance variation without multiplying two ochres.
+                grain=pixels[:,:3]@np.array([.2126,.7152,.0722],dtype=np.float32)
+                grain=np.clip(grain/np.median(grain),.70,1.23)
+                field=(.42*(grain-1)+1).reshape(side,side)
+                if hex_value=='b59a66':
+                    # Fine vertical striations in the scratch tiles. The original
+                    # geometry already supplies the masonry's mortar courses.
+                    x=np.arange(side,dtype=np.float32)
+                    field+=.014*np.sin(2*np.pi*x/3)+.007*np.sin(2*np.pi*x/8)
+                pixels[:,:3]=field.reshape(-1,1)*(np.asarray(HALL_FINISH[hex_value])/255.)
+            else:
+                pixels[:,:3]*=np.array(rgb(tint),dtype=np.float32)
             image.pixels.foreach_set(pixels.ravel())
             image.name=filename+' '+tint
             image.file_format='JPEG'
@@ -97,7 +126,22 @@ def empty(name,parent=None):
     return obj
 
 
-def build_mesh(block,buffer,mat):
+def polished_crests(positions,normals,faces):
+    # Convex casting details catch handling and weather differently from deep
+    # folds. The mask is intrinsic to the mesh, independent of sun and camera.
+    start=faces.ravel()
+    end=np.roll(faces,-1,axis=1).ravel()
+    edges=positions[start]-positions[end]
+    direction=edges/np.maximum(np.linalg.norm(edges,axis=1,keepdims=True),1e-8)
+    turn=np.einsum('ij,ij->i',direction,normals[start])
+    turn=np.bincount(start,weights=turn,minlength=len(positions))/np.maximum(np.bincount(start,minlength=len(positions)),1)
+    convex=np.clip((turn-.005)*4.5,0.,1.)
+    height=positions[:,2]
+    portrait=np.clip((height-15.40)/.25,0,1)*np.clip((16.76-height)/.25,0,1)
+    return np.asarray(1.+convex*(.22+.38*portrait),dtype=np.float32)
+
+
+def build_mesh(block,buffer,mat,patinated):
     def arr(name,dtype):
         offset,count=block[name]
         return np.frombuffer(buffer,dtype=dtype,count=count,offset=offset)
@@ -122,7 +166,10 @@ def build_mesh(block,buffer,mat):
         uv=arr('uv','<f4').reshape(-1,2)[faces].reshape(-1)
         mesh.uv_layers.new(name='Measured material').data.foreach_set('uv',uv)
     if 'c' in block:
-        colors=arr('c','<f4').reshape(-1,3)[faces].reshape(-1,3)*np.asarray(mat.diffuse_color[:3],dtype=np.float32)
+        colors=arr('c','<f4').reshape(-1,3)*np.asarray(mat.diffuse_color[:3],dtype=np.float32)
+        if patinated:
+            colors=bronze_albedo(colors)*polished_crests(pos,norm,faces)[:,None]
+        colors=np.clip(colors[faces].reshape(-1,3),0,1)
         rgba=np.column_stack((colors,np.ones(len(colors),dtype=np.float32)))
         attribute=mesh.color_attributes.new(name='Casting',type='BYTE_COLOR',domain='CORNER')
         attribute.data.foreach_set('color',rgba.ravel())
@@ -145,7 +192,7 @@ def stage(name,staging,work):
     data=json.loads((staging/(name+'.json')).read_text())
     buffer=(staging/(name+'.bin')).read_bytes()
     cache={}
-    mats=[material(rec,cache,work) for rec in data['materials']]
+    mats=[material(rec,cache,work,name) for rec in data['materials']]
     clocks={}
     for n,record in data['clockFaces'].items():
         node=empty('Clock_Face_'+n)
@@ -155,7 +202,8 @@ def stage(name,staging,work):
         node['clockTimeZone']='Asia/Tokyo'
         clocks[int(n)]=node
     for block in data['groups']:
-        obj=build_mesh(block,buffer,mats[block['material']])
+        record=data['materials'][block['material']]
+        obj=build_mesh(block,buffer,mats[block['material']],name=='okuma-statue' and record['metalness']>.3)
         if block['hand']:
             hand=block['hand']
             face,kind=hand['face'],hand['kind']

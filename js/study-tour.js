@@ -29,18 +29,14 @@ export function createGardenTour(stand, { onExplore } = {}) {
   let clearArrival;
   function bridgeToWorld(scene) {
     clearArrival?.();
-    const artwork = view.querySelector('img');
     const frame = document.querySelector('.desk-view'), world = document.getElementById('main');
-    if (!artwork.currentSrc || artwork.hidden || !frame || !world) return;
+    if (!frame || !world) return;
     const veil = document.createElement('div');
     veil.className = 'tour-arrival';
-    const image = document.createElement('img');
-    image.src = artwork.currentSrc;
-    image.alt = '';
     const status = document.createElement('span');
     status.setAttribute('role', 'status');
     status.textContent = scene.name + 'に移動しています…';
-    veil.append(image, status);
+    veil.append(status);
     frame.append(veil);
     const arrival = new AbortController();
     let cleanupTimer;
