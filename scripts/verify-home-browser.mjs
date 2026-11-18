@@ -129,7 +129,7 @@ async function inspectNotebook(page, name, capture = false) {
   assert.match(await canvas.getAttribute('aria-label'), /大隈講堂.*唐津城/);
   assert.equal(await stage.getAttribute('data-position'), 'spread');
   const onIllustration = name.endsWith('-2d');
-  if (onIllustration) assert.equal(await page.locator('#study-artwork .notebook-on-desk').count(), 1, 'The 2D view renders an actual hinged book on the desk illustration');
+  if (onIllustration) assert.equal(await page.locator('#study-artwork .notebook-on-desk').count(), 0, 'Reduced motion opens the spread immediately without animating the desk');
   const open = await pixelSample(canvas);
   assert(open.colors > 32 && open.width > 100 && open.height > 80, 'The open spread contains drawn, varied artwork');
   if (capture) await picture(page, name + '-sketchbook');
@@ -316,6 +316,34 @@ try {
     }
     assert.deepEqual(errors, []); assert.deepEqual(failures, []); await page.close();
   }
+
+  // Observe the physically hinged book on the actual illustration before
+  // its close-up opens. Tests above use reduced motion for deterministic poses.
+  const animated = await open({width: 1280, height: 800}, {reducedMotion:'no-preference'});
+  await goHome(animated.page);
+  await animated.page.evaluate(() => {
+    window.__deskBookFrames = new Set();
+    const end = performance.now() + 8000;
+    function sample() {
+      const overlay = document.querySelector('#study-artwork .notebook-on-desk');
+      if (overlay?.width > 12) {
+        const ctx = overlay.getContext('2d'), {data} = ctx.getImageData(0, 0, overlay.width, overlay.height);
+        let hash = 2166136261;
+        for (let i = 0; i < data.length; i += 28) hash = Math.imul(hash ^ (data[i] + data[i+3] * 256), 16777619);
+        window.__deskBookFrames.add(hash);
+      }
+      if (window.__deskBookFrames.size < 3 && performance.now() < end) requestAnimationFrame(sample);
+    }
+    requestAnimationFrame(sample);
+  });
+  await animated.page.locator('[data-illustration-link="blog"]').click();
+  await animated.page.waitForFunction(() => window.__deskBookFrames.size >= 3, null, {timeout:10000});
+  await animated.page.getByRole('dialog', {name:'旅の手帖'}).waitFor();
+  await animated.page.keyboard.press('Escape');
+  await animated.page.locator('.notebook-on-desk').waitFor({state:'detached'});
+  assert.deepEqual(animated.errors, []);
+  await animated.page.close();
+  report.cases.push({name:'Photographed cover visibly rises on the actual illustrated desktop'});
 
   const slow = await open({ width: 960, height: 720 });
   let release;
