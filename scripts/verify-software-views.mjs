@@ -16,6 +16,15 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const output=process.env.REVIEW_OUTPUT && join(process.env.REVIEW_OUTPUT,'cpu-raster');
 const width=720,height=480, desk=geometry(), garden=geometry();
 buildSoftwareDesk(desk);buildSoftwareGarden(garden);
+// An in-memory render and an identical lossless file use the same sampling
+// filter. Renderer/source registration must never measure a decoder difference.
+const checker=createCanvas(257,157), ink=checker.getContext('2d');
+ink.fillStyle='#bd7c33';ink.fillRect(0,0,checker.width,checker.height);ink.fillStyle='#2d423c';
+for(let x=0;x<checker.width;x+=3)ink.fillRect(x,0,1,checker.height);
+const identical=compareFrames(checker,await loadImage(await checker.encode('png')));
+assert.equal(identical.meanRgbError,0);
+assert.equal(identical.luminanceCorrelation,1);
+
 const failures=[], results=[];
 for (const key of reviewViews) {
   const home=key==='desk', model=home?desk:garden;
