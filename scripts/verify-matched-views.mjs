@@ -109,7 +109,7 @@ try {
       // renderers and the CPU desk are calibrated against their exact source.
       if(key!=='desk'||renderer==='software'){
         if(renderer==='software')require(subject.meanRgbError<27&&subject.luminanceCorrelation>.74,'the foreground subject itself differs from the corresponding artwork');
-        const limit=renderer==='software'?27:55,minimum=renderer==='software'?.80:.55;
+        const limit=27,minimum=renderer==='software'?.80:.74;
         require(registration.meanRgbError<limit,'registered RGB block error exceeds '+limit+'/255');
         require(registration.luminanceCorrelation>minimum,'registered luminance correlation is below '+minimum);
       }

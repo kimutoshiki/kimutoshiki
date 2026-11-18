@@ -6,16 +6,47 @@ import { join } from 'node:path';
 export const reviewViews = ['desk', 'okuma-auditorium', 'okuma-statue', 'karatsu-castle', 'karatsu-bank'];
 export const sourceAsset = key => key === 'desk' ? 'images/study/study-1536.webp' : 'images/outdoors/' + key + '-1536.webp';
 
-function sample(image, width, height) {
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(image, 0, 0, width, height);
-  return ctx.getImageData(0, 0, width, height).data;
+const sources=new WeakMap();
+function rawPixels(image){
+  let raw=sources.get(image);
+  if(raw)return raw;
+  let ctx=image.getContext?.('2d');
+  if(!ctx){
+    ctx=createCanvas(image.width,image.height).getContext('2d');
+    ctx.drawImage(image,0,0);
+  }
+  raw=ctx.getImageData(0,0,image.width,image.height).data;
+  sources.set(image,raw);return raw;
 }
 
-export function compareFrames(reference, frame) {
-  const width = 96, height = 64, count = width * height;
-  const a = sample(reference, width, height), b = sample(frame, width, height);
+// Use the same pixel-area integration for Canvas and decoded files. The
+// platform may otherwise choose different resampling filters for those types.
+function sample(image,width,height,box=[0,0,1,1]){
+  const raw=rawPixels(image), result=new Uint8ClampedArray(width*height*4);
+  const left=box[0]*image.width,top=box[1]*image.height;
+  const dx=box[2]*image.width/width,dy=box[3]*image.height/height;
+  for(let y=0;y<height;y++){
+    const y0=top+y*dy,y1=Math.min(image.height,top+(y+1)*dy);
+    for(let x=0;x<width;x++){
+      const x0=left+x*dx,x1=Math.min(image.width,left+(x+1)*dx);
+      let red=0,green=0,blue=0;
+      for(let sy=Math.floor(y0);sy<Math.ceil(y1);sy++){
+        const wy=Math.min(y1,sy+1)-Math.max(y0,sy);
+        for(let sx=Math.floor(x0);sx<Math.ceil(x1);sx++){
+          const weight=wy*(Math.min(x1,sx+1)-Math.max(x0,sx)),p=(sy*image.width+sx)*4;
+          red+=raw[p]*weight;green+=raw[p+1]*weight;blue+=raw[p+2]*weight;
+        }
+      }
+      const i=(y*width+x)*4,area=(x1-x0)*(y1-y0);
+      result[i]=red/area;result[i+1]=green/area;result[i+2]=blue/area;result[i+3]=255;
+    }
+  }
+  return result;
+}
+
+export function compareFrames(reference,frame,box) {
+  const width=96,height=64,count=width*height;
+  const a=sample(reference,width,height,box),b=sample(frame,width,height,box);
   const rgbError = [0, 0, 0];
   let lumaA = 0, lumaB = 0, product = 0, squareA = 0, squareB = 0;
   for (let i = 0; i < a.length; i += 4) {
@@ -73,10 +104,5 @@ const subjectBoxes={
   'okuma-statue':[.42,.04,.15,.51], 'karatsu-castle':[.30,.02,.51,.79], 'karatsu-bank':[.07,.15,.82,.69],
 };
 export function compareSubject(key,source,frame){
-  const [x,y,w,h]=subjectBoxes[key];
-  function crop(image){
-    const cut=createCanvas(192,128), ctx=cut.getContext('2d');
-    ctx.drawImage(image,x*image.width,y*image.height,w*image.width,h*image.height,0,0,192,128);return cut;
-  }
-  return compareFrames(crop(source),crop(frame));
+  return compareFrames(source,frame,subjectBoxes[key]);
 }
