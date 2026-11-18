@@ -1,0 +1,48 @@
+name: Verify Blender study, interaction and four walks
+on:
+  push:
+    branches:
+      - 'review/study-atelier-*'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    name: Chromium • ${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [interactions, perspectives]
+    env:
+      PREVIEW_URL: http://127.0.0.1:4173
+      REVIEW_OUTPUT: ${{ github.workspace }}/browser-review
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: |
+          chrome="$(command -v google-chrome || command -v google-chrome-stable)"
+          "$chrome" --version
+          echo "CHROMIUM_PATH=$chrome" >> "$GITHUB_ENV"
+      - run: npm run build:world
+      - run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 > "$RUNNER_TEMP/preview.log" 2>&1 &
+          curl --fail --silent --retry 12 --retry-delay 1 --retry-connrefused "$PREVIEW_URL/" -o /dev/null
+      - if: matrix.suite == 'interactions'
+        run: npm test
+      - if: matrix.suite == 'interactions' && !cancelled()
+        run: npm run test:browser
+      - if: matrix.suite == 'perspectives'
+        run: npm run test:views
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapped-${{ matrix.suite }}
+          path: browser-review/
+          if-no-files-found: error
+          retention-days: 5

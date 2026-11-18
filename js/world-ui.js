@@ -173,15 +173,21 @@
   canvas.addEventListener('worldstate', event => { if (engine || launching) syncState(event.detail); });
   canvas.addEventListener('study-notebook-set', ({ detail }) => {
     if (mode !== '3d' || !firstFrame || !engine || !state.seated || typeof detail?.open !== 'boolean') return;
-    if (engine.getState().deskProps?.notebook !== detail.open) engine.interactDesk('notebook');
+    if (engine.getState().deskProps?.notebook !== detail.open) engine.interactDesk('notebook',{reveal:false});
+  });
+  canvas.addEventListener('study-look',({detail})=>{
+    if(mode==='3d'&&firstFrame&&state.seated)engine?.look?.(detail.dx,detail.dy);
+  });
+  canvas.addEventListener('study-object-action',event=>{
+    const {id,source}=event.detail||{};
+    if(!engine||mode!=='3d'||!state.seated||!['notebook','letter'].includes(id))return;
+    event.preventDefault();
+    if(engine.getState().deskProps?.[id])canvas.dispatchEvent(new CustomEvent('studysubject',{detail:{key:id==='notebook'?'blog':'contact',type:'select',source}}));
+    else engine.interactDesk(id,{source});
   });
   for (const button of deskButtons) button.addEventListener('click', () => {
     if (!engine || button.disabled || !state.seated) return;
-    const id = button.dataset.deskAction;
-    engine.interactDesk(id);
-    if (id === 'notebook' && engine.getState().deskProps?.notebook) {
-      canvas.dispatchEvent(new CustomEvent('study-notebook-open', { bubbles: true, detail: { source: button } }));
-    }
+    engine.interactDesk(button.dataset.deskAction,{source:button});
   });
   travel.addEventListener('click', () => {
     if (!engine || travel.disabled) return;
@@ -293,7 +299,7 @@
   async function openGarden(key) {
     const revision = modeRevision;
     try {
-      tourImport ??= import('./study-tour.js?v=20261118-survey2');
+      tourImport ??= import('./study-tour.js?v=20261118-atelier1');
       const { createGardenTour } = await tourImport;
       if (disposed || mode !== '2d' || revision !== modeRevision) return;
       tour ??= createGardenTour(stand, { onExplore: key => {
@@ -368,15 +374,6 @@
   }
   // Some browsers offer WebGL2 through a CPU driver. The textured Canvas
   // renderer draws the same walks much faster on those devices.
-  function hasSoftwareDriver(gl) {
-    try {
-      const debug = gl.getExtension?.('WEBGL_debug_renderer_info');
-      const renderer = gl.getParameter?.(debug?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER) || '';
-      return /swiftshader|llvmpipe|softpipe|software (?:rasterizer|renderer)|microsoft basic render/i.test(renderer);
-    } catch {
-      return false;
-    }
-  }
   async function launch() {
     if (disposed || launching || engine || mode !== '3d' || pageSuspended || document.hidden) return;
     launching = true;
@@ -387,16 +384,11 @@
       if (kind === 'native') {
         rendererContext ??= canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
         if (!rendererContext || rendererContext.isContextLost?.()) throw new Error('WebGL2 is unavailable');
-        if (hasSoftwareDriver(rendererContext)) {
-          rendererContext.getExtension?.('WEBGL_lose_context')?.loseContext();
-          rendererContext = undefined;
-          throw new Error('Software WebGL driver');
-        }
-        const url = '../scene/world.bundle.js?v=20261118-survey2' + (loadFailures ? '&retry=' + loadFailures : '');
+        const url = '../scene/world.bundle.js?v=20261118-atelier1' + (loadFailures ? '&retry=' + loadFailures : '');
         const { mountWorld } = await import(url);
         mount = mountWorld;
       } else {
-        const url = './software-world.js?v=20261118-survey2' + (loadFailures ? '&retry=' + loadFailures : '');
+        const url = './blender-software-world.js?v=20261118-atelier1' + (loadFailures ? '&retry=' + loadFailures : '');
         const { mountSoftwareWorld } = await import(url);
         mount = mountSoftwareWorld;
       }

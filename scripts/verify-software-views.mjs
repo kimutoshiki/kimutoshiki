@@ -1,88 +1,161 @@
-// Decode the production atlases and rasterize physical depth without a browser
-// or GPU. Optional review output includes the actual unlabelled RGB frames.
+// Render the shipped Blender meshes, including their embedded image pixels, without WebGL.
 import assert from 'node:assert/strict';
-import { createCanvas, loadImage } from '@napi-rs/canvas';
-import { fileURLToPath } from 'node:url';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { writeFile, mkdir } from 'node:fs/promises';
-import { OUTDOOR_VIEWS, regionalHeight, HOME } from '../scene/world-layout.js';
-import { geometry, perspective } from '../js/software-renderer.js';
-import { decodeSoftwareTexture } from '../js/software-textures.js';
-import { buildSoftwareDesk, SOFTWARE_SEAT } from '../js/software-desk.js';
-import { buildSoftwareGarden, SOFTWARE_PLACES } from '../js/software-garden.js';
-import { reviewViews, sourceAsset, compareFrames, compareSubject, frameDetail, saveComparison } from './helpers/visual-comparison.mjs';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+import * as T from '../js/vendor/three.module.min.js';
+import { loadBlenderAsset } from '../scene/blender-assets.js';
+import { createBlenderRoom } from '../scene/blender-room.js';
+import { createBlenderCat } from '../scene/blender-cat.js';
+import { createRegionalLandscape } from '../scene/place-settings.js';
+import { createWorldLandmarks } from '../scene/world-landmarks.js';
+import { createMeshRaster } from '../scene/mesh-raster.js';
+import { OUTDOOR_VIEWS, HOME, regionalHeight, worldFov } from '../scene/world-layout.js';
+import { loadTabbyFixture } from './helpers/load-tabby-fixture.mjs';
+import { compareFrames, frameDetail, reviewViews, saveComparison } from './helpers/visual-comparison.mjs';
 
-const root=fileURLToPath(new URL('../',import.meta.url));
+const width=720, height=480;
 const output=process.env.REVIEW_OUTPUT && join(process.env.REVIEW_OUTPUT,'cpu-raster');
-const width=720,height=480, desk=geometry(), garden=geometry();
-buildSoftwareDesk(desk);buildSoftwareGarden(garden);
-// An in-memory render and an identical lossless file use the same sampling
-// filter. Renderer/source registration must never measure a decoder difference.
-const checker=createCanvas(257,157), ink=checker.getContext('2d');
-ink.fillStyle='#bd7c33';ink.fillRect(0,0,checker.width,checker.height);ink.fillStyle='#2d423c';
-for(let x=0;x<checker.width;x+=3)ink.fillRect(x,0,1,checker.height);
-const identical=compareFrames(checker,await loadImage(await checker.encode('png')));
-assert.equal(identical.meanRgbError,0);
-assert.equal(identical.luminanceCorrelation,1);
+const directory=new URL('../assets/models/blender/',import.meta.url);
+globalThis.self=globalThis;
+globalThis.document={createElement(tag){assert.equal(tag,'canvas');return createCanvas(1,1);}};
+globalThis.createImageBitmap=async blob=>loadImage(Buffer.from(await blob.arrayBuffer()));
+const browserFetch=globalThis.fetch;
+globalThis.fetch=async(url,options)=>{
+  if(url instanceof URL && url.protocol==='file:')return new Response(await readFile(url));
+  return browserFetch(url,options);
+};
 
-const failures=[], results=[];
-for (const key of reviewViews) {
-  const home=key==='desk', model=home?desk:garden;
-  const place=home?SOFTWARE_SEAT:SOFTWARE_PLACES['landmark-'+key];
-  const cam={x:place.x,y:place.y??place.eyeY,z:place.z,yaw:place.yaw,pitch:place.pitch,fov:place.fov};
-  if(!home){
-    const view=OUTDOOR_VIEWS[key];
-    assert.deepEqual([cam.x,cam.z],view.eye,'Both renderers share the same registered site and street-side viewpoint');
-    assert.ok(Math.abs(cam.y-HOME.eyeHeight-regionalHeight(view.region,...view.eye))<.02,'Both cameras stand at human height above local terrain');
+// The shared Node Draco reader decodes the production triangle buffers. Its
+// small fixture textures must be replaced by the actual embedded image bytes.
+async function loadRegionAsset(key){
+  const asset=await loadTabbyFixture(new URL(key+'.glb',directory));
+  const maps=new Set();
+  asset.scene.traverse(node=>{
+    for(const material of [].concat(node.material||[]))
+      for(const value of Object.values(material))if(value?.isTexture)maps.add(value);
+  });
+  const decoded=new Map();
+  for(const map of maps){
+    const index=map.userData.sourceIndex;
+    assert.ok(Number.isInteger(index),'Embedded regional texture identifies its image');
+    if(!decoded.has(index)){
+      const image=asset.parser.json.images[index];
+      const contents=await asset.parser.getDependency('bufferView',image.bufferView);
+      decoded.set(index,await loadImage(Buffer.from(contents)));
+    }
+    map.image=decoded.get(index);map.needsUpdate=true;
+    assert.ok(map.image.width>1);
   }
-  const reference=await loadImage(join(root,sourceAsset(key)));
-  const textures=new Map();let imageBytes=0;
-  for (const [name,resource] of model.textureSources) {
-    if(resource.district&&resource.district!==key)continue;
-    const source=await loadImage(fileURLToPath(new URL('../js/'+resource.path,import.meta.url)));
-    const texture=decodeSoftwareTexture(source,{...resource,makeCanvas:createCanvas});
-    textures.set(name,texture);imageBytes+=texture.bytes;
+  return {...asset,dispose(){}};
+}
+
+function meshes(root){
+  const result=[];root.traverse(node=>{if(node.isMesh)result.push(node);});return result;
+}
+function activeTextures(scene){
+  const images=new Set();
+  scene.traverseVisible(node=>{
+    for(const mat of [].concat(node.material||[]))if(mat.map)images.add(mat.map.image);
+  });
+  let byteCount=0;
+  for(const image of images){
+    assert.ok(image?.width>1&&image.height>1,'Materials have real decoded pixels');
+    const scale=Math.min(1,2048/Math.max(image.width,image.height));
+    let w=Math.max(1,Math.round(image.width*scale)),h=Math.max(1,Math.round(image.height*scale));
+    while(true){byteCount+=w*h*4;if(w===1&&h===1)break;w=Math.max(1,w>>1);h=Math.max(1,h>>1);}
   }
-  const canvas=createCanvas(width,height), renderer=perspective(canvas.getContext('2d'));
-  const options={outdoor:!home,night:false,progress:{lamp:1,drawer:0,notebook:0},district:home?'':key,textures};
-  const times=[];
-  function render(camera){
-    const start=performance.now();renderer.draw(model,camera,width,height,options);times.push(performance.now()-start);
-    const result=createCanvas(width,height);result.getContext('2d').drawImage(canvas,0,0);return result;
+  return {count:images.size,bytes:byteCount};
+}
+
+const scene=new T.Scene(),camera=new T.PerspectiveCamera(44,width/height,.035,700);
+scene.background=new T.Color('#b4c9d5');
+scene.add(new T.HemisphereLight(0xffffff,0x8c7865,1.15));
+const sun=new T.DirectionalLight(0xffe4bd,2.6);sun.position.set(-38,55,-12);scene.add(sun,sun.target);
+const room=await createBlenderRoom(T);
+scene.add(room.group);
+await room.loadMiniatures();
+room.attachCat(await createBlenderCat(T,{load:loadBlenderAsset}));
+const canvas=createCanvas(width,height);canvas.dataset={};
+const raster=createMeshRaster(canvas);raster.setSize(width,height);
+const checker=createCanvas(257,157),ink=checker.getContext('2d');
+ink.fillStyle='#bd7c33';ink.fillRect(0,0,257,157);ink.fillStyle='#2d423c';
+for(let x=0;x<257;x+=3)ink.fillRect(x,0,1,157);
+const identical=compareFrames(checker,await loadImage(await checker.encode('png')));
+assert.equal(identical.meanRgbError,0);assert.equal(identical.luminanceCorrelation,1);
+
+let region,terrain,architecture;
+const results=[];
+for(const key of reviewViews){
+  const view=OUTDOOR_VIEWS[key],home=key==='desk';
+  let subject;
+  room.group.visible=home;
+  if(view && region!==view.region){
+    terrain?.group.removeFromParent();terrain?.dispose();
+    architecture?.group.removeFromParent();architecture?.dispose();
+    region=view.region;
+    [terrain,architecture]=await Promise.all([
+      createRegionalLandscape(T,region,{loadAsset:loadRegionAsset}),createWorldLandmarks(T,{region})
+    ]);
+    scene.add(terrain.group,architecture.group);
   }
-  const original=render(cam), faces=renderer.texturedFaces;
-  const side={...cam,x:cam.x+Math.cos(cam.yaw)*(home?.24:1.2),z:cam.z-Math.sin(cam.yaw)*(home?.24:1.2)};
-  const translated=render(side), turned=render({...side,yaw:side.yaw+.39,pitch:cam.pitch+.035});
-  const surround=home?[]:[
-    {name:'right',label:'Perpendicular to arrival',image:render({...side,yaw:cam.yaw+Math.PI/2})},
-    {name:'rear',label:'Facing away from the landmark',image:render({...side,yaw:cam.yaw+Math.PI})},
-  ];
-  const walkingCanvas=createCanvas(450,300), walkingRaster=perspective(walkingCanvas.getContext('2d'));
+  if(home){
+    camera.position.fromArray(HOME.seated.position);
+    camera.lookAt(...HOME.seated.target);camera.fov=worldFov(width/height,true);
+    subject=room.group.getObjectByName('WritingDesk');
+  }else{
+    const [x,z]=view.eye;
+    camera.position.set(x,HOME.eyeHeight+regionalHeight(region,x,z),z);
+    camera.lookAt(...view.target);camera.fov=view.fov;
+    terrain.update(camera.position);
+    subject=architecture.targets.find(t=>t.id==='landmark-'+key).object;
+    const miniature=room.group.getObjectByName('desk-'+key);
+    const actual=meshes(subject),small=meshes(miniature);
+    assert.ok(actual.length>=4 && actual.length===small.length,key+' has modelled parts at both scales');
+    actual.forEach((mesh,i)=>assert.equal(mesh.geometry,small[i].geometry,'The desk and street instances share every vertex/index buffer for '+key));
+    const size=new T.Box3().setFromObject(subject).getSize(new T.Vector3());
+    assert.ok(Math.min(size.x,size.y,size.z)>1,key+' occupies all three dimensions');
+  }
+  camera.updateProjectionMatrix();
+  const textures=activeTextures(scene),drawMs=[];
+  function render(){
+    const start=performance.now();raster.render(scene,camera);drawMs.push(Math.round(performance.now()-start));
+    const shot=createCanvas(width,height);shot.getContext('2d').drawImage(canvas,0,0);return shot;
+  }
+  const arrival=render(),stats={...raster.info.render},detail=frameDetail(arrival);
+  subject.visible=false;const without=render();subject.visible=true;
+  const subjectChange=compareFrames(arrival,without);
+  assert.ok(subjectChange.meanRgbError>1,key+' subject changes actual arrival pixels');
+  camera.translateX(home?.24:1.2);
+  const side=render(),sideRotation=camera.quaternion.clone();
+  camera.rotateOnWorldAxis(new T.Vector3(0,1,0),.39);const turned=render();
+  const shift=compareFrames(arrival,side),look=compareFrames(side,turned),offAxis=frameDetail(turned);
+  assert.ok(stats.calls>=8 && stats.triangles>1000,key+' submits physical scene meshes');
+  assert.ok(detail.colors>2200 && offAxis.colors>1500,key+' retains coloured detail off-axis');
+  assert.ok(shift.meanRgbError>1.5 && look.meanRgbError>4,key+' moves under independent translation and rotation');
+  assert.ok(textures.count>=2 && textures.bytes<=48*1024*1024,key+' decoded colour maps fit the 48 MiB district budget');
+  const surround=[];
+  if(!home)for(const [name,angle] of [['right',-Math.PI/2],['rear',Math.PI]]){
+    camera.quaternion.copy(sideRotation);camera.rotateOnWorldAxis(new T.Vector3(0,1,0),angle);
+    const image=render();
+    assert.ok(raster.info.render.calls>=3 && frameDetail(image).meanNeighbourDifference>.5,key+' has visible surroundings in its '+name+' street view');
+    surround.push({name,label:name+' street view',image});
+  }
+  // Record warmed walking frames at the same reduced resolution used in past reviews.
+  raster.setSize(450,300);
   const timings=[];
   for(let tick=0;tick<7;tick++){
-    const begin=performance.now();
-    walkingRaster.draw(model,{...side,yaw:cam.yaw+.025*tick},450,300,{...options,fast:true});
-    if(tick>0)timings.push(performance.now()-begin);
+    camera.quaternion.copy(sideRotation);camera.rotateOnWorldAxis(new T.Vector3(0,1,0),.025*tick);
+    const start=performance.now();raster.render(scene,camera);
+    if(tick>0)timings.push(performance.now()-start);
   }
   timings.sort((a,b)=>a-b);
-  const movingRaster={width:450,height:300,medianMs:+((timings[2]+timings[3])/2).toFixed(1),maxMs:+timings.at(-1).toFixed(1)};
-  const registration=compareFrames(reference,original),shift=compareFrames(original,translated), look=compareFrames(translated,turned);
-  const detail=frameDetail(original),offAxis=frameDetail(turned);
-  const subject=compareSubject(key,reference,original);
-  const entry={key,registration,subject,detail,offAxis,movingRaster,surround:surround.map(view=>frameDetail(view.image)),shift,look,sourceTextures:textures.size,decodedMiB:+(imageBytes/1048576).toFixed(2),texturedFaces:faces,drawMs:times.map(n=>Math.round(n))};
-  results.push(entry);
-  console.log(JSON.stringify(entry));
-  await saveComparison(output,key,[{name:'source',label:'2D source',image:reference},{name:'arrival',label:'CPU render',image:original},
-    {name:'side',label:'Lateral translation',image:translated},{name:'turn',label:'After translation and rotation',image:turned},...surround]);
-  const checks=[
-    [faces>=8&&textures.size>=2,'multiple textured surfaces and source images'],
-    [detail.colors>2200&&offAxis.colors>1500,'varied full-color arrival and off-axis material'],
-    [subject.meanRgbError<27&&subject.luminanceCorrelation>.74,'the subject itself retains registered detail against the plate'],
-    [shift.meanRgbError>1.5&&look.meanRgbError>4,'images respond to independent camera translation and rotation'],
-    [registration.meanRgbError<27&&registration.luminanceCorrelation>.80,'photograph registration: RGB error <27/255, luminance correlation >0.80'],
-    [imageBytes<=48*1024*1024,'active district texture decoding fits 48 MiB'],
-  ];
-  for(const [ok,description] of checks)if(!ok)failures.push(key+': '+description);
+  const movingRaster={width:450,height:300,medianMs:Math.round((timings[2]+timings[3])/2),maxMs:Math.round(timings.at(-1))};
+  raster.setSize(width,height);
+  const report={key,drawCalls:stats.calls,triangles:stats.triangles,textures,subjectChange,detail,offAxis,shift,look,drawMs,movingRaster};
+  console.log(JSON.stringify(report));results.push(report);
+  await saveComparison(output,key,[{name:'arrival',label:'CPU / Blender scene',image:arrival},
+    {name:'side',label:'Lateral translation',image:side},{name:'turn',label:'Translated and turned',image:turned},...surround]);
 }
-if(output){await mkdir(output,{recursive:true});await writeFile(join(output,'metrics.json'),JSON.stringify({results,failures},null,2)+'\n');}
-assert.deepEqual(failures,[]);
+terrain?.dispose();architecture?.dispose();room.dispose();raster.dispose();
+if(output){await mkdir(output,{recursive:true});await writeFile(join(output,'metrics.json'),JSON.stringify({results},null,2)+'\n');}

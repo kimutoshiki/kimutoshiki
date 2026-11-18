@@ -5,13 +5,14 @@ export const HOME = Object.freeze({
   door: { x: -1.296, z: 3.4056, width: 1.2, height: 2.1 },
   spawn: { x: .70, z: 1.85, yaw: Math.atan2(-.9, -1.85), pitch: Math.atan2(-.62, Math.hypot(.9, 1.85)) },
   target: [-.2, 1, 0],
-  seated: { position: [0, 1.28, 1.67], target: [0, .815, 0] },
+  seated: { position: [0, 1.49, 2.42], target: [0, .80, -.065] },
 });
 export const WORLD_BOUNDS = { minX: -48, maxX: 48, minZ: -8, maxZ: 90 };
 /** Wider portrait view keeps the same human eye in the room, never pulls outside. */
 export function worldFov(aspect, seated = false) {
   const portrait = Math.max(0, Math.min(1, (1.1 - aspect) / .3));
-  return (seated ? 59 : 62) + 16 * portrait;
+  if(seated) return Math.min(92, 360/Math.PI*Math.atan(Math.tan(44*Math.PI/360)*Math.max(1,1.43/Math.max(.1,aspect))));
+  return 62 + 16 * portrait;
 }
 export const WAYPOINTS = [
   { x: .7, z: 1.85 }, { x: -1.296, z: 2.6 }, { x: -1.296, z: 4.8 },
@@ -28,16 +29,16 @@ export const REGION_BOUNDS = {
 };
 export const CASTLE_CENTER=[2260,570], CASTLE_COURT_Y=40;
 export const LANDMARK_SITES = [
-  { key:'okuma-auditorium', region:'waseda', title:'大隈講堂', name:'Okuma auditorium architecture', position:[173,263],rotation:-124.5*Math.PI/180,height:38,width:33.74499,depth:29.32435,arrival:[124,241],lookHeight:14 },
+  { key:'okuma-auditorium', region:'waseda', title:'大隈講堂', name:'Okuma auditorium architecture', position:[173,263],rotation:-124.5*Math.PI/180,height:38,width:33.74499,depth:29.32435,arrival:[124,232.2],lookHeight:15.4 },
   { key:'karatsu-castle', region:'karatsu', title:'唐津城', name:'Five-tier keep', position:CASTLE_CENTER,rotation:0,height:30,foundationY:CASTLE_COURT_Y,width:30,depth:26,arrival:[CASTLE_CENTER[0]+10,CASTLE_CENTER[1]+43],lookHeight:CASTLE_COURT_Y+13.5 },
   { key:'karatsu-bank', region:'karatsu', title:'旧唐津銀行', name:'Landmark architecture', position:[1600,1100],rotation:0,height:14,width:25.131055,depth:20.463466,arrival:[1581.5,1125.5],lookHeight:6.2 },
   { key:'okuma-statue', region:'waseda', title:'大隈重信像', name:'Okuma statue monument', position:[0,230],rotation:Math.PI/2,height:5.01,width:1.5003,depth:1.2753,arrival:[8.45,230.45],lookHeight:3.03 },
 ];
 export const OUTDOOR_VIEWS = {
-  'okuma-auditorium': {region:'waseda',district:'大隈講堂前',eye:[124,241],target:[172,14,263]},
-  'okuma-statue': {region:'waseda',district:'大隈重信像前',eye:[8.45,230.45],target:[0,3.03,230]},
-  'karatsu-castle': {region:'karatsu',district:'唐津城・本丸',eye:[CASTLE_CENTER[0]+10,CASTLE_CENTER[1]+43],target:[CASTLE_CENTER[0],CASTLE_COURT_Y+13.5,CASTLE_CENTER[1]]},
-  'karatsu-bank': {region:'karatsu',district:'旧唐津銀行通り',eye:[1581.5,1125.5],target:[1600,6.2,1100]},
+  'okuma-auditorium': {fov:52,region:'waseda',district:'大隈講堂前',eye:[124,232.2],target:[172,15.4,263]},
+  'okuma-statue': {fov:42,region:'waseda',district:'大隈重信像前',eye:[8.45,230.45],target:[0,3.03,230]},
+  'karatsu-castle': {fov:45,region:'karatsu',district:'唐津城・本丸',eye:[CASTLE_CENTER[0]+10,CASTLE_CENTER[1]+43],target:[CASTLE_CENTER[0],CASTLE_COURT_Y+13.5,CASTLE_CENTER[1]]},
+  'karatsu-bank': {fov:43,region:'karatsu',district:'旧唐津銀行通り',eye:[1581.5,1125.5],target:[1600,6.2,1100]},
 };
 
 export function regionalHeight(region,x,z){

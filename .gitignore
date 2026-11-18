@@ -2,3 +2,4 @@
 .DS_Store
 node_modules/
 work/
+/tools/blender/__pycache__/

@@ -11,7 +11,7 @@ export function createGardenTour(stand, { onExplore } = {}) {
   const controller = new AbortController(), { signal } = controller;
   const sheet = document.createElement('link');
   sheet.rel = 'stylesheet';
-  sheet.href = new URL('../css/study-tour.css?v=20261118-survey2', import.meta.url).href;
+  sheet.href = new URL('../css/study-tour.css?v=20261118-atelier1', import.meta.url).href;
   document.head.append(sheet);
   const dialog = document.createElement('dialog');
   dialog.className = 'study-tour';
@@ -60,10 +60,7 @@ export function createGardenTour(stand, { onExplore } = {}) {
       const state = event.detail;
       if (state?.outdoorsError) clear();
       else if (state?.mode === 'outside') {
-        const received = state.renderer === 'software'
-          ? state.renderedDistrict === 'landmark-' + scene.file
-          : state.photoPlace === scene.file && state.placeArtReady;
-        if (received || state.placeArtError) reveal();
+        if (state.placeKey === scene.file && state.geometryReady) reveal();
       }
     }, { capture: true, signal: arrival.signal });
     window.addEventListener('study-mode-change', () => {
@@ -99,7 +96,7 @@ export function createGardenTour(stand, { onExplore } = {}) {
     view.querySelector('img').replaceWith(picture);
     picture.addEventListener('load', succeed, { once: true });
     picture.addEventListener('error', fail, { once: true });
-    const suffix = '?v=survey2' + (refresh ? '&retry=' + Date.now() : '');
+    const suffix = '?v=atelier1' + (refresh ? '&retry=' + Date.now() : '');
     picture.sizes = '(max-width: 620px) 100vw, min(96vw, 85rem)';
     picture.srcset = [768, 1280, 1536].map(width => imagePath(scene.file, width) + suffix + ' ' + width + 'w').join(', ');
     picture.src = imagePath(scene.file, 1280) + suffix;

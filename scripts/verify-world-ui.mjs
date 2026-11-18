@@ -92,7 +92,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
     if (context === 'throw') throw new Error('Simulated GPU creation error');
     return context === 'null' ? null : rendererContext;
   };
-  const engineState = { deskProps: { notebook: false, lamp: true, drawer: false }, deskActionSequence: 0, catReady: false, landmarksReady: false, outdoorsReady: false, paused: reduced, lightingMode: 'auto', focus: 'room', mode: 'inside', travel: false, seated: true };
+  const engineState = { deskProps: { notebook: false, lamp: true, drawer: false, letter: false }, deskActionSequence: 0, catReady: false, landmarksReady: false, outdoorsReady: false, paused: reduced, lightingMode: 'auto', focus: 'room', mode: 'inside', travel: false, seated: true };
   const record = (name, value) => calls.push({ name, value });
   window.addEventListener('resize', () => record('resize'));
   const engine = {
@@ -139,7 +139,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
       } };
     },
     testImport: async url => {
-      const software = url.startsWith('./software-world.js');
+      const software = url.startsWith('./blender-software-world.js');
       if (software) {
         softwareImports++; record('softwareURL', url);
         if (softwareFails) throw new Error('Simulated CPU module failure');
@@ -249,7 +249,7 @@ assert.equal(clockOnly.contextRequests, 0); assert.equal(clockOnly.imports, 0, '
 emit(clockOnly.window, 'pagehide', { persisted: false }); const finalClock = clockOnly.byId('world-clock').textContent;
 await clockOnly.advance(120000); emit(clockOnly.window, 'pageshow'); assert.equal(clockOnly.byId('world-clock').textContent, finalClock);
 
-for (const context of ['null', 'throw', 'swiftshader', 'softpipe-generic']) {
+for (const context of ['null', 'throw']) {
   const h = harness({ context }); assertLanding(h);
   assert.equal(h.softwareImports, 0);
   await h.select3d(); await h.finishUnsupported();
@@ -263,6 +263,11 @@ for (const context of ['null', 'throw', 'swiftshader', 'softpipe-generic']) {
   h.select2d(); await h.select3d();
   assert.equal(h.contextRequests, 1); assert.equal(h.softwareImports, 1, 'The same software engine resumes without probing the GPU again');
   emit(h.window, 'pagehide', { persisted: false });
+}
+for (const driver of ['swiftshader','softpipe-generic']){
+  const active=await booted({context:driver});
+  assert.equal(active.softwareImports,0,'A working WebGL2 context renders the original scene on any GPU driver');
+  emit(active.window,'pagehide',{persisted:false});
 }
 const noCanvas = harness({ context: 'null', softwareFails: true });
 await noCanvas.select3d(); await tick();
@@ -496,7 +501,7 @@ assert.equal(seatedAgain.count('dispose'), 0);
 assert(!seatedAgain.byId('world-live-controls').hidden);
 
 const warm = await booted();
-assert.deepEqual(warm.deskButtons.map(button => button.dataset.deskAction).sort(), ['drawer', 'lamp', 'notebook']);
+assert.deepEqual(warm.deskButtons.map(button => button.dataset.deskAction).sort(), ['drawer', 'lamp', 'letter', 'notebook']);
 for (const button of warm.deskButtons) {
   const id = button.dataset.deskAction;
   assert(!button.disabled);

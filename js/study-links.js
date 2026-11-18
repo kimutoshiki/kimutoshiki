@@ -114,7 +114,7 @@ export function mountStudyLinks(world) {
       const request=++revision;
       loadingNotebook=true;
       // Keep the ordinary card and its native link usable while importing.
-      import('./notebook-view.js').then(({presentNotebook})=>{
+      import('./notebook-view.js?v=20261118-atelier1').then(({presentNotebook})=>{
         if(request!==revision || selected!=='blog' || signal.aborted)return;
         loadingNotebook=false;
         const setCover=mode==='live' ? open=>canvas.dispatchEvent(new CustomEvent('study-notebook-set',{detail:{open}})) : null;
@@ -150,17 +150,41 @@ export function mountStudyLinks(world) {
     on(el,'focus',()=>{focused=key;highlight();});
     on(el,'blur',()=>{if(focused===key){focused=null;highlight();}});
   }
+  // A marker occupies real screen space on top of a mesh. Treat a drag which
+  // starts on the marker exactly like a drag which starts on the canvas.
+  let swallowed=null;
+  for(const pin of live.values()){
+    let held=null;
+    on(pin,'pointerdown',event=>{
+      if(event.button!==0||held||mode!=='live')return;
+      swallowed=null;
+      held={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false};
+      pin.setPointerCapture?.(event.pointerId);
+    });
+    on(pin,'pointermove',event=>{
+      if(!held||held.id!==event.pointerId||mode!=='live')return;
+      const x=event.clientX-held.x,y=event.clientY-held.y;
+      if(!held.moved&&Math.hypot(x,y)<6)return;
+      held.moved=true;swallowed=pin;held.x=event.clientX;held.y=event.clientY;
+      const rect=canvas.getBoundingClientRect();
+      if(rect.width&&rect.height)canvas.dispatchEvent(new CustomEvent('study-look',{detail:{dx:-2.7*x/rect.width,dy:1.7*y/rect.height}}));
+    });
+    const end=event=>{if(held?.id===event.pointerId)held=null;};
+    on(pin,'pointerup',end);on(pin,'pointercancel',end);on(pin,'lostpointercapture',end);
+  }
   for(const el of pins){
     const key=keyOf(el);
     el.setAttribute('aria-controls',card.id);el.setAttribute('aria-expanded','false');
     on(el,'click',event=>{
+      if(swallowed===el && event.detail!==0){event.preventDefault();swallowed=null;return;}
       // Preserve modifier clicks and a second activation on an illustration link.
       if(event.ctrlKey || event.metaKey || event.shiftKey || event.altKey ||
          (selected===key && el.tagName==='A')) return;
       event.preventDefault();
-      if(mode==='live' && key==='blog' && selected!==key) {
-        const notebook=world.querySelector('[data-desk-action="notebook"]');
-        if(notebook && !notebook.disabled && notebook.getAttribute('aria-pressed')!=='true') notebook.click();
+      if(mode==='live' && ['blog','contact'].includes(key)){
+        const handled=!canvas.dispatchEvent(new CustomEvent('study-object-action',{cancelable:true,
+          detail:{id:key==='blog'?'notebook':'letter',source:el}}));
+        if(handled)return;
       }
       select(key,el,event.detail===0);
     });
@@ -187,7 +211,7 @@ export function mountStudyLinks(world) {
   on(canvas,'studysubject',({detail})=>{
     if(mode!=='live' || !detail) return;
     if(detail.type==='hover'){hovered=pages[detail.key]?detail.key:null;highlight();}
-    if(detail.type==='select' && pages[detail.key]) select(detail.key,canvas);
+    if(detail.type==='select' && pages[detail.key]) select(detail.key,detail.source||canvas,detail.source?.matches?.(':focus-visible')||false);
   });
   on(canvas,'worldstate',({detail})=>{
     if(typeof detail?.seated==='boolean') seated=detail.seated;
