@@ -1,0 +1,132 @@
+/* Reading typography shared by the portfolio's five content pages. */
+body.study-detail {
+  --font: "Hiragino Sans", "Yu Gothic", Meiryo, "Noto Sans CJK JP", sans-serif;
+  --mincho: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", serif;
+  --latin-serif: "Iowan Old Style", Palatino, Georgia, serif;
+  --numerals: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --ink: #2f2924;
+  --muted: #645a52;
+  --wine: #762b40;
+  --paper: #faf7ef;
+  --line: #d3c6b6;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: clamp(1.0625rem, 1rem + .22vw, 1.1875rem);
+  line-height: 1.85;
+  line-break: strict;
+}
+
+.logo-copy, .footer-logo, .study-page-heading h1, .section-title, .lead-quote,
+.timeline-title, .roadmap-body h3, .theme-title, .activity-title, .type-title,
+.blog-title, .photo-grid .gallery-photo figcaption strong, .photo-viewer-bottom h2 {
+  font-family: var(--mincho);
+  font-weight: 600;
+}
+.logo-copy { font-size: 1.25rem; letter-spacing: .07em; }
+.logo-copy small, .translation-link { font-family: var(--numerals); }
+.logo-copy small { font-size: .6875rem; letter-spacing: .12em; }
+.study-detail .site-header nav a, .menu-toggle { font-size: 1rem; }
+.study-detail .site-header { background: #faf7ef; }
+.study-detail .site-header nav a[aria-current="page"]::after { background: var(--wine); }
+.translation-link { display: inline-flex; align-items: center; min-height: 44px; font-size: .875rem; }
+
+.study-detail main > section.study-page-heading {
+  padding-block: clamp(1.8rem, 4.5vw, 4.2rem);
+  background: linear-gradient(110deg, #f4ede1, #eee5d7);
+  box-shadow: none;
+  border-bottom: 1px solid var(--line);
+}
+.page-heading-inner > div { min-width: 0; }
+.breadcrumbs { align-items: center; margin-bottom: 1.1rem; color: var(--muted); font-size: .875rem; }
+.study-page-heading h1 {
+  font-size: clamp(2.3rem, 1.6rem + 3.2vw, 4.5rem);
+  line-height: 1.32;
+  letter-spacing: .055em;
+}
+.study-detail .page-description { color: var(--muted); margin-top: .85rem; font-size: 1.125rem; }
+.study-detail .heading-photo {
+  width: clamp(9rem, 22vw, 17rem);
+  padding: .45rem .45rem 0;
+  background: #fffcf5;
+  border: 1px solid #cec2ae;
+  box-shadow: 0 4px 14px #34231314;
+  transform: none;
+}
+.study-detail .heading-photo img { border: 0; outline: 0; box-shadow: none; }
+.study-detail .heading-photo figcaption { padding: .4rem .2rem; color: var(--muted); font-size: .8125rem; }
+
+.section-title { font-size: clamp(1.75rem, 1.5rem + 1.05vw, 2.5rem); line-height: 1.5; }
+.section-eyebrow, .name-en, .email-label {
+  font-family: var(--latin-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: .025em;
+  color: var(--wine);
+}
+.section-eyebrow { font-size: 1.125rem; margin: 0 0 .3rem; }
+.name-en { font-size: 1.3rem; }
+.about-label, .blog-date, .timeline-year, .roadmap-date, .photo-number, .photo-counter {
+  font-family: var(--numerals);
+  font-variant-numeric: tabular-nums;
+}
+.about-label, .blog-date { font-size: .875rem; }
+.license-year, .about-sub { color: var(--muted); font-size: .9375rem; }
+.license-name, .about-value { font-size: 1.125rem; }
+.lead-quote { font-size: clamp(1.5rem, 1.25rem + .9vw, 2.15rem); }
+.about-lead, .lead-body, .future-text, .contact-desc, .theme-desc, .blog-content-inner {
+  font-size: inherit;
+  line-height: 1.95;
+  max-inline-size: 42em;
+}
+.timeline-title, .roadmap-body h3, .theme-title, .activity-title, .type-title, .blog-title {
+  font-size: clamp(1.25rem, 1.115rem + .58vw, 1.6rem);
+  line-height: 1.6;
+}
+.study-detail .activity-card { padding: clamp(1.2rem, 2vw, 1.75rem); }
+.email-address { font-family: var(--latin-serif); font-variant-numeric: lining-nums; letter-spacing: .005em; }
+.blog-content-inner p { margin-block-end: 1.15em; }
+.blog-content-inner h4 { font-size: 1.25rem; line-height: 1.6; }
+.filter-btn, .btn, .return-study a { min-height: 44px; font-size: 1rem; }
+.study-detail .keyword, .study-detail .theme-tag, .study-detail .cat-badge { font-size: .9375rem; }
+.photo-grid .gallery-photo figcaption strong, .photo-viewer-bottom h2 { font-size: 1.25rem; }
+.photo-grid .gallery-photo figcaption .photo-number, .photo-counter { font-size: .8125rem; }
+.photo-grid .gallery-photo figcaption div > span { font-size: .9375rem; color: var(--muted); }
+.photo-viewer button, .photo-viewer button.photo-close { width: 44px; height: 44px; }
+.photo-viewer[open] { grid-template-rows: 44px minmax(0, 1fr) auto; }
+.site-footer, .footer-brand p, .footer-col h2 { font-size: 1rem; }
+.footer-logo { font-size: 1.45rem; }
+.footer-bottom { font-size: .875rem; }
+
+@media (max-width: 1180px) {
+  .site-header nav { max-height: calc(100dvh - 76px); overflow: auto; }
+  .menu-toggle { min-height: 44px; }
+}
+@media (max-width: 760px) {
+  .page-heading-inner { align-items: center; }
+  .study-detail .heading-photo { width: 28%; margin-top: 0; }
+  .logo-copy { font-size: 1.125rem; }
+  .logo-copy small { font-size: .625rem; }
+  .study-detail .page-description { font-size: 1.0625rem; }
+  .timeline-year, .roadmap-date { font-size: 1rem; }
+  .about-grid { grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr)); }
+  .photo-viewer-bottom { align-items: center; }
+}
+@media (max-width: 540px) {
+  .page-heading-inner { flex-wrap: wrap; gap: 1.3rem; }
+  .page-heading-inner > div { flex: 1 0 100%; }
+  .study-detail .heading-photo {
+    display: flex;
+    align-items: end;
+    gap: .75rem;
+    width: auto;
+    max-width: 100%;
+    border: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .study-detail .heading-photo img { width: 5rem; }
+  .study-detail .heading-photo figcaption { text-align: start; padding: 0; }
+  .header-inner { padding-inline: clamp(.75rem, 4vw, 1.375rem); }
+}

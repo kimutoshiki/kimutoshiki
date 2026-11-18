@@ -6,7 +6,7 @@
 <title>木村紀喜のホームページ</title>
 <meta name="description" content="佐賀県唐津市出身。早稲田大学で小学校教育の研究と実践に取り組む木村紀喜のホームページ。プロフィール、研究・活動、ブログ、写真を紹介します。">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<meta name="theme-color" content="#eee5d5">
+<meta name="theme-color" content="#f7f4eb">
 <link rel="canonical" href="https://kimutoshiki.com/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ja_JP">
@@ -22,53 +22,77 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="alternate icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="css/world.css?v=20261107-live2">
+<link rel="stylesheet" href="css/world.css?v=20261118-study">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://kimutoshiki.com/#website","url":"https://kimutoshiki.com/","name":"木村紀喜のホームページ","alternateName":["木村紀喜","Toshiki Kimura"],"inLanguage":"ja","publisher":{"@id":"https://kimutoshiki.com/#person"}},{"@type":"Person","@id":"https://kimutoshiki.com/#person","name":"木村紀喜","alternateName":["木村 紀喜","Toshiki Kimura"],"url":"https://kimutoshiki.com/","description":"早稲田大学教職大学院で小学校教育、授業づくり、生成AIの教育利用を研究。佐賀県唐津市出身。","sameAs":["https://github.com/kimutoshiki"]}]}</script>
 </head>
 <body>
 <a class="skip-link" href="#home-menu">ページを選ぶ</a>
 <main class="world" id="main">
-<div class="world-stage" aria-hidden="true">
-<picture class="world-poster" hidden>
-<source media="(max-width:650px)" data-srcset="images/world/seated-day-mobile.webp">
-<img data-src="images/world/seated-day.webp" width="1400" height="1100" alt="" decoding="async">
-</picture>
-<noscript><picture class="world-poster"><source media="(max-width:650px)" srcset="images/world/seated-day-mobile.webp"><img src="images/world/seated-day.webp" width="1400" height="1100" alt=""></picture></noscript>
-</div>
-<canvas class="world-canvas" id="world-canvas" tabindex="-1" aria-hidden="true" aria-label="猫のいる書斎から庭へ歩ける3D空間。ドラッグで見回し、WASDキーか矢印キーで歩けます。" aria-describedby="world-help"></canvas>
-<div class="world-shade" aria-hidden="true"></div>
 <header class="world-header">
-<a class="world-mark" href="./"><h1 id="world-title">木村 紀喜<span lang="en">TOSHIKI KIMURA</span></h1></a>
-<nav class="world-nav" id="walking-navigation" aria-label="ページ">
+  <a class="world-mark" href="./" aria-label="木村紀喜のホームページ"><span aria-hidden="true" class="monogram">tk<span>.</span></span><span class="wordmark">木村紀喜のホームページ</span></a>
+  <nav class="world-nav" id="walking-navigation" aria-label="ページ">
 <a href="profile.html">プロフィール</a>
 <a href="research.html">研究・活動</a>
 <a href="blog.html">ブログ</a>
 <a href="photos.html">写真</a>
 <a href="contact.html">お問い合わせ</a>
 </nav>
-<div class="home-clock"><span>日本時間</span><time id="world-clock" aria-label="現在の日本時間">--:--</time><span id="world-time-phase"></span></div>
+  <div class="header-tools">
+    <div class="home-clock"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.4"/><path d="M12 7v5l3.6 2"/></svg><span>日本時間</span><time id="world-clock" aria-label="現在の日本時間">--:--</time><span id="world-time-phase"></span></div>
+    <button class="seat-return" id="world-seat" type="button" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M9 6.4 5.4 10m0 0 3.6 3.6M5.4 10h9A4.6 4.6 0 0 1 19 14.6v1.2"/></svg><span>席に戻る</span></button>
+  </div>
 </header>
-<section class="home-panel" id="home-panel" aria-label="ホームページのメニュー">
-<div class="home-intro" id="home-intro"><h2>メニュー</h2></div>
-<nav class="home-menu" id="home-menu" tabindex="-1" aria-label="各ページへ">
-<a href="profile.html"><span class="menu-number">01</span><span>プロフィール<small>経歴・学歴・資格</small></span><span aria-hidden="true">↗</span></a>
-<a href="research.html"><span class="menu-number">02</span><span>研究・活動<small>研究・実践報告</small></span><span aria-hidden="true">↗</span></a>
-<a href="blog.html"><span class="menu-number">03</span><span>ブログ<small>記事一覧</small></span><span aria-hidden="true">↗</span></a>
-<a href="photos.html"><span class="menu-number">04</span><span>写真<small>写真一覧</small></span><span aria-hidden="true">↗</span></a>
-<a href="contact.html"><span class="menu-number">05</span><span>お問い合わせ<small>連絡先</small></span><span aria-hidden="true">↗</span></a>
-</nav>
-<div class="home-memories" aria-label="掲載写真">
-<a href="photos.html"><img src="images/home/waseda.webp" width="320" height="240" alt="" decoding="async"><span>早稲田</span></a>
-<a href="blog.html"><img src="images/home/kyukeisha.webp" width="320" height="180" alt="" decoding="async"><span>東京唐津くんち・久敬社</span></a>
-</div>
-<p class="home-panel-credit" lang="en">© Toshiki Kimura</p>
+<section class="home-panel" id="home-panel" aria-label="プロフィールとメニュー">
+  <div class="home-intro" id="home-intro">
+    <h1 id="world-title">木村 紀喜</h1>
+    <p class="name-en" lang="en">Toshiki Kimura</p>
+    <p class="bio">佐賀県唐津市出身。早稲田大学で小学校教育の研究と実践に取り組んでいます。</p>
+  </div>
+  <nav class="home-menu" id="home-menu" tabindex="-1" aria-label="各ページへ">
+    <a href="profile.html"><span class="menu-symbol"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.4-4 3.2-6.5 7.5-6.5s7.1 2.5 7.5 6.5"/></svg></span><span class="menu-text">プロフィール<small>経歴・学歴・資格</small></span><span class="menu-arrow"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span></a>
+<a href="research.html"><span class="menu-symbol"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M3.5 5.5c3-1.3 5.6-1 8.5.7 2.9-1.7 5.5-2 8.5-.7v13c-3-1.3-5.6-1-8.5.7-2.9-1.7-5.5-2-8.5-.7zM12 6.2v13"/></svg></span><span class="menu-text">研究・活動<small>小学校教育と生成AI</small></span><span class="menu-arrow"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span></a>
+<a href="blog.html"><span class="menu-symbol"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 20l1.3-5.3L15.9 4.1a2.7 2.7 0 0 1 3.9 3.8L9.2 18.6zM13.9 6.1l3.9 3.9"/></svg></span><span class="menu-text">ブログ<small>記事一覧</small></span><span class="menu-arrow"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span></a>
+<a href="photos.html"><span class="menu-symbol"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M3 7.5h4l1.6-2.7h6.8L17 7.5h4v12H3z"/><circle cx="12" cy="13" r="3.2"/></svg></span><span class="menu-text">写真<small>写真一覧</small></span><span class="menu-arrow"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span></a>
+<a href="contact.html"><span class="menu-symbol"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M3 5.8h18v12.4H3zM3.8 6.5l8.2 6.4 8.2-6.4"/></svg></span><span class="menu-text">お問い合わせ<small>連絡先</small></span><span class="menu-arrow"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></span></a>
+  </nav>
+  <div class="home-memories" aria-label="掲載写真">
+    <a href="photos.html"><img src="images/home/waseda.webp" width="320" height="240" alt="" decoding="async"><span>早稲田</span></a>
+    <a href="blog.html"><img src="images/home/kyukeisha.webp" width="320" height="180" alt="" decoding="async"><span>東京唐津くんち・久敬社</span></a>
+  </div>
+  <p class="home-panel-credit" lang="en">© Toshiki Kimura</p>
 </section>
-<div class="home-entry" id="home-entry"><button type="button" id="world-stand" disabled><span id="world-stand-label">席を立つ</span><span aria-hidden="true">↗</span></button><p class="home-entry-note" id="world-entry-note">書斎を読み込んでいます…</p></div>
+<section class="home-studio" aria-label="書斎と散策">
+  <div class="studio-heading">
+    <h2>私の書斎</h2>
+    <p class="look-hint"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M3 12h18M7 8l-4 4 4 4m10-8 4 4-4 4"/></svg><span>ドラッグで見回す</span></p>
+  </div>
+  <div class="desk-view">
+    <div class="world-stage" aria-hidden="true"><picture class="world-poster" hidden>
+<source media="(max-width:650px)" data-srcset="images/world/seated-day-mobile.webp">
+<img data-src="images/world/seated-day.webp" width="1400" height="1100" alt="" decoding="async">
+</picture>
+<noscript><picture class="world-poster"><source media="(max-width:650px)" srcset="images/world/seated-day-mobile.webp"><img src="images/world/seated-day.webp" width="1400" height="1100" alt=""></picture></noscript></div>
+    <canvas class="world-canvas" id="world-canvas" tabindex="-1" aria-hidden="true" aria-label="木村紀喜の書斎。机の小物を押すと動きます。席を立つと早稲田と唐津をモチーフにした庭を自由に歩けます。" aria-describedby="world-prop-feedback world-help"></canvas>
+  </div>
+  <div class="home-entry" id="home-entry">
+    <div class="desk-controls">
+      <p class="desk-prompt" id="world-prop-feedback" role="status">小物をクリックすると動きます。</p>
+      <div class="prop-actions" role="group" aria-label="机の小物を動かす">
+        <button type="button" id="world-prop-notebook" data-desk-action="notebook" aria-pressed="false" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M5 3.5h13a1.5 1.5 0 0 1 1.5 1.5v15.5H6.3A2.3 2.3 0 0 1 4 18.2V5a1.5 1.5 0 0 1 1-1.5zM8 3.5v14M4 18.5c0-1.1.8-1.7 2-1.7h13.5M11 8h5"/></svg>ノート</button>
+        <button type="button" id="world-prop-lamp" data-desk-action="lamp" aria-pressed="false" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M6 12.8l4.6-8.6 6.7 2.2.8 7.8zM13 14.1l1.1 5.7M9 20h9"/></svg>ライト</button>
+        <button type="button" id="world-prop-drawer" data-desk-action="drawer" aria-pressed="false" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M3 8l2-3.5h14L21 8v12H3zM3 8h18M3 14h18M10 10.8h4M10 16.8h4"/></svg>引き出し</button>
+      </div>
+    </div>
+    <div class="stand-wrap">
+      <button type="button" id="world-stand" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 20V4h9v16M2 20h13M10.5 12H21m-4.3-4.3L21 12l-4.3 4.3"/></svg><span class="stand-copy"><span id="world-stand-label">席を立つ</span><small>早稲田と唐津を歩く</small></span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button>
+    </div>
+    <p class="home-entry-note" id="world-entry-note">書斎を読み込んでいます…</p>
+  </div>
+</section>
 <div class="world-location"><span class="location-dot" aria-hidden="true"></span><span id="world-location-name">書斎</span></div>
-<p class="visually-hidden">佐賀県唐津市出身。早稲田大学で小学校教育の研究と実践に取り組んでいます。木の机と猫のいる書斎から外へ出ると、唐津城、旧唐津銀行、大隈講堂、大隈重信像があります。</p>
 <aside class="world-caption" id="world-caption" aria-label="行き先" hidden>
-<p id="world-caption-name"></p>
-<a id="world-caption-link" href="profile.html">関連するページへ <span aria-hidden="true">↗</span></a>
+  <p id="world-caption-name"></p>
+  <a id="world-caption-link" href="profile.html">関連するページへ <span aria-hidden="true">↗</span></a>
 </aside>
 <footer class="world-footer">
 <div class="world-live-controls" id="world-live-controls" hidden>
@@ -99,20 +123,19 @@
 <div class="settings-panel">
 <p class="places-heading">操作と設定</p>
 <p class="world-help" id="world-help" hidden>ドラッグで見回す<br><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> または矢印キーで歩く<br>画面の矢印を押し続けても歩けます。<br><kbd>Esc</kbd>で移動を止めます。</p>
-<button class="setting-row" id="world-motion" type="button" aria-pressed="false"><span>猫の動き</span><span id="world-motion-label">動いています</span></button>
+<button class="setting-row" id="world-motion" type="button" aria-pressed="false"><span>風景と猫の動き</span><span id="world-motion-label">動いています</span></button>
 <button class="setting-row" id="world-lighting" type="button"><span>部屋と庭の光</span><span id="world-lighting-label">現在の時刻</span></button>
-<button class="setting-row" id="world-seat" type="button"><span>席に戻って座る</span><span aria-hidden="true">↩</span></button>
 <button class="setting-row" id="world-reset" type="button"><span>書斎に戻る</span><span aria-hidden="true">↩</span></button>
 </div>
 </details>
+
 </div>
-<p class="world-gesture-hint" aria-hidden="true">ドラッグで見回す <span>·</span> 矢印キーで歩く</p>
+<p class="world-gesture-hint">ドラッグで見回す <span>·</span> 矢印キーで歩く</p>
 </div>
-<p class="world-copyright">© <span lang="en">Toshiki Kimura</span></p>
 </footer>
 <p class="visually-hidden" id="world-status" role="status" aria-live="polite"></p>
-<noscript><style>.home-clock,#world-stand,.home-entry-note{display:none}</style></noscript>
+<noscript><style>.home-clock,.home-entry,.look-hint{display:none}</style></noscript>
 </main>
-<script src="js/world-ui.js?v=20261107-live2" defer></script>
+<script src="js/world-ui.js?v=20261118-study" defer></script>
 </body>
 </html>

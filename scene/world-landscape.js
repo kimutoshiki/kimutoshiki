@@ -1,4 +1,5 @@
 import { HOME, LANDMARK_SITES, REVIEW_VIEWS, WORLD_BOUNDS } from './world-layout.js';
+import { createWalkDistricts } from './walk-districts.js';
 import { mergeStaticDraws, cacheStaticLocalMatrices, staticDrawStats } from './static-batching.js';
 
 /** A continuous, ground-level garden: one metre is one metre indoors and out. */
@@ -11,13 +12,18 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
   function grain(kind, size = 256) {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = size;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = kind === 'lawn' ? '#869168' : kind === 'stone' ? '#c3b7a1' : '#75634e';
-    ctx.fillRect(0, 0, size, size);
-    for (let i = 0; i < size * size / 2; i++) {
-      ctx.fillStyle = i % 3 === 0 ? `rgba(245,233,200,${.03 + random() * .1})` : `rgba(42,49,28,${.025 + random() * .12})`;
-      const x = random() * size, y = random() * size;
-      ctx.fillRect(x, y, kind === 'lawn' ? .7 : 1 + random() * 2, kind === 'lawn' ? 2 + random() * 4 : 1);
+    const pixels = ctx.createImageData(size, size);
+    const base = kind === 'lawn' ? [134,145,104] : kind === 'stone' ? [195,183,161] : [117,99,78];
+    // Fill one typed array. Thousands of fillStyle changes and subpixel
+    // canvas draw calls previously competed with the first outdoor frame.
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+      const grain = (random()-.5)*17, i = (y*size+x)*4;
+      const stroke = kind === 'wood' ? 5*Math.sin(y*.68+.58*Math.sin(x*.12)) :
+        kind === 'lawn' ? 2*Math.sin(x*.9+.23*y) : 0;
+      for (let c=0;c<3;c++) pixels.data[i+c]=base[c]+grain+stroke;
+      pixels.data[i+3]=255;
     }
+    ctx.putImageData(pixels,0,0);
     if (kind === 'stone') {
       ctx.strokeStyle = '#a89b84'; ctx.lineWidth = 1.5;
       for (let row = 0; row < 4; row++) {
@@ -45,6 +51,12 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
   }
   function plane(name, material, x, z, w, d, y = -.001, span = 4, segments = 1) {
     const geo = new T.PlaneGeometry(w, d, segments, segments); geo.rotateX(-Math.PI / 2);
+    // These horizontal surfaces have exactly one normal direction. A normalized
+    // byte per component retains it exactly, including on the horizon grid.
+    const normals=geo.getAttribute('normal');
+    const packedNormals=new Int8Array(normals.count*3);
+    for(let i=0;i<normals.count;i++) packedNormals[i*3+1]=127;
+    geo.setAttribute('normal',new T.BufferAttribute(packedNormals,3,true));
     const uv = geo.getAttribute('uv'); for (let i = 0; i < uv.count; i++) uv.setXY(i, (x + (uv.getX(i) - .5) * w) / span, (z + (.5 - uv.getY(i)) * d) / span);
     geometries.add(geo); const mesh = new T.Mesh(geo, material); mesh.name = name; mesh.position.set(x, y, z); mesh.receiveShadow = true; group.add(mesh); return mesh;
   }
@@ -126,15 +138,26 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
     box('Continuous stone garden edging', edging, side * 4, -.04, 49, .12, .08, 62, false);
     plane('Gravel border', gravel, side * 4.5, 49, .8, 62, -.004, 1.3);
   }
+  const benchTransforms = new Map([[timber,[]],[iron,[]]]), benchBatches = [];
+  function benchPart(material,x,y,z,w,h,d) {
+    const transform=new T.Object3D(); transform.position.set(x,y,z); transform.scale.set(w,h,d); transform.updateMatrix();
+    benchTransforms.get(material).push(transform.matrix);
+  }
   for (const z of [12, 31, 61, 77]) for (const side of [-1, 1]) {
     const x = side * 5.8;
     obstacle('garden-bench-'+side+'-'+z, x, z+.19, 1.6, .43, .95);
-    for (let slat = 0; slat < 5; slat++) box('Garden bench seat slat', timber, x, .46, z + slat * .075, 1.6, .045, .06);
-    for (let slat = 0; slat < 3; slat++) box('Garden bench back slat', timber, x, .67 + slat * .105, z + .37, 1.6, .075, .035);
+    for (let slat = 0; slat < 5; slat++) benchPart(timber, x, .46, z + slat * .075, 1.6, .045, .06);
+    for (let slat = 0; slat < 3; slat++) benchPart(timber, x, .67 + slat * .105, z + .37, 1.6, .075, .035);
     for (const offset of [-.6, .6]) {
-      box('Garden bench leg', iron, x + offset, .23, z + .05, .045, .46, .045);
-      box('Garden bench rear support', iron, x + offset, .44, z + .34, .045, .88, .045);
+      benchPart(iron, x + offset, .23, z + .05, .045, .46, .045);
+      benchPart(iron, x + offset, .44, z + .34, .045, .88, .045);
     }
+  }
+  for(const [material,matrices] of benchTransforms) {
+    const seats=new T.InstancedMesh(cube,material,matrices.length);
+    seats.name='Instanced garden bench '+material.name;
+    matrices.forEach((matrix,i)=>seats.setMatrixAt(i,matrix));seats.computeBoundingSphere();
+    seats.castShadow=seats.receiveShadow=true;group.add(seats);benchBatches.push(seats);
   }
   // A few mature trees establish ordinary human scale and a shaded garden edge.
   const trees = [
@@ -176,7 +199,9 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
     mesh.name='Individual cupped leaves — garden cluster '+cluster;mesh.userData.vegetationCluster=cluster;return mesh;
   });
   const color = new T.Color(),leafIndices=new Uint32Array(8);
-  for (const r of crownRecords) for(let j=0;j<leavesPerCluster;j++) {
+  // Interleave every tree within a batch. Reducing its visible instance count
+  // at a distance thins all crowns evenly without dropping an entire tree.
+  for(let j=0;j<leavesPerCluster;j++) for (const r of crownRecords) {
     const angle=random()*Math.PI*2, vertical=random()*2-1, reach=Math.cbrt(random()), horizontal=Math.sqrt(1-vertical*vertical);
     dummy.position.set(r.p[0]+Math.cos(angle)*horizontal*reach*r.s[0],r.p[1]+vertical*reach*r.s[1],r.p[2]+Math.sin(angle)*horizontal*reach*r.s[2]);
     dummy.rotation.set((random()-.5)*1.8,random()*Math.PI*2,(random()-.5)*1.4);
@@ -241,13 +266,36 @@ export function createWorldLandscape(T, { onTextureLoad = () => {} } = {}) {
     const daylight=Math.max(0,Math.min(1,snapshot.daylight??1)),dusk=snapshot.dusk||0;fogTint.set(snapshot.fogColor||'#dce0d1');
     ridgeMaterials.forEach((material,i)=>{tint.set(ridgeDefinitions[i].day);nightTint.set(ridgeDefinitions[i].night);material.color.copy(nightTint).lerp(tint,daylight).lerp(fogTint,dusk*.10+i*.035);});
   }
-  function setInteriorView(indoors){const next=!indoors;if(trunks.visible===next)return false;trunks.visible=next;for(const mesh of crowns)mesh.visible=next;return true;}
-  mergeStaticDraws(T, group, { byParent: false, skipRoots: new Set([trunks,...crowns,...ridgeMeshes]) }); cacheStaticLocalMatrices(group);
+  const district = createWalkDistricts(T,{obstacle, materials, geometries, textures});
+  group.add(district.root);
+  const treeGroups = Array.from({length:crowns.length},()=>[]);
+  for(const [x,z] of trees){
+    const band = z<0 ? 0 : z<40 ? 1 : z<75 ? 2 : 3;
+    treeGroups[band*2+Number(x>=0)].push([x,z]);
+  }
+  let lastDetailX=Infinity,lastDetailZ=Infinity;
+  function update(delta,enabled,position) {
+    if(position && (position.x-lastDetailX)**2+(position.z-lastDetailZ)**2>.75**2) {
+      lastDetailX=position.x;lastDetailZ=position.z;
+      for(const [i,mesh] of crowns.entries()) {
+        let distanceSquared=Infinity;
+        for(const [x,z] of treeGroups[i]) distanceSquared=Math.min(distanceSquared,(x-position.x)**2+(z-position.z)**2);
+        // Wide continuous transition preserves rich near silhouettes. Buffers and
+        // their bounds stay shared and fixed; no GPU uploads are needed to switch.
+        const far=Math.min(1,Math.max(0,(Math.sqrt(distanceSquared)-15)/50));
+        mesh.count=Math.round(leafIndices[i]*(1-.66*far));
+      }
+    }
+    return district.update(delta,enabled,position);
+  }
+  function setInteriorView(indoors){const next=!indoors;if(trunks.visible===next)return false;trunks.visible=next;district.root.visible=next;for(const mesh of crowns)mesh.visible=next;return true;}
+  mergeStaticDraws(T, group, { byParent: false, skipRoots: new Set([trunks,...crowns,...ridgeMeshes,...benchBatches,district.root]) });
+  cacheStaticLocalMatrices(group,{movable:new Set([group,district.boat])});
   group.updateMatrixWorld(true);
-  const stats = { ...staticDrawStats(group), externalRequests: 0, textures: textures.size, maxTextureSide: 256, trees: trees.length, vegetationBatches:crowns.length+1, mountainLayers:ridgeMeshes.length, mountainTriangles:ridgeMeshes.reduce((sum,mesh)=>sum+mesh.geometry.index.count/3,0), groundY: 0, continuousGround: true };
+  const stats = { ...staticDrawStats(group), externalRequests: 0, textures: textures.size, maxTextureSide: 256, trees: trees.length+district.trees, vegetationBatches:crowns.length+3, mountainLayers:ridgeMeshes.length, mountainTriangles:ridgeMeshes.reduce((sum,mesh)=>sum+mesh.geometry.index.count/3,0), groundY: 0, continuousGround: true };
   group.userData.landscapeStats = stats;
   onTextureLoad('garden-procedural-surfaces');
-  return { group, stats, collisions, materials: { stone, edging, grass, timber, iron }, cameraPlan: { ...REVIEW_VIEWS.interior, groundY: 0, bounds: WORLD_BOUNDS }, setTime,setInteriorView,update() {},
+  return { group, stats, collisions, materials: { stone, edging, grass, timber, iron }, cameraPlan: { ...REVIEW_VIEWS.interior, groundY: 0, bounds: WORLD_BOUNDS }, setTime,setInteriorView,update,wantsMotion:district.wantsMotion,
     dispose() { if (disposed) return; disposed = true; group.traverse(o => { if (o.geometry) geometries.add(o.geometry); }); geometries.forEach(g => g.dispose()); textures.forEach(t => t.dispose()); materials.forEach(m => m.dispose()); },
   };
 }

@@ -15,6 +15,8 @@
   const status = byId('world-status'), locationName = byId('world-location-name');
   const focusButtons = [...document.querySelectorAll('[data-world-focus]')];
   const walkButtons = [...document.querySelectorAll('[data-walk]')];
+  const deskButtons = [...document.querySelectorAll('[data-desk-action]')];
+  const deskFeedback = byId('world-prop-feedback');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const subjects = {
     'landmark-karatsu-castle': { label: '唐津城', href: 'photos.html', link: '写真を見る' },
@@ -27,7 +29,7 @@
   let launching = false, session = 0, wantsSeat = false, seatTimer, clockTimer;
   let bootFrame, bootTimer, viewportObserver, canvasVisible = true;
   const clockFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-  let posterPhase = '';
+  let posterPhase = '', tour, lastDeskAction = 0;
   function updateClock() {
     const now = new Date(), label = clockFormat.format(now), hour = Number(label.slice(0, 2));
     clock.textContent = label; clock.setAttribute('datetime', now.toISOString());
@@ -35,6 +37,7 @@
     phaseLabel.textContent = phase === 'night' ? '夜間' : phase === 'dusk' ? (hour < 8 ? '朝' : '夕方') : '日中';
     if (failed && phase !== posterPhase) {
       posterPhase = phase;
+      if (tour) { tour.setPhase(phase); return; }
       const picture = document.querySelector('.world-poster'); if (picture) picture.hidden = false;
       const photo = document.querySelector('.world-poster img'), mobile = document.querySelector('.world-poster source');
       if (mobile) mobile.srcset = 'images/world/seated-' + phase + '-mobile.webp';
@@ -55,6 +58,14 @@
     state = { ...state, ...next };
     const ready = !!engine && firstFrame && !state.seated && state.posture !== 'standing-up' && state.posture !== 'sitting-down';
     stand.disabled = !engine || !firstFrame || !state.seated;
+    for (const button of deskButtons) {
+      button.disabled = stand.disabled;
+      button.setAttribute('aria-pressed', String(!!state.deskProps?.[button.dataset.deskAction]));
+    }
+    if (state.deskActionSequence && state.deskActionSequence !== lastDeskAction) {
+      lastDeskAction = state.deskActionSequence;
+      deskFeedback.textContent = state.deskStatus;
+    }
     seat.disabled = !ready;
     if (wantsSeat && state.seated && engine) { clearTimeout(seatTimer); seatTimer = setTimeout(returnToHome, 0); }
     travel.disabled = !ready || (!state.outdoorsReady && !state.outdoorsError && state.mode !== 'outside' && !state.travel);
@@ -66,7 +77,7 @@
     retry.disabled = !engine || !firstFrame || state.outdoorsLoading;
     locationName.textContent = state.mode === 'outside' ? '庭' : '書斎';
     motion.setAttribute('aria-pressed', String(state.paused));
-    motion.setAttribute('aria-label', state.paused ? '猫の動きを再開する' : '猫の動きを止める');
+    motion.setAttribute('aria-label', state.paused ? '風景と猫の動きを再開する' : '風景と猫の動きを止める');
     motionLabel.textContent = state.paused ? '停止中' : '動いています';
     lightingLabel.textContent = {auto:'現在の時刻', day:'昼を眺める', night:'夜を眺める'}[state.lightingMode];
     lighting.setAttribute('aria-label', '光：' + lightingLabel.textContent + '。クリックで切り替え');
@@ -77,7 +88,7 @@
       captionLink.hidden = !subject.href;
       if (subject.href) { captionLink.href = subject.href; captionLink.textContent = subject.link + ' ↗'; }
     }
-    if (firstFrame && state.seated) announce('書斎を表示しています。各ページのメニューと、席を立つボタンをご利用いただけます。');
+    if (firstFrame && state.seated) announce('書斎を表示しています。机の小物を選ぶか、席を立って庭を歩けます。');
     else if (firstFrame && state.posture === 'standing-up') announce('席を立っています。');
     else if (firstFrame) announce(state.travel ? (subject?.label || (state.mode === 'inside' ? '庭' : '書斎')) + 'へ歩いています。途中で止められます。' : (subject?.label || locationName.textContent) + '。ドラッグで見回し、矢印キーで歩けます。');
   }
@@ -111,9 +122,15 @@
     controls.hidden = true; help.hidden = true; caption.hidden = true;
     canvas.tabIndex = -1; canvas.setAttribute('aria-hidden', 'true');
     travel.disabled = true;
-    [...focusButtons, ...walkButtons].forEach(button => { button.disabled = true; });
+    [...focusButtons, ...walkButtons, ...deskButtons].forEach(button => { button.disabled = true; });
     engine?.dispose?.(); engine = undefined;
-    announce('各ページは上のメニューからご覧いただけます。');
+    announce('各ページはメニューからご覧いただけます。');
+    import('./study-tour.js?v=20261118-study').then(async ({ mountStudyTour }) => {
+      if (disposed) return;
+      const result = await mountStudyTour({ phase: posterPhase });
+      if (disposed) result?.destroy();
+      else { tour = result; tour?.setPhase(posterPhase); }
+    }).catch(() => { /* The original still and the five links remain usable. */ });
   }
   function showHome(show) {
     homePanel.hidden = !show; homeMenu.hidden = !show; homeIntro.hidden = !show; homeEntry.hidden = !show;
@@ -136,6 +153,9 @@
     entryNote.hidden = true; syncState();
   }
   canvas.addEventListener('worldstate', event => { if (engine || launching) syncState(event.detail); });
+  for (const button of deskButtons) button.addEventListener('click', () => {
+    if (engine && !button.disabled && state.seated) engine.interactDesk(button.dataset.deskAction);
+  });
   travel.addEventListener('click', () => {
     if (!engine || travel.disabled) return;
     releasePad(); closePanels();
@@ -240,9 +260,6 @@
     if (engine.standUp?.() === false) { showHome(true); return; }
     refresh(); canvas.focus({ preventScroll: true });
   });
-  const warmOutside = () => { if (!disposed && !failed) engine?.prewarmExterior?.(); };
-  stand.addEventListener('pointerenter', warmOutside);
-  stand.addEventListener('focus', warmOutside);
   async function launch() {
     if (disposed || failed || launching || engine) return;
     launching = true;
@@ -253,7 +270,7 @@
     try {
       const rendererContext = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
       if (!rendererContext) { fail(new Error('WebGL2 is unavailable')); return; }
-      const { mountWorld } = await import('../scene/world.bundle.js?v=20261107-live2');
+      const { mountWorld } = await import('../scene/world.bundle.js?v=20261118-study');
       if (!active()) return;
       const mounted = await mountWorld({ canvas, rendererContext, seated: true, autoTime: true, reducedMotion: reducedMotion.matches,
         onReady: () => { if (active()) ready(); },
@@ -278,7 +295,7 @@
     releasePad(); engine?.stopMovement?.(); clearTimeout(clockTimer);
     if (event.persisted) return;
     disposed = true; session++; clearTimeout(seatTimer); clearTimeout(bootTimer); cancelAnimationFrame(bootFrame);
-    viewportObserver?.disconnect(); engine?.dispose?.();
+    viewportObserver?.disconnect(); tour?.destroy(); engine?.dispose?.();
   });
   window.addEventListener('pageshow', () => { if (!disposed) scheduleClock(); });
 })();

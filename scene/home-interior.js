@@ -1,4 +1,5 @@
 import { createRoom } from './room-model.js';
+import { createDeskActions, createDeskJournal } from './desk-interactions.js';
 import { surface, prepareBoxSurfaceUVs, ensureSurfaceUV, SURFACES } from './surface-materials.js';
 import { mergeStaticDraws, cacheStaticLocalMatrices } from './static-batching.js';
 
@@ -18,7 +19,8 @@ export const HOME_FRONT_WINDOW = Object.freeze({ x: .85, width: 1.4, sill: .8, h
 export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange = () => {}, catAsset, loadCatDetail } = {}) {
   let disposed = false, landmarks, clockSnapshot;
   const group = new T.Group(); group.name = 'Home · the original warm study';
-  const original = createRoom(T, { worldHome: true, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
+  let journal;
+  const original = createRoom(T, { worldHome: true, createNotebook: root => { journal=createDeskJournal(T,root); }, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
   original.lampLight.intensity *= HOME_SCALE * HOME_SCALE;
   original.lampLight.distance *= HOME_SCALE;
   const room = original.group; room.scale.setScalar(HOME_SCALE); room.position.y = .0108; group.add(room);
@@ -188,9 +190,10 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
   prepareBoxSurfaceUVs(T,group);
   group.traverse(o=>{if(!o.isMesh)return;for(const material of Array.isArray(o.material)?o.material:[o.material]){const spec=SURFACES[material.userData.surface?.key];if(spec)ensureSurfaceUV(T,o.geometry,spec.span);}o.geometry.userData.surfaceUVPrepared=true;});
   const skipRoots = new Set([original.cat.group, original.cat.contactShadow, original.blinds.group, original.clock.group]);
-  const protectedObjects = new Set([map, rug, floor].filter(Boolean));
+  const deskActions = createDeskActions(T, {journal, lampLight:original.lampLight, drawer:original.drawers[0], desk:room.getObjectByName('Writing desk')});
+  const protectedObjects = new Set([map, rug, floor, ...deskActions.protectedObjects].filter(Boolean));
   // Keep selection roots and furniture identities but combine their static parts.
-  const preserveGroups = new Set([room.getObjectByName('Writing desk'),chair,room.getObjectByName('Oak and iron window workbench'),...targets.map(t=>t.object)].filter(Boolean));
+  const preserveGroups = new Set([room.getObjectByName('Writing desk'),chair,room.getObjectByName('Oak and iron window workbench'),...deskActions.preserveGroups,...targets.map(t=>t.object)].filter(Boolean));
   const batchReport = mergeStaticDraws(T, group, {byParent:false,skipRoots,protectedObjects,preserveGroups});
   cacheStaticLocalMatrices(shell);
   const metadata = {
@@ -237,7 +240,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
     });
   }
   return {
-    group,targets,collisions,metadata,cat:original.cat,lampLight:original.lampLight,clock:original.clock,landmarksReady,
+    group,targets,collisions,metadata,deskActions,cat:original.cat,lampLight:original.lampLight,clock:original.clock,landmarksReady,
     refine,loadMiniatures,
     updateClock(snapshot){clockSnapshot=snapshot;landmarks?.updateClock?.(snapshot);},
     update(delta,enabled=true){return original.blinds.update(delta,enabled);},
