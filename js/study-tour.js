@@ -70,7 +70,7 @@ function makeGarden(stand, signal) {
 
 export function mountStudyTour({ phase = 'day', hotspots = {} } = {}) {
   const world = document.getElementById('main'), frame = world.querySelector('.desk-view');
-  const picture = frame.querySelector('.world-poster'), original = picture.querySelector('img');
+  const picture = frame.querySelector('.world-poster');
   const stand = document.getElementById('world-stand'), label = document.getElementById('world-stand-label');
   const sublabel = stand.querySelector('small'), hint = world.querySelector('.look-hint');
   const note = document.getElementById('world-entry-note'), feedback = document.getElementById('world-prop-feedback');
@@ -131,7 +131,10 @@ export function mountStudyTour({ phase = 'day', hotspots = {} } = {}) {
   function render(message) {
     // A second tap while an image is loading supersedes it, even if it returns to the current view.
     if (pending) { pending.onload = pending.onerror = null; pending.removeAttribute('src'); pending = null; }
-    if (shownLight === light && shownMask === mask) return;
+    if (shownLight === light && shownMask === mask) {
+      if (message) feedback.textContent = message;
+      return;
+    }
     const wantedLight = light, wantedMask = mask;
     const image = new Image();
     pending = image; image.decoding = 'async'; image.alt = ''; image.width = 1152; image.height = 780;

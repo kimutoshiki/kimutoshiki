@@ -20,7 +20,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
   let disposed = false, landmarks, clockSnapshot;
   const group = new T.Group(); group.name = 'Home · the original warm study';
   let journal;
-  const original = createRoom(T, { worldHome: true, createNotebook: root => { journal=createDeskJournal(T,root); }, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
+  const original = createRoom(T, { worldHome: true, createNotebook: root => { journal=createDeskJournal(T,root,onTextureLoad); }, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
   original.lampLight.intensity *= HOME_SCALE * HOME_SCALE;
   original.lampLight.distance *= HOME_SCALE;
   const room = original.group; room.scale.setScalar(HOME_SCALE); room.position.y = .0108; group.add(room);
@@ -220,7 +220,7 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
     try {
       const { createDeskLandmarks } = await import('./desk-landmarks.js');
       if(disposed){startLandmarks(null);return null;}
-      const result = await createDeskLandmarks(T, {waitForFonts:false,yieldBetweenModels:true});
+      const result = await createDeskLandmarks(T, {waitForFonts:false,yieldBetweenModels:true,onTextureLoad});
       if(disposed){disposeTree(result.group);startLandmarks(null);return null;}
       landmarks=result;if(clockSnapshot)landmarks.updateClock?.(clockSnapshot);room.add(result.group);group.updateMatrixWorld(true);
       for(const target of result.targets){target.anchor=target.object.localToWorld(new T.Vector3(0,.4,0));targets.push(target);}

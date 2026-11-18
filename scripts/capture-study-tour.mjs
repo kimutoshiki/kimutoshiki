@@ -14,7 +14,7 @@ try {
   const page = await browser.newPage({viewport:{width:1152,height:780}, deviceScaleFactor:1});
   page.on('pageerror', e => console.error(e.message));
   await page.route('**/tour-capture.html', route => route.fulfill({contentType:'text/html',body:
-    '<!doctype html><meta charset="utf-8"><style>*{margin:0}canvas{display:block;width:100vw;height:100vh}</style><canvas></canvas>'}));
+    '<!doctype html><html lang="ja"><meta charset="utf-8"><link rel="stylesheet" href="/css/site-fonts.css"><style>*{margin:0}canvas{display:block;width:100vw;height:100vh}</style><canvas></canvas>'}));
   await page.goto(preview + '/tour-capture.html');
   await page.evaluate(async () => {
     const T = await import('/js/vendor/three.module.min.js');
@@ -41,6 +41,7 @@ try {
     return state.catReady && state.miniaturesReady;
   },null,{timeout:180000});
   await page.waitForLoadState('networkidle');
+  await page.evaluate(() => document.fonts.ready.then(() => true));
   await page.evaluate(() => {
     const {world,scene,camera,renderer,T} = window.fixture;
     world.setRenderingActive(false);
@@ -96,10 +97,10 @@ try {
   await page.waitForLoadState('networkidle');
   await page.evaluate(() => window.fixture.world.setRenderingActive(false));
   const views = [
-    ['okuma-auditorium',[-1,1.95,23],[-25,14,48],57],
-    ['karatsu-castle',[4.5,2.2,37],[25,11.5,66],52],
-    ['okuma-statue',[-2.3,1.62,13],[-7,2.8,22],46],
-    ['karatsu-bank',[-1.8,1.8,16.2],[19,5.9,25],54],
+    ['okuma-auditorium',[-21,3,15],[-25,15,48],61],
+    ['karatsu-castle',[2,3.5,42],[25,10.8,66],57],
+    ['okuma-statue',[2.75,1.95,19],[-7,3,22],48],
+    ['karatsu-bank',[-3,4,34],[19,5.8,25],57],
   ];
   for(const [name,eye,target,fov] of views){
     const image = await page.evaluate(({eye,target,fov}) => {

@@ -425,6 +425,12 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     else if (key === 'home') { event.preventDefault(); returnHome(); }
   });
   listen(window, 'keyup', event => { if (pressed.delete(event.key.toLowerCase())) { keyMovement(); revision++; } });
+  // Hiding a loading note, loading a typeface or wrapping toolbar text can
+  // change the canvas size without changing the browser window.
+  const sizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
+    if (!disposed && (width !== canvas.clientWidth || height !== canvas.clientHeight)) resize();
+  });
+  sizeObserver?.observe(canvas);
   listen(window, 'blur', stopMovement); listen(canvas, 'blur', stopMovement); listen(window, 'resize', resize);
   listen(document, 'visibilitychange', () => { visible = !document.hidden; stopMovement(); suspendFrames(); if (visible) { revision++; wake(); } });
   function setRenderingActive(value) {
@@ -435,7 +441,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     emit();
   }
   function dispose() {
-    if (disposed) return; disposed = true; abort.abort(); suspendFrames(); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose();surfaceOwners.forEach(owner=>owner.dispose()); home.dispose?.(); landmarks?.dispose(); landscape?.dispose(); boundary?.dispose(); skyOwner.dispose(); renderer.dispose();
+    if (disposed) return; disposed = true; sizeObserver?.disconnect(); abort.abort(); suspendFrames(); cancelAnimationFrame(paintRaf); clearTimeout(paintTimer); listeners.forEach(remove => remove()); navigation.dispose();surfaceOwners.forEach(owner=>owner.dispose()); home.dispose?.(); landmarks?.dispose(); landscape?.dispose(); boundary?.dispose(); skyOwner.dispose(); renderer.dispose();
   }
   listen(canvas, 'webglcontextlost', event => { event.preventDefault(); dispose(); onError(new Error('World graphics context lost')); });
   applyTime(true); resize(); draw(0, true);firstFrameReady=true; onReady(); onProgress({ phase: 'home' }); emit(true); raf = requestAnimationFrame(animate);

@@ -1,0 +1,32 @@
+/* Japanese glyphs for browsers without locally installed Japanese fonts. */
+@font-face {
+  font-family: "Study Gothic";
+  src: url("../fonts/sans-home-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Study Gothic";
+  src: url("../fonts/sans-home-bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Study Mincho";
+  src: url("../fonts/serif-home-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Study Mincho";
+  src: url("../fonts/serif-home-bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}

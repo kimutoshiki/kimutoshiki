@@ -65,7 +65,7 @@ try {
     }
     await settledStudy(page);
     assert(await page.evaluate(() => window.__glCalls > 0), 'homepage must automatically create a real WebGL context');
-    assert(!requests.some(url => /\/images\/world\/seated-/.test(url)), 'normal live entry must not download a still poster');
+    assert(!requests.some(url => /\/images\/world\/(?:seated-|tour\/)/.test(url)), 'normal live entry must not download a still poster');
     assert.equal(await page.locator('#world-clock').textContent(), night ? '23:42' : '12:42');
     assert.equal(await page.locator('#home-menu a').count(), 5);
     for (const link of await page.locator('#home-menu a').all()) assert(await link.isVisible());
@@ -85,6 +85,7 @@ try {
     assert(await page.evaluate(() => [...document.querySelectorAll('.home-memories img')].every(img => img.complete && img.naturalWidth > 0)));
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no horizontal overflow');
     assert(!/FROM KARATSU|書斎へ、ようこそ|唐津から早稲田へ/.test(await page.locator('body').innerText()));
+    await page.evaluate(() => document.fonts.ready.then(() => true));
     await picture(page, name, true);
     assert.deepEqual(responses, []); assert.deepEqual(errors, []);
     report.cases.push({name, automaticLive3D:true, menusBeforeRenderer:!!release, posterRequests:0, firstFrameMs:await page.evaluate(()=>window.__firstFrame), canvas:await page.locator('#world-canvas').evaluate(c=>({width:c.width,height:c.height,cssWidth:c.clientWidth,cssHeight:c.clientHeight})), resources: await page.evaluate(() => performance.getEntriesByType('resource').map(r=>({name:new URL(r.name).pathname,bytes:r.decodedBodySize}))) });

@@ -40,8 +40,9 @@
       if (tour) { tour.setPhase(phase); return; }
       const picture = document.querySelector('.world-poster'); if (picture) picture.hidden = false;
       const photo = document.querySelector('.world-poster img'), mobile = document.querySelector('.world-poster source');
-      if (mobile) mobile.srcset = 'images/world/seated-' + phase + '-mobile.webp';
-      if (photo) photo.src = 'images/world/seated-' + phase + '.webp';
+      const still = 'images/world/tour/' + phase + '-0.webp';
+      if (mobile) mobile.srcset = still;
+      if (photo) photo.src = still;
     }
   }
   function scheduleClock() { clearTimeout(clockTimer); updateClock(); if (!disposed && !document.hidden) clockTimer = setTimeout(scheduleClock, 60000 - Date.now() % 60000 + 20); }
@@ -127,7 +128,9 @@
     announce('各ページはメニューからご覧いただけます。');
     import('./study-tour.js?v=20261118-study').then(async ({ mountStudyTour }) => {
       if (disposed) return;
-      const result = await mountStudyTour({ phase: posterPhase });
+      const result = await mountStudyTour({phase: posterPhase, hotspots: {
+        notebook: [.462, .533], lamp: [.794, .335], drawer: [.292, .683],
+      }});
       if (disposed) result?.destroy();
       else { tour = result; tour?.setPhase(posterPhase); }
     }).catch(() => { /* The original still and the five links remain usable. */ });

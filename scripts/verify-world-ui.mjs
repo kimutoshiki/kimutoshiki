@@ -216,7 +216,7 @@ for (const context of ['null', 'throw']) {
   assert.equal(h.contextRequests, 1); assert.equal(h.imports, 0); assert.equal(h.warnings.length, 1); assertUnavailable(h);
   assert.equal(h.count('fallbackImport'), 1);
   assertLanding(h); assert(h.byId('world-stand').disabled);
-  assert.equal(h.selected.get('.world-poster img').src, 'images/world/seated-night.webp', 'Only WebGL failure requests the fallback picture');
+  assert.equal(h.selected.get('.world-poster img').src, 'images/world/tour/night-0.webp', 'Only WebGL failure requests the fallback picture');
   await h.requestStand(); assert.equal(h.contextRequests, 1, 'A failed stand attempt does not enter a retry loop');
   assert.match(h.byId('world-status').textContent, /メニュー/);
   emit(h.media, 'change', { matches: true }); h.notify({ catReady: true, landmarksReady: true, travel: true });

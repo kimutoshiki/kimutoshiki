@@ -1,9 +1,42 @@
+/* Additional kanji used in the reading pages. */
+@font-face {
+  font-family: "Study Gothic Reading";
+  src: url("../fonts/sans-reading-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Study Gothic Reading";
+  src: url("../fonts/sans-reading-bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Study Mincho Reading";
+  src: url("../fonts/serif-reading-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Study Mincho Reading";
+  src: url("../fonts/serif-reading-bold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 /* Reading typography shared by the portfolio's five content pages. */
 body.study-detail {
-  --font: "Hiragino Sans", "Yu Gothic", Meiryo, "Noto Sans CJK JP", sans-serif;
-  --mincho: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", serif;
-  --latin-serif: "Iowan Old Style", Palatino, Georgia, serif;
-  --numerals: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font: "Hiragino Sans", "Yu Gothic", Meiryo, "Noto Sans CJK JP", Arial, "Study Gothic", "Study Gothic Reading", sans-serif;
+  --mincho: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", Georgia, "Study Mincho", "Study Mincho Reading", serif;
+  --latin-serif: "Iowan Old Style", Palatino, Georgia, var(--mincho);
+  --numerals: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", var(--font);
   --ink: #2f2924;
   --muted: #645a52;
   --wine: #762b40;

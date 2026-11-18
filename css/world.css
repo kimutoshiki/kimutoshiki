@@ -9,9 +9,9 @@
   --wine: #772d43;
   --wine-dark: #592337;
   --sage: #475647;
-  --serif: "Yu Mincho", YuMincho, "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP", Meiryo, sans-serif;
-  --latin: "Baskerville", "Palatino Linotype", "Noto Serif", Georgia, serif;
+  --serif: "Yu Mincho", YuMincho, "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", Georgia, "Study Mincho", "Study Gothic", serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP", Meiryo, Arial, "Study Gothic", sans-serif;
+  --latin: "Baskerville", "Palatino Linotype", "Noto Serif", Georgia, var(--serif);
   --rail: clamp(310px, 27.4vw, 414px);
   --gutter: clamp(22px, 2.65vw, 48px);
   --header: 76px;
@@ -70,6 +70,8 @@ svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.6; stroke
 .monogram span { color: #ad784a; }
 .wordmark { padding-left: 15px; border-left: 1px solid var(--rule); font: 600 16px/1.4 var(--serif); letter-spacing: .055em; }
 .header-tools { gap: 18px; }
+.wordmark, .mobile-menu-shortcut, .prop-actions button, .stand-copy { white-space: nowrap; }
+.mobile-menu-shortcut { display: none; }
 .home-clock { gap: .55em; flex-shrink: 0; font-size: 13px; color: var(--muted); }
 .home-clock svg { width: 16px; height: 16px; }
 .home-clock time { color: var(--ink); font: 500 23px/1 var(--latin); letter-spacing: .015em; font-variant-numeric: tabular-nums; }
@@ -134,6 +136,12 @@ svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.6; stroke
 .world-poster img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .world-canvas { z-index: 1; display: block; opacity: 0; cursor: grab; touch-action: none; transition: opacity .28s ease; }
 .world-canvas:active { cursor: grabbing; }
+.keyboard-guide { display: none; }
+.world:not(.is-walking) .world-canvas:focus-visible + .keyboard-guide {
+  position: absolute; z-index: 2; left: 10px; bottom: 10px; display: block;
+  max-width: calc(100% - 20px); padding: 6px 9px; border-radius: 3px;
+  font-size: 14px; line-height: 1.5; color: var(--sheet); background: #26221ee6; pointer-events: none;
+}
 .world-canvas:focus-visible { outline-offset: -4px; outline-color: var(--sheet); }
 .world.is-rendered .world-canvas { opacity: 1; }
 .world.is-rendered .world-stage { visibility: hidden; }
@@ -287,7 +295,11 @@ summary::-webkit-details-marker { display: none; }
   .world-mark { gap: 10px; }
   .monogram { font-size: 35px; }
   .wordmark { padding-left: 10px; font-size: clamp(14px, 2.9vw, 16px); letter-spacing: .01em; }
+  .wordmark-detail { display: none; }
   .home-clock { gap: 5px; font-size: 12px; }
+  .header-tools { gap: 10px; }
+  .world:not(.is-walking) .mobile-menu-shortcut { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; color: var(--wine); font-size: 14px; font-weight: 600; }
+  .mobile-menu-shortcut span { font-size: 17px; }
   #world-time-phase { display: none; }
   .home-clock time { font-size: 20px; }
   .home-studio { padding-bottom: 18px; border-bottom: 1px solid var(--rule); }
@@ -324,6 +336,7 @@ summary::-webkit-details-marker { display: none; }
   #world-stand { width: 100%; min-height: 50px; padding: 8px 15px; gap: 12px; }
   .stand-copy { display: flex; align-items: baseline; gap: 10px; flex: 1; }
   #world-stand-label { font-size: 18px; }
+  .world.has-study-tour .stand-copy { display: grid; gap: 1px; }
   .world-places summary, .world-settings summary { padding: 0 10px; gap: 5px; font-size: 14px; }
   .world-settings summary { min-width: 44px; }
   .settings-label { display: none; }
@@ -331,9 +344,13 @@ summary::-webkit-details-marker { display: none; }
   .world-travel { padding: 0 10px; gap: 5px; font-size: 14px; }
 }
 @media (max-width: 380px) {
-  .home-clock > span:first-of-type { display: none; }
+  .world:not(.is-walking) .home-clock { display: none; }
   .home-clock time { font-size: 19px; }
-  .prop-actions button { font-size: 14px; }
+  .prop-actions button { font-size: 14px; gap: 3px; padding-inline: 2px; }
+  .prop-actions button svg { width: 16px; height: 16px; }
+  #world-stand { padding-inline: 12px; gap: 8px; }
+  #world-stand > svg:last-child { display: none; }
+  .stand-copy { gap: 7px; }
   .seat-return { padding-inline: 8px; }
   .world.is-walking .world-nav a { font-size: 12px; }
   .world-walkpad { bottom: 90px; }
@@ -344,8 +361,7 @@ summary::-webkit-details-marker { display: none; }
   .world.is-walking { --header: 52px; }
   .world.is-walking .world-header { min-height: 52px; padding-block: 0; }
   .world.is-walking .world-mark { min-height: 43px; }
-  .world.is-walking .world-nav { display: none; }
-  .world-location { top: 60px; }
+  .world-location { top: 94px; }
   .world-footer { bottom: 8px; }
   .world-walkpad { bottom: 57px; }
   .world-gesture-hint { display: none; }

@@ -1,8 +1,8 @@
+import { deskMincho, finishCanvasType } from "./desk-type.js";
+
 // One illustrated atlas for the cover and three pages. Each quadrant includes
 // a paper margin so neighbouring pages cannot bleed at ordinary viewing sizes.
-function journalPrint(T) {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 1024;
+function drawJournal(canvas) {
   const c = canvas.getContext('2d');
   const path = (points, close = false) => {
     c.beginPath();
@@ -14,7 +14,7 @@ function journalPrint(T) {
   const text = (value, x, y, size, face = 'serif', weight = 500) => {
     c.font = weight + ' ' + size + 'px ' + face; c.fillText(value, x, y);
   };
-  const mincho = '"Yu Mincho", "Hiragino Mincho ProN", serif';
+  const mincho = deskMincho;
   const burgundy = '#814439', ink = '#243e3f', gold = '#e7ca85';
   c.fillStyle = '#244543'; c.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 512; i += 4) {
@@ -89,7 +89,14 @@ function journalPrint(T) {
     line(81,405,412,405);
     for (const [x,y,w] of [[78,421,79],[181,429,110],[319,420,74]]) line(x,y,x+w,y);
   });
+}
+
+function journalPrint(T, onTextureLoad) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1024;
+  drawJournal(canvas);
   const texture = new T.CanvasTexture(canvas);
+  finishCanvasType(texture, () => drawJournal(canvas), onTextureLoad);
   texture.colorSpace = T.SRGBColorSpace; texture.anisotropy = 4;
   return new T.MeshStandardMaterial({map:texture, roughness:.86});
 }
@@ -101,11 +108,11 @@ function panelUV(columnFraction, rowFraction, panel) {
   return [(panel % 2 + u) / 2, (1 - Math.floor(panel / 2) + v) / 2];
 }
 
-export function createDeskJournal(T, root) {
+export function createDeskJournal(T, root, onTextureLoad) {
   root.userData.deskProp = 'notebook';
   root.position.set(-.70, 2.172, .493);
   root.rotation.y = -.045; root.scale.setScalar(1);
-  const print = journalPrint(T);
+  const print = journalPrint(T, onTextureLoad);
   const cloth = new T.MeshStandardMaterial({color:'#274442', roughness:.86});
   const paper = new T.MeshStandardMaterial({color:'#ded0ae', roughness:.93});
   const ribbon = new T.MeshStandardMaterial({color:'#8d483a', roughness:.85});
