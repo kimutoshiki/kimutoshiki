@@ -94,3 +94,42 @@
   .tour-top, .tour-bottom { flex-direction: row; align-items: center; padding: .25rem 1rem; }
   .tour-area { display: none; }
 }
+
+.study-tour { width: min(85rem, 96vw); height: min(62rem, 95svh); font-family: var(--sans, "Study Gothic", sans-serif); box-shadow: 0 1.5rem 6rem #1d140e59; }
+.tour-top { padding-block: .55rem; }
+.tour-top h2 { color: #622d39; font-size: clamp(1.2rem, 2vw, 1.5rem); }
+.tour-close { min-height: 42px; background: transparent; border-color: transparent; }
+.tour-view { background: #252723; touch-action: pan-y pinch-zoom; }
+.tour-view img { user-select: none; }
+.tour-bottom { gap: clamp(.7rem, 2vw, 1.8rem); border-top: 1px solid #daceb7; }
+.tour-place { flex: 1; }
+.tour-place h3 { font-size: clamp(1.55rem, 2.5vw, 2.25rem); letter-spacing: .035em; }
+.tour-area { color: #705b4f; font-size: .95rem; }
+.tour-steps { gap: .65rem; }
+.tour-steps button { width: 44px; min-height: 44px; padding: 0; border-radius: 50%; font-size: 1.3rem; }
+.tour-explore { min-height: 46px; padding: .55em 1em; border: 1px solid #63273a; border-radius: 4px; background: #752b42; color: #fffaf1; font: 650 1rem/1.5 var(--sans, "Study Gothic", sans-serif); cursor: pointer; }
+.tour-explore span { margin-inline-start: .45em; }
+.tour-explore:hover { background: #572031; }
+.tour-explore[hidden] { display: none; }
+@media (max-width: 620px) {
+  .study-tour { width: 100vw; height: auto; max-height: 100svh; }
+  .study-tour[open] { grid-template-rows: auto auto auto; }
+  .tour-view { aspect-ratio: 3 / 2; }
+  .tour-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .tour-steps { grid-area: 1 / 2; }
+  .tour-explore { grid-column: 1 / -1; }
+}
+@media (max-height: 460px) and (orientation: landscape) {
+  .study-tour { height: 100svh; width: 100vw; }
+  .study-tour[open] { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .tour-view { aspect-ratio: auto; }
+  .tour-bottom { display: flex; }
+  .tour-top, .tour-bottom { padding-block: .15rem; }
+  .tour-area { display: none; }
+}
+
+.tour-arrival { position: absolute; inset: 0; z-index: 3; overflow: hidden; background: #282923; pointer-events: none; opacity: 1; transition: opacity .42s ease-out; }
+.tour-arrival img { width: 100%; height: 100%; object-fit: cover; }
+.tour-arrival span { position: absolute; left: 50%; bottom: 12%; width: max-content; max-width: 95%; transform: translateX(-50%); padding: .45em 1em; border-radius: 3px; background: #2a2320dc; color: #fff9ee; font: 500 1rem/1.5 var(--sans, sans-serif); }
+.tour-arrival.is-arrived { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .tour-arrival { transition: none; } }

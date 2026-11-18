@@ -6,7 +6,7 @@ import { createWalkNavigation } from './home-navigation.js';
 import { getWorldTime } from './world-time.js';
 import { createWorldSky } from './world-sky.js';
 import { loadSurfaceMaterials } from './surface-materials.js';
-import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS, worldFov } from './world-layout.js';
+import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS, OUTDOOR_VIEWS, districtAt, worldFov } from './world-layout.js';
 
 const clamp = T.MathUtils.clamp;
 const pixelRatio = (w, h) => Math.min(globalThis.devicePixelRatio || 1, 2, Math.max(.7, Math.sqrt(3000000 / Math.max(1, w * h))));
@@ -40,7 +40,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   let landmarks, home, cat, landscape, boundary, navigation, skyOwner, shadowDirty = true, revision = 1, lightingMode = autoTime ? 'auto' : 'day', focusId = 'room', lastState = '', lastView = '';
   let miniaturesReady=false,outdoorsReady=false,outdoorsLoading=false,outdoorsError=null,outdoorPromise,landmarkPromise;
   let clockWake = 0, firstFrameReady = false, performanceScale = 1, slowFrames = 0, lastPerformanceChange = 0;
-  let pendingGardenArrival = false, movementHeld = false, seatedZoom = 0;
+  let pendingGardenArrival = false, movementHeld = false, seatedZoom = 0, placeRequest = 0;
   let deskAction = null, deskStatus = '', deskActionSequence = 0;
   const surfaceOwners=[],performanceStats={frames:0,lastRenderMs:0,drawCalls:0,triangles:0,pixelRatio:1,shadowRefreshes:0};
   let posture = startSeated ? 'seated' : 'walking', postureTransition = null, pendingSeat = false;
@@ -187,11 +187,11 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function state() {
     const view = navigation.getState();
-    return { webgl: true, deskProps: home.deskActions?.getState() || {}, deskAction, deskStatus, deskActionSequence, catReady: !!cat?.model, landmarksReady: !!landmarks, miniaturesReady, outdoorsReady, outdoorsLoading, outdoorsError, renderingActive, readyPhase: !miniaturesReady || !cat?.model ? 'home' : !outdoorsReady ? 'study' : !landmarks ? 'garden' : 'complete', focus: focusId, paused, lightingMode, mode: inHome(view.position) ? 'inside' : 'outside', travel: !!view.routeActive || !!postureTransition, seated: posture === 'seated', standing: posture === 'walking' || posture === 'returning-to-seat', posture, time: timeState, position: { ...view.position } };
+    return { webgl: true, district: inHome(view.position) ? '書斎' : districtAt(view.position), deskProps: home.deskActions?.getState() || {}, deskAction, deskStatus, deskActionSequence, catReady: !!cat?.model, landmarksReady: !!landmarks, miniaturesReady, outdoorsReady, outdoorsLoading, outdoorsError, renderingActive, readyPhase: !miniaturesReady || !cat?.model ? 'home' : !outdoorsReady ? 'study' : !landmarks ? 'garden' : 'complete', focus: focusId, paused, lightingMode, mode: inHome(view.position) ? 'inside' : 'outside', travel: !!view.routeActive || !!postureTransition, seated: posture === 'seated', standing: posture === 'walking' || posture === 'returning-to-seat', posture, time: timeState, position: { ...view.position } };
   }
   function emit(force = false) {
     if(disposed)return;
-    const value = state(), key = [deskActionSequence, value.catReady, value.landmarksReady, value.miniaturesReady, value.outdoorsReady, value.outdoorsLoading, value.outdoorsError, value.renderingActive, value.focus, value.paused, value.lightingMode, value.mode, value.travel, value.posture, value.time?.label, value.time?.phase].join(',');
+    const value = state(), key = [deskActionSequence, value.catReady, value.landmarksReady, value.miniaturesReady, value.outdoorsReady, value.outdoorsLoading, value.outdoorsError, value.renderingActive, value.focus, value.paused, value.lightingMode, value.mode, value.district, value.travel, value.posture, value.time?.label, value.time?.phase].join(',');
     if (force || key !== lastState) { lastState = key; canvas.dispatchEvent(new CustomEvent('worldstate', { detail: value })); }
   }
   function updateProjection() {
@@ -296,7 +296,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function walk(points, focus, look) {
     if (disposed || posture === 'seated' || postureTransition) return false;
-    pendingGardenArrival=false;pendingSeat=false;posture='walking';
+    placeRequest++;pendingGardenArrival=false;pendingSeat=false;posture='walking';
     const accepted = navigation.walkRoute(points, look);
     if (accepted) { focusId = focus; pressed.clear(); movementHeld=false; revision++; wake(); emit(true); }
     return accepted;
@@ -309,7 +309,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function standUp() {
     if(disposed || posture!=='seated')return false;
-    canvas.style.cursor = '';pendingGardenArrival=true;beginPosture('standing-up',HOME.eyeHeight);void prewarmExterior();return true;
+    placeRequest++;canvas.style.cursor = '';pendingGardenArrival=true;beginPosture('standing-up',HOME.eyeHeight);void prewarmExterior();return true;
   }
   function sitDown() {
     if(disposed || posture==='seated' || postureTransition)return false;
@@ -318,6 +318,20 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function leave() { if(!outdoorsReady){void prewarmExterior();return false;} cat?.useRoomDetail?.(); return walk([{ x: HOME.door.x, z: 4.8 }, { x: HOME.door.x, z: 9 }], 'outside', { x: 0, y: 6.5, z: 40 }); }
   function returnHome() { cat?.useRoomDetail?.(); return walk([{ x: seatedSpawn.x, z: seatedSpawn.z }], 'room', seatLook); }
+  async function explorePlace(id) {
+    const key = typeof id === 'string' ? id.replace(/^landmark-/, '') : '';
+    const view = Object.hasOwn(OUTDOOR_VIEWS,key) && OUTDOOR_VIEWS[key];
+    if (!view || disposed || !studyActive) return false;
+    const token=++placeRequest;
+    if (!await prewarmExterior() || token!==placeRequest || disposed || !studyActive) return false;
+    const [x,z]=view.eye, [tx,ty,tz]=view.target;
+    const yaw=Math.atan2(tx-x,tz-z), pitch=Math.atan2(ty-HOME.eyeHeight,Math.hypot(tx-x,tz-z));
+    if(!navigation.relocate({x,z,yaw,pitch})) return false;
+    pendingGardenArrival=false;pendingSeat=false;postureTransition=null;
+    pressed.clear();movementHeld=false;seatedZoom=0;posture='walking';focusId='landmark-'+key;
+    navigation.setEyeHeight(HOME.eyeHeight); updateProjection();cat?.useRoomDetail?.();
+    revision++;wake();emit(true); return true;
+  }
   function goToLandmark(id) {
     if(!outdoorsReady){void prewarmExterior();return false;}
     cat?.useRoomDetail?.();
@@ -455,7 +469,8 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     }
     if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(key)) { event.preventDefault(); pressed.add(key); keyMovement(); }
     else if (key === 'q' || key === 'e') { event.preventDefault(); look(key === 'q' ? .13 : -.13, 0); }
-    else if (key === 'escape') { event.preventDefault(); pendingGardenArrival=false; stopMovement(); }
+    else if (key === 'r' || key === 'f') { event.preventDefault(); look(0,key==='r' ? .10 : -.10); }
+    else if (key === 'escape') { event.preventDefault(); placeRequest++;pendingGardenArrival=false; stopMovement(); }
     else if (key === 'home') { event.preventDefault(); returnHome(); }
   });
   listen(window, 'keyup', event => { if (pressed.delete(event.key.toLowerCase())) { keyMovement(); revision++; } });
@@ -476,6 +491,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
   }
   function setStudyActive(value) {
     if(disposed || studyActive===!!value)return;
+    if(!value)placeRequest++;
     studyActive=!!value;
     if(studyActive){releaseWaiters();revision++;wake();}
     else {stopMovement();suspendFrames();announceSubject(null,'hover');}
@@ -509,7 +525,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     // the garden. Desk readers never pay to decode geometry they cannot see.
   }).catch(error=>{if(!disposed)onError(error);});
   return {
-    getState: state, getPerformance: () => ({...performanceStats,outdoorsReady,miniaturesReady}), setRenderingActive, setStudyActive, interactDesk, prewarmExterior, standUp, sitDown, focus, leave, returnHome, goToLandmark, reset: returnHome, zoom, setMovement, look, stopMovement,
+    getState: state, getPerformance: () => ({...performanceStats,outdoorsReady,miniaturesReady}), setRenderingActive, setStudyActive, interactDesk, prewarmExterior, standUp, sitDown, focus, leave, returnHome, explorePlace, goToLandmark, reset: returnHome, zoom, setMovement, look, stopMovement,
     setPaused(value) { paused = !!value; revision++; wake(); emit(); },
     setLightingMode(value) {
       if (!['day','night','auto'].includes(value)) return;

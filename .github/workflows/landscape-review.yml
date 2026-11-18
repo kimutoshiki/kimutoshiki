@@ -1,0 +1,47 @@
+name: Review the illustrated and live study
+on:
+  push:
+    branches:
+      - 'review/study-*'
+      - 'codex/study-*'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      PREVIEW_URL: http://127.0.0.1:4173
+      REVIEW_OUTPUT: ${{ github.workspace }}/browser-review
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Select installed Chrome
+        run: |
+          chrome="$(command -v google-chrome || command -v google-chrome-stable)"
+          "$chrome" --version
+          echo "CHROMIUM_PATH=$chrome" >> "$GITHUB_ENV"
+      - run: npm run build:world
+      - name: Start local website
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 > "$RUNNER_TEMP/study-server.log" 2>&1 &
+          curl --fail --silent --retry 15 --retry-delay 1 --retry-connrefused "$PREVIEW_URL/" -o /dev/null
+      - name: Verify room and interaction behaviour
+        run: npm test
+      - name: Check interactive desktop, mobile and lightweight tour
+        if: success() || failure()
+        run: npm run test:browser
+      - name: Save screenshots and browser report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: illustrated-browser-review
+          path: |
+            browser-review/
+          if-no-files-found: error
+          retention-days: 7

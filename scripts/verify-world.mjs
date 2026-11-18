@@ -123,7 +123,7 @@ checks.push('Procedural cloud pixels remain bounded; separate 512×256 backgroun
 const landscape = createWorldLandscape(T);
 assert.equal(typeof landscape.then, 'undefined', 'Ground geometry is synchronous');
 assert.deepEqual(requests, [], 'Ground construction never requests external assets');
-assert.ok(landscape.stats.triangles <= 220000 && landscape.stats.drawCalls < 24 && landscape.stats.geometryBytes < 400000, 'Initial garden geometry has bounded triangle/draw budgets');
+assert.ok(landscape.stats.triangles <= 265000 && landscape.stats.drawCalls <= 32 && landscape.stats.geometryBytes <= 650000, 'Four connected outdoor settings fit their full, pre-culling polygon, draw and buffer budgets');
 assert.ok(!landscape.group.children.some(object => object.isLight), 'Garden geometry adds no lighting passes');
 const hillMeshes=[];landscape.group.traverse(object=>{if(object.userData.terrainLayer)hillMeshes.push(object);});
 assert.equal(hillMeshes.length,3,'Three actual grounded terrain layers provide distant atmospheric depth');
@@ -283,6 +283,22 @@ for (const site of LANDMARK_SITES) {
   close(target.object.position.z, site.position[1], 1e-8, 'Landmark location z');
   const sourceModel = factories[site.key](T), source = sourceModel.architecture || sourceModel.group.getObjectByName(site.name);
   source.removeFromParent();
+  if (site.key==='okuma-statue') {
+    const bounds=name=>{
+      const part=source.getObjectByName(name);assert.ok(part,'Bronze sculpture includes '+name);
+      return new T.Box3().setFromObject(part,true);
+    };
+    const cane=bounds('Slender right-hand walking stick'),head=bounds('Continuous bronze portrait');
+    const cuff=bounds('Right hanging sleeve'),otherCuff=bounds('Left hanging sleeve');
+    assert.ok(cane.max.x<0 && cane.min.y<7.48 && cane.max.y>11.7,'Thin cane meets the base below the right hand');
+    assert.ok(-cuff.min.x>otherCuff.max.x+.20 && head.getCenter(new T.Vector3()).x>.12,'Weight and the two sleeves keep their photographed asymmetry');
+    assert.ok(bounds('Weighted fluted tassel').getCenter(new T.Vector3()).x>head.max.x,'Tassel hangs from the left-hand corner of the board');
+    const stone=bounds('Tapered granite monolith'),inscription=source.getObjectByProperty('name','総長大隈老侯像 · granite inscription');
+    assert.equal(inscription.userData.inscription,'総長大隈老侯像');
+    const relief=new T.Box3().setFromObject(inscription,true);
+    assert.ok(inscription.geometry.attributes.position.count>100 && relief.min.y>stone.min.y && relief.max.y<stone.max.y && relief.min.z>1.77 && relief.max.z<stone.max.z,'Carved lettering follows the front of the tapered granite pedestal');
+    close(new T.Box3().setFromObject(source).max.y,new T.Box3().setFromObject(source,true).max.y,.00001,'The inclined square board has a precise upper bound');
+  }
   const before = geometrySummary(source), after = geometrySummary(actual); originals.set(site.key, before);
   assert.equal(after.triangles, before.triangles, 'Original architectural triangles retained: ' + id);
   assert.equal(after.vertices, before.vertices, 'Original triangle topology retained: ' + id);
@@ -302,8 +318,12 @@ for (const site of LANDMARK_SITES) {
   });
   const bounds = new T.Box3().setFromObject(target.object);
   close(bounds.getSize(new T.Vector3()).y, site.height, .005, 'Full-size monument height in metres');
-  close(bounds.min.y, HOME.floorY, .005, 'Original architecture foundation touches ground without a floating plinth');
-  assertGround(landscape.group, site.position[0], site.position[1], id);
+  const footing=site.foundationY || HOME.floorY;
+  close(bounds.min.y,footing,.005,'Full-size architecture reaches its actual stone/plaza foundation');
+  if(footing) {
+    const support=groundAt(landscape.group,site.position[0],site.position[1],footing+.4);
+    close(support.point.y,footing,.005,'The castle rests on its modeled hilltop');
+  } else assertGround(landscape.group,site.position[0],site.position[1],id);
   assert.ok(bounds.min.x >= WORLD_BOUNDS.minX && bounds.max.x <= WORLD_BOUNDS.maxX && bounds.min.z >= WORLD_BOUNDS.minZ && bounds.max.z <= WORLD_BOUNDS.maxZ, 'Complete monument fits on walkable real ground');
   const reservation = LANDMARK_RESERVATIONS.find(value => value.id === id);
   assert.ok(reservation && reservation.minX <= bounds.min.x && reservation.maxX >= bounds.max.x && reservation.minZ <= bounds.min.z && reservation.maxZ >= bounds.max.z,
@@ -319,15 +339,14 @@ assert.ok(landmarks.stats.total.drawCalls < 160, 'Full outdoor architectures rem
 report.landmarks = landmarks.stats.models.map(({id,height,width,depth}) => ({id,height,width,depth}));
 checks.push('Four original life-size architectures preserve every triangle, vertex moments, proportions and clock faces, with grounded nonintersecting foundations and real shadows');
 
-const preservedFiles = ['js/models/okuma-auditorium.js', 'js/models/okuma-statue.js', 'js/models/karatsu-castle.js', 'js/models/karatsu-bank.js'];
+const preservedFiles = ['js/models/okuma-auditorium.js', 'js/models/karatsu-castle.js', 'js/models/karatsu-bank.js'];
 report.sourceSha256 = Object.fromEntries(await Promise.all(preservedFiles.map(async path => [path, createHash('sha256').update(await readFile(new URL('../' + path, import.meta.url))).digest('hex')])));
 assert.deepEqual(report.sourceSha256, {
   'js/models/okuma-auditorium.js': '612350f76ba1b70429a33fd1c5b2197c3aafd25ad1a3d0c5012cff4ffb0cf188',
-  'js/models/okuma-statue.js': '2185a3dc140922c473761ebcaae54867fab0ac008a997ad22f1e6de62d67173f',
   'js/models/karatsu-castle.js': 'd11944352081b6e4585063904ced21526d996df60eda55dea68c058b6052d620',
   'js/models/karatsu-bank.js': '8fd587c485105b64ea23689748b833b163d0972eeba6119816c7a9c2e020529c',
-}, 'The four original model sources remain byte-for-byte preserved');
-for (const path of ['scene/world.js', 'scene/home-interior.js', 'scene/home-navigation.js', 'scene/world-time.js', 'scene/world-sky.js', 'scene/landmark-clocks.js', 'scene/garden-boundary.js', 'scene/room-model.js', 'scene/world-landscape.js', 'scene/world-landmarks.js', 'scene/cat-life.js', 'scene/surface-materials.js', 'scene/static-batching.js', ...preservedFiles]) {
+}, 'The three original building sources remain byte-for-byte preserved');
+for (const path of ['scene/world.js', 'scene/home-interior.js', 'scene/home-navigation.js', 'scene/world-time.js', 'scene/world-sky.js', 'scene/landmark-clocks.js', 'scene/garden-boundary.js', 'scene/room-model.js', 'scene/world-landscape.js', 'scene/world-landmarks.js', 'scene/cat-life.js', 'scene/surface-materials.js', 'scene/static-batching.js', 'js/models/okuma-statue.js', 'js/models/okuma-plinth.js', ...preservedFiles]) {
   const source = await readFile(new URL('../' + path, import.meta.url), 'utf8');
   assert.ok(!/import\s+\*\s+as\s+\w+\s+from\s+['"][^'"]*vendor\/three/.test(source), 'Runtime factory never imports the entire vendor Three namespace: ' + path);
   for (const [, name] of source.matchAll(/\b(?:T|THREE)\.([A-Z]\w*)/g)) assert.ok(name in WorldThree, 'Explicit Three palette includes ' + path + ' dependency ' + name);

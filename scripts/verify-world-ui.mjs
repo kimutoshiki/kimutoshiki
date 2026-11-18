@@ -16,7 +16,7 @@ assert.match(html, /data-display-mode="2d"/, 'The server markup opens in two dim
 for (const width of [640, 960, 1536]) assert.match(html, new RegExp('study-' + width + '\\.webp'));
 const picture = html.match(/<img\b(?=[^>]*\bid="study-image")[^>]*>/)?.[0] || '';
 assert.match(picture, /\ssrcset="[^"]+"/);
-assert.match(picture, /\ssrc="[^"]+\.webp"/, 'The illustration has a native source before JavaScript runs');
+assert.match(picture, /\ssrc="[^"]+\.webp(?:\?[^"]*)?"/, 'The illustration has a native source before JavaScript runs');
 assert.equal((html.match(/data-illustration-link=/g) || []).length, 5);
 assert.match(html, /id="world-live-controls"[^>]*\bhidden/);
 assert.match(html, /id="world-travel"[^>]*\bdisabled/);
@@ -26,7 +26,7 @@ assert.equal((html.match(/data-walk=/g) || []).length, 4);
 const rendererImport = /import\(url\)/g;
 assert.match(source, /const url = ['"]\.\.\/scene\/world\.bundle\.js/);
 const gardenImport = /import\(['"]\.\/study-tour\.js[^'"]*['"]\)/g;
-assert.equal([...source.matchAll(rendererImport)].length, 1, 'The heavy engine has one dynamic import boundary');
+assert.equal([...source.matchAll(rendererImport)].length, 2, 'The GPU and CPU renderers each have a lazy import boundary');
 assert.equal([...source.matchAll(gardenImport)].length, 1, 'The photograph tour has its own dynamic import boundary');
 const executable = source.replace(rendererImport, 'testImport(url)').replace(gardenImport, 'testTourImport()');
 const emit = (target, type, values = {}) => {
@@ -37,7 +37,7 @@ const emit = (target, type, values = {}) => {
 const tick = async () => { for (let i = 0; i < 6; i++) await Promise.resolve(); };
 const same = (actual, expected, message) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected, message);
 
-function harness({ context = 'supported', reduced = false, importFails = false, observeViewport = false } = {}) {
+function harness({ context = 'supported', reduced = false, importFails = false, softwareFails = false, observeViewport = false } = {}) {
   const ids = new Map(), focusButtons = [], walkButtons = [], deskButtons = [], toggleQueue = new Set();
   const document = Object.assign(new EventTarget(), { hidden: false, activeElement: null });
   class Element extends EventTarget {
@@ -74,7 +74,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
   const window = new EventTarget(), media = Object.assign(new EventTarget(), { matches: reduced });
   const frames = new Map(), tasks = new Map(), warnings = [], calls = [];
   const observers = [];
-  let nextId = 0, imports = 0, contextRequests = 0, mountOptions, resolveMount, launch, now = 0;
+  let nextId = 0, imports = 0, contextRequests = 0, softwareImports = 0, tourOptions, mountOptions, resolveMount, launch, now = 0;
   const rendererContext = {};
   byId('world-canvas').getContext = (kind, options) => {
     contextRequests++; assert.equal(kind, 'webgl2'); same(options, { antialias: true, alpha: false, powerPreference: 'high-performance' });
@@ -93,6 +93,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
       notify({ deskAction: id, deskStatus: '操作しました', deskActionSequence: engineState.deskActionSequence + 1 });
       return true;
     },
+    explorePlace(key) { record('explorePlace', key); notify({ seated: false, standing: true, posture: 'walking', mode: 'outside', focus: 'landmark-' + key, district: '唐津城の水辺', outdoorsReady: true, landmarksReady: true }); },
     standUp() { record('standUp'); Object.assign(engineState, { seated: false, standing: true, posture: 'walking', mode: 'inside' }); return true; },
     prewarmExterior() { record('prewarmExterior'); return Promise.resolve(); },
     setRenderingActive(value) { record('setRenderingActive', value); },
@@ -109,7 +110,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
   };
   const epoch = Date.UTC(2026, 10, 6, 18, 5);
   class ClockDate extends Date { constructor(...args) { super(...(args.length ? args : [epoch + now])); } static now() { return epoch + now; } }
-  const scope = createContext({ document, window, Event, Date: ClockDate, matchMedia: query => { assert.equal(query, '(prefers-reduced-motion: reduce)'); return media; },
+  const scope = createContext({ document, window, Event, CustomEvent: class extends Event { constructor(type, options = {}) { super(type, options); this.detail = options.detail; } }, Date: ClockDate, matchMedia: query => { assert.equal(query, '(prefers-reduced-motion: reduce)'); return media; },
     ...(observeViewport ? { IntersectionObserver: class {
       constructor(callback, options) { this.callback = callback; this.options = options; observers.push(this); }
       observe(target) { this.target = target; }
@@ -119,8 +120,30 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
     setTimeout: (callback, delay = 0) => { tasks.set(++nextId, { callback, at: now + delay }); return nextId; }, clearTimeout: id => tasks.delete(id),
     setInterval: (callback, interval) => { tasks.set(++nextId, { callback, at: now + interval, interval }); return nextId; }, clearInterval: id => tasks.delete(id),
     console: { warn: (...values) => warnings.push(values) },
-    testTourImport: async () => { record('tourImport'); return { createGardenTour: () => ({ open() { record('tourOpen'); }, destroy() { record('tourDestroy'); } }) }; },
-    testImport: async url => { assert.match(url, /^\.\.\/scene\/world\.bundle\.js/); record('engineURL', url); imports++; if (importFails === true || (importFails === 'once' && imports === 1)) throw new Error('Simulated module import failure'); return { mountWorld: options => { mountOptions = options; assert.equal(options.canvas, byId('world-canvas')); assert.equal(options.rendererContext, rendererContext); Object.assign(engineState, { seated: true, travel: false }); return new Promise(resolve => { resolveMount = resolve; }); } }; },
+    testTourImport: async () => {
+      record('tourImport');
+      return { createGardenTour: (button, options) => {
+        assert.equal(button, byId('world-stand')); tourOptions = options;
+        return { open() { record('tourOpen'); }, destroy() { record('tourDestroy'); } };
+      } };
+    },
+    testImport: async url => {
+      const software = url.startsWith('./software-world.js');
+      if (software) {
+        softwareImports++; record('softwareURL', url);
+        if (softwareFails) throw new Error('Simulated CPU module failure');
+      } else {
+        assert.match(url, /^\.\.\/scene\/world\.bundle\.js/); record('engineURL', url); imports++;
+        if (importFails === true || (importFails === 'once' && imports === 1)) throw new Error('Simulated GPU module failure');
+      }
+      const mount = options => {
+        mountOptions = options; assert.equal(options.canvas, byId('world-canvas'));
+        if (!software) assert.equal(options.rendererContext, rendererContext);
+        Object.assign(engineState, { webgl: !software, renderer: software ? 'software' : 'native', seated: true, travel: false });
+        return new Promise(resolve => { resolveMount = resolve; });
+      };
+      return software ? { mountSoftwareWorld: mount } : { mountWorld: mount };
+    },
   });
   new Script(executable).runInContext(scope);
   function runFrame() { for (const [id, callback] of [...frames]) { frames.delete(id); callback(); } }
@@ -144,7 +167,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
   async function requestStand() { emit(byId('world-stand'), 'click'); runFrame(); await runTask(); await tick(); }
   return { byId, focusButtons, walkButtons, deskButtons, select3d, select2d, document, window, media, warnings, calls, engine, engineState, runFrame, runTask, advance, attach, notify, flushToggles, requestStand, selected, observers,
     get pendingFrames() { return frames.size; },
-    get imports() { return imports; }, get contextRequests() { return contextRequests; }, get options() { return mountOptions; },
+    get imports() { return imports; }, get softwareImports() { return softwareImports; }, get tourOptions() { return tourOptions; }, get contextRequests() { return contextRequests; }, get options() { return mountOptions; },
     async finishUnsupported() { await launch; }, count: name => calls.filter(call => call.name === name).length,
     lastMovement: () => calls.filter(call => call.name === 'setMovement').at(-1)?.value,
     pad: direction => walkButtons.find(button => button.dataset.walk === direction),
@@ -217,15 +240,24 @@ await clockOnly.advance(120000); emit(clockOnly.window, 'pageshow'); assert.equa
 
 for (const context of ['null', 'throw']) {
   const h = harness({ context }); assertLanding(h);
+  assert.equal(h.softwareImports, 0);
   await h.select3d(); await h.finishUnsupported();
-  assert.equal(h.contextRequests, 1); assert.equal(h.warnings.length, 1); assertUnavailable(h);
-  assertLanding(h); assert(!h.byId('study-mode-3d').disabled);
-  assert.equal(h.byId('main').dataset.displayMode, '2d');
-  assert(h.byId('study-mode-status').textContent.trim(), '3D failure is explained next to the mode switch');
-  h.runFrame(); await h.runTask(); assert.equal(h.contextRequests, 1, 'No unrequested retry loop');
-  emit(h.media, 'change', { matches: true }); h.notify({ catReady: true, landmarksReady: true, travel: true });
-  assertUnavailable(h); emit(h.window, 'pagehide', { persisted: false });
+  assert.equal(h.contextRequests, 1); assert.equal(h.softwareImports, 1); assert.equal(h.imports, 0);
+  assert.equal(h.warnings.length, 0); assertUnavailable(h);
+  h.options.onReady(); await h.attach();
+  assert.equal(h.byId('main').dataset.displayMode, '3d');
+  assert.equal(h.byId('world-stand').disabled, false);
+  assert.match(h.byId('study-mode-status').textContent, /軽量3D/);
+  await h.requestStand(); assert.equal(h.count('standUp'), 1);
+  h.select2d(); await h.select3d();
+  assert.equal(h.contextRequests, 1); assert.equal(h.softwareImports, 1, 'The same software engine resumes without probing the GPU again');
+  emit(h.window, 'pagehide', { persisted: false });
 }
+const noCanvas = harness({ context: 'null', softwareFails: true });
+await noCanvas.select3d(); await tick();
+assert.equal(noCanvas.byId('main').dataset.displayMode, '2d'); assertUnavailable(noCanvas);
+assert.match(noCanvas.byId('study-mode-status').textContent, /もう一度/);
+assert.equal(noCanvas.warnings.length, 1);
 const gardenOnly = harness();
 await gardenOnly.requestStand();
 assert.equal(gardenOnly.count('tourImport'), 1);
@@ -233,7 +265,14 @@ assert.equal(gardenOnly.count('tourOpen'), 1);
 await gardenOnly.requestStand();
 assert.equal(gardenOnly.count('tourImport'), 1, 'Opening the photograph tour again reuses its module');
 assert.equal(gardenOnly.contextRequests, 0);
-assert.equal(gardenOnly.imports, 0);
+assert.equal(gardenOnly.imports, 0); assert.equal(gardenOnly.softwareImports, 0);
+assert.equal(gardenOnly.byId('world-stand-label').textContent, '外をのぞいてみる');
+gardenOnly.tourOptions.onExplore('karatsu-castle'); await tick();
+await gardenOnly.attach(); gardenOnly.options.onReady(); await tick();
+assert.equal(gardenOnly.count('explorePlace'), 1);
+assert.equal(gardenOnly.byId('main').dataset.displayMode, '3d');
+assert.equal(gardenOnly.byId('world-location-name').textContent, '唐津城の水辺');
+assert(gardenOnly.byId('main').classList.contains('is-walking'));
 const canceled = harness();
 await canceled.select3d(); canceled.select2d(); canceled.options.onReady(); await canceled.attach();
 assert.equal(canceled.byId('main').dataset.displayMode, '2d');
@@ -393,29 +432,35 @@ for (const cancel of [
 activate('forward'); emit(assistive.window, 'pagehide', { persisted: false }); same(assistive.lastMovement(), { forward: 0, right: 0 });
 beforeNudge = assistive.count('setMovement'); activate('forward'); await assistive.advance(200); assert.equal(assistive.count('setMovement'), beforeNudge, 'Disposed controls cannot start an assistive nudge');
 
-const failure = await mounted(); emit(failure.pad('forward'), 'click', { detail: 0 }); failure.options.onError(new Error('Simulated context loss')); assertUnavailable(failure); assert.equal(failure.count('dispose'), 1);
-same(failure.lastMovement(), { forward: 0, right: 0 }); const failedMovementCalls = failure.count('setMovement'); await failure.advance(200); assert.equal(failure.count('setMovement'), failedMovementCalls, 'Failure clears a pending nudge timer');
-failure.notify({ catReady: true, landmarksReady: true, mode: 'outside' }); failure.options.onReady(); emit(failure.media, 'change', { matches: true });
-assertUnavailable(failure); assert.equal(failure.warnings.length, 1, 'Late events do not resurrect a failed view');
-const late = harness(); await late.select3d(); late.options.onReady(); late.options.onError(new Error('Failed while mount was pending')); await late.attach();
-assertUnavailable(late); assert.equal(late.count('dispose'), 1, 'An engine resolving after failure is disposed'); late.options.onReady(); assertUnavailable(late);
+const failure = await mounted(); emit(failure.pad('forward'), 'click', { detail: 0 });
+const lostGPU = failure.options;
+lostGPU.onError(new Error('Simulated context loss')); assertUnavailable(failure); assert.equal(failure.count('dispose'), 1);
+same(failure.lastMovement(), { forward: 0, right: 0 });
+const failedMovementCalls = failure.count('setMovement'); await failure.advance(200);
+assert.equal(failure.count('setMovement'), failedMovementCalls, 'Failure clears a pending nudge timer');
+assert.equal(failure.softwareImports, 1); lostGPU.onReady(); assertUnavailable(failure); await tick();
+failure.options.onReady(); await failure.attach();
+assert(!failure.byId('world-stand').disabled); assert.equal(failure.warnings.length, 0);
+const late = harness({ softwareFails: true }); await late.select3d();
+const lateGPU = late.options; lateGPU.onReady(); lateGPU.onError(new Error('Failed while mount was pending'));
+await late.attach(); assertUnavailable(late);
+assert.equal(late.count('dispose'), 1, 'An engine resolving after failure is disposed');
+lateGPU.onReady(); assertUnavailable(late);
 const departed = harness(); await departed.select3d(); emit(departed.window, 'pagehide', { persisted: false }); await departed.attach();
 assert.equal(departed.count('dispose'), 1); departed.options.onReady(); assertUnavailable(departed);
 const immediateDeparture = harness(); emit(immediateDeparture.window, 'pagehide', { persisted: false }); immediateDeparture.runFrame(); await immediateDeparture.runTask(); assert.equal(immediateDeparture.imports, 0);
 const reduceAtStart = await mounted({ reduced: true }); assert.equal(reduceAtStart.options.reducedMotion, true); assert(reduceAtStart.engineState.paused);
 
 const brokenImport = harness({ importFails: 'once' }); await brokenImport.select3d(); assertLanding(brokenImport);
-assert.equal(brokenImport.imports, 1); assert.equal(brokenImport.warnings.length, 1);
-assert.equal(brokenImport.byId('main').dataset.displayMode, '2d');
-assert(!brokenImport.byId('study-mode-3d').disabled);
-await brokenImport.select3d();
+assert.equal(brokenImport.imports, 1); assert.equal(brokenImport.softwareImports, 1);
 brokenImport.options.onReady(); await brokenImport.attach();
-assert.equal(brokenImport.contextRequests, 1, 'A module retry retains the working WebGL context');
-assert.equal(brokenImport.imports, 2);
-const attempts = brokenImport.calls.filter(call => call.name === 'engineURL').map(call => call.value);
-assert.notEqual(attempts[0], attempts[1], 'Explicit retry uses a fresh module URL after a cached load failure');
-assert.equal(brokenImport.byId('main').dataset.displayMode, '3d');
-assert(!brokenImport.byId('world-stand').disabled);
+assert.equal(brokenImport.byId('main').dataset.displayMode, '3d'); assert(!brokenImport.byId('world-stand').disabled);
+const retryImport = harness({ importFails: 'once', softwareFails: true }); await retryImport.select3d();
+assert.equal(retryImport.byId('main').dataset.displayMode, '2d');
+await retryImport.select3d(); retryImport.options.onReady(); await retryImport.attach();
+const attempts = retryImport.calls.filter(call => call.name === 'engineURL').map(call => call.value);
+assert.equal(attempts.length, 2); assert.notEqual(attempts[0], attempts[1], 'An explicit retry can recover a cached module failure');
+assert.equal(retryImport.contextRequests, 1); assert(!retryImport.byId('world-stand').disabled);
 const attachFirst = harness(); await attachFirst.select3d(); await attachFirst.attach();
 assert.equal(attachFirst.count('standUp'), 0); assert(attachFirst.byId('world-stand').disabled, 'Mount resolution alone cannot enable standing before the first frame');
 assertLanding(attachFirst); attachFirst.options.onReady(); await tick();
@@ -468,7 +513,8 @@ console.log(JSON.stringify({ result: 'PASS', checks: [
   'Five native page menus and the responsive illustration remain interactive without a WebGL context; 3D waits for selection',
   'Japan-time clock updates in 2D without loading the renderer and pauses while hidden',
   'Either ready/mount ordering enables standing; standing reuses the existing engine',
-  'Unsupported GPU and failed imports preserve native menus without retry loops',
+  'A blocked GPU, lost context or failed native import switches to interactive CPU 3D; if both backends fail the menu offers a fresh retry',
+  'Each outdoor artwork opens the matching 3D location after the renderer is ready',
   'Sitting restores menus and resizes the live canvas without disposing or remounting',
   'Outdoor travel and landmark navigation remain gated until exterior readiness',
   'Exterior failure exposes a retry action, gates loading and restores walking after recovery',

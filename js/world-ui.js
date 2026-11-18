@@ -28,6 +28,7 @@
     cat: { label: '書斎の猫' },
   };
   let mode = '2d', engine, rendererContext, disposed = false, firstFrame = false, motionChosen = false;
+  let backend = 'native', requestedPlace = null, visitingEngine = null;
   let launching = false, pageSuspended = false, session = 0, modeRevision = 0, loadFailures = 0, wantsSeat = false, seatTimer, clockTimer;
   let viewportObserver, canvasVisible = true, tour, tourImport, lastDeskAction = 0;
   const clockFormat = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tokyo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -68,7 +69,7 @@
     travel.classList.toggle('is-travelling', !!state.travel);
     retryRow.hidden = !state.outdoorsReady || !state.outdoorsError || state.landmarksReady;
     retry.disabled = !engine || !firstFrame || state.outdoorsLoading;
-    locationName.textContent = state.mode === 'outside' ? '庭' : '書斎';
+    locationName.textContent = state.mode === 'outside' ? (state.district || '庭') : '書斎';
     motion.setAttribute('aria-pressed', String(state.paused));
     motion.setAttribute('aria-label', state.paused ? '風景と猫の動きを再開する' : '風景と猫の動きを止める');
     motionLabel.textContent = state.paused ? '停止中' : '動いています';
@@ -115,6 +116,7 @@
   }
   function showIllustration(message = '') {
     applyMode('2d');
+    requestedPlace = null; visitingEngine = null;
     releasePad(); closePanels();
     wantsSeat = false; clearTimeout(seatTimer);
     engine?.stopMovement?.();
@@ -125,7 +127,7 @@
     controls.hidden = help.hidden = caption.hidden = true;
     canvas.tabIndex = -1; canvas.setAttribute('aria-hidden', 'true');
     for (const button of [...deskButtons, ...walkButtons, ...focusButtons, seat, travel, retry]) button.disabled = true;
-    stand.disabled = false; standLabel.textContent = '庭の景色を見る';
+    stand.disabled = false; standLabel.textContent = '外をのぞいてみる';
     if (standDetail) standDetail.textContent = '早稲田と唐津の4か所';
     modeStatus.textContent = message; entryNote.hidden = true;
     modeChanged();
@@ -137,6 +139,7 @@
     releasePad(); engine?.stopMovement?.();
     engine?.dispose?.(); engine = undefined;
     if (rendererContext?.isContextLost?.()) rendererContext = undefined;
+    backend = 'native';
     lastDeskAction = 0;
     const message = showMessage ? '3Dを読み込めませんでした。2Dで表示しています。「3D」を選ぶと、もう一度読み込みます。' : '';
     showIllustration(message);
@@ -162,12 +165,22 @@
     if (mode !== '3d') return;
     canvas.tabIndex = 0; canvas.removeAttribute('aria-hidden');
     world.classList.add('is-rendered'); world.classList.remove('is-loading');
-    modeStatus.textContent = ''; entryNote.hidden = true;
+    modeStatus.textContent = backend === 'software' ? '軽量3Dで表示しています。' : ''; entryNote.hidden = true;
     syncState(); modeChanged();
+    visitRequestedPlace();
   }
   canvas.addEventListener('worldstate', event => { if (engine || launching) syncState(event.detail); });
+  canvas.addEventListener('study-notebook-set', ({ detail }) => {
+    if (mode !== '3d' || !firstFrame || !engine || !state.seated || typeof detail?.open !== 'boolean') return;
+    if (engine.getState().deskProps?.notebook !== detail.open) engine.interactDesk('notebook');
+  });
   for (const button of deskButtons) button.addEventListener('click', () => {
-    if (engine && !button.disabled && state.seated) engine.interactDesk(button.dataset.deskAction);
+    if (!engine || button.disabled || !state.seated) return;
+    const id = button.dataset.deskAction;
+    engine.interactDesk(id);
+    if (id === 'notebook' && engine.getState().deskProps?.notebook) {
+      canvas.dispatchEvent(new CustomEvent('study-notebook-open', { bubbles: true, detail: { source: button } }));
+    }
   });
   travel.addEventListener('click', () => {
     if (!engine || travel.disabled) return;
@@ -199,7 +212,7 @@
   });
   seat.addEventListener('click', () => {
     if (!engine || seat.disabled) return;
-    releasePad(); closePanels(); wantsSeat = true;
+    requestedPlace = null; visitingEngine = null; releasePad(); closePanels(); wantsSeat = true;
     if (engine.sitDown?.() === false) wantsSeat = false;
     refresh(); canvas.focus({ preventScroll: true });
   });
@@ -276,14 +289,19 @@
     if (motionChosen || disposed) return;
     state.paused = event.matches; engine?.setPaused?.(state.paused); syncState();
   });
-  async function openGarden() {
+  async function openGarden(key) {
     const revision = modeRevision;
     try {
-      tourImport ??= import('./study-tour.js?v=20261118-gallery');
+      tourImport ??= import('./study-tour.js?v=20261118-explore');
       const { createGardenTour } = await tourImport;
       if (disposed || mode !== '2d' || revision !== modeRevision) return;
-      tour ??= createGardenTour(stand);
-      tour.open();
+      tour ??= createGardenTour(stand, { onExplore: key => {
+        if (!subjects['landmark-' + key]) return;
+        requestedPlace = key;
+        select3D();
+        visitRequestedPlace();
+      } });
+      tour.open(key);
     } catch {
       tourImport = undefined;
       if (!disposed && mode === '2d' && revision === modeRevision) modeStatus.textContent = '庭の景色を読み込めませんでした。もう一度ボタンを押してください。';
@@ -293,10 +311,31 @@
     if (disposed) return;
     if (mode === '2d') { openGarden(); return; }
     if (!engine || !firstFrame || !state.seated) return;
-    wantsSeat = false; releasePad(); closePanels(); showHome(false);
+    requestedPlace = null; visitingEngine = null; wantsSeat = false; releasePad(); closePanels(); showHome(false);
     if (engine.standUp?.() === false) { showHome(true); return; }
     refresh(); canvas.focus({ preventScroll: true });
   });
+  function visitRequestedPlace() {
+    if (!requestedPlace || !firstFrame || !engine || mode !== '3d' || document.hidden || pageSuspended) return;
+    if (visitingEngine === engine) return;
+    const key = requestedPlace, currentEngine = engine;
+    visitingEngine = engine; wantsSeat = false;
+    releasePad(); closePanels(); showHome(false);
+    refresh(); canvas.focus({ preventScroll: true });
+    Promise.resolve().then(() => {
+      if (requestedPlace !== key || visitingEngine !== currentEngine) return false;
+      return currentEngine.explorePlace(key);
+    }).catch(() => false).then(arrived => {
+      if (disposed || requestedPlace !== key || visitingEngine !== currentEngine) return;
+      visitingEngine = null;
+      if (document.hidden || pageSuspended) return;
+      if (arrived === false) {
+        if (backend === 'native') { backendFailed(new Error('Outdoor arrival failed')); return; }
+        showIllustration('この場所を開けませんでした。「外をのぞいてみる」からもう一度選んでください。');
+        stand.focus({ preventScroll: true });
+      } else requestedPlace = null;
+    });
+  }
   function resumeEngine() {
     engine.setStudyActive?.(true);
     engine.setRenderingActive?.(canvasVisible && !document.hidden);
@@ -306,26 +345,53 @@
     if (firstFrame) ready();
     refresh();
   }
+  function backendFailed(error) {
+    if (disposed) return;
+    if (backend === 'software') { fail(error); return; }
+    // A disabled/lost WebGL context or a failed native import can still use a
+    // real perspective scene with the browser's ordinary Canvas 2D backend.
+    session++; launching = false; firstFrame = false; backend = 'software'; visitingEngine = null;
+    releasePad(); engine?.stopMovement?.(); engine?.dispose?.(); engine = undefined;
+    lastDeskAction = 0; wantsSeat = false;
+    state = { ...state, seated: true, posture: 'seated', mode: 'inside', travel: false, focus: 'room', deskActionSequence: 0 };
+    if (mode !== '3d') return;
+    world.classList.remove('is-rendered'); world.classList.add('is-loading');
+    showHome(true); stand.disabled = true;
+    canvas.tabIndex = -1; canvas.setAttribute('aria-hidden', 'true');
+    for (const button of [...deskButtons, ...walkButtons, ...focusButtons, seat, travel, retry]) button.disabled = true;
+    modeStatus.textContent = '軽量3Dの書斎を読み込んでいます…';
+    if (!pageSuspended && !document.hidden) launch();
+  }
   async function launch() {
-    if (disposed || launching || engine || mode !== '3d') return;
+    if (disposed || launching || engine || mode !== '3d' || pageSuspended || document.hidden) return;
     launching = true;
-    const id = ++session;
+    const id = ++session, kind = backend;
     const current = () => !disposed && id === session;
     try {
-      rendererContext ??= canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
-      if (!rendererContext || rendererContext.isContextLost?.()) throw new Error('WebGL2 is unavailable');
-      // A cache-busting URL on a retry also recovers a failed module fetch.
-      const url = '../scene/world.bundle.js?v=20261118-studio' + (loadFailures ? '&retry=' + loadFailures : '');
-      const { mountWorld } = await import(url);
+      let mount;
+      if (kind === 'native') {
+        rendererContext ??= canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
+        if (!rendererContext || rendererContext.isContextLost?.()) throw new Error('WebGL2 is unavailable');
+        const url = '../scene/world.bundle.js?v=20261118-grounds2' + (loadFailures ? '&retry=' + loadFailures : '');
+        const { mountWorld } = await import(url);
+        mount = mountWorld;
+      } else {
+        const url = './software-world.js?v=20261118-perspective' + (loadFailures ? '&retry=' + loadFailures : '');
+        const { mountSoftwareWorld } = await import(url);
+        mount = mountSoftwareWorld;
+      }
       if (!current() || mode !== '3d' || pageSuspended || document.hidden) return;
-      const mounted = await mountWorld({ canvas, rendererContext, seated: true, autoTime: true, reducedMotion: state.paused,
+      const mounted = await mount({ canvas, rendererContext, seated: true, autoTime: true, reducedMotion: state.paused,
         onReady: () => { if (current()) ready(); },
-        onError: error => { if (current()) fail(error); },
+        onError: error => { if (current()) backendFailed(error); },
         onSelect: focus => { if (current()) syncState({ focus }); },
       });
       if (!current()) { mounted?.dispose?.(); return; }
-      if (!mounted || mounted.getState?.().webgl === false) throw new Error('The 3D study could not start');
+      if (!mounted || (kind === 'native' && mounted.getState?.().webgl === false)) {
+        mounted?.dispose?.(); throw new Error('The 3D study could not start');
+      }
       engine = mounted;
+      if (state.lightingMode !== 'auto') engine.setLightingMode?.(state.lightingMode);
       engine.setPaused?.(state.paused);
       if (mode === '3d' && !pageSuspended && !document.hidden) resumeEngine();
       else {
@@ -333,7 +399,7 @@
         engine.setRenderingActive?.(false);
       }
     } catch (error) {
-      if (current()) fail(error);
+      if (current()) backendFailed(error);
     } finally {
       if (current()) launching = false;
     }
@@ -353,7 +419,11 @@
     }
   }
   mode2D.addEventListener('click', () => {
-    if (!disposed && mode !== '2d') { showIllustration(); announce('2Dの書斎を表示しています。'); }
+    if (disposed || mode === '2d') return;
+    const districts = { '大隈講堂前': 'okuma-auditorium', '大隈重信像前': 'okuma-statue', '唐津城の水辺': 'karatsu-castle', '旧唐津銀行通り': 'karatsu-bank' };
+    const place = state.mode === 'outside' && districts[state.district];
+    showIllustration(); announce('2Dの書斎を表示しています。');
+    if (place) openGarden(place);
   });
   mode3D.addEventListener('click', select3D);
   showIllustration(); scheduleClock();

@@ -21,10 +21,25 @@ export const WAYPOINTS = [
 ];
 export const LANDMARK_SITES = [
   { key: 'okuma-auditorium', title: '大隈講堂', name: 'Okuma auditorium architecture', position: [-25, 48], rotation: Math.PI * .70, height: 35, width: 31.081174, depth: 27.009272, arrival: [-3, 35], lookHeight: 13 },
-  { key: 'karatsu-castle', title: '唐津城', name: 'Five-tier keep', position: [25, 66], rotation: -Math.PI * .82, height: 27, width: 25.481469, depth: 17.621053, arrival: [7, 50], lookHeight: 11 },
+  { key: 'karatsu-castle', title: '唐津城', name: 'Five-tier keep', position: [25, 66], rotation: -Math.PI * .82, height: 27, foundationY: 4.2, width: 25.481469, depth: 17.621053, arrival: [7, 50], lookHeight: 11 },
   { key: 'karatsu-bank', title: '旧唐津銀行', name: 'Landmark architecture', position: [19, 25], rotation: -Math.PI * .55, height: 14, width: 25.131055, depth: 20.463466, arrival: [6, 20], lookHeight: 5 },
   { key: 'okuma-statue', title: '大隈重信像', name: 'Okuma statue monument', position: [-7, 22], rotation: Math.PI * .78, height: 6.5, width: 1.94655, depth: 1.654568, arrival: [-1.296, 15], lookHeight: 3.4 },
 ];
+// Gallery entries begin at ground-level viewpoints with open walking space.
+export const OUTDOOR_VIEWS = {
+  'okuma-auditorium': { eye: [-3.5,34.0], target: [-25,13.4,48] },
+  'okuma-statue': { eye: [-2.4,16.3], target: [-7,3.4,22] },
+  'karatsu-castle': { eye: [13.4,40.1], target: [25,11.8,66] },
+  'karatsu-bank': { eye: [4.8,14.5], target: [19,5.5,25] },
+};
+
+export function districtAt({x,z}) {
+  if(z>=38 && x>=5) return '唐津城の水辺';
+  if(z>=9 && z<40 && x>=3.5) return '旧唐津銀行通り';
+  if(z>=31 && z<80 && x<2.5) return '大隈講堂前';
+  if(z>=12 && z<31 && x<2.5) return '大隈重信像前';
+  return '庭';
+}
 /** Reserve the complete rotated native bounding rectangle before any asset
  * factory finishes. Loading architecture can only shrink these obstacles. */
 export const LANDMARK_RESERVATIONS = LANDMARK_SITES.map(site => {

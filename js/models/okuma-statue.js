@@ -10,15 +10,15 @@
  * and rear architecture below are intentionally abbreviated, not a site survey.
  */
 import { surface } from '../../scene/surface-materials.js';
+import { createOkumaPlinth } from './okuma-plinth.js';
 export function createOkumaStatue(T) {
   const group = new T.Group();
   group.name = 'Okuma Shigenobu — Waseda campus';
   const mat = (color, roughness = .85, metalness = 0) => new T.MeshStandardMaterial({color, roughness, metalness});
   const M = {
-    bronze: mat(0x46594f, .54, .73),
-    raised: mat(0x68776a, .45, .76),
-    recess: mat(0x2e3e37, .78, .5),
-    robe: new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.68,metalness:.58}),
+    bronze: mat(0x47585a, .50, .61),
+    raised: mat(0x667572, .43, .66),
+    recess: mat(0x2e3b3c, .74, .48),
     stone:mat(0xa6a6a0), stoneEdge:mat(0xb7b7af), stoneShade:mat(0x848981),
     paving:mat(0xc2bdb0), paving2:mat(0xb3b0a4), ground:mat(0x999b8b), soil:mat(0x5d6950),
     leaf:mat(0x6c7856), leaf2:mat(0x84916a), leaf3:mat(0x4a6550),
@@ -27,8 +27,6 @@ export function createOkumaStatue(T) {
   };
   for(const key of ['stone','stoneEdge','stoneShade'])surface(M[key],'stone',{tint:key==='stoneShade'?'#bbc0bb':'#e0e3df'});
   const boxGeo = new T.BoxGeometry(1,1,1);
-  const ballGeo = new T.SphereGeometry(1,16,10);
-  const smallBallGeo = new T.SphereGeometry(1,12,8);
   const leafGeo = new T.IcosahedronGeometry(1,1);
   const cylGeo = new T.CylinderGeometry(1,1,1,10);
   const v = (p) => new T.Vector3(...p);
@@ -37,7 +35,6 @@ export function createOkumaStatue(T) {
     m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
   };
   const box = (p,s,m,parent=group) => add(boxGeo,m,p,s,parent);
-  const ball = (p,s,m=M.bronze,parent=group,detail=false) => add(detail?ballGeo:smallBallGeo,m,p,s,parent);
   const segment = (a,b,r,m=M.bronze,parent=group) => {
     const delta=v(b).sub(v(a));const o=add(cylGeo,m,v(a).add(v(b)).multiplyScalar(.5).toArray(),[r,delta.length(),r],parent);
     o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());return o;
@@ -45,19 +42,6 @@ export function createOkumaStatue(T) {
   const curve = (points,r,m=M.bronze,steps=20,sides=5,parent=group) => {
     const path = new T.CatmullRomCurve3(points.map(v));
     return add(new T.TubeGeometry(path,steps,r,sides,false),m,[0,0,0],[1,1,1],parent);
-  };
-  const indexed = (pos,idx,material,vertexColor=false,parent=group) => {
-    const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));geo.setIndex(idx);geo.computeVertexNormals();
-    if(vertexColor){
-      const colors=[];const base=new T.Color(0x577268),light=new T.Color(0x789083),dark=new T.Color(0x3c514b);
-      for(let i=0;i<pos.length;i+=3){
-        const x=pos[i],y=pos[i+1],z=pos[i+2];
-        const noise=.45*Math.sin(x*27+y*7+Math.sin(z*13))+.25*Math.sin(x*8-y*11+z*18)+.18*Math.sin(y*43+x*6);
-        const c=base.clone().lerp(noise>0?light:dark,Math.min(.7,Math.abs(noise)*.72));colors.push(c.r,c.g,c.b);
-      }
-      geo.setAttribute('color',new T.Float32BufferAttribute(colors,3));
-    }
-    return add(geo,material,[0,0,0],[1,1,1],parent);
   };
   // Thin chamfered island and a quiet gridded stone approach.
   box([0,-.27,0],[32,.55,26],M.ground);
@@ -86,7 +70,7 @@ export function createOkumaStatue(T) {
   const gauss = (x,c,w) => Math.exp(-(((x-c)/w)**2));
   const mix = (a,b,t) => a+(b-a)*t;
   const smooth = t => {t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
-  const sculptMaterial = new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.56,metalness:.72});
+  const sculptMaterial = new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.48,metalness:.57});
   // Fine casting and granite grain are bounded procedural maps, no external
   // textures or image downloads. Low bump amplitude avoids a painted toy sheen.
   const micro = new Uint8Array(96*96*4), stoneMicro = new Uint8Array(96*96*4);
@@ -101,15 +85,18 @@ export function createOkumaStatue(T) {
   bronzeMap.wrapS=bronzeMap.wrapT=T.RepeatWrapping;bronzeMap.repeat.set(7,7);bronzeMap.needsUpdate=true;
   const stoneMap = new T.DataTexture(stoneMicro,96,96,T.RGBAFormat);
   stoneMap.wrapS=stoneMap.wrapT=T.RepeatWrapping;stoneMap.repeat.set(8,12);stoneMap.needsUpdate=true;
-  for(const m of [M.bronze,M.raised,M.recess,M.robe,sculptMaterial]) {m.bumpMap=bronzeMap;m.bumpScale=.008;}
+  for(const texture of [bronzeMap,stoneMap]){
+    texture.minFilter=T.LinearMipmapLinearFilter;texture.magFilter=T.LinearFilter;texture.generateMipmaps=true;
+  }
+  for(const m of [M.bronze,M.raised,M.recess,sculptMaterial]) {m.bumpMap=bronzeMap;m.bumpScale=.008;}
   for(const m of [M.stone,M.stoneShade,M.stoneEdge]) {m.bumpMap=stoneMap;m.bumpScale=.011;}
-  const patina = (geo,base=0x50655a) => {
+  const patina = (geo,base=0x485b60) => {
     const p=geo.attributes.position,c=[],uv=[];
-    const bronze=new T.Color(base),light=new T.Color(0x819583),dark=new T.Color(0x34483c);
+    const bronze=new T.Color(base),light=new T.Color(0x87948d),dark=new T.Color(0x303d40);
     for(let i=0;i<p.count;i++) {
       const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
       const n=.33*Math.sin(x*10.3+y*3.7+z*8.8)+.18*Math.sin(x*29.7-y*8.3+z*17.4)+.08*Math.sin(y*47.6+x*43.2);
-      const color=bronze.clone().lerp(n>0?light:dark,Math.abs(n)*.62);c.push(color.r,color.g,color.b);
+      const color=bronze.clone().lerp(n>0?light:dark,Math.abs(n)*.31);c.push(color.r,color.g,color.b);
       uv.push(x*.51+z*.37,y*.23+z*.16);
     }
     geo.setAttribute('color',new T.Float32BufferAttribute(c,3));
@@ -120,7 +107,6 @@ export function createOkumaStatue(T) {
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();patina(g);
     const mesh=add(g,material,[0,0,0],[1,1,1],parent);mesh.name=name;return mesh;
   };
-  const mb = (p,s,m=M.bronze,parent=monument) => box(p,s,m,parent);
   const mc = (p,r=.015,m=M.raised,steps=26,sides=6,parent=monument) => curve(p,r,m,steps,sides,parent);
   function ellipseLoft(rings,n,name,closed=true,parent=monument) {
     const p=[],idx=[];
@@ -144,26 +130,7 @@ export function createOkumaStatue(T) {
     }
     return sculpt(p,idx,name,parent);
   }
-  // Slightly tapered dressed granite pedestal, matching the campus monolith.
-  mb([0,.49,0],[5,.20,4.25],M.stoneShade);
-  const pedestalG=new T.CylinderGeometry(1,1,1,4,1,false,Math.PI/4);
-  const pp=pedestalG.attributes.position;
-  for(let i=0;i<pp.count;i++){
-    const t=pp.getY(i)+.5,w=mix(4.55,4.0,t),d=mix(3.97,3.58,t);
-    pp.setXYZ(i,pp.getX(i)*w/Math.SQRT2,.59+t*6.13,pp.getZ(i)*d/Math.SQRT2);
-  }
-  pedestalG.computeVertexNormals();add(pedestalG,M.stone,[0,0,0],[1,1,1],monument).name='Tapered granite monolith';
-  mb([0,6.74,0],[4.03,.12,3.61],M.stoneEdge);
-  mb([0,7.09,0],[3.46,.59,3.12],M.bronze);
-  mb([0,7.397,0],[3.5,.07,3.15],M.raised);
-  mb([0,3.79,1.891],[.65,3.68,.026],M.stoneShade);
-  mb([0,3.8,1.909],[.59,3.59,.025],M.stone);
-  // Keep the existing blank inscription field; no invented lettering.
-  for(const x of [-1.85,1.85])mb([x,3.6,1.884],[.018,5.4,.012],M.stoneEdge);
-  for(const sign of [-1,1]){
-    mb([0,6.865,sign*1.562],[3.39,.027,.020],M.raised);
-    mb([sign*1.732,6.865,0],[.020,.027,3.05],M.raised);
-  }
+  createOkumaPlinth(T,monument,M);
   // Sculpted shoes: squared heel, instep, toe and welt form one continuous skin.
   // The nearer right foot points forward; the left foot is set slightly behind.
   function shoe(x,z,turn) {
@@ -188,44 +155,68 @@ export function createOkumaStatue(T) {
     mc(welt,.017,M.recess,42,5);
     ellipseLoft([[7.72,.24,.245,x,z],[8.2,.27,.28,x,z-.035],[8.72,.29,.31,x,z-.07]],36,'Trouser ankle',true);
   }
-  shoe(-.42,.31,-.075);shoe(.48,-.03,.26);
-  // The museum's 1932 standing figure has a long, comparatively narrow gown.
-  // The shoulder yoke and arms give breadth; the head is not oversized.
-  const profile=[
-    [8.47,1.25,.70,-.02,-.06,.071],[8.60,1.28,.72,-.02,-.06,.085],
-    [9.20,1.27,.72,-.005,-.075,.090],[10.0,1.24,.70,.015,-.085,.091],
-    [11.0,1.20,.69,.025,-.07,.088],[12.0,1.13,.67,.025,-.045,.079],
-    [13.0,1.10,.65,.018,-.018,.070],[14.0,1.13,.59,.012,.00,.055],
-    [14.64,1.10,.49,.01,.00,.041],[14.96,.94,.41,0,.00,.024],
-    [15.18,.65,.31,0,.00,.012],[15.30,.32,.26,0,.00,0]
+  shoe(-.34,.34,-.09);shoe(.46,-.05,.96);
+  // The figure carries its weight on the forward right foot. The head drifts
+  // toward his left shoulder, while the opposite sleeve hangs well clear of
+  // the body. The front panels are cut from the same draped surface.
+  const torso = [
+    [8.62,1.45,.735,-.05,-.045],[9.20,1.43,.72,-.032,-.064],
+    [10.65,1.32,.68,-.017,-.082],[12.12,1.21,.64,.016,-.052],
+    [13.38,1.13,.61,.046,-.028],[14.38,1.09,.54,.079,-.016],
+    [14.89,.94,.44,.105,.006],[15.18,.65,.335,.143,.018],[15.39,.30,.246,.18,.033],
   ];
-  const gownR=[];
-  for(let k=0;k<profile.length-1;k++){
-    const a=profile[k],b=profile[k+1],steps=5;
-    for(let j=0;j<steps;j++)gownR.push(a.map((n,i)=>mix(n,b[i],smooth(j/steps))));
+  // Ridges at the shoulder diverge gradually toward the irregular hem. Broad
+  // quiet stretches alternate with tightly pinched shadow folds.
+  const pleats = [
+    [-2.94,-3.05,.095,.11],[-2.59,-2.73,.14,.12],[-2.29,-2.12,.13,.10],
+    [-1.97,-1.78,.08,.16],[-1.70,-1.58,.14,.09],[-1.37,-1.23,.095,.10],
+    [-1.09,-1.01,.16,.10],[-.79,-.66,.125,.085],[-.46,-.41,.065,.11],
+    [.22,.39,.055,.09],[.49,.57,.085,.095],[.74,.85,.13,.085],
+    [1.03,1.17,.16,.12],[1.38,1.48,.12,.11],[1.75,1.90,.11,.09],
+    [2.04,2.24,.12,.14],[2.35,2.47,.13,.10],[2.69,2.77,.09,.12],
+  ];
+  const angleDistance = (a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+  function clothPoint(a,t) {
+    const y=mix(torso[0][0],torso.at(-1)[0],t);
+    let k=0;while(k<torso.length-2 && torso[k+1][0]<y)k++;
+    const lo=torso[k],hi=torso[k+1],u=(y-lo[0])/(hi[0]-lo[0]);
+    const rx=mix(lo[1],hi[1],u),rz=mix(lo[2],hi[2],u);
+    const x=mix(lo[3],hi[3],u),z=mix(lo[4],hi[4],u);
+    let corrugation=0;
+    for(const [hem,shoulder,height,width] of pleats){
+      const center=mix(hem,shoulder,t)+.055*Math.sin(t*4.9+hem)*(1-t);
+      const d=angleDistance(a,center);
+      corrugation+=height*(Math.exp(-((d/width)**2))-.45*Math.exp(-(((d+width*1.12)/(width*.72))**2)));
+    }
+    corrugation*=.58+.42*Math.sin(Math.PI*(.76*t+.20));
+    const opening=.12+.14*t+.035*Math.sin(t*3);
+    corrugation+=.035*gauss(a,opening-.09,.085)-.087*gauss(a,opening,.042)+.055*gauss(a,opening+.10,.073);
+    const hemLift=(.105*Math.sin(2*a-.3)+.043*Math.cos(5*a)+.048*gauss(a,-1.45,.34))*(1-smooth(t/.105));
+    return [x+(rx+corrugation)*Math.sin(a),y+hemLift,z+(rz+corrugation)*Math.cos(a)];
   }
-  gownR.push(profile.at(-1));
-  const gown=ellipseLoft(gownR,112,'Continuous pleated academic gown');
-  // A broad, shallow fold on each front panel breaks the mechanical symmetry.
-  const gp=gown.geometry.attributes.position;
-  for(let i=0;i<gp.count;i++){
-    const x=gp.getX(i),y=gp.getY(i),z=gp.getZ(i);
-    const front=smooth((z+.05)/.42),weighted=smooth((14.9-y)/1.0);
-    const fold=.065*gauss(x,-.49+.06*Math.sin(y*.65),.17)-.039*gauss(x,.41,.10);
-    const rearYoke=smooth((y-14.21)/.51)*smooth((-z-.16)/.25);
-    gp.setZ(i,z+fold*front*weighted+(z<0?.047*Math.cos(12*Math.atan2(x,z))*(1-rearYoke*.25)*rearYoke:0));
-    if(y<8.65)gp.setY(i,y+(.031*Math.sin(x*8)+.022*Math.cos(x*13))*smooth((8.65-y)/.18));
+  const clothP=[],clothI=[],around=136,down=48;
+  for(let j=0;j<=down;j++)for(let i=0;i<=around;i++)clothP.push(...clothPoint(i/around*Math.PI*2-Math.PI,j/down));
+  for(let j=0;j<down;j++)for(let i=0;i<around;i++){const a=j*(around+1)+i,b=a+around+1;clothI.push(a,a+1,b,a+1,b+1,b);}
+  const gown=sculpt(clothP,clothI,'Continuous pleated academic gown');
+  gown.userData.sculpturePart='weighted-gown';
+  const hem=[];for(let i=0;i<=88;i++)hem.push(clothPoint(Math.PI*2*i/88-Math.PI,0));
+  const underside=[],underTriangles=[];
+  for(const [scale,lift] of [[1,0],[.90,.065],[.38,.13],[.007,.15]]){
+    for(const [x,y,z] of hem)underside.push(x*scale,y+lift,z*scale);
   }
-  gown.geometry.computeVertexNormals();
-  mc([[-1.05,14.64,-.263],[-.75,14.47,-.450],[-.39,14.33,-.537],[0,14.27,-.573],[.39,14.33,-.537],[.75,14.47,-.450],[1.05,14.64,-.263]],.010,M.bronze,62,6);
-  mc([[0,15.27,-.27],[0,14.95,-.435],[0,14.53,-.528],[0,14.29,-.584]],.011,M.recess,26,5);
-  // Hem lip is a flattened fold, with consistent thickness when seen from below.
-  const hem=[];for(let i=0;i<=80;i++){const a=i/80*Math.PI*2,r=.064*Math.cos(a*12);hem.push([(1.25+r)*Math.sin(a)-.02,8.481,(.70+r*.66)*Math.cos(a)-.06]);}
-  mc(hem,.023,M.recess,90,5);
-  // Convex ribbon surfaces model the fabric's broad front facings. They lie
-  // against the gown and have no tube-like, detached cable appearance.
-  function facing(points,width,name,bulge=.023,material=sculptMaterial) {
-    const path=new T.CatmullRomCurve3(points.map(v)),p=[],idx=[],L=52,W=8;
+  for(let j=0;j<3;j++)for(let i=0;i<88;i++){
+    const a=j*89+i,b=a+89;underTriangles.push(a,b,a+1,a+1,b,b+1);
+  }
+  sculpt(underside,underTriangles,'Shadowed inner return of the hem',monument,M.recess);
+  mc(hem,.018,M.bronze,90,6).name='Turned irregular hem';
+  const opening=[];
+  for(let j=0;j<=45;j++){
+    const t=.016+.903*j/45,a=.12+.14*t+.035*Math.sin(t*3);
+    const [x,y,z]=clothPoint(a-.028,t);opening.push([x,y,z+.012]);
+  }
+  mc(opening,.012,M.recess,48,5).name='Fold at the overlapping front of the gown';
+  function facing(points,width,name,bulge=.023,material=sculptMaterial){
+    const path=new T.CatmullRomCurve3(points.map(v)),p=[],idx=[],L=24,W=5;
     for(let j=0;j<=L;j++){
       const t=j/L,c=path.getPoint(t),tan=path.getTangent(t),side=new T.Vector3(tan.y,-tan.x,0).normalize();
       for(let i=0;i<=W;i++){
@@ -234,125 +225,238 @@ export function createOkumaStatue(T) {
       }
     }
     for(let j=0;j<L;j++)for(let i=0;i<W;i++){const a=j*(W+1)+i,b=a+W+1;idx.push(a,b,a+1,a+1,b,b+1);}
-    const mesh=sculpt(p,idx,name);mesh.material=material.clone();mesh.material.side=T.DoubleSide;return mesh;
+    const m=sculpt(p,idx,name);m.material=material.clone();m.material.side=T.DoubleSide;return m;
   }
-  facing([[-.28,15.31,.20],[-.45,14.92,.43],[-.43,14.01,.62],[-.32,12.6,.704],[-.29,10.55,.765],[-.26,8.52,.77]],.34,'Left gown facing');
-  facing([[.27,15.31,.20],[.40,14.91,.43],[.38,13.99,.62],[.33,12.5,.705],[.36,10.5,.758],[.41,8.54,.762]],.32,'Right gown facing');
-  mc([[.055,14.66,.44],[.065,13.95,.65],[.085,12.5,.663],[.09,10.2,.705],[.105,8.54,.723]],.013,M.recess,55,5);
-  // Spacious triangular hanging sleeves, open at the cuff and joined smoothly
-  // to the shoulders. Cross sections follow the arm, never a stack of spheres.
+  for(const side of [-1,1]){
+    const p=[],idx=[],L=44,W=9;
+    for(let j=0;j<=L;j++)for(let i=0;i<=W;i++){
+      const t=.985*j/L,across=i/W,collar=smooth((t-.7)/.285);
+      const a=side*(.22+.10*side+.40*across+.30*collar);
+      const pt=clothPoint(a,t),relief=.012+.038*Math.sin(Math.PI*across)+.014*gauss(across,.04,.10);
+      pt[0]+=Math.sin(a)*relief;pt[2]+=Math.cos(a)*relief;p.push(...pt);
+    }
+    for(let j=0;j<L;j++)for(let i=0;i<W;i++){
+      const a=j*(W+1)+i,b=a+W+1;
+      if(side<0)idx.push(a,b,a+1,a+1,b,b+1);else idx.push(a,a+1,b,a+1,b+1,b);
+    }
+    sculpt(p,idx,side<0?'Right silk gown facing':'Left silk gown facing');
+  }
+  // The sleeve on the cane side projects out and back, then folds sharply
+  // inward into the wrist. The resting arm stays much closer to the torso.
   function sleeve(side) {
-    const p=[],idx=[],N=64,H=34,endY=side<0?12.27:12.16;
-    const path=new T.CatmullRomCurve3([v([side*.78,14.96,-.075]),v([side*1.05,14.11,-.08]),v([side*1.16,13.06,-.01]),v([side*1.25,endY,.07])]);
-    for(let j=0;j<=H;j++){
-      const t=j/H,c=path.getPoint(t),rx=.20+.20*smooth(t/.5)+.06*t,rz=.25+.18*t;
-      for(let i=0;i<=N;i++){
-        const a=i/N*Math.PI*2,f=(.014+.037*t)*Math.cos(9*a+.17*Math.sin(t*4));
-        const x=c.x+(rx+f)*Math.sin(a),z=c.z+(rz+f*.65)*Math.cos(a),y=c.y+.105*t*Math.sin(a)*side;
-        p.push(x,y,z);
-      }
+    const cane=side<0,N=64,H=32;
+    const centers=cane?[
+      [-.56,15.12,-.11],[-.99,14.76,-.14],[-1.24,13.78,-.19],[-1.49,12.99,-.20],[-1.39,12.40,.014],
+    ]:[
+      [.68,15.06,-.085],[1.00,14.63,-.075],[1.12,13.86,-.04],[1.24,12.99,-.035],[1.23,12.15,.025],
+    ];
+    const path=new T.CatmullRomCurve3(centers.map(v)),p=[],idx=[];
+    function edge(t,a){
+      const c=path.getPoint(t),outer=.5+.5*side*Math.sin(a),front=Math.cos(a);
+      const rx=(cane?.13:.12)+(cane?.32:.24)*smooth(t/.56)+(cane?.09:.032)*gauss(t,.76,.18);
+      const rz=.18+(cane?.34:.225)*smooth(t/.70);
+      const ridge=.052*Math.cos(6*a+1.20*t+.27*Math.sin(2*a))+.028*Math.cos(10*a-2.2*t);
+      const bias=angleDistance(a,side*(.75+1.27*smooth((t-.45)/.55)));
+      const fold=ridge*(.17+.83*smooth(t/.3)) + (cane?.14:.065)*gauss(bias,0,.20)*gauss(t,.83,.22);
+      return [c.x+(rx+fold)*Math.sin(a)+(cane?-.115:0)*outer*t*t,
+        c.y+(t**2)*((cane?.44:.21)*outer-.13*front-(cane?.50:.12)*outer*Math.max(0,-front)),
+        c.z+(rz+fold)*front-(cane?.17:.035)*outer*t*t];
     }
+    for(let j=0;j<=H;j++)for(let i=0;i<=N;i++)p.push(...edge(j/H,Math.PI*2*i/N));
     for(let j=0;j<H;j++)for(let i=0;i<N;i++){const a=j*(N+1)+i,b=a+N+1;idx.push(a,b,a+1,a+1,b,b+1);}
-    sculpt(p,idx,side<0?'Right hanging sleeve':'Left hanging sleeve');
-    const end=path.getPoint(1),cuff=[];
-    for(let i=0;i<=64;i++){const a=i/64*Math.PI*2;const f=.05*Math.cos(9*a+.17*Math.sin(4));cuff.push([end.x+(.46+f)*Math.sin(a),end.y+.105*Math.sin(a)*side,end.z+(.43+f*.65)*Math.cos(a)]);}
-    mc(cuff,.027,M.raised,72,6);
-    // Inset dark lining is a closed modest ellipse, clear from a low viewpoint.
-    const lining=new T.SphereGeometry(1,32,12);add(lining,M.recess,[end.x,end.y+.025,end.z],[.425,.055,.40],monument).name='Sleeve inner lining';
-    if(side>0){
-      ellipseLoft([[11.81,.14,.13,1.18,.11],[12.02,.17,.16,1.20,.11],[12.25,.13,.14,1.20,.09]],32,'Relaxed left hand');
-      for(let k=0;k<3;k++)mc([[1.10+k*.061,12.04,.256],[1.10+k*.061,11.86,.225]],.009,M.recess,9,4);
+    const m=sculpt(p,idx,cane?'Right hanging sleeve':'Left hanging sleeve');
+    const edgePts=[];for(let i=0;i<=56;i++)edgePts.push(edge(1,2*Math.PI*i/56));
+    mc(edgePts,.026,M.raised,58,6).name='Rolled sleeve edge';
+    const center=centers.at(-1), lining=[],li=[];
+    for(const [depth,scale] of [[0,1],[.16,.91],[.40,.56]]){
+      for(const pt of edgePts)lining.push(mix(center[0],pt[0],scale),pt[1]+depth,mix(center[2],pt[2],scale));
     }
+    for(let j=0;j<2;j++)for(let i=0;i<56;i++){const a=j*57+i,b=a+57;li.push(a,b,a+1,a+1,b,b+1);}
+    sculpt(lining,li,'Deep sleeve lining',monument,M.recess);
+    m.userData.sculpturePart=cane?'open-cane-sleeve':'resting-sleeve';
   }
   sleeve(-1);sleeve(1);
-  // Hand and cane are fitted together. The curled fingers are continuous tapered
-  // sweeps; knuckle creases stay shallow in the cast bronze surface.
-  ellipseLoft([[11.50,.19,.17,-1.27,.30],[11.70,.22,.20,-1.29,.30],[11.96,.17,.17,-1.28,.21],[12.23,.13,.14,-1.27,.13]],40,'Cane-bearing hand');
-  for(let i=0;i<4;i++){
-    const x=-1.455+i*.082;
-    mc([[x,11.83,.395],[x-.012,11.69,.518],[x+.020,11.52,.475]],.052,M.bronze,14,8);
-    mc([[x-.010,11.68,.532],[x+.024,11.665,.535]],.007,M.recess,6,4);
+  // Taper each articulated finger from the knuckle, round the fingertip, and
+  // leave visible notches between the four fingers and the opposing thumb.
+  function finger(points,radius,name) {
+    const path=new T.CatmullRomCurve3(points.map(v)),L=13,S=8;
+    const geo=new T.TubeGeometry(path,L,radius,S,false),p=geo.attributes.position;
+    for(let j=0;j<=L;j++){
+      const t=j/L,c=path.getPointAt(t);
+      const taper=(1-.27*t)*(.18+.82*Math.sqrt(Math.max(0,1-(Math.max(0,(t-.80)/.20))**2)));
+      for(let i=0;i<=S;i++){const at=j*(S+1)+i;p.setXYZ(at,mix(c.x,p.getX(at),taper),mix(c.y,p.getY(at),taper),mix(c.z,p.getZ(at),taper));}
+    }
+    geo.computeVertexNormals();const m=add(patina(geo),sculptMaterial,[0,0,0],[1,1,1],monument);m.name=name;
   }
-  mc([[-1.08,11.85,.30],[-1.04,11.69,.44],[-1.14,11.60,.50]],.065,M.raised,16,8);
-  mc([[-1.47,7.44,.47],[-1.39,9.60,.47],[-1.31,11.73,.46]],.052,M.bronze,40,10);
-  mc([[-1.47,7.44,.47],[-1.465,7.58,.47]],.065,M.recess,4,10);
-  // Standing collar and bow tie remain part of the original academic dress.
-  ellipseLoft([[15.03,.27,.23,0,0],[15.37,.275,.25,0,.01],[15.67,.275,.255,0,.025]],40,'Neck');
-  facing([[-.27,15.55,.12],[-.28,15.32,.24],[-.13,15.08,.36]],.105,'Left standing collar',.011);
-  facing([[.27,15.55,.12],[.27,15.32,.24],[.13,15.08,.36]],.105,'Right standing collar',.011);
-  const bowG=new T.SphereGeometry(1,24,12);
-  for(const side of [-1,1]){const b=add(bowG,M.bronze,[side*.15,15.09,.358],[.16,.075,.055],monument);b.rotation.z=side*.12;}
-  add(bowG,M.raised,[0,15.09,.39],[.061,.063,.048],monument);
-  // A single continuous head mesh integrates brow, sockets, nose, cheeks, mouth
-  // and chin. It replaces detached cheek/jowl/nose balls that read as a toy.
-  const head=new T.Group();head.name='Sculpted portrait of Okuma Shigenobu';head.position.set(0,16.035,.026);head.rotation.y=-.045;head.rotation.x=-.035;monument.add(head);
-  const faceP=[],faceI=[],N=100,H=76;
+  ellipseLoft([[11.87,.145,.13,-1.17,.32],[11.99,.195,.173,-1.18,.305],[12.19,.18,.155,-1.21,.24],[12.43,.127,.132,-1.26,.12]],32,'Cane-bearing right palm');
+  for(let i=0;i<4;i++){
+    const x=-1.345+.088*i,dy=[.08,.035,0,.035][i];
+    finger([[x,12.04,.41],[x-.015,11.91,.505],[x+.005,11.76+dy,.512],[x+.035,11.72+dy,.408]],.046,'Right fingers around the walking stick');
+  }
+  finger([[-1.05,12.14,.26],[-.985,12.02,.38],[-1.035,11.91,.47],[-1.115,11.89,.49]],.063,'Right thumb');
+  mc([[-1.42,7.445,.53],[-1.33,9.68,.49],[-1.23,11.77,.436]],.041,M.bronze,32,10).name='Slender right-hand walking stick';
+  mc([[-1.42,7.445,.53],[-1.414,7.58,.528]],.046,M.recess,5,9);
+  mc([[-1.28,11.76,.431],[-1.23,11.86,.435],[-1.14,11.88,.421]],.060,M.raised,14,8);
+  ellipseLoft([[11.91,.13,.115,1.245,.145],[12.05,.16,.14,1.25,.14],[12.28,.135,.13,1.24,.10]],28,'Relaxed left palm');
+  for(let i=0;i<4;i++){
+    const x=1.135+.07*i,z=.178+.025*Math.sin(i),drop=[.17,.22,.205,.145][i];
+    finger([[x,12.03,z],[x+.025,11.93,z+.043],[x+.032,12.01-drop,z+.025],[x+.025,11.994-drop,z]],.037,'Relaxed left fingers');
+  }
+  finger([[1.135,12.14,.14],[1.081,12.03,.20],[1.077,11.975,.227]],.045,'Left thumb');
+  const shirt=[],shirtI=[],shirtRows=18,shirtCols=8;
+  for(let j=0;j<=shirtRows;j++){
+    const u=j/shirtRows,t=.865+.134*u,width=.015+.54*u;
+    for(let i=0;i<=shirtCols;i++){
+      const a=.08+(2*i/shirtCols-1)*width,point=clothPoint(a,t);
+      point[2]+=.034;shirt.push(...point);
+    }
+  }
+  for(let j=0;j<shirtRows;j++)for(let i=0;i<shirtCols;i++){
+    const a=j*(shirtCols+1)+i,b=a+shirtCols+1;shirtI.push(a,a+1,b,a+1,b+1,b);
+  }
+  const waistcoat=sculptMaterial.clone();waistcoat.color.set('#bec7c5');
+  sculpt(shirt,shirtI,'V-shaped upper opening and waistcoat',monument,waistcoat);
+  ellipseLoft([[15.05,.26,.23,.13,.01],[15.33,.272,.25,.17,.023],[15.65,.268,.248,.20,.045]],40,'Neck');
+  facing([[-.11,15.55,.14],[-.12,15.33,.262],[.03,15.12,.37]],.104,'Right standing collar',.013);
+  facing([[.43,15.54,.115],[.425,15.33,.241],[.285,15.12,.36]],.104,'Left standing collar',.013);
+  const bowG=new T.SphereGeometry(1,20,12);
+  for(const side of [-1,1]){
+    const wing=add(bowG,M.bronze,[.16+side*.137,15.15,.358],[.145,.068,.055],monument);
+    wing.rotation.z=side*.13;
+  }
+  add(bowG,M.raised,[.16,15.145,.397],[.053,.056,.047],monument);
+  const head=new T.Group();head.name='Sculpted portrait of Okuma Shigenobu';
+  head.position.set(.19,16.055,.04);head.rotation.set(-.025,.115,-.065);monument.add(head);
+  // Horizontal sections captured from the portrait: broad temples, pronounced
+  // zygomatic arch, full lower cheeks, and a compact projecting chin. Cubic
+  // interpolation keeps the planes continuous in profile as well as head-on.
+  const skull=[
+    [-.665,.016,.025,.07],[-.611,.185,.165,.06],[-.52,.274,.264,.041],
+    [-.39,.368,.319,.018],[-.22,.435,.361,.008],[-.07,.448,.381,.003],
+    [.08,.463,.393,.005],[.24,.451,.397,.014],[.39,.439,.389,.028],
+    [.54,.414,.365,.032],[.67,.347,.309,.023],[.755,.18,.177,.016],[.777,.028,.039,0],
+  ];
+  function skullSection(y){
+    let k=0;while(k<skull.length-2&&y>skull[k+1][0])k++;
+    const a=skull[k],b=skull[k+1],prev=skull[Math.max(0,k-1)],next=skull[Math.min(skull.length-1,k+2)];
+    const step=b[0]-a[0],t=Math.max(0,Math.min(1,(y-a[0])/step)),t2=t*t,t3=t2*t;
+    return [1,2,3].map(i=>(2*t3-3*t2+1)*a[i]+(-2*t3+3*t2)*b[i]
+      +(t3-2*t2+t)*step*(b[i]-prev[i])/(b[0]-prev[0])
+      +(t3-t2)*step*(next[i]-a[i])/(next[0]-a[0]));
+  }
+  function faceRelief(x,y){
+    const ax=Math.abs(x),asym=x<0?-.008:.006;
+    const lip=-.273-.123*Math.pow(Math.min(1,ax/.245),1.65)+asym*.25;
+    const furrow=.14+.172*smooth((.018-y)/.38);
+    let z=.077*gauss(ax,.306,.106)*gauss(y,-.055+asym,.118);
+    z-=.051*gauss(ax,.327,.080)*gauss(y,-.207,.119);
+    z+=.041*gauss(ax,.286,.115)*gauss(y,-.337,.129);
+    z-=.040*gauss(ax,furrow,.022)*gauss(y,-.189,.154);
+    z+=.029*gauss(ax,furrow+.039,.044)*gauss(y,-.162,.158);
+    const browY=.215-.075*Math.pow((ax-.19)/.20,2)+asym;
+    z+=.094*gauss(ax,.207,.15)*gauss(y,browY,.047);
+    z-=.077*gauss(ax,.206,.112)*gauss(y,.099+asym,.05);
+    z+=.035*gauss(ax,.219,.106)*gauss(y,.013+asym,.042);
+    z-=.018*gauss(ax,.215,.114)*gauss(y,-.026+asym,.014);
+    z+=.129*gauss(x,.007,.075)*gauss(y,.106,.198);
+    z+=.195*gauss(x,.006,.084)*gauss(y,-.048,.073);
+    z+=.09*gauss(ax,.096,.047)*gauss(y,-.084,.04);
+    z-=.046*gauss(ax,.075,.025)*gauss(y,-.107,.017);
+    z-=.020*gauss(ax,.012,.027)*gauss(y,-.173,.055);
+    z+=.043*gauss(x,0,.235)*gauss(y,lip+.025,.022);
+    z-=.030*gauss(x,0,.236)*gauss(y,lip,.009);
+    z+=.052*gauss(x,.01,.203)*gauss(y,lip-.026,.026);
+    z-=.027*gauss(x,0,.192)*gauss(y,-.405,.021);
+    z+=.093*gauss(x,.012,.204)*gauss(y,-.500,.089);
+    for(const crease of [.318,.392,.461]){
+      z-=.010*gauss(x,.005,.29)*gauss(y,crease+.046*(x/.35)**2,.009);
+    }
+    z-=.017*gauss(ax,.055,.013)*gauss(y,.254,.048);
+    return z;
+  }
+  function frontDepth(x,y){
+    const [w,d,offset]=skullSection(y),cos=Math.sqrt(Math.max(0,1-(x/w)**2));
+    return offset+d*cos**.70+faceRelief(x,y)*smooth((cos-.01)/.73);
+  }
+  const faceP=[],faceI=[],N=110,H=84;
   for(let j=0;j<=H;j++){
-    const t=j/H,yy=mix(-.685,.685,t),s=Math.sqrt(Math.max(0,1-(yy/.69)**2));
-    // An elderly, wide-jowled face, narrow at the temples and chin.
-    const width=.493*s*(1+.065*gauss(yy,-.31,.21)-.035*gauss(yy,.27,.19));
+    const y=mix(skull[0][0],skull.at(-1)[0],j/H),[w,d,offset]=skullSection(y);
     for(let i=0;i<=N;i++){
-      const a=i/N*Math.PI*2,x=width*Math.sin(a);let z=.397*s*Math.cos(a);
-      const front=smooth((Math.cos(a)-.02)/.70);
-      let sculptZ=0;
-      // Fleshy cheek planes and a broad chin are integrated into the envelope.
-      sculptZ+=.045*(gauss(x,-.30,.18)+gauss(x,.30,.18))*gauss(yy,-.17,.21);
-      sculptZ+=.058*gauss(x,0,.28)*gauss(yy,-.53,.11);
-      // Eye sockets under the brow, subtly recessed relative to the cheekbones.
-      for(const side of [-1,1]){
-        sculptZ-=.060*gauss(x,side*.211,.132)*gauss(yy,.105,.061);
-        sculptZ+=.060*gauss(x,side*.22,.16)*gauss(yy,.207,.057);
-        sculptZ+=.022*gauss(x,side*.247,.18)*gauss(yy,.023,.038);
-        sculptZ-=.016*gauss(x,side*(.16+.18*smooth((-yy)/.35)),.024)*gauss(yy,-.22,.17);
-      }
-      // Nose bridge and alae merge into the face; the tip projects in profile.
-      sculptZ+=.106*gauss(x,0,.075)*gauss(yy,.082,.19);
-      sculptZ+=.166*gauss(x,0,.103)*gauss(yy,-.062,.078);
-      sculptZ+=.060*(gauss(x,-.106,.058)+gauss(x,.106,.058))*gauss(yy,-.105,.045);
-      // Downturned mouth: slight lip relief and a shallow central philtrum.
-      const mouthY=-.305-.105*Math.pow(Math.min(1,Math.abs(x)/.255),1.8);
-      sculptZ+=.040*gauss(x,0,.265)*gauss(yy,mouthY+.027,.020);
-      sculptZ-=.022*gauss(x,0,.269)*gauss(yy,mouthY,.010);
-      sculptZ+=.031*gauss(x,0,.235)*gauss(yy,mouthY-.024,.019);
-      sculptZ-=.012*gauss(x,0,.025)*gauss(yy,-.19,.044);
-      sculptZ-=.008*gauss(x,0,.32)*gauss(yy,.337+.033*(x/.35)**2,.012);
-      sculptZ-=.007*gauss(x,0,.32)*gauss(yy,.418+.030*(x/.35)**2,.012);
-      sculptZ+=.022*(gauss(x,-.34,.115)+gauss(x,.34,.115))*gauss(yy,-.26,.19);
-      z+=sculptZ*front;
-      faceP.push(x,yy,z);
+      const a=2*Math.PI*i/N,x=w*Math.sin(a),c=Math.cos(a);
+      const z=c>0?offset+d*c**.70+faceRelief(x,y)*smooth((c-.01)/.73):offset+d*c;
+      faceP.push(x,y,z);
     }
   }
   for(let j=0;j<H;j++)for(let i=0;i<N;i++){const a=j*(N+1)+i,b=a+N+1;faceI.push(a,a+1,b,a+1,b+1,b);}
-  const face=sculpt(faceP,faceI,'Continuous bronze portrait',head);
-  face.userData.reference='Asakura Museum official photo, 1932 standing academic-gown figure';
-  // Narrow incised eyes and ears add legibility without bright eye spheres.
+  sculpt(faceP,faceI,'Continuous bronze portrait',head);
+  const bronzeLid=mat(0x66716d,.54,.55),eyeMaterial=mat(0x536064,.35,.54);
   for(const side of [-1,1]){
-    mc([[side*.10,.10,.385],[side*.212,.116,.365],[side*.326,.095,.326]],.009,M.recess,18,5,head);
-    mc([[side*.10,.111,.392],[side*.21,.137,.378],[side*.327,.103,.328]],.009,M.bronze,18,5,head);
-    const earP=[],earI=[],eN=28,eH=12;
-    for(let j=0;j<=eH;j++)for(let i=0;i<=eN;i++){
-      const t=j/eH,a=i/eN*Math.PI*2,rr=Math.sin(t*Math.PI/2);
-      earP.push(side*(.454+.065*rr*Math.cos(a)+.025*Math.sin(t*Math.PI)),.015+.166*rr*Math.sin(a),.034+.06*Math.cos(t*Math.PI/2)+.011*Math.cos(a));
+    const eyeP=[],eyeI=[],upper=[],lower=[],lid=[],incision=[],cols=22,rows=5;
+    for(let i=0;i<=cols;i++){
+      const t=i/cols,x=side*(.080+.251*t),arc=Math.sin(t*Math.PI),base=.092-.018*t+(side<0?-.008:.006);
+      const top=base+.034*arc,bottom=base-.019*arc;
+      for(let j=0;j<=rows;j++){
+        const v=j/rows,y=mix(bottom,top,v),z=frontDepth(x,y)+.012+.036*arc*(.68+.32*Math.sin(v*Math.PI));
+        eyeP.push(x,y,z);
+      }
+      upper.push([x,top,frontDepth(x,top)+.020+.032*arc]);
+      lower.push([x,bottom,frontDepth(x,bottom)+.014+.019*arc]);
+      const fold=top+.030*arc;lid.push([x,fold,frontDepth(x,fold)+.009]);
+      const cut=bottom-.037*arc;incision.push([x,cut,frontDepth(x,cut)+.002]);
     }
-    for(let j=0;j<eH;j++)for(let i=0;i<eN;i++){const a=j*(eN+1)+i,b=a+eN+1;side>0?earI.push(a,b,a+1,a+1,b,b+1):earI.push(a,a+1,b,a+1,b+1,b);}
-    const ear=sculpt(earP,earI,'Carved ear',head);ear.material=sculptMaterial.clone();ear.material.side=T.DoubleSide;
-    mc([[side*.486,.143,.087],[side*.528,.066,.085],[side*.518,-.098,.075],[side*.479,-.139,.078]],.018,M.bronze,22,6,head);
+    for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){
+      const a=i*(rows+1)+j,b=a+rows+1;
+      if(side>0)eyeI.push(a,b,a+1,a+1,b,b+1);else eyeI.push(a,a+1,b,a+1,b+1,b);
+    }
+    sculpt(eyeP,eyeI,'Cast eye beneath the upper lid',head,eyeMaterial);
+    mc(upper,.011,bronzeLid,25,6,head);mc(lower,.0075,M.bronze,24,5,head);
+    mc(lid,.005,M.recess,24,5,head);mc(incision,.0045,M.recess,22,5,head);
+    const x=side*.204,y=.092+(side<0?-.008:.006);
+    add(bowG,M.recess,[x,y,frontDepth(x,y)+.042],[.027,.026,.008],head).name='Incised iris';
+    const nostrilX=side*.083,nostrilY=-.105;
+    add(bowG,M.recess,[nostrilX,nostrilY,frontDepth(nostrilX,nostrilY)+.006],[.027,.012,.006],head).name='Nostril recess';
+    // The helix rolls around a recessed concha, rather than around the face.
+    const earP=[],earI=[],R=10,A=36;
+    for(let j=0;j<=R;j++)for(let i=0;i<=A;i++){
+      const r=j/R,a=i/A*Math.PI*2,ca=Math.cos(a),sa=Math.sin(a);
+      earP.push(side*(.441+.044*r+.037*gauss(r,.80,.14)-.017*ca),.018+.166*r*sa,-.003+.101*r*ca+.036*r*sa);
+    }
+    for(let j=0;j<R;j++)for(let i=0;i<A;i++){const a=j*(A+1)+i,b=a+A+1;if(side>0)earI.push(a,a+1,b,a+1,b+1,b);else earI.push(a,b,a+1,a+1,b,b+1);}
+    const ear=sculpt(earP,earI,'Modelled ear and helix',head);ear.material=sculptMaterial.clone();ear.material.side=T.DoubleSide;
+    mc([[side*.499,.100,.029],[side*.498,.045,.012],[side*.501,.007,-.022],[side*.484,-.066,.005]],.015,M.raised,14,6,head);
   }
-  // Crown and square mortarboard retain their recognizable shape. All six faces
-  // are real outward-facing geometry, including the underside for orbit viewing.
-  add(new T.CylinderGeometry(.463,.482,.37,48),M.bronze,[0,16.69,.025],[1,1,1],monument).name='Academic cap crown';
-  const cap=new T.Group();cap.name='Square mortarboard and tassel';cap.position.set(0,16.93,0);cap.rotation.y=.20;cap.rotation.z=-.025;monument.add(cap);
-  const capGeo=new T.BoxGeometry(2.06,.084,1.49,12,1,10),cp=capGeo.attributes.position;
-  for(let i=0;i<cp.count;i++){const x=cp.getX(i),z=cp.getZ(i);cp.setY(i,cp.getY(i)-.024*(x*x+z*z));}
-  capGeo.computeVertexNormals();add(capGeo,M.bronze,[0,.055,0],[1,1,1],cap);
-  for(const sign of [-1,1]){
-    mc([[-1.012,.074,sign*.724],[0,.095,sign*.724],[1.012,.074,sign*.724]],.010,M.raised,28,5,cap);
-    mc([[sign*1.012,.071,-.724],[sign*1.012,.076,0],[sign*1.012,.071,.724]],.010,M.raised,24,5,cap);
+  const mouth=[];
+  for(let i=0;i<=30;i++){
+    const x=mix(-.208,.216,i/30),y=-.273-.123*Math.min(1,Math.abs(x)/.245)**1.65;
+    mouth.push([x,y,frontDepth(x,y)+.004]);
   }
-  add(bowG,M.raised,[0,.113,0],[.065,.033,.065],cap);
-  mc([[0,.114,0],[.29,.13,.13],[.81,.096,.29],[.92,.025,.31],[.94,-.55,.33]],.026,M.raised,32,7,cap);
-  for(let i=0;i<8;i++)mc([[.875+i*.017,-.21,.314],[.882+i*.018,-.46,.322],[.91+i*.017,-.69,.345]],.0125,i%3?M.bronze:M.raised,16,5,cap);
-  mc([[.925,-.18,.32],[.928,-.235,.324]],.071,M.recess,5,10,cap);
+  mc(mouth,.0055,M.recess,31,5,head).name='Downturned mouth line';
+  // The square board sits low and slightly oblique on the tapered skull.
+  // The tassel is a single weighted textile form with fluting and a tied neck.
+  const crown=ellipseLoft([[.53,.443,.393,0,.028],[.575,.449,.389,0,.018],[.70,.412,.351,.006,.014],[.805,.357,.310,.014,.018]],48,'Close-fitting academic cap crown',true,head);
+  crown.material=M.bronze;
+  const cap=new T.Group();cap.name='Square mortarboard and tassel';cap.position.set(.013,.815,.006);cap.rotation.set(-.025,.34,-.040);head.add(cap);
+  const capGeo=new T.BoxGeometry(1.78,.056,1.31,14,1,12),cp=capGeo.attributes.position;
+  for(let i=0;i<cp.count;i++){
+    const x=cp.getX(i),z=cp.getZ(i);cp.setY(i,cp.getY(i)+.047-.054*x*x-.045*z*z-.020*x*z);
+  }
+  capGeo.computeVertexNormals();
+  // The brim defines the monument's highest point. Bake its inclination once
+  // so the unbatched and merged monument report the same exact metric height.
+  cap.updateWorldMatrix(true,false);
+  capGeo.applyMatrix4(monument.matrixWorld.clone().invert().multiply(cap.matrixWorld));
+  add(capGeo,M.bronze,[0,0,0],[1,1,1],monument).name='Thin bowing square board';
+  add(bowG,M.raised,[0,.079,0],[.049,.021,.049],cap);
+  mc([[0,.081,0],[.33,.089,.093],[.69,.071,.20],[.872,.026,.251],[.889,-.112,.256]],.021,M.raised,28,7,cap);
+  const tassel=ellipseLoft([[-.574,.034,.029,.886,.28],[-.549,.070,.051,.891,.280],[-.47,.075,.054,.889,.275],
+    [-.27,.065,.049,.886,.268],[-.156,.057,.045,.88,.259],[-.101,.043,.036,.881,.257]],32,'Weighted fluted tassel',true,cap);
+  const tp=tassel.geometry.attributes.position;
+  for(let i=0;i<tp.count;i++){
+    const x=tp.getX(i)-.886,z=tp.getZ(i)-.27,a=Math.atan2(x,z),t=1+.054*Math.cos(12*a);
+    tp.setXYZ(i,.886+x*t,tp.getY(i),.27+z*t);
+  }
+  tassel.geometry.computeVertexNormals();tassel.material=M.raised;
+  add(bowG,M.bronze,[.88,-.106,.258],[.050,.066,.042],cap).name='Tassel knot';
   // Mature trees frame the monument; asymmetric crowns keep sightlines clear.
   function tree(x,z,height,spread,index){
     segment([x,.37,z],[x+.15,height*.64,z-.15],.24,M.trunk);
