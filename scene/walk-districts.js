@@ -54,6 +54,10 @@ function coloredGeometry(T) {
 
 const HARBOUR = { left: 10.5, right: 44.5, near: 41.6, far: 48.6 };
 const BOAT = [17.8, 45.25];
+// Curved intertidal edge leading from the boat basin around the castle hill.
+// Rows are [z, west bank x, east bank x], in real walking coordinates.
+const COAST = [[48.6,10.5,26],[50.4,9.8,26.7],[53,9.45,28.6],[57,8.2,31.1],
+  [61,7.45,33.2],[65,7.65,35.4],[69,9.7,35],[73,15.2,32]];
 const brick = '#9a5143', granite = '#d4c2a6', limestone = '#e9d8b9', slate = '#495957';
 
 function campusArcade(geometry, obstacle) {
@@ -109,11 +113,12 @@ function harbourQuay(geometry, obstacle) {
       box(ax+(bx-ax)*t,.115,az+(bz-az)*t,ax===bx?.44:length-.025,.23,az===bz?.44:length-.025,stoneColors[i%4]);
     }
   }
-  edge(left,near,right,near); edge(left,far,right,far); edge(left,near,left,far); edge(right,near,right,far);
+  edge(left,near,right,near); edge(COAST[0][2],far,right,far); edge(left,near,left,far); edge(right,near,right,far);
   obstacle('karatsu-waterfront-basin', (left+right)/2,(near+far)/2,right-left+.44,far-near+.44,.23);
   for(const z of [near-.57,far+.57]) {
     let last;
     for(const x of [left+.6,left+5.4,left+10.2,left+15,left+19.8,left+24.6,left+29.4,right-.6]) {
+      if(z>far && x<COAST[0][2])continue;
       box(x,.325,z,.20,.65,.20,'#455851');box(x,.64,z,.24,.065,.24,'#a39470');
       obstacle('harbour-bollard-'+x+'-'+z,x,z,.24,.24,.68);
       if(last!==undefined) {
@@ -123,7 +128,19 @@ function harbourQuay(geometry, obstacle) {
       last=x;
     }
     // The low ropes follow the continuous quay and enclose the water.
-    obstacle('harbour-rope-'+z,(left+right)/2,z,right-left-1.2,.12,.65);
+    const ropeStart=z>far?COAST[0][2]:left;
+    obstacle('harbour-rope-'+z,(ropeStart+right)/2,z,right-ropeStart-1.2,.12,.65);
+  }
+  for(let i=1;i<COAST.length;i++){
+    const [za,xa,ea]=COAST[i-1],[zb,xb,eb]=COAST[i];
+    const mid=(za+zb)/2,bank=(xa+xb)/2;
+    // These low irregular shoreline stones retain the promenade on the dry west bank.
+    for(let j=0;j<3;j++){
+      const a=j/3+.012,b=(j+1)/3-.012;
+      beam([xa+(xb-xa)*a,.045,za+(zb-za)*a],[xa+(xb-xa)*b,.045,za+(zb-za)*b],.20,.18,stoneColors[(j+i)%4],6);
+    }
+    const east=Math.max(ea,eb);
+    obstacle('karatsu-coastal-inlet-'+i,(bank+east)/2,mid,east-bank+.38,zb-za+.05,.22);
   }
 }
 
@@ -165,7 +182,7 @@ function treeGeometry(T, pine) {
     const cy=(pine?1.75:2.18)+frac*(pine?2.77:3.91);
     const bend=[(root[0]+cx)/2,cy-(pine?.62:.76),(root[2]+cz)/2];
     beam(root,bend,.105,.073,trunk);beam(bend,[cx,cy,cz],.073,.034,trunk);
-    const sprays=pine?20:24;
+    const sprays=pine?18:22;
     for(let j=0;j<sprays;j++) {
       const azimuth=j*2.399+ang+random()*.53;
       const u=random(),reach=(pine?1.36:1.16)*Math.sqrt(u)*(1-frac*.28);
@@ -173,7 +190,7 @@ function treeGeometry(T, pine) {
       const ly=cy+(pine?.35:.85)*(1-u)+(random()-.5)*(pine?.28:.64);
       const size=(pine?.94:1.02)*(.78+random()*.58);
       const tilt=pine?.26+random()*.70:.58+random()*.82;
-      if(j%5===0)beam([cx,cy-.14,cz],[lx,ly,lz],.031,.011,trunk,4);
+      if(j%6===0)beam([cx,cy-.14,cz],[lx,ly,lz],.031,.011,trunk,4);
       canopy.add(lx,ly,lz,size*(pine?.94:.92),size,azimuth,tilt);
     }
   }
@@ -221,8 +238,8 @@ export function createWalkDistricts(T, {obstacle, materials, geometries, texture
     });
     instances.computeBoundingSphere();leaves.computeBoundingSphere();
   }
-  grove('Ginkgo trees on the campus walk',false,[[-7.4,13,1.11,.1],[-8.6,18.4,1.23,2.1],[-9.7,26.1,1.17,.7],[-7.0,31.3,1.24,4.1],[-13,74,1.28,1.1],[-19,79,1.2,2.8],[-12.2,11.0,1.28,2.7],[-2.55,21.8,1.26,.6],[-5.7,27.0,1.19,3.2],[-14.8,26.15,1.34,1.5]]);
-  grove('Windswept coastal pines',true,[[7.7,10.5,.99,2.2],[8.0,16.0,1.07,1.3],[8.8,38.9,1.28,.5],[11.8,49.8,1.08,2.2],[31.4,50,1.25,1.1],[38.5,49.8,1.19,3.65],[43,54,1.18,1.4],[17.0,86.2,1.3,3.1],
+  grove('Ginkgo trees on the campus walk',false,[[-7.4,13,1.11,.1],[-8.6,18.4,1.23,2.1],[-9.7,26.1,1.17,.7],[-11.4,30.3,1.12,4.1],[-13,74,1.28,1.1],[-19,79,1.2,2.8],[-12.2,11.0,1.28,2.7],[-2.55,21.8,1.26,.6],[-6.1,25.95,1.04,3.2],[-14.8,26.15,1.34,1.5]]);
+  grove('Windswept coastal pines',true,[[7.7,10.5,.99,2.2],[8.0,16.0,1.07,1.3],[14.7,39.9,1.25,.5],[22.9,50.8,1.08,2.2],[31.4,50,1.25,1.1],[38.5,49.8,1.19,3.65],[43,54,1.18,1.4],[17.0,86.2,1.3,3.1],
     ...[.18,.50,.92,1.48,1.88,2.39,2.90,3.37,3.90,4.42,4.91,5.45,5.92].map((angle,i)=>{
       const [x,z,elevation]=settings.hillPine(angle,.84+(i%3)*.035);
       return [x,z,.71+(i%4)*.075,angle+.55,elevation];
@@ -231,7 +248,19 @@ export function createWalkDistricts(T, {obstacle, materials, geometries, texture
   const waterMap=makeWater(T);textures.add(waterMap);
   const waterMaterial=new T.MeshStandardMaterial({map:waterMap,roughness:.43,metalness:.10});
   waterMaterial.name='Ripples on the Karatsu waterfront';materials.add(waterMaterial);
-  const waterGeometry=new T.PlaneGeometry(right-left,far-near);waterGeometry.rotateX(-Math.PI/2);
+  const waterGeometry=new T.BufferGeometry(),points=[],uv=[],indices=[];
+  const xc=(left+right)/2,zc=(near+far)/2;
+  function waterStrip(za,xa,ea,zb,xb,eb) {
+    const first=points.length/3;
+    for(const [x,z] of [[xa,za],[ea,za],[eb,zb],[xb,zb]]){
+      points.push(x-xc,0,z-zc);uv.push((x-left)/(right-left),(z-near)/(far-near));
+    }
+    indices.push(first,first+2,first+1,first,first+3,first+2);
+  }
+  waterStrip(near,left,right,far,left,right);
+  for(let i=1;i<COAST.length;i++)waterStrip(...COAST[i-1],...COAST[i]);
+  waterGeometry.setAttribute('position',new T.Float32BufferAttribute(points,3));
+  waterGeometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));waterGeometry.setIndex(indices);waterGeometry.computeVertexNormals();
   const water=add(new T.Mesh(waterGeometry,waterMaterial));water.name='Sheltered water';water.castShadow=false;water.position.set((left+right)/2,.006,(near+far)/2);
   const skiff=coloredGeometry(T);sailingBoat(skiff);
   const boat=add(new T.Mesh(skiff.finish(),material));boat.name='Moored wooden sailing skiff';

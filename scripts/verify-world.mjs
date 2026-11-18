@@ -9,7 +9,7 @@ import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js';
 import { createOkumaStatue } from '../js/models/okuma-statue.js';
 import { createKaratsuCastle } from '../js/models/karatsu-castle.js';
 import { createKaratsuBank } from '../js/models/karatsu-bank.js';
-import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS } from '../scene/world-layout.js';
+import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS, OUTDOOR_VIEWS } from '../scene/world-layout.js';
 import { mountWorld } from '../scene/world.js';
 import { createStudyDestinations } from '../scene/study-destinations.js';
 import { createWalkNavigation } from '../scene/home-navigation.js';
@@ -727,6 +727,19 @@ running.engine.setRenderingActive(true);frame();assert.equal(running.engine.getS
 assert.equal(running.ready,1);assert.equal(running.renderer.disposed,0,'Resuming the same live scene never remounts its renderer');
 assert.ok(running.engine.getPerformance().frames>=perfBeforeInactive.frames+1);assert.ok(running.engine.getPerformance().pixelRatio>=.65);
 checks.push('Rendering suspension cancels frame work while offscreen and resumes the same scene, preserving assets and readiness');
+for(const [key,view] of Object.entries(OUTDOOR_VIEWS)){
+  assert.ok(await running.engine.explorePlace(key),'Gallery opens free exploration at '+key);frame(2);
+  const state=running.engine.getState(),camera=running.renderer.renders.at(-1).camera;
+  assert.equal(state.mode,'outside');assert.equal(state.posture,'walking');assert.equal(state.travel,false);
+  assert.equal(state.focus,'landmark-'+key);assert.equal(state.district,view.district);
+  assert.ok(position().distanceTo(new T.Vector3(view.eye[0],HOME.eyeHeight,view.eye[1]))<.001);
+  const ray=new T.Vector3(...view.target).sub(camera.position).normalize();
+  assert.ok(camera.getWorldDirection(new T.Vector3()).dot(ray)>.999,'Initial camera faces the physical '+key);
+  assertGround(worldScene,view.eye[0],view.eye[1],'Gallery visit '+key);
+  running.engine.look(.32,-.16);running.engine.setMovement({forward:-.75,right:0});frame(4);running.engine.stopMovement();
+  assert.ok(position().distanceTo(camera.position)>.05,'Visitor can immediately look and walk away from '+key);
+}
+checks.push('Four matching gallery entries open their physical landmarks at a clear eye-level viewpoint, ready for free look and walking');
 const sceneResources = watchResources(worldScene), cachedGroomResources = watchResources(full.scene);
 running.engine.dispose(); running.engine.dispose(); assert.equal(running.renderer.disposed, 1);
 for (const [resource,count] of [...sceneResources,...cachedGroomResources]) assert.equal(count, 1, 'Mounted scene and cached cat resource released exactly once: ' + resource.type + ' ' + resource.name);

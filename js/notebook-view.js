@@ -38,7 +38,7 @@ export function presentNotebook({card,artwork,dismiss,setCover,keyboard=false}) 
   const oldOverflow=document.documentElement.style.overflow;
   const controller=new AbortController(), {signal}=controller;
   const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const inline=deskNotebook(artwork,pageAtlas);
+  const inline=motion.matches ? null : deskNotebook(artwork,pageAtlas);
   let progress=motion.matches?1:0,target=1,frame=0,last=0,alive=true,startDelay=0,w=0,h=0,ratio=1;
   function draw() {
     if(w && h) {
@@ -134,9 +134,9 @@ export function presentNotebook({card,artwork,dismiss,setCover,keyboard=false}) 
     showState();
     observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;
     observer?.observe(stage);window.addEventListener('resize',resize,{signal});resize();
-    document.fonts?.ready.then(()=>{
-      if(!alive)return;
-      drawNotebookAtlas(pageAtlas,mincho);draw();
+    if(document.fonts?.status==='loading')document.fonts.ready.then(()=>{
+      drawNotebookAtlas(pageAtlas,mincho);
+      if(alive)draw();
     });
     if(!motion.matches){startDelay=140;frame=requestAnimationFrame(tick);}
     else arrived();

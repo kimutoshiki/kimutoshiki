@@ -22,7 +22,7 @@ export function mountSoftwareWorld({canvas,onReady,onError,onSelect,reducedMotio
   const controller=new AbortController(),listen=(el,type,listener,options={})=>el.addEventListener(type,listener,{signal:controller.signal,...options});
   const desk=buildSoftwareDesk(geometry()),renderer=perspective(ctx);
   let camera=spread(SOFTWARE_SEAT),props={notebook:false,lamp:true,drawer:false},progress={notebook:0,lamp:1,drawer:0};
-  let garden,places,obstacles=[],gardenTask,gardenModule,exteriorFailures=0,arrival=0,district='庭',posture='seated',outdoor=false,focusId='room',action,status='',sequence=0;
+  let garden,places,obstacles=[],gardenTask,gardenModule,exteriorFailures=0,arrival=0,district='屋外',posture='seated',outdoor=false,focusId='room',action,status='',sequence=0;
   let disposed=false,active=true,rendering=true,paused=!!reducedMotion,lightingMode='auto',ready=false,loadError=false,firstDraw=true;
   let frame=0,lastFrame=0,w=0,h=0,scaledW=0,scaledH=0,sizing=true,drawn=0,projection='',held=new Set(),vector={forward:0,right:0},drag,hover=null;
   const emit=(name,detail)=>canvas.dispatchEvent(new CustomEvent(name,{detail}));
@@ -68,7 +68,7 @@ export function mountSoftwareWorld({canvas,onReady,onError,onSelect,reducedMotio
     if(firstDraw){firstDraw=false;ready=true;onReady?.();announce();}
   }
   function nearestDistrict(){
-    let next='庭',best=10;
+    let next='屋外',best=10;
     for(const [key,p] of Object.entries(places||{})){
       const d=Math.hypot(camera.x-p.x,camera.z-p.z);
       if(d<best){best=d;next=districts[key];}
@@ -143,7 +143,7 @@ export function mountSoftwareWorld({canvas,onReady,onError,onSelect,reducedMotio
     camera=place?{x:place.x,y:1.67,z:place.z,fov:66,yaw:Math.atan2(place.targetX-place.x,place.targetZ-place.z),
       pitch:Math.atan2(place.targetY-1.67,Math.hypot(place.targetX-place.x,place.targetZ-place.z))}:
       {x:0,y:1.67,z:0,yaw:0,pitch:.07,fov:66};
-    outdoor=true;posture='walking';focusId=place?key:'world';district=place?districts[key]:'庭';
+    outdoor=true;posture='walking';focusId=place?key:'world';district=place?districts[key]:'屋外';
     resize();announce();onSelect?.(focusId);return true;
   }
   const explorePlace=key=>enter(key?.startsWith('landmark-')?key:'landmark-'+key);

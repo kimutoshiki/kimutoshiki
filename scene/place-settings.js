@@ -55,7 +55,7 @@ export function createPlaceSettings(T,{root,obstacle,materials,geometries,textur
   place('Waseda quadrangle · brick faculty wing and clock plaza',g=>{
     campusWing(g,-31,21.7,7);
     // Paired limestone entrance piers with copper caps frame the approach.
-    for(const [x,z] of [[-7.3,35.2],[-10.0,30.1]]){
+    for(const [x,z] of [[-3.0,40.6],[-10.75,28.7]]){
       g.box(x,.15,z,1.09,.30,1.09,'#a19582');
       g.box(x,1.15,z,.81,1.78,.81,'#9c5947');
       for(const y of [.45,1.73,2.08])g.box(x,y,z,.94,.10,.94,'#d6c5a7');
@@ -78,12 +78,26 @@ export function createPlaceSettings(T,{root,obstacle,materials,geometries,textur
       obstacle('avenue-hedge-'+side+'-'+along,x,z,1.62,1.38,.68);
     }
     const granite=['#a49986','#bdb099','#9f9483'];
-    const radius=2.16,w=.23,segments=40;
+    const radius=2.30,w=.19,segments=40;
+    const leaves=['#3b5636','#506b3c','#536b3a','#647841','#475f35','#6e8146'];
+    // A clipped, rounded hedge follows the plinth, with individual leafy
+    // clumps breaking its silhouette and a low granite kerb at its feet.
+    for(let i=0;i<24;i++){
+      const a=i*2*Math.PI/24,xx=origin[0]+Math.cos(a)*1.80,zz=origin[1]+Math.sin(a)*1.80;
+      const r=.40+.07*Math.sin(i*3.1),height=.55+.055*Math.cos(i*1.35);
+      const ring=(scale,y)=>Array.from({length:6},(_,j)=>{
+        const t=2*Math.PI*j/6+i*.35;
+        return [xx+Math.cos(t)*r*scale,y,zz+Math.sin(t)*r*scale];
+      });
+      g.rings(ring(.90,.055),ring(1,height*.72),leaves[i%6]);
+      g.rings(ring(1,height*.72),ring(.62,height),leaves[(i*3+1)%6]);
+      if(i%3===0)obstacle('plinth-hedge-'+i,xx,zz,.71,.68,height);
+    }
     for(let i=0;i<segments;i++){
       const a=i/segments*Math.PI*2,b=(i+1)/segments*Math.PI*2-.006;
       const corner=(ang,r,y)=>[origin[0]+Math.cos(ang)*r,y,origin[1]+Math.sin(ang)*r];
       const face=y=>[corner(a,radius,y),corner(b,radius,y),corner(b,radius-w,y),corner(a,radius-w,y)];
-      g.rings(face(-.01),face(.012),granite[i%3]);
+      g.rings(face(-.01),face(.093),granite[i%3]);
     }
   });
 
@@ -152,9 +166,9 @@ export function createPlaceSettings(T,{root,obstacle,materials,geometries,textur
     if(xs.length>1){const min=Math.min(...xs),max=Math.max(...xs);obstacle('castle-hillside-'+z,(min+max)/2,z+.875,max-min,1.75,top);}
   }
   place('Karatsu Castle · terraced pine hill and battered stone revetment',g=>{
-    const count=96, tones=['#929887','#aaa694','#929886','#b3ab95','#9d9c89','#a9a18e'];
+    const count=96, tones=['#6c756d','#858778','#717a71','#9b9788','#798173','#8b8977'];
     const topLoop=Array.from({length:count},(_,i)=>contour(i/count*2*Math.PI,1,top));
-    g.rings(Array.from({length:count},(_,i)=>contour(i/count*2*Math.PI,.01,-.025)),topLoop,'#788262');
+    g.rings(Array.from({length:count},(_,i)=>contour(i/count*2*Math.PI,.01,-.025)),topLoop,'#586f47');
     // Equal arc lengths around the curve avoid stretched blocks at the corners.
     const lengths=[0];let length=0;
     for(let i=1;i<=count;i++){const a=topLoop[i-1],b=topLoop[i%count];length+=Math.hypot(a[0]-b[0],a[2]-b[2]);lengths.push(length);}
@@ -200,7 +214,7 @@ export function createPlaceSettings(T,{root,obstacle,materials,geometries,textur
     const mesh=new T.Mesh(g,surface);mesh.name=name;mesh.position.set(x,.003,z);mesh.rotation.y=angle;
     mesh.receiveShadow=true;root.add(mesh);
   }
-  paving('Auditorium brick quadrangle','brick',-23,45,38.5,31.5,Math.PI*.70,2.6);
+  paving('Auditorium brick quadrangle','brick',-16,40.9,38.5,41.0,LANDMARK_SITES.find(s=>s.key==='okuma-auditorium').rotation,2.6);
   paving('Granite avenue leading to the statue','granite',-6.15,20.8,6.37,20.6,-.595,2.8);
   paving('Old bank street roadway','street',23.3,10.5,33,3.2,0,2.1);
   return {groups, hillPine(angle,t){const p=contour(angle,t,top*t);return [p[0],p[2],p[1]];}};

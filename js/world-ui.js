@@ -27,6 +27,7 @@
     'landmark-okuma-statue': { label: '大隈重信像', href: 'profile.html', link: 'プロフィールを見る' },
     cat: { label: '書斎の猫' },
   };
+  const districts = { '大隈講堂前': 'okuma-auditorium', '大隈重信像前': 'okuma-statue', '唐津城の水辺': 'karatsu-castle', '旧唐津銀行通り': 'karatsu-bank' };
   let mode = '2d', engine, rendererContext, disposed = false, firstFrame = false, motionChosen = false;
   let backend = 'native', requestedPlace = null, visitingEngine = null;
   let launching = false, pageSuspended = false, session = 0, modeRevision = 0, loadFailures = 0, wantsSeat = false, seatTimer, clockTimer;
@@ -65,11 +66,11 @@
     travel.disabled = !ready || (!state.outdoorsReady && !state.outdoorsError && state.mode !== 'outside' && !state.travel);
     focusButtons.forEach(button => { button.disabled = !ready || !(button.dataset.worldFocus === 'cat' ? state.catReady : state.landmarksReady && state.outdoorsReady); });
     walkButtons.forEach(button => { button.disabled = !ready; });
-    travelLabel.textContent = state.travel ? '移動を止める' : state.mode === 'outside' ? '部屋へ戻る' : !state.outdoorsReady ? (state.outdoorsError ? '庭を再読み込み' : '庭を読み込み中…') : '外へ歩く';
+    travelLabel.textContent = state.travel ? '移動を止める' : state.mode === 'outside' ? '部屋へ戻る' : !state.outdoorsReady ? (state.outdoorsError ? '屋外を再読み込み' : '屋外を読み込み中…') : '外へ歩く';
     travel.classList.toggle('is-travelling', !!state.travel);
     retryRow.hidden = !state.outdoorsReady || !state.outdoorsError || state.landmarksReady;
     retry.disabled = !engine || !firstFrame || state.outdoorsLoading;
-    locationName.textContent = state.mode === 'outside' ? (state.district || '庭') : '書斎';
+    locationName.textContent = state.mode === 'outside' ? (state.district || '屋外') : '書斎';
     motion.setAttribute('aria-pressed', String(state.paused));
     motion.setAttribute('aria-label', state.paused ? '風景と猫の動きを再開する' : '風景と猫の動きを止める');
     motionLabel.textContent = state.paused ? '停止中' : '動いています';
@@ -82,9 +83,9 @@
       captionLink.hidden = !subject.href;
       if (subject.href) { captionLink.href = subject.href; captionLink.textContent = subject.link + ' ↗'; }
     }
-    if (firstFrame && state.seated) announce('書斎を表示しています。机の小物を選ぶか、席を立って庭を歩けます。');
+    if (firstFrame && state.seated) announce('書斎を表示しています。机の小物を選ぶか、席を立って外を歩けます。');
     else if (firstFrame && state.posture === 'standing-up') announce('席を立っています。');
-    else if (firstFrame) announce(state.travel ? (subject?.label || (state.mode === 'inside' ? '庭' : '書斎')) + 'へ歩いています。途中で止められます。' : (subject?.label || locationName.textContent) + '。ドラッグで見回し、矢印キーで歩けます。');
+    else if (firstFrame) announce(state.travel ? (subject?.label || (state.mode === 'inside' ? '屋外' : '書斎')) + 'へ歩いています。途中で止められます。' : (subject?.label || locationName.textContent) + '。ドラッグで見回し、矢印キーで歩けます。');
   }
   function sendPadInput() {
     const directions = new Set(held.values());
@@ -304,7 +305,7 @@
       tour.open(key);
     } catch {
       tourImport = undefined;
-      if (!disposed && mode === '2d' && revision === modeRevision) modeStatus.textContent = '庭の景色を読み込めませんでした。もう一度ボタンを押してください。';
+      if (!disposed && mode === '2d' && revision === modeRevision) modeStatus.textContent = '外の景色を読み込めませんでした。もう一度ボタンを押してください。';
     }
   }
   stand.addEventListener('click', () => {
@@ -324,7 +325,7 @@
     refresh(); canvas.focus({ preventScroll: true });
     Promise.resolve().then(() => {
       if (requestedPlace !== key || visitingEngine !== currentEngine) return false;
-      return currentEngine.explorePlace(key);
+      return key === 'garden' ? currentEngine.leave() : currentEngine.explorePlace(key);
     }).catch(() => false).then(arrived => {
       if (disposed || requestedPlace !== key || visitingEngine !== currentEngine) return;
       visitingEngine = null;
@@ -350,6 +351,9 @@
     if (backend === 'software') { fail(error); return; }
     // A disabled/lost WebGL context or a failed native import can still use a
     // real perspective scene with the browser's ordinary Canvas 2D backend.
+    if (!requestedPlace && mode === '3d' && state.mode === 'outside') {
+      requestedPlace = districts[state.district] || 'garden';
+    }
     session++; launching = false; firstFrame = false; backend = 'software'; visitingEngine = null;
     releasePad(); engine?.stopMovement?.(); engine?.dispose?.(); engine = undefined;
     lastDeskAction = 0; wantsSeat = false;
@@ -420,7 +424,6 @@
   }
   mode2D.addEventListener('click', () => {
     if (disposed || mode === '2d') return;
-    const districts = { '大隈講堂前': 'okuma-auditorium', '大隈重信像前': 'okuma-statue', '唐津城の水辺': 'karatsu-castle', '旧唐津銀行通り': 'karatsu-bank' };
     const place = state.mode === 'outside' && districts[state.district];
     showIllustration(); announce('2Dの書斎を表示しています。');
     if (place) openGarden(place);

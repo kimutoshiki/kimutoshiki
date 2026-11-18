@@ -189,6 +189,15 @@ async function exploreAndReturn(page, scene, renderer, capture) {
   const veil = page.locator('.tour-arrival');
   if (await veil.count()) await veil.waitFor({state:'hidden',timeout:15000});
   if (capture) await picture(page, renderer + '-place-' + scene.key);
+  await page.locator('#study-mode-2d').click();
+  const returnView = await galleryView(page, scene, places.indexOf(scene), page.viewportSize().width);
+  assert.equal(await page.locator('#main').getAttribute('data-display-mode'), '2d');
+  await returnView.locator('.tour-close').click();
+  await returnView.waitFor({state:'hidden'});
+  assert(await page.locator('#study-artwork').isVisible(), 'Closing the returned illustration reveals the native desk');
+  await page.locator('#study-mode-3d').click();
+  await page.waitForFunction(district => document.querySelector('#main.is-rendered.is-walking[data-display-mode="3d"]') &&
+    window.__worldState?.mode === 'outside' && window.__worldState?.district === district, state.district, {timeout:180000});
   if (renderer === 'software') {
     const surface = page.locator('canvas[data-renderer="software"]');
     const before = await pixelSample(surface);
