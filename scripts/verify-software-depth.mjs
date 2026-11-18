@@ -28,3 +28,24 @@ for (let order=0; order<2; order++) {
   mesh.faces.reverse();
 }
 console.log('Depth, alpha cutout and picking agree before and after translation in both face orders.');
+
+// The source-camera boundary fades into the surrounding panorama. A closer
+// solid object must still occlude the blended layer, in either submission order.
+const fadeModel=geometry(), solid=createCanvas(16,16), paint=solid.getContext('2d');
+paint.fillStyle='#f33327';paint.fillRect(0,0,16,16);
+textures.set('wall',decodeSoftwareTexture(solid,{makeCanvas:createCanvas}));
+fadeModel.face(quad(4,3,5),'#193fd2',{id:'pavement'});
+fadeModel.face(quad(1,1,2),'#141414',{texture:'wall',id:'building',uv:[[0,0],[1,0],[1,1],[0,1]],feather:[.2,0,.2,0]});
+fadeModel.box(-.40,0,1,.12,.40,.12,'#2be356',{id:'tree'});
+for(let order=0;order<2;order++){
+  raster.draw(fadeModel,camera,width,height,{textures});
+  function colorAt(point){
+    const xy=raster.screen(point);
+    return ctx.getImageData(xy[0]*width,xy[1]*height,1,1).data;
+  }
+  const mixed=colorAt([.8,0,2]), center=colorAt([0,0,2]), near=colorAt([-.4,0,1]);
+  assert(mixed[2]>center[2]+25 && center[0]>mixed[0]+25,'At the source border both the front texture and farther panorama contribute');
+  assert(near[1]>near[0]*2 && near[1]>near[2]*2,'An opaque foreground tree wins in front of a feathered image');
+  fadeModel.faces.reverse();
+}
+console.log('Feathered source border blends in depth and respects opaque foreground geometry.');

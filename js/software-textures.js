@@ -26,6 +26,7 @@ export function decodeSoftwareTexture(source,{maxSize=1536,repeat=false,makeCanv
 
 async function readTexture(path,options,signal){
   const url=new URL(path,import.meta.url);
+  if (url.pathname.includes('/images/outdoors/')) url.searchParams.set('v','survey2');
   const hero=document.getElementById?.('study-image');
   if(hero?.complete&&hero.naturalWidth&&hero.currentSrc===url.href)return decodeSoftwareTexture(hero,options);
   const outdoor=url.pathname.match(/^(.*\/images\/outdoors\/(?:okuma-auditorium|okuma-statue|karatsu-castle|karatsu-bank))-1280\.webp$/);
@@ -63,7 +64,7 @@ export function createTextureCache(onChange,read=readTexture){
   const mobile=(globalThis.innerWidth||1280)<=650||globalThis.navigator?.deviceMemory<=3;
   const decodeLimit=mobile?1024:1536;
   const entries=new Map(),images=new Map(),wanted=new Map(),inFlight=new Map(),errors=new Set();
-  const limit=globalThis.navigator?.deviceMemory<=3?24*1024**2:56*1024**2;
+  const limit=(globalThis.navigator?.deviceMemory<=3?24:mobile?34:56)*1024**2;
   let active=true,disposed=false,clock=0,ready=true,bytes=0;
   function trim(){
     if(bytes<=limit)return;

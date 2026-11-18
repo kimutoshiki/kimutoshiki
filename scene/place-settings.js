@@ -99,29 +99,29 @@ export function createRegionalLandscape(T,region) {
     obstacle('Bench '+x+','+z,x,z,2.04,.65,1);
   }
   if(region==='waseda'){
-    top('Main campus · courtyard and open ground','court',74,229,250,173,-.012);
-    top('Granite walk from the main gate to the statue','walk',43,230,174,14,.002);
+    top('Main campus · courtyard and open ground','court',83,230,281,190,-.012);
+    top('Granite walk from the main gate to the statue','walk',49,230,203,14,.002);
     top('North–south cross walk at the bronze','walk',.1,228,11,125,.003);
-    top('Street across the entrance and auditorium forecourt','walk',123,226,19.5,158,.004);
-    top('Stepped forecourt on the west side of the auditorium','walk',142.3,246,29,63,.006);
-    top('Approach beside Building 1','walk',108.9,248,13.1,39.8,.005);
+    top('Street across the entrance and auditorium forecourt','walk',137,234,20.8,175,.004);
+    top('Stepped forecourt on the west side of the auditorium','walk',155.6,253.4,39.8,68.0,.006);
+    top('Approach beside Building 1','walk',126.9,251,14.2,46.1,.005);
     build('University buildings around the main gate',g=>{
       // The recreated old Building 3 faces the central avenue. Its modern
       // tower is set well back to the north as on the present campus plan.
-      building(g,{x:44,z:203.5,w:69,d:25,h:13.6,floors:3,bays:16,front:1,color:'#b79d84',pilasters:true});
-      building(g,{x:46,z:181.4,w:52,d:18,h:67.84,floors:14,bays:13,front:1,color:'#a6aaa5',window:'#829497'});
-      building(g,{x:83.8,z:260,w:36.1,d:29.3,h:17,floors:4,bays:10,front:-1,color:'#b7ab96',pilasters:true});
-      building(g,{x:31.8,z:263.5,w:42.6,d:30,h:14.1,floors:3,bays:10,front:-1,color:'#9f8873',pilasters:true});
-      building(g,{x:-26,z:202,w:30,d:29,h:18.7,floors:5,bays:8,front:1,color:'#b9b3a4'});
-      building(g,{x:-25,z:262,w:34,d:32,h:19.4,floors:5,bays:8,front:-1,color:'#b3b2a8'});
+      building(g,{x:61,z:207.5,w:92,d:31,h:13.6,floors:3,bays:16,front:1,color:'#b79d84',pilasters:true});
+      building(g,{x:58,z:177.6,w:66,d:24,h:67.84,floors:14,bays:13,front:1,color:'#a6aaa5',window:'#829497'});
+      building(g,{x:106.8,z:265.4,w:35.4,d:34.6,h:17,floors:4,bays:10,front:-1,color:'#b7ab96',pilasters:true});
+      building(g,{x:52,z:273.8,w:36,d:46,h:14.1,floors:3,bays:10,front:-1,color:'#9f8873',pilasters:true});
+      building(g,{x:-7,z:191.7,w:39,d:44,h:18.7,floors:5,bays:8,front:1,color:'#b9b3a4'});
+      building(g,{x:-9,z:276.1,w:44,d:43,h:19.4,floors:5,bays:8,front:-1,color:'#b3b2a8'});
       // Low gateposts and the iron fence stop at the open central path.
       for(const zz of [221,239]){
-        g.box(116,.24,zz,1.14,.48,1.14,'#999286');g.box(116,1.43,zz,.91,2.14,.91,'#a79a87');
-        g.box(116,2.57,zz,1.13,.21,1.13,'#c4baab');obstacle('Main gate '+zz,116,zz,1.14,1.14);
+        g.box(132,.24,zz,1.14,.48,1.14,'#999286');g.box(132,1.43,zz,.91,2.14,.91,'#a79a87');
+        g.box(132,2.57,zz,1.13,.21,1.13,'#c4baab');obstacle('Main gate '+zz,132,zz,1.14,1.14);
       }
       for(const [lo,hi] of [[190,219.5],[240.4,269]]){
-        for(let z=lo;z<hi;z+=.66)g.box(116,.87,z,.04,1.58,.042,'#595e55');
-        g.box(116,1.45,(lo+hi)/2,.06,.09,hi-lo,'#626458');
+        for(let z=lo;z<hi;z+=.66)g.box(132,.87,z,.04,1.58,.042,'#595e55');
+        g.box(132,1.45,(lo+hi)/2,.06,.09,hi-lo,'#626458');
       }
       // The monument's clipped planted bed has an open foreground pavement.
       const rounded=(w,d,r,h)=>Array.from({length:24},(_,i)=>{
@@ -139,18 +139,20 @@ export function createRegionalLandscape(T,region) {
     // between Buildings 7 and 8 rather than doubling back onto the auditorium.
     const trees=[];
     for(const [offset,line] of [[0,217.8],[3.7,242.3]]){
-      for(const x of [-37,-24,-11,15,29,46,62,77,94,107])trees.push([x+offset,line+Math.sin(x)*.63,1.56+.13*Math.cos(x)]);
+      for(const x of [-37,-24,-11,15,29,46,62,77,94,110,123])trees.push([x+offset,line+Math.sin(x)*.63,1.56+.13*Math.cos(x)]);
     }
-    for(const [x,z] of [[-16,225],[-21,236],[134,208],[145,202],[167,214],[176,218],[176,202],[140,281],[164,286]])trees.push([x,z,1.65]);
+    for(const [x,z] of [[-16,225],[-21,236],[149,207],[166,210],[181,212],[193,225],[198,219],[164,296],[190,304]])trees.push([x,z,1.65]);
     grove('Mature campus avenue and garden side planting',false,trees);
   }else{
     const [cx,cz]=CASTLE_CENTER;
-    top('Ground of the Karatsu castle town','court',1950,875,1180,795,-.06);
+    top('Ground of the Karatsu castle town','court',1990,875,1320,820,-.013);
     top('Sea north of Mt Mitsushima','sea',2080,cz-177,1280,155,-.016);
     top('Matsuura river mouth east of the keep','sea',cx+190,cz+58,160,350,-.01);
     obstacle('Bay shoreline',2080,cz-177,1280,155);
     const riverX=cx+190,bridgeZ=cz+100;
     for(const [low,high] of [[cz-117,bridgeZ-4.5],[bridgeZ+4.5,cz+233]])obstacle('East river '+low,riverX,(low+high)/2,160,high-low);
+    top('Sandy levee on the east bank','sand',riverX+109,cz+71,57,327,-.005);
+    top('Bridge and east-bank road junction','street',riverX+95,bridgeZ,31,9,.012);
     top('Bridge deck over the Matsuura river','street',riverX,bridgeZ,168,8.5,.11);
     build('Bridge railings at the river mouth',g=>{
       for(const side of [-1,1]){
@@ -238,6 +240,7 @@ export function createRegionalLandscape(T,region) {
       if(Math.abs(x-cx)<23&&z>cz-13&&z<cz+57)continue;
       pines.push([x,z,1.34+.39*(.5+.5*Math.sin(i+.4))]);
     }
+    for(let i=0;i<14;i++)pines.push([riverX+94+8*Math.sin(i*2.11),cz-55+i*13,1.34+.19*Math.sin(i*3.17)]);
     grove('Pine crowns below the bailey and along the bay',true,pines);
   }
   group.updateMatrixWorld(true);

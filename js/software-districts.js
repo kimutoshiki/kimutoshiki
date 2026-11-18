@@ -2,14 +2,20 @@
 // turns the traced points into metric geometry. Its texture coordinates retain
 // source-camera depth so that even the street remains aligned on an oblique walk.
 import {buildSoftwareStatue} from './software-statue.js';
+import {LANDMARK_SITES, OUTDOOR_VIEWS} from '../scene/world-layout.js';
 
 const ASPECT = 1.5;
 const definitions = {
-  'okuma-auditorium': { name:'大隈講堂', anchor:[153,252], eye:[107,257], at:[.513,.827], fov:52, horizon:'waseda-horizon' },
-  'okuma-statue': { name:'大隈重信像', anchor:[0,230], eye:[8.45,230.45], at:[.508,.832], fov:42, horizon:'waseda-horizon' },
-  'karatsu-castle': { name:'唐津城・本丸', anchor:[2260,570], eye:[2270,613], at:[.535,.862], fov:45, horizon:'castle-horizon', elevation:40 },
-  'karatsu-bank': { name:'旧唐津銀行', anchor:[1600,1100], eye:[1581.5,1125.5], at:[.523,.849], fov:43, horizon:'bank-horizon' }
+  'okuma-auditorium': { name:'大隈講堂', at:[.513,.827], fov:52, horizon:'waseda-horizon' },
+  'okuma-statue': { name:'大隈重信像', at:[.508,.832], fov:42, horizon:'waseda-horizon' },
+  'karatsu-castle': { name:'唐津城・本丸', at:[.535,.862], fov:45, horizon:'castle-horizon', elevation:40 },
+  'karatsu-bank': { name:'旧唐津銀行', at:[.523,.849], fov:43, horizon:'bank-horizon' }
 };
+
+for(const site of LANDMARK_SITES) {
+  definitions[site.key].anchor=site.position;
+  definitions[site.key].eye=OUTDOOR_VIEWS[site.key].eye;
+}
 
 function cameraFor(key) {
   const d=definitions[key], elevation=d.elevation||0, height=1.62, eyeY=elevation+height, focal=2*Math.tan(d.fov*Math.PI/360);
@@ -27,12 +33,16 @@ function cameraFor(key) {
     return [x+a[0]*q,eyeY+a[1]*q,z+a[2]*q];
   }
   function ground(u,v,h=0) { return (h-height)/ray(u,v)[1]; }
+  // Roof and parapet corners in the reference are not ground survey points.
+  // Keep returns within the measured building depth when a traced corner
+  // approaches the source picture's perspective horizon.
+  function base(u,v){return Math.min(distance*1.41,Math.max(distance*.66,ground(u,v)));}
   function project(p) {
     const dx=p[0]-x,dy=p[1]-eyeY,dz=p[2]-z;
     const dot=a=>dx*a[0]+dy*a[1]+dz*a[2],q=dot(forward);
     return [.5+dot(right)/(q*focal*ASPECT),.5-dot(up)/(q*focal),q];
   }
-  return {pose,point,ground,ray,project};
+  return {pose,point,ground,base,ray,project};
 }
 
 const cameras=Object.fromEntries(Object.keys(definitions).map(k=>[k,cameraFor(k)]));
@@ -48,7 +58,7 @@ function district(s,key) {
   // A perspective wall needs a depth for every ray, including the top corners.
   // Derive a real vertical plane through its two measured feet on the ground.
   function wall(a,b) {
-    const p=camera.point(a[0],a[1],camera.ground(...a)), q=camera.point(b[0],b[1],camera.ground(...b));
+    const p=camera.point(a[0],a[1],camera.base(...a)), q=camera.point(b[0],b[1],camera.base(...b));
     const nx=b[0]===a[0]&&b[1]===a[1]?1:q[2]-p[2],nz=p[0]-q[0];
     return (u,v)=>{
       const r=camera.ray(u,v);
@@ -62,14 +72,14 @@ function district(s,key) {
     const bottom=1, elevated=.023;
     for(let i=0;i+1<line.length;i++) {
       const [u,a]=line[i],[v,b]=line[i+1];
-      panel([[u,a],[v,b],[v,bottom],[u,bottom]],(x,y)=>camera.ground(x,y,elevated),col,{...only,id:undefined,feather:[.079,0,.079,.11]});
+      panel([[u,a],[v,b],[v,bottom],[u,bottom]],(x,y)=>camera.ground(x,y,elevated),col,{...only,id:undefined,feather:[.085,0,.085,.12],nearView:[camera.pose.x,camera.pose.z,15,33]});
     }
   }
   function farFace(outline,depth,col,opts={}) {
     const surface=typeof depth==='number'?()=>depth:depth;
     panel(outline,surface,col,{...only,id:undefined,...opts});
   }
-  function groundPoint(u,v,y=0){return camera.point(u,v,camera.ground(u,v,y));}
+  function groundPoint(u,v){return camera.point(u,v,camera.base(u,v));}
   function offset(face,delta){return face.map(p=>p.map((n,k)=>n+delta[k]));}
   function cap(points,uv,col,delta) {world(offset(points,delta),uv,col);}
   function texturePath(texture, name, repeat=false){s.registerTexture?.(texture,'../images/outdoors/'+name+'.webp',{district:key,maxSize:1536,repeat});}
@@ -92,10 +102,10 @@ function wing(d,front,right,topLeft,topCorner,topRight,color) {
   return {f,r,lo,hi,rear,highRear};
 }
 
-function horizon(d) {
+function horizon(d,radius) {
   const {s,key,camera,only}=d, file=definitions[key].horizon,name=key+'-panorama';
   d.texturePath(name,file);
-  const yaw=camera.pose.yaw, radius=92, sides=28;
+  const yaw=camera.pose.yaw,sides=28;
   const rings=[[-.50,.999],[-.19,.69],[-.055,.555],[.055,.445],[.19,.31],[.34,.16],[.499,.001]];
   for(let j=0;j+1<rings.length;j++)for(let i=0;i<sides;i++) {
     const points=[],uv=[];
@@ -217,6 +227,7 @@ function architecture(d) {
   traced(d,silhouettes[d.key],depth,col,xCuts,yCuts);
 }
 
+const bronzeOutline=[[0.07429, 0.48684, 0.52392], [0.08309, 0.48684, 0.53563], [0.09287, 0.4953, 0.54149], [0.10167, 0.49335, 0.53368], [0.11047, 0.4914, 0.52587], [0.12025, 0.4914, 0.52522], [0.12905, 0.4927, 0.52132], [0.13883, 0.494, 0.51677], [0.14763, 0.47904, 0.51937], [0.15643, 0.46408, 0.52652], [0.16621, 0.45952, 0.53238], [0.17501, 0.45692, 0.53563], [0.18381, 0.45432, 0.53888], [0.19358, 0.45172, 0.54083], [0.20238, 0.45042, 0.54214], [0.21216, 0.44912, 0.54344], [0.22096, 0.44782, 0.54539], [0.22976, 0.44586, 0.54669], [0.23954, 0.44391, 0.54734], [0.24834, 0.44196, 0.54864], [0.25714, 0.44066, 0.54929], [0.26692, 0.43871, 0.55059], [0.27572, 0.43741, 0.55124], [0.2855, 0.43611, 0.55254], [0.2943, 0.44001, 0.55384], [0.3031, 0.44912, 0.5545], [0.31288, 0.45757, 0.55515], [0.32168, 0.45627, 0.54994], [0.33048, 0.45497, 0.54799], [0.34026, 0.45367, 0.54864], [0.34906, 0.45237, 0.54864], [0.35884, 0.45107, 0.54929], [0.36764, 0.45107, 0.54929], [0.37644, 0.45042, 0.54929], [0.38622, 0.44977, 0.54994], [0.39502, 0.44977, 0.54994], [0.40382, 0.44912, 0.55059], [0.4136, 0.44912, 0.55059], [0.4224, 0.44847, 0.55059], [0.43217, 0.44847, 0.55124], [0.44097, 0.44782, 0.55124], [0.44977, 0.44782, 0.55189], [0.45955, 0.44847, 0.55189], [0.46835, 0.45822, 0.55059], [0.47715, 0.45822, 0.52392], [0.48693, 0.45757, 0.52262], [0.49573, 0.45692, 0.53953], [0.50551, 0.45692, 0.50896]];
 function statue(d,includeSculpture) {
   const {s,id,camera}=d,[x,z]=definitions[d.key].anchor;
   const width=1.88, depth=1.52,yaw=camera.pose.yaw, sn=Math.sin(yaw),cs=Math.cos(yaw);
@@ -229,18 +240,72 @@ function statue(d,includeSculpture) {
     for(let i=0;i<4;i++)d.world([lo[i],lo[(i+1)%4],hi[(i+1)%4],hi[i]],source,col,{textureBrightness:i===0?1:.90});
     s.face(hi,col,{id});
   }
-  if(includeSculpture){
-    // Reproject patina, folds and face only onto the sculpture's actual front
-    // triangles. Its reverse retains the modeled bronze, with no painted figure behind it.
-    const photoSurface={face(pts,color,opts){
-      const uv=pts.map(camera.project), [u,v]=uv.reduce(([u,v],[x,y])=>[u+x/3,v+y/3],[0,0]);
-      const w=v<.15?.019:Math.min(.052,.026+(v-.14)*.27);
-      const front=pts.reduce((n,p)=>n+(p[0]-x)*(cx-x)+(p[2]-z)*(cz-z),0)>0;
-      if(front&&Math.abs(u-.502)<w&&v>.077&&v<.49)d.world(pts,uv,color,opts);
-      else s.face(pts,color,opts);
-    }};
-    buildSoftwareStatue(photoSurface,x,2.12,z,2.89,id,yaw);
+  // The obverse picks up the cast folds and facial detail recorded in the
+  // photograph. The fall of the sleeves, the convex gown and the face each
+  // project at their own depth in front of the corresponding bronze volume.
+  function relief(name,rect,cols,rows,depth,options){
+    const [u0,v0,u1,v1]=rect;d.texturePath(name,name);
+    for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+      const pts=[],uv=[];
+      for(const [ix,iy] of [[i,j],[i+1,j],[i+1,j+1],[i,j+1]]){
+        const u=lerp(u0,u1,ix/cols),v=lerp(v0,v1,iy/rows),q=depth(u,v);
+        pts.push(camera.point(u,v,q));uv.push([ix/cols,iy/rows,q]);
+      }
+      d.world(pts,uv,'#58615d',{texture:name,...options});
+    }
   }
+  if(includeSculpture){
+    // Register the genuine sculpted bronze to the photographed outline. Each
+    // vertex keeps its original depth; there is just one solid figure from
+    // any angle. The photographed front and the patinated reverse share seams.
+    const triangles=[];
+    buildSoftwareStatue({face(points,color){triangles.push({points,color,uv:points.map(camera.project)});}},x,2.12,z,2.89,id,yaw);
+    const vs=triangles.flatMap(t=>t.uv.map(p=>p[1]));
+    const ymin=Math.min(...vs),ymax=Math.max(...vs),minV=bronzeOutline[0][0],maxV=bronzeOutline.at(-1)[0];
+    const src=Array.from({length:81},(_,i)=>{
+      const y=lerp(ymin+.00001,ymax-.00001,i/80),edges=[];
+      for(const {uv} of triangles)for(let k=0;k<3;k++) {
+        const a=uv[k],b=uv[(k+1)%3];
+        if((a[1]>y)===(b[1]>y))continue;
+        edges.push(lerp(a[0],b[0],(y-a[1])/(b[1]-a[1])));
+      }
+      return [y,Math.min(...edges),Math.max(...edges)];
+    });
+    const srcL=src.map(([y,l])=>[y,l]),srcR=src.map(([y,,r])=>[y,r]);
+    const toL=bronzeOutline.map(([y,l])=>[y,l]),toR=bronzeOutline.map(([y,,r])=>[y,r]);
+    d.texturePath('okuma-statue-bronze','okuma-statue-bronze');
+    for(const tri of triangles) {
+      const pts=[],tex=[];
+      for(const [u,v,q] of tri.uv) {
+        const v2=lerp(minV,maxV,(v-ymin)/(ymax-ymin)),left=mix(srcL,v),right=mix(srcR,v);
+        const t=Math.max(0,Math.min(1,(u-left)/Math.max(.00003,right-left)));
+        const u2=lerp(mix(toL,v2),mix(toR,v2),t);
+        pts.push(camera.point(u2,v2,q));
+        tex.push([(u2-.427)/.134,(v2-.065)/.441,q]);
+      }
+      const front=tri.points.some(p=>(p[0]-x)*(cx-x)+(p[2]-z)*(cz-z)>-.35);
+      if(front)d.world(pts,tex,tri.color,{id,texture:'okuma-statue-bronze'});else s.face(pts,tri.color,{id});
+    }
+  }
+  // A complete clipped hedge grows around the base. The rear and side faces
+  // stay planted when the viewer steps out of the photographed approach.
+  const bed=[];
+  for(let i=0;i<20;i++){
+    const a=2*Math.PI*i/20,cs=Math.cos(a),sn=Math.sin(a);
+    bed.push([x+2.26*Math.sign(cs)*Math.abs(cs)**.50,z+2.36*Math.sign(sn)*Math.abs(sn)**.50]);
+  }
+  for(let i=0;i<bed.length;i++){
+    const a=bed[i],b=bed[(i+1)%bed.length],edge=[[a[0],.12,a[1]],[b[0],.12,b[1]],[b[0],.33,b[1]],[a[0],.33,a[1]]];
+    d.world(edge,[[.18,.903],[.27,.903],[.27,.837],[.18,.837]],'#455c3e',{id:undefined});
+    const crown=[edge[3],edge[2],[x+(b[0]-x)*.65,.345,z+(b[1]-z)*.65],[x+(a[0]-x)*.65,.345,z+(a[1]-z)*.65]];
+    d.world(crown,[[.223,.844],[.295,.844],[.295,.875],[.223,.875]],'#536b43',{id:undefined});
+  }
+  const hedgeCenter=Math.hypot(x-cx,z-cz);
+  relief('okuma-statue-hedge',[.142,.745,.870,.966],12,5,(u,v)=>{
+    const face=hedgeCenter-2.65+.98*(Math.abs((u-.50)/.36)**3);
+    return face+Math.max(0,.824-v)*12;
+  },{id:undefined});
+
 }
 
 const depthProfiles={
@@ -252,7 +317,7 @@ const depthProfiles={
 function surrounds(d) {
   const {key,camera}=d,atlas=key+'-surroundings';
   d.texturePath(atlas,atlas);
-  const col='#71826a', opt={...d.only,id:undefined,texture:atlas};
+  const col='#71826a', opt={...d.only,id:undefined,texture:atlas,nearView:[camera.pose.x,camera.pose.z,13,30]};
   // Trace source sky separately from opaque leaves and paved ground. The
   // foreground projects over a finite, curved range so branches and rear
   // campus façades parallax on a sideways step. Holes reveal the 360° horizon.
@@ -263,10 +328,7 @@ function surrounds(d) {
       const u=ki/cols,v=kj/rows,base=mix(depthProfiles[key],u);
       let q;
       if(sky)q=73/Math.hypot(...camera.ray(u,v));
-      else if(key==='okuma-statue'&&v>.70&&u>.13&&u<.86){
-        // Front hedge is a real low hedge surrounding the stone footing.
-        q=Math.min(base,Math.max(4.4,camera.ground(u,Math.max(.934,v),.16)));
-      }else q=base*(1+.09*Math.cos((v+.15)*Math.PI));
+      else q=base*(1+.065*Math.cos((v+.15)*Math.PI));
       points.push(camera.point(u,v,q));uvq.push([u,(v+Number(sky))*.5,q]);
     }
     d.world(points,uvq,sky?'#b6cbd5':col,{...opt,blend:true,feather:sky?[.26,.23,.26,.09]:[.095,.10,.095,.036],featherUV:[0,sky?.5:0,1,sky?1:.5]});
@@ -274,11 +336,23 @@ function surrounds(d) {
   d.floorLine(pavements[key]);
 }
 
-export function buildPhotographicDistrict(s,landmark,{includeHorizon=true,includeSculpture=true}={}) {
+export function buildPhotographicDistrict(s,landmark,{includeHorizon=true,includeSculpture=true,horizonRadius=650}={}) {
   const key=landmark.replace(/^landmark-/,'' );if(!definitions[key])return false;
   const d=district(s,key);
   if(key==='okuma-statue')statue(d,includeSculpture);else architecture(d);
   surrounds(d);
-  if(includeHorizon)horizon(d);
+  if(includeHorizon)horizon(d,horizonRadius);
   return true;
+}
+
+// Scan the measured footprints into narrow horizontal collision strips. This
+// follows real oblique façades instead of closing the surrounding courtyard.
+export function photoFootprint(landmark) {
+  const key=landmark.replace(/^landmark-/,''), c=cameras[key];
+  if(key==='okuma-statue')return [[-1,-.9],[1,-.9],[1,.9],[-1,.9]].map(([x,z])=>[x,z+230]);
+  const uv=key==='okuma-auditorium'?[[.203,.812],[.838,.840],[.888,.826]]:
+    key==='karatsu-bank'?[[.903,.837],[.197,.867],[.054,.795]]:
+    [[.343,.867],[.730,.856],[.822,.833]];
+  const [a,b,e]=uv.map(([u,v])=>{const [x,,z]=c.point(u,v,c.base(u,v));return [x,z];});
+  return [a,b,e,[a[0]+e[0]-b[0],a[1]+e[1]-b[1]]];
 }

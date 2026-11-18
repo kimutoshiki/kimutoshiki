@@ -1,4 +1,4 @@
-/** Shared, metre-based plan. The floor never changes elevation on the walk out. */
+/** Shared, metre-based plan. The study and its garden meet at the same elevation. */
 export const HOME = Object.freeze({
   scale: .36, floorY: 0, eyeHeight: 1.62,
   bounds: { minX: -2.376, maxX: 2.376, minZ: -.58, maxZ: 3.4056 },
@@ -23,18 +23,18 @@ export const WAYPOINTS = [
 // avenue ENE; Karatsu's X axis is east, Z south. Origins are rendering offsets,
 // not a fictional walking route between Tokyo and Saga.
 export const REGION_BOUNDS = {
-  waseda:{minX:-50,maxX:192,minZ:156,maxZ:300},
-  karatsu:{minX:1510,maxX:2400,minZ:415,maxZ:1200},
+  waseda:{minX:-54,maxX:218,minZ:143,maxZ:323},
+  karatsu:{minX:1510,maxX:2584,minZ:415,maxZ:1200},
 };
 export const CASTLE_CENTER=[2260,570], CASTLE_COURT_Y=40;
 export const LANDMARK_SITES = [
-  { key:'okuma-auditorium', region:'waseda', title:'大隈講堂', name:'Okuma auditorium architecture', position:[153,252],rotation:-Math.PI/2,height:35,width:31.081174,depth:27.009272,arrival:[107,257],lookHeight:14 },
+  { key:'okuma-auditorium', region:'waseda', title:'大隈講堂', name:'Okuma auditorium architecture', position:[173,263],rotation:-124.5*Math.PI/180,height:38,width:33.74499,depth:29.32435,arrival:[124,241],lookHeight:14 },
   { key:'karatsu-castle', region:'karatsu', title:'唐津城', name:'Five-tier keep', position:CASTLE_CENTER,rotation:0,height:30,foundationY:CASTLE_COURT_Y,width:30,depth:26,arrival:[CASTLE_CENTER[0]+10,CASTLE_CENTER[1]+43],lookHeight:CASTLE_COURT_Y+13.5 },
   { key:'karatsu-bank', region:'karatsu', title:'旧唐津銀行', name:'Landmark architecture', position:[1600,1100],rotation:0,height:14,width:25.131055,depth:20.463466,arrival:[1581.5,1125.5],lookHeight:6.2 },
   { key:'okuma-statue', region:'waseda', title:'大隈重信像', name:'Okuma statue monument', position:[0,230],rotation:Math.PI/2,height:5.01,width:1.5003,depth:1.2753,arrival:[8.45,230.45],lookHeight:3.03 },
 ];
 export const OUTDOOR_VIEWS = {
-  'okuma-auditorium': {region:'waseda',district:'大隈講堂前',eye:[107,257],target:[151,14,251]},
+  'okuma-auditorium': {region:'waseda',district:'大隈講堂前',eye:[124,241],target:[172,14,263]},
   'okuma-statue': {region:'waseda',district:'大隈重信像前',eye:[8.45,230.45],target:[0,3.03,230]},
   'karatsu-castle': {region:'karatsu',district:'唐津城・本丸',eye:[CASTLE_CENTER[0]+10,CASTLE_CENTER[1]+43],target:[CASTLE_CENTER[0],CASTLE_COURT_Y+13.5,CASTLE_CENTER[1]]},
   'karatsu-bank': {region:'karatsu',district:'旧唐津銀行通り',eye:[1581.5,1125.5],target:[1600,6.2,1100]},
@@ -52,7 +52,7 @@ export function regionalHeight(region,x,z){
 export function districtAt({x,z}){
   if(x>=REGION_BOUNDS.karatsu.minX)
     return Math.hypot(x-CASTLE_CENTER[0],z-CASTLE_CENTER[1])<155?'唐津城・本丸':Math.hypot(x-1600,z-1100)<85?'旧唐津銀行通り':'唐津の城下町';
-  if(z>=REGION_BOUNDS.waseda.minZ)return x<35?'大隈重信像前':x>96?'大隈講堂前':'早稲田キャンパス';
+  if(z>=REGION_BOUNDS.waseda.minZ)return x<35?'大隈重信像前':x>104?'大隈講堂前':'早稲田キャンパス';
   return '屋外';
 }
 /** Reserve the complete rotated native bounding rectangle before any asset

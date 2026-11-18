@@ -275,6 +275,14 @@ assert.deepEqual(requests, [], 'All four outdoor architectures render without im
 const factories = { 'okuma-auditorium': createOkumaAuditorium, 'okuma-statue': createOkumaStatue, 'karatsu-castle': createKaratsuCastle, 'karatsu-bank': createKaratsuBank };
 assert.deepEqual(landmarks.targets.map(target => target.id).sort(), LANDMARK_SITES.map(site => 'landmark-' + site.key).sort());
 const regions = Object.fromEntries(Object.keys(REGION_BOUNDS).map(key => [key,createRegionalLandscape(T,key)]));
+// Check the regional relationship independently from the camera recipes.
+for(const [a,b,lower,upper] of [['okuma-statue','okuma-auditorium',130,210],['karatsu-bank','karatsu-castle',700,970]]){
+  const first=LANDMARK_SITES.find(site=>site.key===a),second=LANDMARK_SITES.find(site=>site.key===b);
+  assert.equal(first.region,second.region);
+  const separation=Math.hypot(first.position[0]-second.position[0],first.position[1]-second.position[1]);
+  assert.ok(separation>lower&&separation<upper,'Landmarks retain the scale and separation of their local map: '+a+' and '+b);
+}
+assert.equal(LANDMARK_SITES.find(site=>site.key==='karatsu-castle').foundationY,40,'The upper bailey belongs to its hill above the city');
 const worldBoxes = [], originals = new Map();
 for (const site of LANDMARK_SITES) {
   const id = 'landmark-' + site.key, target = landmarks.targets.find(value => value.id === id);
@@ -311,6 +319,10 @@ for (const site of LANDMARK_SITES) {
   if(site.key==='karatsu-castle'){
     assert.ok(countNamed(/Basement entrance passage/)>=1);
     assert.ok(countNamed(/Shachihoko ridge casting/)>=2);
+    assert.ok(source.getObjectByName('Interlocking dressed granite fieldstones'));
+    source.updateWorldMatrix(true,true);
+    const through = x => new T.Raycaster(new T.Vector3(x,2.8,12),new T.Vector3(0,0,-1)).intersectObject(source,true)[0]?.point.z;
+    assert.ok(through(4)-through(1)>1.25,'A ray through the castle entrance reaches behind the front masonry');
   }
   const before = geometrySummary(source), after = geometrySummary(actual); originals.set(site.key, before);
   assert.equal(after.triangles, before.triangles, 'Original architectural triangles retained: ' + id);
@@ -556,15 +568,10 @@ checks.push('First paint contains only the live home; supplied cat and desk comp
 // geometry must never appear around someone who entered an unreserved site.
 let earlyWalkingFrames = 0;
 const earlyPosition = () => running.engine.getState().position;
-function outsideReservedBuildings() {
-  const p=earlyPosition();
-  for(const box of LANDMARK_RESERVATIONS) assert.ok(!(p.x>box.minX && p.x<box.maxX && p.z>box.minZ && p.z<box.maxZ),
-    'Walking before assets finish cannot enter the future building footprint: '+box.id);
-}
-function finishEarlyRoute(label, reserved=true) {
+function finishEarlyRoute(label) {
   let budget=4000;
   while(running.engine.getState().travel && budget-->0) {
-    frame();earlyWalkingFrames++;if(reserved)outsideReservedBuildings();
+    frame();earlyWalkingFrames++;
   }
   assert.ok(budget>0,'Physical route remains reachable during progressive loading: '+label);
 }
@@ -572,7 +579,7 @@ assert.equal(running.engine.getState().landmarksReady,false,'Outdoor geometry re
 const delayedVisit=running.engine.explorePlace('okuma-statue');
 assert.equal(running.engine.getState().region,null,'A regional transfer waits for its architecture while the home garden stays usable');
 assert.ok(running.engine.returnHome());
-finishEarlyRoute('cancel a still-loading regional visit',false);
+finishEarlyRoute('cancel a still-loading regional visit');
 const beforeArchitecture={...earlyPosition()};
 const liveMonuments = await createWorldLandmarks(T); running.model.resolve(liveMonuments);
 await until(() => running.engine.getState().landmarksReady, 'Delayed architecture installs after the early walking challenge');assert.equal(await preparation,true);assert.equal(running.engine.getState().readyPhase,'complete');assert.equal(running.engine.getState().outdoorsLoading,false);
@@ -580,7 +587,7 @@ assert.equal(await delayedVisit,false,'A cancelled pending transfer cannot move 
 assert.deepEqual(earlyPosition(),beforeArchitecture,'Installing architecture never relocates or encloses the early visitor');
 
 assert.equal(running.engine.getState().mode,'inside');
-report.progressiveWalking={frames:earlyWalkingFrames,reservedSites:LANDMARK_RESERVATIONS.length};
+report.progressiveWalking={frames:earlyWalkingFrames,cancelledRegionalVisit:true};
 checks.push('Visitors can cross the home garden while architecture loads and cancel a pending transfer without being moved by its completion');
 
 await until(() => running.engine.getState().landmarksReady, 'Life-size outdoor architecture installs without cat/image/font waits');

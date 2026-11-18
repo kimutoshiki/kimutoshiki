@@ -148,6 +148,11 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
     clearPhoto();if(!key)return;
     photoKey=key;const serial=photoSerial;
     const view=OUTDOOR_VIEWS[key],site=LANDMARK_SITES.find(s=>s.key===key);
+    // Keep the monument and the paving at the visitor's feet within the same
+    // high-resolution sun map, even at the wide angle across the gate street.
+    shadowAnchor={x:(view.eye[0]+site.position[0])*.5,
+      y:regionalHeight(view.region,...view.eye)+site.height*.18,z:(view.eye[1]+site.position[1])*.5};
+    applyTime(true);
     const isCurrent=()=>serial===photoSerial&&!disposed;
     const ready=()=>{if(isCurrent()&&!photoDecoded){photoDecoded=true;revision++;wake();}};
     Promise.resolve().then(async()=>{
@@ -423,7 +428,7 @@ export async function mountWorld({ canvas, onReady = () => {}, onError = () => {
       if(token===placeRequest&&!disposed){outdoorsError=String(error?.message||error);emit(true);}
       return false;
     }
-    outdoorsError=null;showPhoto(key);
+    outdoorsError=null;if(photoKey===key&&placeArtError)clearPhoto();showPhoto(key);
     pendingGardenArrival=false;pendingSeat=false;postureTransition=null;
     pressed.clear();movementHeld=false;seatedZoom=0;posture='walking';focusId='landmark-'+key;
     navigation.setEyeHeight(HOME.eyeHeight); updateProjection();cat?.useRoomDetail?.();

@@ -25,6 +25,7 @@ const fragmentShader = `
   uniform sampler2D plate;
   uniform float textured;
   uniform float strength;
+  uniform float alphaCut;
   uniform vec3 lighting;
   varying vec4 margin;
   varying vec4 region;
@@ -41,7 +42,7 @@ const fragmentShader = `
     vec4 distanceToEdge=vec4(localUV,1.-localUV);
     vec4 edge=mix(vec4(1.),smoothstep(vec4(0.),max(margin,vec4(.00001)),distanceToEdge),step(vec4(.0001),margin));
     sampleColor.a *= min(min(edge.x,edge.y),min(edge.z,edge.w));
-    if (sampleColor.a < .015) discard;
+    if (sampleColor.a < alphaCut) discard;
     // Photographic assets already contain the site's light and sRGB contrast.
     gl_FragColor = vec4(sampleColor.rgb * surfaceColor * lighting, sampleColor.a);
   }`;
@@ -63,7 +64,7 @@ function triangles(T, points) {
   return ShapeUtils.triangulateShape(flat,[]);
 }
 
-function registerCamera(T,key,view,site,source,faces) {
+function registerCamera(T,view,source) {
   const h=regionalHeight(view.region,...view.eye)+HOME.eyeHeight;
   const eye=new T.Vector3(view.eye[0],h,view.eye[1]);
   const forward=new T.Vector3(...view.target).sub(eye).normalize();
@@ -71,47 +72,36 @@ function registerCamera(T,key,view,site,source,faces) {
   const up=right.clone().cross(forward);
   const sf=Math.sin(source.yaw), cf=Math.cos(source.yaw), sp=Math.sin(source.pitch), cp=Math.cos(source.pitch);
   const lens=Math.tan(worldFov(1.5,false)*Math.PI/360)/Math.tan(source.fov*Math.PI/360);
-  const samples=[];
-  for (const face of faces) if (face.options.id === 'landmark-'+key) {
-    for(const p of face.points) {
-      const z=((p[0]-source.x)*sf+(p[2]-source.z)*cf)*cp+(p[1]-source.eyeY)*sp;
-      if(z>.1) samples.push(z);
-    }
-  }
-  samples.sort((a,b)=>a-b);
-  // A shared geographic reconstruction can directly retain its metre scale.
-  // Local image reconstructions are aligned with the distance to the surveyed
-  // front of the actual native landmark at this arrival.
-  const sameSite=Math.hypot(source.x-eye.x,source.z-eye.z)<1.5;
-  const distance=Math.hypot(site.position[0]-eye.x,site.position[1]-eye.z);
-  const front=Math.max(distance*.54,distance-Math.min(site.width,site.depth)*.34);
-  const scale=sameSite?1:Math.max(.5,Math.min(8,front/(samples[Math.floor(samples.length*.38)]||front)));
+  // Both cameras use the mapped eye in metres. Canvas and Three.js put
+  // screen-right on opposite sides of their camera's positive Z axis.
   const result=new T.Vector3();
   function position(p) {
     const x=p[0]-source.x, y=p[1]-source.eyeY, z=p[2]-source.z;
     const horizontal=x*sf+z*cf;
-    return result.copy(eye).addScaledVector(right,(x*cf-z*sf)*lens*scale)
-      .addScaledVector(up,(y*cp-horizontal*sp)*lens*scale)
-      .addScaledVector(forward,(y*sp+horizontal*cp)*scale);
+    return result.copy(eye).addScaledVector(right,(x*cf-z*sf)*lens)
+      .addScaledVector(up,(y*cp-horizontal*sp)*lens)
+      .addScaledVector(forward,(y*sp+horizontal*cp));
   }
   return {eye,position};
 }
 
-export function createPlacePhoto(T,{key,view,site,onReady}) {
+export function createPlacePhoto(T,{key,view,onReady}) {
   const plain=key.replace(/^landmark-/,''), source=PHOTO_PLACES['landmark-'+plain];
   const shape=geometry(), scene=new T.Scene(), group=new T.Group();
   scene.add(group);group.name='Photographic surfaces · '+plain;
   let disposed=false,ready=false;
-  buildPhotographicDistrict(shape,plain);
-  const registered=registerCamera(T,plain,view,site,source,shape.faces);
+  buildPhotographicDistrict(shape,plain,{horizonRadius:135});
+  const registered=registerCamera(T,view,source);
   const batches=new Map(), materials=[],textures=new Set(),buffers=[];
+  const contextStrength={value:1};
   const common={strength:{value:1},lighting:{value:new T.Vector3(1,1,1)}};
   for (const face of shape.faces) {
     if (face.label || face.points.length<3 || face.points.some(p=>!p.every(Number.isFinite))) continue;
     const texture=face.options.texture || '';
     const soft=!!(face.options.feather || face.options.blend);
-    const batchKey=texture+(soft?'#blend':'#solid');
-    if(!batches.has(batchKey)) batches.set(batchKey,{texture,soft,positions:[],uvq:[],colors:[],margins:[],regions:[]});
+    const local=!!face.options.nearView;
+    const batchKey=texture+(soft?'#blend':'#solid')+(local?'#near':'');
+    if(!batches.has(batchKey)) batches.set(batchKey,{texture,soft,local,positions:[],uvq:[],colors:[],margins:[],regions:[]});
     const b=batches.get(batchKey), rgb=typeof face.color==='number'?face.color:parseInt(face.color.slice(1),16);
     const power=face.options.textureBrightness??1;
     const tint=texture?[power,power,power]:[rgb>>16&255,rgb>>8&255,rgb&255].map(x=>x/255*(face.light??1));
@@ -126,7 +116,7 @@ export function createPlacePhoto(T,{key,view,site,onReady}) {
   for(const b of batches.values()){
     const descriptor=shape.textureSources.get(b.texture);
     const material=new ShaderMaterial({vertexShader,fragmentShader,side:T.DoubleSide,toneMapped:false,transparent:b.soft,depthWrite:!b.soft,
-      uniforms:{...common,textured:{value:0},plate:{value:null}}});
+      uniforms:{...common,strength:b.local?contextStrength:common.strength,alphaCut:{value:b.soft?.015:.38},textured:{value:0},plate:{value:null}}});
     const buffer=new T.BufferGeometry();
     buffer.setAttribute('position',new T.Float32BufferAttribute(b.positions,3));
     buffer.setAttribute('projectedUV',new T.Float32BufferAttribute(b.uvq,3));
@@ -138,6 +128,18 @@ export function createPlacePhoto(T,{key,view,site,onReady}) {
     if(!descriptor) continue;
     const url=new URL(descriptor.path,import.meta.url);
     url.searchParams.set('v','survey2');
+    if (b.texture === plain) {
+      // Reuse exactly the resolution the visitor was looking at in the gallery.
+      const image=globalThis.document?.querySelector?.('.study-tour .tour-view img');
+      const shown=image?.complete&&image.naturalWidth&&image.currentSrc?new URL(image.currentSrc):null;
+      if(shown?.origin===url.origin && shown.pathname.replace(/-\d+\.webp$/,'')===url.pathname.replace(/-\d+\.webp$/,'')){
+        url.pathname=shown.pathname;
+      } else if ((globalThis.innerWidth||1280)<=640 && (globalThis.devicePixelRatio||1)<1.6) {
+        url.pathname=url.pathname.replace(/-1280\.webp$/,'-768.webp');
+      } else if ((globalThis.innerWidth||0)>1350) {
+        url.pathname=url.pathname.replace(/-1280\.webp$/,'-1536.webp');
+      }
+    }
     let loading=decoded.get(url.href);
     if(!loading){loading=loader.loadAsync(url.href);decoded.set(url.href,loading);}
     promises.push(loading.then(map=>{
@@ -156,6 +158,7 @@ export function createPlacePhoto(T,{key,view,site,onReady}) {
     update(camera,time) {
       const delta=camera.position.distanceTo(registered.eye);
       common.strength.value=1-T.MathUtils.smoothstep(delta,30,51);
+      contextStrength.value=1-T.MathUtils.smoothstep(delta,12,25);
       const night=Math.min(1,Math.max(0,time?.nightMix??0));
       common.lighting.value.set(1-.45*night,1-.39*night,1-.28*night);
     },

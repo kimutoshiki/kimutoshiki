@@ -65,3 +65,18 @@ async function webp(image) {
   canvas.getContext('2d').drawImage(image,0,0);
   return canvas.encode('webp',90);
 }
+
+// Small subjects can disappear in whole-frame scores, particularly the bronze
+// between the canopy and its plinth. Keep their positions in source-image UVs.
+const subjectBoxes={
+  desk:[.14,.17,.73,.40], 'okuma-auditorium':[.16,.02,.72,.81],
+  'okuma-statue':[.42,.04,.15,.51], 'karatsu-castle':[.30,.02,.51,.79], 'karatsu-bank':[.07,.15,.82,.69],
+};
+export function compareSubject(key,source,frame){
+  const [x,y,w,h]=subjectBoxes[key];
+  function crop(image){
+    const cut=createCanvas(192,128), ctx=cut.getContext('2d');
+    ctx.drawImage(image,x*image.width,y*image.height,w*image.width,h*image.height,0,0,192,128);return cut;
+  }
+  return compareFrames(crop(source),crop(frame));
+}

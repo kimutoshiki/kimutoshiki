@@ -35,19 +35,31 @@ export function mountSoftwareWorld({canvas,onReady,onError,onSelect,reducedMotio
   function syncTextureActivity(){images.setActive(active&&rendering&&!document.hidden);}
   const emit=(name,detail)=>canvas.dispatchEvent(new CustomEvent(name,{detail}));
   const subject=(key,type)=>emit('studysubject',{key,type});
+  function cameraPosition(){
+    if(outdoor)return {x:camera.x,y:camera.y,z:camera.z};
+    const turn=camera.yaw-SOFTWARE_SEAT.yaw;
+    return {
+      x:camera.x-Math.sin(turn)*.38,
+      y:camera.y-Math.sin(camera.pitch-SOFTWARE_SEAT.pitch)*.16,
+      z:camera.z+(1-Math.cos(turn))*.38,
+    };
+  }
   function state(){
     return {webgl:false,renderer:'software',textureReady:images.ready,renderedDistrict:paintedDistrict,texturedFaces:renderer.texturedFaces,seated:posture==='seated',standing:posture==='walking',posture,mode:outdoor?'outside':'inside',
       district:outdoor?district:'書斎',travel:false,focus:focusId,catReady:false,miniaturesReady:true,landmarksReady:!!garden,outdoorsReady:!!garden,
       outdoorsLoading:!!gardenTask,outdoorsError:loadError,paused,lightingMode,renderingActive:active&&rendering,
       deskProps:{...props},deskAction:action,deskStatus:status,deskActionSequence:sequence,
-      position:{x:camera.x,y:camera.y,z:camera.z},look:{yaw:camera.yaw,pitch:camera.pitch}};
+      position:cameraPosition(),look:{yaw:camera.yaw,pitch:camera.pitch}};
   }
   const announce=()=>emit('worldstate',state());
   function wake(){
     if(!disposed&&active&&rendering&&!document.hidden&&!frame)frame=requestAnimationFrame(tick);
   }
   function stopFrames(){if(frame)cancelAnimationFrame(frame);frame=0;lastFrame=0;}
-  function stopMovement(){held.clear();vector={forward:0,right:0};drag=undefined;}
+  function stopMovement(){
+    held.clear();vector={forward:0,right:0};drag=undefined;
+    if(active&&rendering&&!disposed&&!document.hidden)settle();
+  }
   function movingFrame(){
     clearTimeout(settleTimer);settleTimer=0;
     if(!fast){fast=true;sizing=true;}
@@ -73,12 +85,9 @@ export function mountSoftwareWorld({canvas,onReady,onError,onSelect,reducedMotio
     const hour=(new Date().getUTCHours()+9)%24;
     const night=lightingMode==='night'||(lightingMode==='auto'&&(hour<6||hour>=19));
     // Widen the vertical lens on a portrait device so all five objects still fit.
-    const cam={...camera};
+    const cam={...camera,...cameraPosition()};
     if(!outdoor){
       cam.fov=2*Math.atan(Math.tan(cam.fov*Math.PI/360)*Math.max(1,1.5*h/w))*180/Math.PI;
-      const turn=cam.yaw-SOFTWARE_SEAT.yaw;
-      cam.x-=Math.sin(turn)*.38;cam.z+=(1-Math.cos(turn))*.38;
-      cam.y-=Math.sin(cam.pitch-SOFTWARE_SEAT.pitch)*.16;
     }else if(w/h<1.08){
       // A portrait crop at the desktop lens would cut off the clock tower at
       // the left of the Waseda entrance. Preserve the principal architecture
@@ -122,9 +131,12 @@ export function mountSoftwareWorld({canvas,onReady,onError,onSelect,reducedMotio
     if(tilt)camera.pitch=clamp(camera.pitch+tilt*dt,-1.06,1.06);
     if(!f&&!r)return !!turn||!!tilt;
     const n=dt*4.4/Math.max(1,Math.hypot(f,r)),sin=Math.sin(camera.yaw),cos=Math.cos(camera.yaw);
-    const bounds=gardenModule?.SOFTWARE_BOUNDS||{minX:-36,maxX:36,minZ:-10,maxZ:60};
-    const nx=clamp(camera.x+(f*sin+r*cos)*n,bounds.minX+.3,bounds.maxX-.3);
-    const nz=clamp(camera.z+(f*cos-r*sin)*n,bounds.minZ+.3,bounds.maxZ-.3);
+    const bounds=gardenModule?.SOFTWARE_BOUNDS;
+    let nx=camera.x+(f*sin+r*cos)*n,nz=camera.z+(f*cos-r*sin)*n;
+    if(bounds){
+      nx=clamp(nx,bounds.minX+.3,bounds.maxX-.3);
+      nz=clamp(nz,bounds.minZ+.3,bounds.maxZ-.3);
+    }
     const walkable=gardenModule?.softwareWalkingAllowed;
     const blocked=(x,z)=>(walkable&&!walkable(x,z))||
       obstacles.some(b=>x>b.minX-.20&&x<b.maxX+.20&&z>b.minZ-.20&&z<b.maxZ+.20);

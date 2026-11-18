@@ -1,110 +1,147 @@
-import {buildPhotographicDistrict, PHOTO_PLACES} from './software-districts.js';
+import {buildPhotographicDistrict, photoFootprint, PHOTO_PLACES} from './software-districts.js';
+import {CASTLE_CENTER, REGION_BOUNDS, districtAt, regionalHeight} from '../scene/world-layout.js';
 
 export const SOFTWARE_PLACES=PHOTO_PLACES;
 export const SOFTWARE_SPAWN={...PHOTO_PLACES['landmark-okuma-auditorium'],key:'landmark-okuma-auditorium'};
+const [cx,cz]=CASTLE_CENTER;
+export const SOFTWARE_BOUNDS={
+  minX:REGION_BOUNDS.waseda.minX,maxX:REGION_BOUNDS.karatsu.maxX,
+  minZ:REGION_BOUNDS.waseda.minZ,maxZ:REGION_BOUNDS.karatsu.maxZ
+};
+export const softwareDistrictAt=(x,z)=>districtAt({x,z});
+export const softwareGroundHeight=(x,z)=>regionalHeight(x>REGION_BOUNDS.waseda.maxX?'karatsu':'waseda',x,z);
+const inRect=(x,z,b)=>x>=b.minX&&x<=b.maxX&&z>=b.minZ&&z<=b.maxZ;
+const street=(x,z,width,depth)=>({minX:x-width/2,maxX:x+width/2,minZ:z-depth/2,maxZ:z+depth/2});
 
-const trees = [
-  [-5.5, 1.5, 3.5, '#9caa60'], [6.2, 2.1, 3.1, '#a3ab64'],
-  [-15.6, 7.8, 4.3, '#be9a4c'], [-19.4, 15, 4.2, '#a9a65b'],
-  [-4.4, 18.5, 3.4, '#c6a657'], [5.6, 19.6, 3.9, '#7d995b'],
-  [-4.5, 30.7, 3.1, '#94a65c'], [-8.2, 39, 5, '#6f925d'],
-  [-18.1, 32.9, 4.2, '#829760'], [21.8, 24, 3.2, '#6d9061'],
-  [23.1, 31.4, 4.3, '#597f60'], [23.5, 43.5, 3.4, '#709061'],
-  [-13, -4, 4, '#9caa66'], [14.2, -3.4, 3.8, '#8a9a60']
+// The two cities share no ground. Within Karatsu the south frontage connects
+// to the west crossroads, the eastward town street and the castle approach.
+const bankStreet=street(1600,1118.8,178,55), westStreet=street(1579.8,1096.5,27,139);
+const townStreet=street(1898,1075.5,652,58), castleApproach=street(cx-75,852,65,466);
+const downhill=street(cx-24,cz+72,176,157), hill=street(cx,cz+15,175,182);
+const townAreas=[bankStreet,westStreet,townStreet,castleApproach,downhill,hill];
+export function softwareWalkingAllowed(x,z){
+  return inRect(x,z,REGION_BOUNDS.waseda)||townAreas.some(area=>inRect(x,z,area));
+}
+const buildings=[
+  // Campus buildings 3, 1, 2, 7 and 8 around the central stone walk.
+  [61,207.5,92,31,13.6,3],[58,177.6,66,24,60,2],[106.8,265.4,35.4,34.6,17,3],
+  [52,273.8,36,46,14.1,2],[-7,191.7,39,44,18.7,3],[-9,276.1,44,43,19.4,2],
+  // The bank and its neighbours sit at the old town crossroads.
+  [1558,1102,25,20,8.8,0],[1634,1094,18,29,10,1],[1660,1097,24,24,8,0],
+  [1556,1140,27,16,7.8,0],[1597,1141,22,17,8.4,1],[1624,1143,23,20,7.4,0],
+  [1655,1140,27,17,12.1,1]
+];
+for(let i=0;i<28;i++){
+  const x=1651+i*18.5, sign=i%2?1:-1;
+  buildings.push([x,1075.5+sign*(19.8+i%3),12+(i%3)*1.7,12+(i%2)*2.2,6+(i%4)*1.45,i%2]);
+}
+for(let i=0;i<16;i++){
+  const z=1040-i*21,sign=i%2?1:-1;
+  buildings.push([cx-75+sign*(19+i%4),z,13+(i%3),13,5.7+(i%4)*.9,i%2]);
+}
+function footprintStrips(key) {
+  const poly=photoFootprint(key),zs=poly.map(p=>p[1]),out=[];
+  for(let lo=Math.min(...zs);lo<Math.max(...zs);lo+=.65){
+    const z=lo+.325,xs=[];
+    for(let i=0;i<poly.length;i++){
+      const a=poly[i],b=poly[(i+1)%poly.length];
+      if((a[1]>z)===(b[1]>z))continue;
+      xs.push(a[0]+(b[0]-a[0])*(z-a[1])/(b[1]-a[1]));
+    }
+    if(xs.length>=2)out.push({minX:Math.min(...xs),maxX:Math.max(...xs),minZ:lo,maxZ:lo+.65});
+  }
+  return out;
+}
+export const SOFTWARE_OBSTACLES=[
+  ...Object.keys(PHOTO_PLACES).flatMap(footprintStrips),
+  ...buildings.map(([x,z,w,d])=>street(x,z,w,d))
 ];
 
-function bounds(minX, maxX, minZ, maxZ) {
-  return { minX, maxX, minZ, maxZ };
+function ground(s,x0,z0,x1,z1,texture,tile,shift=0,step=27) {
+  const nx=Math.ceil((x1-x0)/step),nz=Math.ceil((z1-z0)/step);
+  for(let ix=0;ix<nx;ix++)for(let iz=0;iz<nz;iz++){
+    const a=x0+(x1-x0)*ix/nx,b=x0+(x1-x0)*(ix+1)/nx;
+    const c=z0+(z1-z0)*iz/nz,d=z0+(z1-z0)*(iz+1)/nz;
+    const points=[[a,c],[b,c],[b,d],[a,d]].map(([x,z])=>[x,softwareGroundHeight(x,z)+shift,z]);
+    s.face(points,'#b5aa96',{texture,uv:points.map(([x,,z])=>[x/tile,z/tile]),layer:'ground',order:shift<0?1:2});
+  }
 }
 
-export const SOFTWARE_OBSTACLES = [
-  bounds(-18.2, -7.7, 16.4, 23.4), bounds(-7.47, -6.13, 9.42, 10.58),
-  bounds(10.4, 18.9, 11.3, 16.9), bounds(10.75, 20.25, 33.5, 40.6),
-  bounds(-36, -2.25, 24.9, 27.6), bounds(2.25, 36, 24.9, 27.6),
-  bounds(26, 36, 13.8, 60),
-  ...trees.map(([x, z]) => bounds(x - 0.24, x + 0.24, z - 0.24, z + 0.24))
-];
-
-function tile(s, x0, z0, x1, z1, color, order, y = 0) {
-  const nx = Math.ceil((x1 - x0) / 12), nz = Math.ceil((z1 - z0) / 12);
-  for (let i = 0; i < nx; i++) {
-    const a = x0 + (x1 - x0) * i / nx, b = x0 + (x1 - x0) * (i + 1) / nx;
-    for (let j = 0; j < nz; j++) {
-      const c = z0 + (z1 - z0) * j / nz, d = z0 + (z1 - z0) * (j + 1) / nz;
-      s.face([[a, y, c], [a, y, d], [b, y, d], [b, y, c]], color, { layer: 'ground', order });
+function facade(s,x,z,w,d,h,index) {
+  const bottom=softwareGroundHeight(x,z), roof=bottom+h;
+  const p=[[-.5,-.5],[.5,-.5],[.5,.5],[-.5,.5]].map(([u,v])=>[x+u*w,bottom,z+v*d]);
+  const top=p.map(([a,,b])=>[a,roof,b]);
+  const tile=index*.25, cols=w>30?4:Math.max(1,Math.round(w/10));
+  for(let i=0;i<4;i++) {
+    const j=(i+1)%4,a=p[i],b=p[j],count=i%2?Math.max(1,Math.round(d/13)):cols;
+    for(let c=0;c<count;c++) {
+      const start=a.map((v,k)=>v+(b[k]-v)*c/count), end=a.map((v,k)=>v+(b[k]-v)*(c+1)/count);
+      const low=.005,high=.995;
+      s.face([start,end,[end[0],roof,end[2]],[start[0],roof,start[2]]],'#a59888',{
+        texture:'street-facades',uv:[[tile+.001,high],[tile+.249,high],[tile+.249,low],[tile+.001,low]],
+        textureBrightness:i===0?.96:i===1?.83:i===2?1:.91
+      });
     }
   }
+  s.face(top,'#746f66');
+  if(w<30)s.roof(x,roof+.46,z,w+.48,.94,d+.58,'#645f59');
 }
 
-function ellipse(s, x, y, z, rx, rz, color, order) {
-  const points = Array.from({ length: 10 }, (_, i) => {
-    const angle = Math.PI * i / 5;
-    return [x + Math.cos(angle) * rx, y, z + Math.sin(angle) * rz];
-  });
-  s.face(points, color, { layer: 'ground', order });
+function tree(s,x,z,h,evergreen) {
+  const y=softwareGroundHeight(x,z),a=(x*1.74+z*.28)%6.28;
+  const key='street-leaves',half=evergreen?.5:0;
+  function cluster(ax,ay,az,rise,width,angle){
+    const dx=Math.cos(angle)*width/2,dz=Math.sin(angle)*width/2;
+    const pts=[[ax-dx,ay-rise/2,az-dz],[ax+dx,ay-rise/2,az+dz],[ax+dx,ay+rise/2,az+dz],[ax-dx,ay+rise/2,az-dz]];
+    s.face(pts,evergreen?'#66725a':'#8f844f',{texture:key,uv:[[half+.001,.999],[half+.499,.999],[half+.499,.001],[half+.001,.001]]});
+  }
+  s.frustum(x,y+.24*h,z,h*.040,h*.021,h*.48,6,'#796857');
+  // Crossed foliage clusters surround the trunk. All viewpoints see more than
+  // one depth, including when the visitor passes beneath the crown.
+  for(let i=0;i<3;i++){
+    const t=a+i*Math.PI*2/3,dx=Math.cos(t)*h*.16,dz=Math.sin(t)*h*.16,cy=y+h*(evergreen?.56:.66)+i*.032*h;
+    for(let n=0;n<2;n++)cluster(x+dx,cy,z+dz,h*(evergreen?.38:.59),h*(evergreen?.69:.64),t+n*1.62);
+  }
 }
 
-function taper(s, x, y, z, w, d, topW, topD, h, color, opt) {
-  function ring(rw, rd, ry) {
-    return [[x-rw/2,ry,z-rd/2],[x+rw/2,ry,z-rd/2],[x+rw/2,ry,z+rd/2],[x-rw/2,ry,z+rd/2]];
+function benches(s) {
+  for(const x of [-14,20,46,74])for(const [z,sign] of [[220.3,1],[239.2,-1]]){
+    for(const dx of [-.63,.63])s.box(x+dx,.21,z,.10,.42,.41,'#60645b');
+    s.box(x,.45,z,1.75,.10,.42,'#967654');s.box(x,.76,z-sign*.19,1.73,.25,.075,'#a0815c');
   }
-  const base = ring(w, d, y), top = ring(topW, topD, y+h);
-  for (let i = 0; i < 4; i++) s.face([base[i], base[(i+1)%4], top[(i+1)%4], top[i]], color, opt);
-  s.face(top, color, opt);
 }
-
-function buildWaterfront(s) {
-  const water='#7fa5a4';
-  tile(s,-36,24.9,26,27.6,water,3,-.10);
-  tile(s,26,13.8,36,60,water,3,-.10);
-  for(const [x,z,w] of [[-8,25.8,1.8],[-15,26.8,2.1],[8.7,26.4,2.5],[19,25.4,1.5],[28,21.7,2],[30,33.4,2.7],[28,42.9,2.3],[31,47.8,3.9]]) {
-    tile(s,x,z,x+w,z+.069,'#bed0c4',4,-.09);
+function townGround(s){
+  ground(s,1510,1025,2252,1166,'town-road',9,-.043,65);
+  ground(s,2151,635,2225,1089,'town-road',10,-.035,37);
+  ground(s,2161,497,2356,739,'castle-gravel',7,-.18,14);
+  ground(s,2215,535,2308,638,'castle-gravel',5,-.058,12);
+  for(const [x,z,w,d] of [[1600,1127.5,171,3.8],[1574.2,1097,2.5,130],[1945,1068.6,726,3.9],[1945,1082.6,726,3.4],[cx-82,852,3.3,429],[cx-68,852,3.3,429]]){
+    ground(s,x-w/2,z-d/2,x+w/2,z+d/2,'campus-walk',6,.002,53);
   }
-  tile(s,-2.39,24.38,2.39,28.1,'#a18d76',5,.04);
-  for(let i=0;i<8;i++) tile(s,-2.36,24.65+i*.42,2.36,24.69+i*.42,'#796e61',6,.045);
-  for (const x of [-2.39,2.39]) {
-    for(const dz of [-1.85,0,1.85]) s.box(x,.51,26.25+dz,.17,1.02,.19,'#6e7770');
-    s.box(x,.89,26.25,.12,.14,3.98,'#8d8877');
-    s.box(x,.45,26.25,.08,.10,3.91,'#898978');
-  }
-  const x=29.35,z=19.5;
-  taper(s,x,-.02,z,.6,2.82,1.02,3.42,.4,'#756559');
-  s.box(x,.41,z,.85,.09,2.35,'#cdb6a0');
-  s.box(x,1.80,z,.055,2.84,.055,'#746f61');
-  s.face([[x,3.17,z],[x+.04,.70,z],[x+.08,.73,z-1.70]],'#eee5cc');
-  s.face([[x+.05,2.73,z+.08],[x+.11,.70,z+.12],[x+.14,.73,z+1.18]],'#c3b89f');
+  // Crosswalk near the bank, plus dashed lane markings along the eastward street.
+  for(let i=0;i<7;i++)s.face([[1576.5,.009,1113.8+i*1.49],[1580.2,.009,1113.8+i*1.49],[1580.2,.009,1114.28+i*1.49],[1576.5,.009,1114.28+i*1.49]],'#d9d5c6');
+  for(let x=1644;x<2170;x+=19)s.face([[x,.004,1075.5],[x+4.7,.004,1075.5],[x+4.7,.004,1075.61],[x,.004,1075.61]],'#d9d4c5');
 }
 
 export function buildSoftwareGarden(s) {
-  tile(s,-36,-11,36,60,'#a8b187',0,-.18);
-  tile(s,-2.86,-11,2.86,24.95,'#b3a991',1,-.015);
-  tile(s,-2.54,-11,2.54,24.95,'#d1c6a9',2);
-  tile(s,-2.77,27.54,2.77,54,'#cbbfa4',2);
-  tile(s,-18.4,6.8,20.8,9.9,'#d1c4a8',2,.003);
-  tile(s,-17.95,8.8,-5.1,16.76,'#c6bda3',3,.006);
-  tile(s,8.35,9.75,20.4,13.6,'#d1c4a8',3,.006);
-  tile(s,2.25,29.2,21,33.95,'#cfc7ad',2);
-  tile(s,22.1,13.8,25.8,48.7,'#c0b699',2);
-  for(const [x,z,rx,rz] of [[-12,20,6.4,4.4],[-6.8,10,1.72,1.14],[14.4,14.1,5.38,3.12],[15.2,37,6.69,4.53]]) {
-    ellipse(s,x+.64,.012,z+.36,rx,rz,'#989f87',3);
+  for(const [k,file,repeat] of [
+    ['campus-walk','campus-stone',true],['castle-gravel','bailey-gravel',true],['town-road','town-paving',true],
+    ['street-leaves','district-trees',false],['street-facades','district-fronts',false]
+  ])s.registerTexture(k,'../images/outdoors/'+file+'.webp',{repeat,maxSize:1024});
+  const campus=REGION_BOUNDS.waseda;
+  ground(s,campus.minX-12,campus.minZ-9,campus.maxX+13,campus.maxZ+9,'campus-walk',7,-.06,29);
+  ground(s,-48,223.7,148,236.3,'campus-walk',5,-.021,22);
+  ground(s,-5.5,170.7,5.5,287.4,'campus-walk',5,-.016,22);
+  townGround(s);
+  for(const b of buildings)facade(s,...b);
+  benches(s);
+  for(let i=0;i<8;i++){
+    const x=-30+i*18;
+    for(const [off,z] of [[0,217.8],[3.6,242.1]])if(Math.abs(x+off)>14)tree(s,x+off,z,7.3+i%3,false);
   }
-  buildWaterfront(s);
+  for(let i=0;i<13;i++)tree(s,1641+i*41,1083.4+(i%2)*.75,4.4+i%4*.43,false);
+  for(let i=0;i<10;i++)tree(s,cx-82.4,1031-i*36,4.6+i%3*.65,i>5);
+  for(const [a,b,h] of [[-55,-34,8.3],[-43,3,10],[38,-12,8],[43,9,9.7],[-40,47,7.5],[42,35,8.7],[-23,-44,9.4]])
+    tree(s,cx+a,cz+b,h,true);
   for(const key of Object.keys(PHOTO_PLACES))buildPhotographicDistrict(s,key);
-  for(const [x,z,h,c] of trees) {
-    ellipse(s,x+.67,.017,z+.39,h*.54,h*.32,'#909d7d',3);
-    s.frustum(x,h*.24,z,.16,.102,h*.48,5,'#7a7160');
-    s.frustum(x,h*.54,z,h*.21,h*.37,h*.28,6,c);
-    s.frustum(x,h*.81,z,h*.37,h*.09,h*.27,6,c);
-    if(z>29 || z<3) s.frustum(x-.52,h*.62,z+.23,h*.24,.05,h*.28,5,c);
-  }
-  for(const [x,z] of [[-3.25,5.3],[3.31,14],[3.40,31.0]]) {
-    s.frustum(x,1.19,z,.07,.041,2.38,5,'#5d6d67');
-    s.frustum(x,2.56,z,.11,.20,.38,4,'#dccca0');
-    s.frustum(x,2.81,z,.25,.04,.15,4,'#586b64');
-  }
-  // Layer the mountain ridges behind the coast and the campus's northern treeline.
-  for(const [x,z,w,h,c] of [[-29,58,21,6.8,'#869b8b'],[-14,59,19,8.2,'#94a69a'],[7,59,23,6.2,'#9bad9e'],[24,59,25,7.7,'#849b92'],[38,57,19,6.3,'#8fa59a']]) {
-    s.face([[x-w/2,-.24,z],[x-w*.22,h*.58,z],[x-w*.05,h*.81,z+.1],[x+w*.05,h,z],[x+w*.20,h*.64,z-.3],[x+w/2,-.24,z]],c);
-    s.face([[x+w*.05,h,z],[x+w*.2,h*.64,z-.30],[x+w/2,-.24,z],[x+w*.10,-.24,z-1]],'#8a9b8b');
-  }
 }

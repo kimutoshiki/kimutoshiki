@@ -7,7 +7,7 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 import { loadImage } from '@napi-rs/canvas';
-import { reviewViews, sourceAsset, compareFrames, frameDetail, saveComparison } from './helpers/visual-comparison.mjs';
+import { reviewViews, sourceAsset, compareFrames, compareSubject, frameDetail, saveComparison } from './helpers/visual-comparison.mjs';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 const directory=resolve(process.env.REVIEW_OUTPUT||join(root,'docs/reviews/live-study'),'views');
@@ -15,6 +15,28 @@ const origin=process.env.PREVIEW_URL||'http://127.0.0.1:4173';
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',
   args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const results=[], failures=[];
+async function settle(page, renderer) {
+  if(renderer==='software') await page.waitForFunction(()=>!window.cameraReview.getPerformance().fast);
+  await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+}
+async function strafe(page){
+  return page.evaluate(async()=>{
+    const e=window.cameraReview,start=e.getState().position,t0=performance.now();
+    let previous=t0,frames=e.getPerformance().frames,samples=[],distance=0;
+    e.setMovement({right:1});
+    try {
+      do {
+        await new Promise(requestAnimationFrame);
+        const data=e.getPerformance(),now=performance.now(),end=e.getState().position;
+        distance=Math.hypot(end.x-start.x,end.z-start.z);
+        if(data.frames!==frames) {samples.push(now-previous);frames=data.frames;previous=now;}
+      }while((distance<1.2||samples.length<8)&&performance.now()-t0<9000);
+    }finally{e.stopMovement();}
+    samples.sort((a,b)=>a-b);
+    const median=samples[Math.floor(samples.length/2)],p95=samples[Math.floor(samples.length*.95)];
+    return {frames:samples.length,elapsedMs:Math.round(performance.now()-t0),medianFrameMs:+median.toFixed(1),p95FrameMs:+p95.toFixed(1),medianFps:+(1000/median).toFixed(1)};
+  });
+}
 await mkdir(directory,{recursive:true});
 try {
   for (const renderer of ['software','native']) {
@@ -52,26 +74,32 @@ try {
       const source=await loadImage(join(root,sourceAsset(key)));
       const arrival=await loadImage(await canvas.screenshot());
       const before=await page.evaluate(()=>window.cameraReview.getState().position);
-      if(key!=='desk'){
-        await page.evaluate(()=>window.cameraReview.setMovement({right:1}));
-        try{
-          await page.waitForFunction(start=>{const p=window.cameraReview.getState().position;return Math.hypot(p.x-start.x,p.z-start.z)>=.9;},before);
-        }finally{await page.evaluate(()=>window.cameraReview.stopMovement());}
-      }else{await page.evaluate(()=>window.cameraReview.look(.16,0));}
-      await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+      let movingPerformance;
+      if(key!=='desk') movingPerformance=await strafe(page);
+      else await page.evaluate(()=>window.cameraReview.look(.16,0));
+      await settle(page,renderer);
       const sideways=await loadImage(await canvas.screenshot());
       const actual=await page.evaluate(()=>window.cameraReview.getState().position);
       await page.evaluate(desk=>window.cameraReview.look(desk?-.31:.38,.025),key==='desk');
-      await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+      await settle(page,renderer);
       const turned=await loadImage(await canvas.screenshot());
+      const surround=[];
+      if(key!=='desk'){
+        for(const [name,delta] of [['right',Math.PI/2-.38],['rear',Math.PI/2]]){
+          await page.evaluate(delta=>window.cameraReview.look(delta,0),delta);
+          await settle(page,renderer);
+          surround.push({name,label:name==='right'?'Perpendicular to arrival':'Facing away from the landmark',image:await loadImage(await canvas.screenshot())});
+        }
+      }
       const registration=compareFrames(source,arrival), translation=compareFrames(arrival,sideways), turn=compareFrames(sideways,turned);
       const lm=Math.hypot(actual.x-before.x,actual.z-before.z), detail=frameDetail(arrival), away=frameDetail(turned);
-      const entry={renderer,key,width:arrival.width,height:arrival.height,position:before,metresTranslated:lm,registration,translation,turn,detail,turnedDetail:away,performance};
+      const subject=compareSubject(key,source,arrival);
+      const entry={renderer,key,subject,width:arrival.width,height:arrival.height,position:before,metresTranslated:lm,registration,translation,turn,detail,turnedDetail:away,surroundDetail:surround.map(view=>frameDetail(view.image)),performance,movingPerformance};
       results.push(entry);
       await saveComparison(directory,renderer+'-'+key,[
         {name:'reference',label:'2D source',image:source},{name:'arrival',label:'3D arrival / '+renderer,image:arrival},
         {name:'side',label:key==='desk'?'Seated look right':'Camera translated '+lm.toFixed(2)+' m',image:sideways},
-        {name:'turn',label:'Camera turned',image:turned}]);
+        {name:'turn',label:'Camera turned',image:turned},...surround]);
       const require=(value,why)=>{if(!value) failures.push(renderer+' '+key+': '+why);};
       require(arrival.width===720&&arrival.height===480,'common 3:2 camera capture');
       require(translation.meanRgbError>1.5&&turn.meanRgbError>4,'visible change under each camera motion');
@@ -80,8 +108,17 @@ try {
       // The native indoor study is independently modelled. Outdoors both
       // renderers and the CPU desk are calibrated against their exact source.
       if(key!=='desk'||renderer==='software'){
-        require(registration.meanRgbError<55,'registered RGB block error exceeds 55/255');
-        require(registration.luminanceCorrelation>.55,'registered luminance correlation is below 0.55');
+        if(renderer==='software')require(subject.meanRgbError<27&&subject.luminanceCorrelation>.74,'the foreground subject itself differs from the corresponding artwork');
+        const limit=renderer==='software'?27:55,minimum=renderer==='software'?.80:.55;
+        require(registration.meanRgbError<limit,'registered RGB block error exceeds '+limit+'/255');
+        require(registration.luminanceCorrelation>minimum,'registered luminance correlation is below '+minimum);
+      }
+      if(renderer==='software'){
+        const idle=await page.evaluate(async()=>{
+          const e=window.cameraReview,start=e.getPerformance().frames;
+          await new Promise(resolve=>setTimeout(resolve,260));return e.getPerformance().frames-start;
+        });
+        require(idle<=1,'still CPU view kept repainting while idle');
       }
       console.log(renderer,key,JSON.stringify({registration,translation:translation.meanRgbError,turn:turn.meanRgbError,detail}));
     }

@@ -146,7 +146,7 @@ export function perspective(ctx) {
           opacity=255*Math.max(0,Math.min(1,edge[0]?eu*edge[0]:1,edge[1]?ev*edge[1]:1,
             edge[2]?(1-eu)*edge[2]:1,edge[3]?(1-ev)*edge[3]:1));
         }
-        opacity=opacity*alpha/255;
+        opacity=opacity*alpha/255*mat.opacity;
         if(opacity<1||(mat.translucent?opacity>=254:opacity<254))continue;
       }else if(alpha<96)continue;
       if(interpolate&&alpha===255&&ix<maxX&&iy<maxY&&littleEndian){
@@ -216,11 +216,21 @@ export function perspective(ctx) {
     const tanY=height/(2*focal),tanX=width/(2*focal),planeX=Math.hypot(1,tanX),planeY=Math.hypot(1,tanY);
     for(const f of model.faces){
       const o=f.options;if((o.visible&&!o.visible(progress))||(o.districtOnly&&o.districtOnly.replace(/^landmark-/,'')!==district))continue;
+      let opacity=1;
+      if(o.nearView){
+        const [cx,cz,start,end]=o.nearView,distance=Math.hypot(cam.x-cx,cam.z-cz);
+        if(distance>=end)continue;
+        if(distance>start){
+          const t=(end-distance)/(end-start);
+          opacity=t*t*(3-2*t);
+        }
+      }
       if(f.bounds){
         const r=f.bounds[3],[x,y,z]=view(f.bounds);
         if(z+r<near||Math.abs(x)>z*tanX+r*planeX||Math.abs(y)>z*tanY+r*planeY||r*focal<z*.13)continue;
       }
       const tex=o.texture&&textures?.get(o.texture);
+      if(!tex&&opacity<.5)continue;
       let pts=f.points.map((p,i)=>{
         const xyz=view(o.transform?o.transform(...p,progress):p);
         return tex&&f.uvq?xyz.concat(f.uvq[i]):xyz;
@@ -242,7 +252,7 @@ export function perspective(ctx) {
         const dark=night&&!o.glow;
         const rect=o.featherUV;
         const edgeRect=rect?[rect[0],rect[1],1/(rect[2]-rect[0]),1/(rect[3]-rect[1])]:null;
-        mat={image:tex,edgeRect,soft:!!(o.feather||o.blend),edge:edgeWidths(o.feather),filter:!fast,identity:!dark&&bright===1,r:bright*(dark?.85:1),g:bright*(dark?.86:1),b:bright*(dark?.93:1)};
+        mat={image:tex,edgeRect,opacity,soft:!!(o.feather||o.blend||opacity<.999),edge:edgeWidths(o.feather),filter:!fast,identity:!dark&&bright===1,r:bright*(dark?.85:1),g:bright*(dark?.86:1),b:bright*(dark?.93:1)};
         texturedFaces++;
       }
       surfaces.push({points,color,id,bias,mat,dep});
