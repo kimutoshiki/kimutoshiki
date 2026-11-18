@@ -79,6 +79,19 @@
   object-position: center;
   box-shadow: 0 0 0 1px #54442544;
 }
+.illustrated-nameplate {
+  position: absolute;
+  left: 18.85%;
+  top: 49.69%;
+  transform: translate(-50%, -50%) skewX(-4deg);
+  font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+  font-size: min(1.58cqw, 2.37cqh);
+  line-height: 1;
+  letter-spacing: .055em;
+  color: #4a3428;
+  white-space: nowrap;
+  pointer-events: none;
+}
 .study-pins, .study-link-layer { position: absolute; inset: 0; pointer-events: none; }
 .study-pins { z-index: 2; }
 /* These percentages refer to the uncropped 1536 × 1024 artwork.

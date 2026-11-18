@@ -57,8 +57,8 @@ export function createMeshRaster(canvas) {
   surface.dataset.renderer='software';
   let w=1,h=1,ratio=1,image,pixels,depth,textureCache=new WeakMap();
   const viewProj=new Matrix4(),mvp=new Matrix4(),world=new Matrix4(),instance=new Matrix4(),normalMatrix=new Matrix3();
-  const frustum=new Frustum(),sphere=new Sphere(),normal=new Vector3(),point=new Vector3(),tint=new Vector3(),morph=new Vector3();
-  const geometries=new WeakMap(),sunVec=new Vector3(),info={render:{calls:0,triangles:0}};
+  const frustum=new Frustum(),sphere=new Sphere(),normal=new Vector3(),point=new Vector3(),tint=new Vector3();
+  const sunVec=new Vector3(),info={render:{calls:0,triangles:0}};
   let projected=new Float32Array(0),flags=new Uint8Array(0);
   let skyTop,skyBottom;
   function background(scene) {
@@ -142,7 +142,7 @@ export function createMeshRaster(canvas) {
     const count=pos.count,norm=geometry.attributes.normal,idx=geometry.index;
     if(projected.length<count*stride){projected=new Float32Array(count*stride);flags=new Uint8Array(count);}
     mvp.multiplyMatrices(viewProj,model);normalMatrix.getNormalMatrix(model);
-    const e=mvp.elements,ne=normalMatrix.elements,tex=pixelTexture(mat.map,textureCache);
+    const e=mvp.elements,tex=pixelTexture(mat.map,textureCache);
     const color=mat.color||{r:1,g:1,b:1},em=mat.emissive,ei=mat.emissiveIntensity??1;
     const posed=node.isSkinnedMesh || node.morphTargetInfluences?.some(k=>Math.abs(k)>.0001);
     const basic=mat.isMeshBasicMaterial;

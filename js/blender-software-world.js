@@ -3,10 +3,10 @@
 import { mountWorld } from '../scene/world.bundle.js?v=atelier1';
 import { createMeshRaster } from '../scene/mesh-raster.js?v=atelier1';
 export async function mountSoftwareWorld(options) {
-  let raster;
-  const engine=await mountWorld({...options, rendererFactory:canvas=>(raster=createMeshRaster(canvas))});
-  if (!engine?.getState?.().webgl) {engine?.dispose?.();throw Error('Blender scene could not start');}
-  const state=engine.getState;
-  engine.getState=()=>({...state(),webgl:false,renderer:'software',renderedMeshes:raster.info.render.calls});
+  const engine=await mountWorld({...options, rendererFactory:createMeshRaster});
+  if (engine?.getState?.().geometrySource !== 'blender') {
+    engine?.dispose?.();
+    throw Error('Blender scene could not start');
+  }
   return engine;
 }
