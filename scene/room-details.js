@@ -146,9 +146,11 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
   for (let i = 0; i < 3; i++) box([.054 - i * .01, .003, .003], [0, .073 - i * .012, .073], palette.darkBrass, ink);
 
   // Existing lamp and pencil pot gain fittings without extra lights or animation.
-  for (const y of [.13, .66, .78]) disc(.041, .025, [0, y, -y * .061], palette.darkBrass, lamp);
-  bead([.044, .044, .038], [-.016, .820, -.051], palette.brass, lamp);
-  disc(.025, .014, [.036, .820, -.051], palette.darkBrass, lamp, [0, 0, Math.PI / 2]);
+  if (!lamp.userData.readingLamp) {
+    for (const y of [.13, .66, .78]) disc(.041, .025, [0, y, -y * .061], palette.darkBrass, lamp);
+    bead([.044, .044, .038], [-.016, .820, -.051], palette.brass, lamp);
+    disc(.025, .014, [.036, .820, -.051], palette.darkBrass, lamp, [0, 0, Math.PI / 2]);
+  }
   for (let i = 0; i < 10; i++) {
     const angle = i * Math.PI / 5;
     rod([Math.cos(angle) * .103, .025, Math.sin(angle) * .103], [Math.cos(angle) * .114, .211, Math.sin(angle) * .114], .003, palette.lightWood, pot);

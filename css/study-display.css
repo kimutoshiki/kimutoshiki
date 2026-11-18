@@ -1,0 +1,269 @@
+/* The desk's printed numbers match the five destinations in the reading rail. */
+.study-switch {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid #baaa99;
+  border-radius: 7px;
+  background: var(--sheet);
+}
+.study-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  min-height: 39px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--muted);
+  background: transparent;
+  font: 650 15px/1 var(--sans);
+  font-variant-numeric: tabular-nums;
+}
+.study-switch svg { width: 17px; height: 17px; }
+.study-switch button[aria-pressed="true"] { background: var(--wine); color: #fff9ec; }
+.study-switch button[aria-pressed="false"]:hover { background: #f0e8db; color: var(--wine); }
+.home-menu .menu-symbol {
+  width: 25px;
+  height: 25px;
+  border: 1px solid #b19889;
+  border-radius: 50%;
+  color: var(--wine);
+  background: transparent;
+  font: 600 13px/1 var(--latin);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.home-menu .is-linked .menu-symbol, .home-menu a:focus-visible .menu-symbol {
+  color: var(--sheet);
+  background: var(--wine);
+  border-color: var(--wine);
+}
+.home-menu a.is-linked { color: var(--wine); background: #efe6d9; }
+.art-hint { font: 500 14px/1.6 var(--sans); color: var(--muted); }
+.study-mode-status { flex: 1 1 13em; color: var(--wine-dark); font-size: 14px; line-height: 1.6; }
+.study-mode-status:empty { display: none; }
+
+.world[data-display-mode="2d"] .world-stage,
+.world[data-display-mode="2d"] .world-canvas,
+.world[data-display-mode="2d"] .look-hint,
+.world[data-display-mode="2d"] .desk-controls,
+.world[data-display-mode="3d"]:not(.is-rendered) .desk-controls,
+.world[data-display-mode="3d"] .art-hint,
+.world.is-walking .study-illustration,
+.world.is-walking .study-link-layer,
+.world.is-walking .study-link-card,
+.world.is-rendered[data-display-mode="3d"] .study-illustration { display: none; }
+
+.desk-view { container-type: size; }
+.world[data-display-mode="2d"] .desk-view { background: transparent; outline: none; }
+.study-illustration {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  width: min(100cqw, 150cqh);
+  aspect-ratio: 3 / 2;
+  transform: translate(-50%, -50%);
+  isolation: isolate;
+}
+.study-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  box-shadow: 0 0 0 1px #54442544;
+}
+.study-pins, .study-link-layer { position: absolute; inset: 0; pointer-events: none; }
+.study-pins { z-index: 2; }
+/* These percentages refer to the uncropped 1536 × 1024 artwork.
+   A short leader offsets each badge from the miniature or stationery it identifies. */
+.study-pin[data-illustration-link="profile"]  { --x: 41.8%; --y: 33.5%; --dx: -20px; --dy: -15px; --leader-angle: 37deg; }
+.study-pin[data-illustration-link="research"] { --x: 23%;   --y: 37.5%; --dx: -17px; --dy: -17px; --leader-angle: 45deg; }
+.study-pin[data-illustration-link="blog"]     { --x: 43%;   --y: 52%;   --dx: -16px; --dy: 16px;  --leader-angle: -45deg; }
+.study-pin[data-illustration-link="photos"]   { --x: 58%;   --y: 39%;   --dx: 23px;  --dy: -20px; --leader-angle: 139deg; --leader-length: 30px; }
+.study-pin[data-illustration-link="contact"]  { --x: 59.4%; --y: 53%;   --dx: 16px;  --dy: 16px;  --leader-angle: 225deg; }
+.desk-view .study-pin {
+  position: absolute;
+  z-index: 1;
+  top: var(--y);
+  left: var(--x);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--wine);
+  transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)));
+  pointer-events: auto;
+}
+.study-pins .study-pin::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--leader-length, 23px);
+  height: 1px;
+  background: #faf2df;
+  box-shadow: 0 1px 1px #26160b88;
+  transform-origin: 0 50%;
+  transform: rotate(var(--leader-angle, 0deg));
+}
+.study-pin .pin-dot {
+  z-index: 1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: 1px solid #fbefd8;
+  box-shadow: 0 1px 5px #29191291;
+  color: #fff8e8;
+  background: #6a2a3c;
+  font: 600 13px/1 var(--latin);
+  font-variant-numeric: lining-nums tabular-nums;
+  transition: background-color .16s, color .16s;
+}
+.study-pin .pin-label {
+  position: absolute;
+  bottom: calc(100% - 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 12em;
+  padding: 4px 9px;
+  border: 1px solid #b9a690;
+  border-radius: 3px;
+  color: var(--ink);
+  background: var(--sheet);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+  box-shadow: 0 2px 8px #33221426;
+}
+.desk-view .study-pin:is(.is-linked, :focus-visible) { z-index: 4; }
+.study-pin:is(.is-linked, :focus-visible) .pin-dot { background: #fff8e8; color: var(--wine-dark); box-shadow: 0 0 0 2px var(--wine); }
+.study-pin:is(.is-linked, :focus-visible) .pin-label { visibility: visible; opacity: 1; }
+.study-live-pin[data-side="right"] .pin-label { left: auto; right: 4px; transform: none; }
+.study-link-layer { z-index: 3; }
+.study-link-card {
+  position: absolute;
+  z-index: 5;
+  bottom: 12px;
+  right: 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  max-width: calc(100% - 24px);
+  padding: 8px 9px 8px 14px;
+  background: var(--sheet);
+  border: 1px solid #bcaa92;
+  border-left: 3px solid var(--wine);
+  border-radius: 3px;
+  box-shadow: 0 3px 14px #38291f2b;
+}
+.study-link-object { grid-column: 1; font-size: 13px; color: var(--muted); line-height: 1.45; }
+.study-link-go { grid-column: 1; display: inline-flex; align-items: center; min-height: 33px; color: var(--wine-dark); font-size: 16px; font-weight: 600; text-underline-offset: 3px; text-decoration: underline; }
+.study-link-close { grid-area: 1 / 2 / span 2 / 3; width: 42px; height: 44px; padding: 0; border: 0; border-radius: 4px; color: var(--muted); background: transparent; font-size: 24px; }
+.study-link-close:hover { background: #eee7d9; }
+.world[data-display-mode="2d"] .home-entry { justify-content: flex-end; padding-block: 10px; }
+.world[data-display-mode="2d"] #world-stand {
+  min-height: 48px;
+  padding: 6px 10px;
+  gap: 9px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--wine-dark);
+}
+.world[data-display-mode="2d"] #world-stand:hover { background: #f0e8d9; }
+.world[data-display-mode="2d"] #world-stand > svg:first-child { width: 19px; height: 19px; }
+.world[data-display-mode="2d"] #world-stand-label { font-size: 16px; }
+.world[data-display-mode="2d"] .stand-copy { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.world[data-display-mode="2d"] .stand-copy small { color: var(--muted); }
+.world[data-display-mode="2d"] .home-entry-note { display: none; }
+
+@media (min-width: 791px) {
+  .world[data-display-mode="2d"] .home-studio { min-height: 0; }
+  /* Short screens scroll vertically so the desk can keep its full composition. */
+  .world:not(.is-walking)[data-display-mode="2d"] { min-height: min(820px, calc(42vw + 180px)); }
+  .world.is-walking .wordmark-detail { display: none; }
+}
+@media (max-width: 1140px) {
+  .world.is-walking .home-clock { display: none; }
+}
+@media (max-width: 790px) {
+  .world:not(.is-walking)[data-display-mode="2d"] .desk-view { height: auto; aspect-ratio: 3 / 2; }
+  .world:not(.is-walking)[data-display-mode="2d"] .home-studio { grid-template-rows: auto auto auto; }
+  .study-switch button { min-height: 40px; padding-inline: 9px; gap: 4px; }
+  .study-switch svg { width: 15px; height: 15px; }
+  .art-hint { font-size: 13px; }
+  .study-link-card { bottom: 5px; right: 5px; max-width: calc(100% - 10px); padding: 4px 6px 3px 10px; }
+}
+@media (max-width: 620px) {
+  .world:not(.is-walking) .home-clock { display: none; }
+  .world[data-display-mode="2d"] .home-entry { display: flex; padding-block: 5px; }
+  .world[data-display-mode="2d"] .stand-copy { flex: initial; }
+  .world.is-walking .wordmark-detail { display: none; }
+}
+@media (max-width: 420px) {
+  .world-header { gap: 6px; }
+  .header-tools { gap: 7px; }
+  .study-switch button { width: 43px; padding-inline: 0; }
+  .study-switch svg { display: none; }
+  .world.is-walking .wordmark { display: none; }
+  .study-pin .pin-dot { width: 21px; height: 21px; font-size: 12px; }
+  .art-hint { font-size: 12px; }
+  .study-link-go { min-height: 32px; font-size: 15px; }
+}
+
+/* The photographed notebook lies flat in perspective. Its paper and cover
+   share that footprint; no second illustration download is needed to open it. */
+.study-illustration::before, .study-illustration::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 34.95%;
+  top: 48.75%;
+  width: 16.45%;
+  height: 5.35%;
+  clip-path: polygon(8% 0, 91% 0, 99% 98%, 1% 98%);
+  pointer-events: none;
+  opacity: 0;
+}
+.study-illustration::before {
+  background:
+    linear-gradient(90deg, #948265, #dfd2b1 5%, transparent 9%),
+    repeating-linear-gradient(0deg, transparent 0 15%, #96896d55 15.5% 16.5%, transparent 17% 19%),
+    linear-gradient(172deg, #cbb991, #f5ebce 72%, #d9c8a4);
+}
+.study-illustration::after {
+  transform-origin: 8% 50%;
+  background:
+    repeating-linear-gradient(98deg, #c5b68c15 0 1px, transparent 1px 3px),
+    linear-gradient(100deg, #283324, #626a4e 8%, #454e35 35%, #2f392b 92%, #8f8257);
+  box-shadow: inset 0 0 0 2px #ac935b;
+}
+.study-illustration[data-notebook-open]::before { opacity: 1; }
+.study-illustration[data-notebook-open]::after {
+  opacity: 1;
+  animation: lift-notebook-cover .55s cubic-bezier(.2,.72,.3,1) both;
+}
+@keyframes lift-notebook-cover {
+  from { transform: perspective(260px) rotateY(0); }
+  to { transform: perspective(260px) rotateY(-113deg) skewY(-6deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .study-illustration[data-notebook-open]::after { animation: none; transform: perspective(260px) rotateY(-113deg) skewY(-6deg); }
+}

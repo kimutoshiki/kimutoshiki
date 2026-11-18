@@ -10,6 +10,6 @@ export {
   LinearMipmapLinearFilter, LoopOnce, Material, MathUtils, Matrix4, Mesh,
   MeshBasicMaterial, MeshPhysicalMaterial, MeshStandardMaterial, NoColorSpace,
   Object3D, PCFSoftShadowMap, Path, PerspectiveCamera, PlaneGeometry, PointLight, RGBAFormat,
-  Raycaster, RepeatWrapping, SRGBColorSpace, Scene, Shape, SphereGeometry,
+  Raycaster, RepeatWrapping, SRGBColorSpace, Scene, Shape, SphereGeometry, SpotLight,
   TextureLoader, TorusGeometry, TubeGeometry, Vector2, Vector3, WebGLRenderer,
 } from '../js/vendor/three.module.min.js';

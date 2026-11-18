@@ -1,4 +1,5 @@
 import { createRoom } from './room-model.js';
+import { createReadingLamp, finishEnvelope, furnishStudy } from './study-finishes.js';
 import { createDeskActions, createDeskJournal } from './desk-interactions.js';
 import { surface, prepareBoxSurfaceUVs, ensureSurfaceUV, SURFACES } from './surface-materials.js';
 import { mergeStaticDraws, cacheStaticLocalMatrices } from './static-batching.js';
@@ -16,11 +17,12 @@ export const HOME_FRONT_WINDOW = Object.freeze({ x: .85, width: 1.4, sill: .8, h
  * The returned cat is the original empty owner; the caller installs its asset.
  * No external image or cat request begins during this synchronous factory.
  */
-export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange = () => {}, catAsset, loadCatDetail } = {}) {
+export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange = () => {}, catAsset, loadCatDetail, waitForStudy } = {}) {
   let disposed = false, landmarks, clockSnapshot;
   const group = new T.Group(); group.name = 'Home · the original warm study';
   let journal;
-  const original = createRoom(T, { worldHome: true, createNotebook: root => { journal=createDeskJournal(T,root,onTextureLoad); }, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
+  const original = createRoom(T, { worldHome: true, createReadingLamp, finishEnvelope, createNotebook: root => { journal=createDeskJournal(T,root,onTextureLoad); }, catAsset, loadDetailedCat: loadCatDetail, onCatChange: onAssetChange, onTextureLoad });
+  const studyFinishes=furnishStudy(T,original);
   original.lampLight.intensity *= HOME_SCALE * HOME_SCALE;
   original.lampLight.distance *= HOME_SCALE;
   const room = original.group; room.scale.setScalar(HOME_SCALE); room.position.y = .0108; group.add(room);
@@ -218,11 +220,13 @@ export function createHomeInterior(T, { onTextureLoad = () => {}, onAssetChange 
   async function loadMiniatures() {
     if(landmarksStarted||disposed)return landmarksReady;landmarksStarted=true;
     try {
+      if(waitForStudy && !await waitForStudy()){startLandmarks(null);return null;}
       const { createDeskLandmarks } = await import('./desk-landmarks.js');
       if(disposed){startLandmarks(null);return null;}
-      const result = await createDeskLandmarks(T, {waitForFonts:false,yieldBetweenModels:true,onTextureLoad});
+      const result = await createDeskLandmarks(T, {waitForFonts:false,yieldBetweenModels:true,waitForStudy,onTextureLoad});
+      if(waitForStudy)await waitForStudy();
       if(disposed){disposeTree(result.group);startLandmarks(null);return null;}
-      landmarks=result;if(clockSnapshot)landmarks.updateClock?.(clockSnapshot);room.add(result.group);group.updateMatrixWorld(true);
+      landmarks=result;studyFinishes.setMiniatureFinishes(result.group);if(clockSnapshot)landmarks.updateClock?.(clockSnapshot);room.add(result.group);group.updateMatrixWorld(true);
       for(const target of result.targets){target.anchor=target.object.localToWorld(new T.Vector3(0,.4,0));targets.push(target);}
       metadata.miniatures=result.targets.map(t=>({id:t.id,position:t.object.getWorldPosition(new T.Vector3()).toArray()}));
       onAssetChange();startLandmarks(result);return result;

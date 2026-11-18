@@ -7,27 +7,28 @@ const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const canvasMarkup = html.match(/<canvas\b(?=[^>]*\bid="world-canvas")[^>]*>/)?.[0];
 assert.match(canvasMarkup || '', /tabindex="-1"/); assert.match(canvasMarkup, /aria-hidden="true"/);
 const navigation = html.match(/<nav\b(?=[^>]*\bid="walking-navigation")[^>]*>([\s\S]*?)<\/nav>/)?.[1];
-const links = [...(navigation || '').matchAll(/<a\s+href="([^"]+)"[^>]*>([^<]+)<\/a>/g)];
+const links = [...(navigation || '').matchAll(/<a\b[^>]*?\bhref="([^"]+)"[^>]*>([^<]+)<\/a>/g)];
 assert.deepEqual(links.map(match => match[1]), ['profile.html', 'research.html', 'blog.html', 'photos.html', 'contact.html']);
 assert(links.every(match => match[2].trim()), 'All five native page links retain accessible names');
 const seatedMenu = html.match(/<nav\b(?=[^>]*\bid="home-menu")[^>]*>([\s\S]*?)<\/nav>/)?.[1] || '';
-assert.deepEqual([...seatedMenu.matchAll(/<a\s+href="([^"]+)"/g)].map(match => match[1]), links.map(match => match[1]), 'The seated home exposes the same five native pages');
-const posterMarkup = html.match(/<picture\b[^>]*\bclass="world-poster"[^>]*>[\s\S]*?<\/picture>/)?.[0] || '';
-assert(posterMarkup); assert(!/\s(?:src|srcset)\s*=/.test(posterMarkup), 'Fallback pictures have no eager image source in the initial HTML');
-assert(!html.includes('書斎へ、ようこそ。') && !html.includes('机の先に広がる世界'), 'The menu omits the removed promotional phrases');
+assert.deepEqual([...seatedMenu.matchAll(/<a\b[^>]*?\bhref="([^"]+)"/g)].map(match => match[1]), links.map(match => match[1]), 'The seated home exposes the same five native pages');
+assert.match(html, /data-display-mode="2d"/, 'The server markup opens in two dimensions');
+for (const width of [640, 960, 1536]) assert.match(html, new RegExp('study-' + width + '\\.webp'));
+const picture = html.match(/<img\b(?=[^>]*\bid="study-image")[^>]*>/)?.[0] || '';
+assert.match(picture, /\ssrcset="[^"]+"/);
+assert.match(picture, /\ssrc="[^"]+\.webp"/, 'The illustration has a native source before JavaScript runs');
+assert.equal((html.match(/data-illustration-link=/g) || []).length, 5);
 assert.match(html, /id="world-live-controls"[^>]*\bhidden/);
 assert.match(html, /id="world-travel"[^>]*\bdisabled/);
 for (const id of ['home-menu', 'home-intro', 'world-stand', 'world-seat']) assert.match(html, new RegExp(`id="${id}"`));
 assert.equal((html.match(/data-world-focus=/g) || []).length, 5);
 assert.equal((html.match(/data-walk=/g) || []).length, 4);
-const importExpression = source.match(/await import\('\.\.\/scene\/world\.bundle\.js[^']*'\)/)?.[0];
-assert(importExpression, 'The UI imports the production world bundle asynchronously');
-const fallbackImport = source.match(/import\('\.\/study-tour\.js[^']*'\)/)?.[0];
-assert(fallbackImport, 'Only a failed WebGL start should load the lightweight tour');
-assert.equal((source.match(/\bimport\s*\(/g) || []).length, 2, 'The UI imports only the engine and its optional fallback');
-// Replace only the module-loader boundary. All production UI handlers, state
-// transitions, first-paint scheduling and failure handling execute unchanged.
-const executable = source.replace(importExpression, 'await testImport()').replace(fallbackImport, 'testFallbackImport()');
+const rendererImport = /import\(url\)/g;
+assert.match(source, /const url = ['"]\.\.\/scene\/world\.bundle\.js/);
+const gardenImport = /import\(['"]\.\/study-tour\.js[^'"]*['"]\)/g;
+assert.equal([...source.matchAll(rendererImport)].length, 1, 'The heavy engine has one dynamic import boundary');
+assert.equal([...source.matchAll(gardenImport)].length, 1, 'The photograph tour has its own dynamic import boundary');
+const executable = source.replace(rendererImport, 'testImport(url)').replace(gardenImport, 'testTourImport()');
 const emit = (target, type, values = {}) => {
   const event = new Event(type, { cancelable: true });
   for (const [key, value] of Object.entries(values)) Object.defineProperty(event, key, { value });
@@ -46,12 +47,13 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
       this.classList = { add: (...names) => names.forEach(name => classes.add(name)), remove: (...names) => names.forEach(name => classes.delete(name)), contains: name => classes.has(name), toggle: (name, force) => { const add = force ?? !classes.has(name); if (add) classes.add(name); else classes.delete(name); return add; } };
     }
     setAttribute(key, value) { this.attributes.set(key, String(value)); }
+    getAttribute(key) { return this.attributes.get(key) ?? null; }
     removeAttribute(key) { this.attributes.delete(key); }
     get open() { return !!this._open; }
     set open(value) { if (this.open !== !!value) { this._open = !!value; toggleQueue.add(this); } }
     focus() { if (document.activeElement !== this) { if (document.activeElement) emit(document.activeElement, 'blur'); document.activeElement = this; } }
     setPointerCapture(id) { this.captures.add(id); }
-    querySelector(selector) { assert.equal(selector, 'summary'); return this.summary ||= new Element(); }
+    querySelector(selector) { assert(['summary', 'small'].includes(selector)); return this[selector] ||= new Element(); }
   }
   for (const match of html.matchAll(/<[a-z][^>]*>/gi)) {
     const tag = match[0], id = tag.match(/\bid="([^"]+)"/)?.[1], focus = tag.match(/\bdata-world-focus="([^"]+)"/)?.[1], walk = tag.match(/\bdata-walk="([^"]+)"/)?.[1];
@@ -67,7 +69,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
     if (walk) { element.dataset.walk = walk; walkButtons.push(element); }
   }
   const byId = id => { assert(ids.has(id), `Requested HTML element ${id} exists`); return ids.get(id); };
-  const selected = new Map(['.world-poster', '.world-poster img', '.world-poster source', '.skip-link'].map(selector => [selector, new Element()]));
+  const selected = new Map(['.skip-link'].map(selector => [selector, new Element()]));
   Object.assign(document, { getElementById: byId, querySelector: selector => { assert(selected.has(selector), `Known document selector ${selector}`); return selected.get(selector); }, querySelectorAll: selector => { if (selector === '[data-world-focus]') return focusButtons; if (selector === '[data-walk]') return walkButtons; if (selector === '[data-desk-action]') return deskButtons; throw new Error('Unexpected selector: ' + selector); } });
   const window = new EventTarget(), media = Object.assign(new EventTarget(), { matches: reduced });
   const frames = new Map(), tasks = new Map(), warnings = [], calls = [];
@@ -94,6 +96,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
     standUp() { record('standUp'); Object.assign(engineState, { seated: false, standing: true, posture: 'walking', mode: 'inside' }); return true; },
     prewarmExterior() { record('prewarmExterior'); return Promise.resolve(); },
     setRenderingActive(value) { record('setRenderingActive', value); },
+    setStudyActive(value) { record('setStudyActive', value); },
     sitDown() { record('sitDown'); Object.assign(engineState, { travel: true, posture: 'sitting-down', focus: 'room' }); return true; },
     leave() { record('leave'); Object.assign(engineState, { travel: true, focus: 'room' }); },
     returnHome() { record('returnHome'); Object.assign(engineState, { travel: true, focus: 'room' }); },
@@ -116,8 +119,8 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
     setTimeout: (callback, delay = 0) => { tasks.set(++nextId, { callback, at: now + delay }); return nextId; }, clearTimeout: id => tasks.delete(id),
     setInterval: (callback, interval) => { tasks.set(++nextId, { callback, at: now + interval, interval }); return nextId; }, clearInterval: id => tasks.delete(id),
     console: { warn: (...values) => warnings.push(values) },
-    testFallbackImport: async () => { record('fallbackImport'); throw new Error('Simulated optional tour import failure'); },
-    testImport: async () => { imports++; if (importFails) throw new Error('Simulated module import failure'); return { mountWorld: options => { mountOptions = options; assert.equal(options.canvas, byId('world-canvas')); assert.equal(options.rendererContext, rendererContext); Object.assign(engineState, { seated: true, travel: false }); return new Promise(resolve => { resolveMount = resolve; }); } }; },
+    testTourImport: async () => { record('tourImport'); return { createGardenTour: () => ({ open() { record('tourOpen'); }, destroy() { record('tourDestroy'); } }) }; },
+    testImport: async url => { assert.match(url, /^\.\.\/scene\/world\.bundle\.js/); record('engineURL', url); imports++; if (importFails === true || (importFails === 'once' && imports === 1)) throw new Error('Simulated module import failure'); return { mountWorld: options => { mountOptions = options; assert.equal(options.canvas, byId('world-canvas')); assert.equal(options.rendererContext, rendererContext); Object.assign(engineState, { seated: true, travel: false }); return new Promise(resolve => { resolveMount = resolve; }); } }; },
   });
   new Script(executable).runInContext(scope);
   function runFrame() { for (const [id, callback] of [...frames]) { frames.delete(id); callback(); } }
@@ -133,11 +136,13 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
     }
     now = end;
   }
+  async function select3d() { emit(byId('study-mode-3d'), 'click'); runFrame(); await runTask(); await tick(); }
+  function select2d() { emit(byId('study-mode-2d'), 'click'); }
   async function attach() { assert(resolveMount); resolveMount(engine); await launch; await tick(); }
   function notify(next) { Object.assign(engineState, next); emit(byId('world-canvas'), 'worldstate', { detail: { ...engineState } }); }
   function flushToggles() { for (let count = 0; toggleQueue.size; count++) { assert(count < 10); const pending = [...toggleQueue]; toggleQueue.clear(); for (const target of pending) emit(target, 'toggle'); } }
   async function requestStand() { emit(byId('world-stand'), 'click'); runFrame(); await runTask(); await tick(); }
-  return { byId, focusButtons, walkButtons, deskButtons, document, window, media, warnings, calls, engine, engineState, runFrame, runTask, advance, attach, notify, flushToggles, requestStand, selected, observers,
+  return { byId, focusButtons, walkButtons, deskButtons, select3d, select2d, document, window, media, warnings, calls, engine, engineState, runFrame, runTask, advance, attach, notify, flushToggles, requestStand, selected, observers,
     get pendingFrames() { return frames.size; },
     get imports() { return imports; }, get contextRequests() { return contextRequests; }, get options() { return mountOptions; },
     async finishUnsupported() { await launch; }, count: name => calls.filter(call => call.name === name).length,
@@ -158,9 +163,9 @@ function assertLanding(h) {
 async function booted(options) {
   const h = harness(options); assertLanding(h);
   assert.equal(h.contextRequests, 0); assert.equal(h.imports, 0);
-  emit(h.byId('world-stand'), 'click'); assert.equal(h.contextRequests, 0, 'An early unavailable stand action cannot bypass the first-paint startup');
-  h.runFrame(); assert.equal(h.contextRequests, 0, 'The native HTML gets a first-paint boundary before graphics startup');
-  await h.runTask(); assert.equal(h.imports, 1); assert.equal(h.contextRequests, 1);
+  h.runFrame(); await h.runTask(); await h.advance(2000);
+  assert.equal(h.contextRequests, 0); assert.equal(h.imports, 0, 'Idle time on the 2D home never starts the 3D engine');
+  await h.select3d(); assert.equal(h.imports, 1); assert.equal(h.contextRequests, 1);
   emit(h.byId('world-stand'), 'click'); emit(h.byId('world-stand'), 'click'); assert.equal(h.imports, 1, 'Repeated stand input during startup cannot mount another engine');
   assert.equal(h.options.seated, true); assert.equal(h.options.autoTime, true);
   assertLanding(h);
@@ -168,11 +173,10 @@ async function booted(options) {
   assert(h.byId('world-stand').disabled, 'onReady before the async mount resolves cannot enable unattached engine actions');
   assert(h.walkButtons.every(button => button.disabled));
   await h.attach();
-  assert.equal(h.count('fallbackImport'), 0, 'Healthy WebGL never imports the lightweight tour');
+  assert.equal(h.count('tourImport'), 0, 'WebGL never needs the photographic tour');
   assert.equal(h.count('standUp'), 0, 'Automatic engine startup stays seated until requested');
   assertLanding(h); assert(h.byId('main').classList.contains('is-rendered'), 'The initial home shows the actual seated WebGL frame');
   assert(!h.byId('world-stand').disabled);
-  assert.equal(h.selected.get('.world-poster img').src, undefined, 'Successful WebGL startup never requests a fallback poster');
   return h;
 }
 async function mounted(options) {
@@ -193,11 +197,11 @@ async function mounted(options) {
   return h;
 }
 
-const clockOnly = await booted(); assertLanding(clockOnly);
+const clockOnly = harness(); assertLanding(clockOnly);
 assert.equal(clockOnly.byId('world-clock').textContent, '03:05', 'The clock uses Japanese time rather than executor UTC');
 assert.equal(clockOnly.byId('world-clock').attributes.get('datetime'), '2026-11-06T18:05:00.000Z');
 assert.equal(clockOnly.byId('world-time-phase').textContent, '夜間');
-assert.equal(clockOnly.selected.get('.world-poster img').src, undefined);
+
 await clockOnly.advance(60020); assert.equal(clockOnly.byId('world-clock').textContent, '03:06');
 clockOnly.document.hidden = true; emit(clockOnly.document, 'visibilitychange'); await clockOnly.advance(240000);
 assert.equal(clockOnly.byId('world-clock').textContent, '03:06', 'Hidden documents stop their clock timer');
@@ -205,23 +209,43 @@ clockOnly.document.hidden = false; emit(clockOnly.document, 'visibilitychange');
 emit(clockOnly.window, 'pagehide', { persisted: true }); await clockOnly.advance(60000); assert.equal(clockOnly.byId('world-clock').textContent, '03:10');
 emit(clockOnly.window, 'pageshow'); assert.equal(clockOnly.byId('world-clock').textContent, '03:11', 'Returning from the back-forward cache refreshes the clock');
 await clockOnly.advance(9 * 60 * 60000);
-assert.equal(clockOnly.byId('world-time-phase').textContent, '日中'); assert.equal(clockOnly.selected.get('.world-poster img').src, undefined);
-assert.equal(clockOnly.selected.get('.world-poster source').srcset, undefined);
-assert.equal(clockOnly.contextRequests, 1); assert.equal(clockOnly.imports, 1, 'Clock updates reuse the existing renderer and do not fetch posters');
+assert.equal(clockOnly.byId('world-time-phase').textContent, '日中');
+
+assert.equal(clockOnly.contextRequests, 0); assert.equal(clockOnly.imports, 0, 'The clock runs in 2D without a rendering engine');
 emit(clockOnly.window, 'pagehide', { persisted: false }); const finalClock = clockOnly.byId('world-clock').textContent;
 await clockOnly.advance(120000); emit(clockOnly.window, 'pageshow'); assert.equal(clockOnly.byId('world-clock').textContent, finalClock);
 
 for (const context of ['null', 'throw']) {
-  const h = harness({ context }); assertLanding(h); h.runFrame(); await h.runTask(); await h.finishUnsupported();
-  assert.equal(h.contextRequests, 1); assert.equal(h.imports, 0); assert.equal(h.warnings.length, 1); assertUnavailable(h);
-  assert.equal(h.count('fallbackImport'), 1);
-  assertLanding(h); assert(h.byId('world-stand').disabled);
-  assert.equal(h.selected.get('.world-poster img').src, 'images/world/tour/night-0.webp', 'Only WebGL failure requests the fallback picture');
-  await h.requestStand(); assert.equal(h.contextRequests, 1, 'A failed stand attempt does not enter a retry loop');
-  assert.match(h.byId('world-status').textContent, /メニュー/);
+  const h = harness({ context }); assertLanding(h);
+  await h.select3d(); await h.finishUnsupported();
+  assert.equal(h.contextRequests, 1); assert.equal(h.warnings.length, 1); assertUnavailable(h);
+  assertLanding(h); assert(!h.byId('study-mode-3d').disabled);
+  assert.equal(h.byId('main').dataset.displayMode, '2d');
+  assert(h.byId('study-mode-status').textContent.trim(), '3D failure is explained next to the mode switch');
+  h.runFrame(); await h.runTask(); assert.equal(h.contextRequests, 1, 'No unrequested retry loop');
   emit(h.media, 'change', { matches: true }); h.notify({ catReady: true, landmarksReady: true, travel: true });
   assertUnavailable(h); emit(h.window, 'pagehide', { persisted: false });
 }
+const gardenOnly = harness();
+await gardenOnly.requestStand();
+assert.equal(gardenOnly.count('tourImport'), 1);
+assert.equal(gardenOnly.count('tourOpen'), 1);
+await gardenOnly.requestStand();
+assert.equal(gardenOnly.count('tourImport'), 1, 'Opening the photograph tour again reuses its module');
+assert.equal(gardenOnly.contextRequests, 0);
+assert.equal(gardenOnly.imports, 0);
+const canceled = harness();
+await canceled.select3d(); canceled.select2d(); canceled.options.onReady(); await canceled.attach();
+assert.equal(canceled.byId('main').dataset.displayMode, '2d');
+assert(!canceled.byId('main').classList.contains('is-rendered'), 'A mount resolving late never exposes a canceled 3D scene');
+assertUnavailable(canceled);
+const retained = await booted();
+retained.select2d();
+assert.equal(retained.byId('main').dataset.displayMode, '2d');
+assert.equal(retained.calls.filter(call=>call.name==='setStudyActive').at(-1)?.value, false);
+await retained.select3d();
+assert.equal(retained.contextRequests, 1); assert.equal(retained.imports, 1);
+assert(!retained.byId('world-stand').disabled);
 const h = await mounted(), click = id => emit(h.byId(id), 'click');
 const retry = await mounted();
 retry.notify({ outdoorsReady: false, outdoorsError: true, outdoorsLoading: false, mode: 'inside', travel: false });
@@ -264,7 +288,7 @@ h.notify({ mode: 'outside', travel: false }); assert.equal(h.byId('world-locatio
 click('world-travel'); assert.equal(h.count('returnHome'), 1);
 h.notify({ travel: false, catReady: true });
 assert.equal(h.focusButtons.filter(button => !button.disabled).length, 1); assert(!h.focusButtons.find(button => button.dataset.worldFocus === 'cat').disabled);
-const subjectLinks = { 'landmark-karatsu-castle': 'photos.html', 'landmark-karatsu-bank': 'blog.html', 'landmark-okuma-auditorium': 'profile.html', 'landmark-okuma-statue': 'research.html' };
+const subjectLinks = { 'landmark-karatsu-castle': 'photos.html', 'landmark-karatsu-bank': 'blog.html', 'landmark-okuma-auditorium': 'research.html', 'landmark-okuma-statue': 'profile.html' };
 const gated = h.focusButtons.find(button => button.dataset.worldFocus !== 'cat'); emit(gated, 'click'); assert.equal(h.count('focus'), 0);
 h.notify({ landmarksReady: true }); assert(h.focusButtons.every(button => !button.disabled));
 for (const button of h.focusButtons) {
@@ -373,18 +397,26 @@ const failure = await mounted(); emit(failure.pad('forward'), 'click', { detail:
 same(failure.lastMovement(), { forward: 0, right: 0 }); const failedMovementCalls = failure.count('setMovement'); await failure.advance(200); assert.equal(failure.count('setMovement'), failedMovementCalls, 'Failure clears a pending nudge timer');
 failure.notify({ catReady: true, landmarksReady: true, mode: 'outside' }); failure.options.onReady(); emit(failure.media, 'change', { matches: true });
 assertUnavailable(failure); assert.equal(failure.warnings.length, 1, 'Late events do not resurrect a failed view');
-const late = harness(); late.runFrame(); await late.runTask(); late.options.onReady(); late.options.onError(new Error('Failed while mount was pending')); await late.attach();
+const late = harness(); await late.select3d(); late.options.onReady(); late.options.onError(new Error('Failed while mount was pending')); await late.attach();
 assertUnavailable(late); assert.equal(late.count('dispose'), 1, 'An engine resolving after failure is disposed'); late.options.onReady(); assertUnavailable(late);
-const departed = harness(); departed.runFrame(); await departed.runTask(); emit(departed.window, 'pagehide', { persisted: false }); await departed.attach();
+const departed = harness(); await departed.select3d(); emit(departed.window, 'pagehide', { persisted: false }); await departed.attach();
 assert.equal(departed.count('dispose'), 1); departed.options.onReady(); assertUnavailable(departed);
 const immediateDeparture = harness(); emit(immediateDeparture.window, 'pagehide', { persisted: false }); immediateDeparture.runFrame(); await immediateDeparture.runTask(); assert.equal(immediateDeparture.imports, 0);
 const reduceAtStart = await mounted({ reduced: true }); assert.equal(reduceAtStart.options.reducedMotion, true); assert(reduceAtStart.engineState.paused);
 
-const brokenImport = harness({ importFails: true }); brokenImport.runFrame(); await brokenImport.runTask(); assertLanding(brokenImport);
-assert.equal(brokenImport.imports, 1); assert.equal(brokenImport.warnings.length, 1); assert(brokenImport.byId('world-stand').disabled);
-await brokenImport.requestStand(); assert.equal(brokenImport.imports, 1, 'An import failure keeps usable native menus without repeatedly importing');
-
-const attachFirst = harness(); attachFirst.runFrame(); await attachFirst.runTask(); await attachFirst.attach();
+const brokenImport = harness({ importFails: 'once' }); await brokenImport.select3d(); assertLanding(brokenImport);
+assert.equal(brokenImport.imports, 1); assert.equal(brokenImport.warnings.length, 1);
+assert.equal(brokenImport.byId('main').dataset.displayMode, '2d');
+assert(!brokenImport.byId('study-mode-3d').disabled);
+await brokenImport.select3d();
+brokenImport.options.onReady(); await brokenImport.attach();
+assert.equal(brokenImport.contextRequests, 1, 'A module retry retains the working WebGL context');
+assert.equal(brokenImport.imports, 2);
+const attempts = brokenImport.calls.filter(call => call.name === 'engineURL').map(call => call.value);
+assert.notEqual(attempts[0], attempts[1], 'Explicit retry uses a fresh module URL after a cached load failure');
+assert.equal(brokenImport.byId('main').dataset.displayMode, '3d');
+assert(!brokenImport.byId('world-stand').disabled);
+const attachFirst = harness(); await attachFirst.select3d(); await attachFirst.attach();
 assert.equal(attachFirst.count('standUp'), 0); assert(attachFirst.byId('world-stand').disabled, 'Mount resolution alone cannot enable standing before the first frame');
 assertLanding(attachFirst); attachFirst.options.onReady(); await tick();
 assert.equal(attachFirst.count('standUp'), 0); assert(!attachFirst.byId('world-stand').disabled);
@@ -425,7 +457,7 @@ assert.equal(warm.count('standUp'), 0); assert.equal(warm.imports, 1); assertLan
 const observed = harness({ observeViewport: true });
 assert.equal(observed.observers.length, 1); assert.equal(observed.observers[0].target, observed.byId('world-canvas'));
 assert.equal(observed.observers[0].options.rootMargin, '120px');
-observed.observers[0].callback([{ isIntersecting: false }]); observed.runFrame(); await observed.runTask(); observed.options.onReady(); await observed.attach();
+observed.observers[0].callback([{ isIntersecting: false }]); await observed.select3d(); observed.options.onReady(); await observed.attach();
 assert.equal(observed.calls.filter(call => call.name === 'setRenderingActive').at(-1).value, false, 'An offscreen canvas does not retain an active rendering loop after mounting');
 observed.observers[0].callback([{ isIntersecting: true }]);
 assert.equal(observed.calls.filter(call => call.name === 'setRenderingActive').at(-1).value, true, 'The live scene resumes when its canvas approaches the viewport');
@@ -433,8 +465,8 @@ emit(observed.window, 'pagehide', { persisted: true }); assert(!observed.observe
 emit(observed.window, 'pagehide', { persisted: false }); assert(observed.observers[0].disconnected); assert.equal(observed.count('dispose'), 1);
 
 console.log(JSON.stringify({ result: 'PASS', checks: [
-  'Five native page menus remain visible while the real seated 3D engine starts after first paint',
-  'Japan-time clock updates without poster downloads and pauses while hidden',
+  'Five native page menus and the responsive illustration remain interactive without a WebGL context; 3D waits for selection',
+  'Japan-time clock updates in 2D without loading the renderer and pauses while hidden',
   'Either ready/mount ordering enables standing; standing reuses the existing engine',
   'Unsupported GPU and failed imports preserve native menus without retry loops',
   'Sitting restores menus and resizes the live canvas without disposing or remounting',

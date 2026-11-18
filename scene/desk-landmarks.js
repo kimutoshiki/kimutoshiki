@@ -103,7 +103,7 @@ function nameplate(T, title, subtitle, brass, edgeGeometry, screwGeometry, onTex
 }
 
 /** Return a standalone tabletop group and the room's standard target records. */
-export async function createDeskLandmarks(T, { optimize = true, waitForFonts = true, yieldBetweenModels = false, onTextureLoad } = {}) {
+export async function createDeskLandmarks(T, { optimize = true, waitForFonts = true, yieldBetweenModels = false, waitForStudy, onTextureLoad } = {}) {
   if (waitForFonts && typeof document !== 'undefined' && document.fonts?.ready) await document.fonts.ready;
   const group = new T.Group();
   group.name = 'Original Waseda and Karatsu desk miniatures';
@@ -125,6 +125,7 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
   ];
   for (const layout of layouts) {
     if(yieldBetweenModels)await new Promise(resolve=>setTimeout(resolve,0));
+    if(waitForStudy && !await waitForStudy())break;
     const model = layout.factory(T);
     const before = countGeometry(model.group);
     layout.extract(model);
@@ -138,6 +139,7 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
     const display = new T.Group();
     display.name = `desk-${layout.key}`;
     display.position.set(layout.x, TABLE_Y, layout.z);
+    display.scale.setScalar(layout.key==='okuma-statue' ? 1.18 : 1.14);
     display.userData = { targetId: layout.targetId, landmarkId: layout.key, title: layout.title };
     group.add(display);
     const base = new T.Mesh(baseGeometry, wood);
@@ -199,6 +201,7 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
   if (optimize) {
     for (const display of group.children) {
       if(yieldBetweenModels)await new Promise(resolve=>setTimeout(resolve,0));
+      if(waitForStudy && !await waitForStudy())break;
       const mount = display.children.find(child => child.userData.inspectionSource);
       const architecture = mount.children[0].children[0];
       const clockFaces = new Set();

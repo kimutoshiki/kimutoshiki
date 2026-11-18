@@ -1,3 +1,4 @@
+import { deskMincho } from './desk-type.js';
 import { surface } from './surface-materials.js?v=20261106-craft1';
 import { addCollectedDecor } from './collected-decor.js?v=20261106-craft1';
 import { completeRoom } from './room-shell.js?v=20261106-craft1';
@@ -136,7 +137,7 @@ export function createRoom(THREE, assets = {}) {
   function paperTexture(title, type = 'note') {
     return makeCanvas(768, 512, (ctx, w, h) => {
       ctx.fillStyle = '#e9e4ce'; ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#484c3d'; ctx.font = '500 34px "Noto Serif JP", "Yu Mincho", serif'; ctx.fillText(title, 58, 76);
+      ctx.fillStyle = '#484c3d'; ctx.font = '500 34px '+deskMincho; ctx.fillText(title, 58, 76);
       ctx.strokeStyle = 'rgba(77,86,63,.17)'; ctx.lineWidth = 1;
       for (let y = 120; y < h - 40; y += 36) { ctx.beginPath(); ctx.moveTo(52, y); ctx.lineTo(w - 48, y); ctx.stroke(); }
       if (type === 'note') {
@@ -278,7 +279,7 @@ export function createRoom(THREE, assets = {}) {
   const nameMap = makeCanvas(640, 240, (ctx, w, h) => {
     ctx.fillStyle = '#dacaa0'; ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = '#a28957'; ctx.lineWidth = 3; ctx.strokeRect(14, 14, w - 28, h - 28);
-    ctx.textAlign = 'center'; ctx.fillStyle = '#4b4637'; ctx.font = '56px "Noto Serif JP", "Yu Mincho", serif'; ctx.fillText('木村紀喜', w / 2, 118);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#4b4637'; ctx.font = '56px '+deskMincho; ctx.fillText('木村紀喜', w / 2, 118);
     ctx.font = '19px Georgia, serif'; ctx.fillStyle = '#80704f'; ctx.fillText('KIMURA TOSHIKI', w / 2, 178);
   });
   const nameFace = mesh(new THREE.PlaneGeometry(.731, .215), new THREE.MeshStandardMaterial({ map: nameMap, roughness: .84 }), profile, false);
@@ -299,7 +300,7 @@ export function createRoom(THREE, assets = {}) {
     if (label) {
       const map = makeCanvas(128, 512, (ctx, cw, ch) => {
         ctx.fillStyle = color; ctx.fillRect(0, 0, cw, ch); ctx.fillStyle = '#d6c99f';
-        ctx.font = '32px "Noto Serif JP", "Yu Mincho", serif'; ctx.textAlign = 'center';
+        ctx.font = '32px '+deskMincho; ctx.textAlign = 'center';
         [...label].forEach((c, i) => ctx.fillText(c, cw / 2, 60 + i * 49));
       });
       const text = mesh(new THREE.PlaneGeometry(w * .76, h * .70), new THREE.MeshStandardMaterial({ map, roughness: .91 }), b, false);
@@ -353,6 +354,7 @@ export function createRoom(THREE, assets = {}) {
   rod([.315, .011, .19], [.10, .011, .027], .002, foldMat, contact);
   const wax = cyl(.046, .048, .011, palette.burgundy, 0, .019, .046, contact, 14);
   const stamp = box(.065, .003, .085, palette.leafLight, .236, .013, -.126, contact, .006);
+  assets.finishEnvelope?.(THREE,contact);
   target('contact', contact, [.63, 2.213, .59]);
 
   // Two substantial wall shelves make room for objects collected over time.
@@ -372,26 +374,31 @@ export function createRoom(THREE, assets = {}) {
 
   // Articulated black-enamel task lamp with warm brass joints.
   const lamp = new THREE.Group(); lamp.position.set(2.82, 2.18, -.46); lamp.scale.y = 1.16; group.add(lamp);
-  cyl(.245, .27, .072, palette.darkBrass, 0, .035, 0, lamp);
-  cyl(.202, .232, .030, palette.brass, 0, .078, 0, lamp);
-  const enamel = mat('#303a33', .42, .58);
-  for(const dx of [-.047,.047]) {
-    rod([dx,.09,0],[dx+.15,.63,-.12],.020,enamel,lamp);
-    rod([dx+.15,.63,-.12],[dx-.35,1.08,.13],.018,enamel,lamp);
+  let lampLight;
+  if (assets.createReadingLamp) {
+    lampLight=assets.createReadingLamp(THREE,lamp);
+  } else {
+    cyl(.245, .27, .072, palette.darkBrass, 0, .035, 0, lamp);
+    cyl(.202, .232, .030, palette.brass, 0, .078, 0, lamp);
+    const enamel = mat('#303a33', .42, .58);
+    for(const dx of [-.047,.047]) {
+      rod([dx,.09,0],[dx+.15,.63,-.12],.020,enamel,lamp);
+      rod([dx+.15,.63,-.12],[dx-.35,1.08,.13],.018,enamel,lamp);
+    }
+    for(const [x,y,z] of [[0,.12,0],[.15,.63,-.12],[-.35,1.08,.13]]) {
+      const joint=cyl(.059,.059,.075,palette.brass,x,y,z,lamp);joint.rotation.z=Math.PI/2;
+      oval(.042,.030,.031,enamel,x+.044,y,z,lamp);
+    }
+    for(const dx of [-.045,.045])rod([dx,.20,-.01],[dx+.105,.56,-.098],.009,palette.darkBrass,lamp);
+    const shadePivot = new THREE.Group(); lamp.add(shadePivot); shadePivot.position.set(-.38, 1.055, .13); shadePivot.rotation.z = -.13; shadePivot.name = 'Desk lamp shade pivot';
+    const shadeMat = new THREE.MeshPhysicalMaterial({ color: '#26352d', roughness: .35, metalness: .36, clearcoat:.3, side: THREE.DoubleSide });
+    const shade = mesh(new THREE.ConeGeometry(.33, .24, 32, 1, true), shadeMat, shadePivot); shade.position.y = -.075;
+    const rim = mesh(new THREE.TorusGeometry(.33, .013, 6, 32), palette.brass, shadePivot); rim.rotation.x = Math.PI / 2; rim.position.y = -.195;
+    const bulbMat = new THREE.MeshStandardMaterial({ color: '#fff0bd', emissive: '#ffc67b', emissiveIntensity: 2 });
+    const bulb = mesh(new THREE.SphereGeometry(.06, 12, 8), bulbMat, shadePivot, false); bulb.position.y = -.15; bulb.name = 'Desk lamp bulb';
+    lampLight = new THREE.PointLight('#ffd094', 3.5, 3.4, 2); lampLight.position.set(-.38, .79, .13); lamp.add(lampLight);
+    curve([[0, .09, -.10], [.23, .01, -.34], [.39, -.06, -.35], [.40, -1.1, -.42], [.50, -2.11, -.40]], .009, palette.darkWood, lamp);
   }
-  for(const [x,y,z] of [[0,.12,0],[.15,.63,-.12],[-.35,1.08,.13]]) {
-    const joint=cyl(.059,.059,.075,palette.brass,x,y,z,lamp);joint.rotation.z=Math.PI/2;
-    oval(.042,.030,.031,enamel,x+.044,y,z,lamp);
-  }
-  for(const dx of [-.045,.045])rod([dx,.20,-.01],[dx+.105,.56,-.098],.009,palette.darkBrass,lamp);
-  const shadePivot = new THREE.Group(); lamp.add(shadePivot); shadePivot.position.set(-.38, 1.055, .13); shadePivot.rotation.z = -.13; shadePivot.name = 'Desk lamp shade pivot';
-  const shadeMat = new THREE.MeshPhysicalMaterial({ color: '#26352d', roughness: .35, metalness: .36, clearcoat:.3, side: THREE.DoubleSide });
-  const shade = mesh(new THREE.ConeGeometry(.33, .24, 32, 1, true), shadeMat, shadePivot); shade.position.y = -.075;
-  const rim = mesh(new THREE.TorusGeometry(.33, .013, 6, 32), palette.brass, shadePivot); rim.rotation.x = Math.PI / 2; rim.position.y = -.195;
-  const bulbMat = new THREE.MeshStandardMaterial({ color: '#fff0bd', emissive: '#ffc67b', emissiveIntensity: 2 });
-  const bulb = mesh(new THREE.SphereGeometry(.06, 12, 8), bulbMat, shadePivot, false); bulb.position.y = -.15; bulb.name = 'Desk lamp bulb';
-  const lampLight = new THREE.PointLight('#ffd094', 3.5, 3.4, 2); lampLight.position.set(-.38, .79, .13); lamp.add(lampLight);
-  curve([[0, .09, -.10], [.23, .01, -.34], [.39, -.06, -.35], [.40, -1.1, -.42], [.50, -2.11, -.40]], .009, palette.darkWood, lamp);
   const cup = new THREE.Group(); cup.position.set(4.37, 3.55, -.87); group.add(cup);
   const ceramic = mat('#cbbfa1', .48);
   cyl(.113, .094, .20, ceramic, 0, .10, 0, cup);

@@ -11,6 +11,7 @@ import { createKaratsuCastle } from '../js/models/karatsu-castle.js';
 import { createKaratsuBank } from '../js/models/karatsu-bank.js';
 import { HOME, WORLD_BOUNDS, WAYPOINTS, LANDMARK_SITES, LANDMARK_RESERVATIONS } from '../scene/world-layout.js';
 import { mountWorld } from '../scene/world.js';
+import { createStudyDestinations } from '../scene/study-destinations.js';
 import { createWalkNavigation } from '../scene/home-navigation.js';
 import { getWorldTime } from '../scene/world-time.js';
 import { createWorldSky } from '../scene/world-sky.js';
@@ -856,6 +857,22 @@ checks.push('A slow 4-frame standing transition still takes exactly .9 seconds; 
 checks.push('Default first view is seated at 1.18 m with movement blocked; standing rises over .9 seconds and enters the garden, and sitting walks home before lowering continuously');
 
 await until(()=>seatedScene.getObjectByName('desk-okuma-auditorium'),'Delayed desk auditorium becomes available for current-time checks');
+// Visible labels and physical mesh picks must select the same page at the
+// real seated camera, even after the miniatures have arrived asynchronously.
+const deskLinks = createStudyDestinations(T, seatedScene);
+const expectedPages = ['profile', 'research', 'blog', 'photos', 'contact'].sort();
+const projectedLinks = deskLinks.projectionChanged(initialSeatCamera);
+assert.deepEqual(Object.keys(projectedLinks).sort(), expectedPages);
+for (const [key, [x, y]] of Object.entries(projectedLinks)) {
+  const ray = new T.Raycaster();
+  ray.setFromCamera(new T.Vector2(x * 2 - 1, 1 - y * 2), initialSeatCamera);
+  assert.equal(deskLinks.pick(ray), key, 'The visible 3D anchor and the real mesh resolve to the same page: ' + key);
+}
+assert.equal(deskLinks.projectionChanged(initialSeatCamera), null, 'An untouched camera does not republish the same markers on each clock tick');
+const turnedCamera = initialSeatCamera.clone();
+turnedCamera.rotateY(.04);
+assert.notDeepEqual(deskLinks.projectionChanged(turnedCamera), projectedLinks, 'Desk labels follow a changed viewpoint');
+checks.push('All five projected desk labels raycast to the matching physical destination and update only when needed');
 let seatedOutdoorAuditorium;
 const seatedDeskAuditorium=seatedScene.getObjectByName('desk-okuma-auditorium');
 const clockHour=seatedScene.getObjectByName('Wall hour hand'),clockMinute=seatedScene.getObjectByName('Wall minute hand');
@@ -967,6 +984,20 @@ const lateBoundary=createGardenBoundary(T,{bounds:WORLD_BOUNDS}),lateBoundaryRes
 pendingBoundary.engine.dispose();pendingBoundary.boundary.resolve(lateBoundary);assert.equal(await boundaryPreparation,false);
 for(const count of [...installedGroundResources.values(),...lateBoundaryResources.values()])assert.equal(count,1,'Existing ground and late boundary are each disposed once');
 assert.ok(!pendingBoundary.calls.includes('landmarks'));
+const hiddenStudy = await pendingWorld({defaultSeated:true, startExterior:false, paint:false});
+hiddenStudy.engine.setStudyActive(false); hiddenStudy.engine.setRenderingActive(false);
+frame(8); await settle();
+assert.deepEqual(hiddenStudy.calls, [], 'Returning to 2D before the first deferred paint starts no textures, cat or garden factories');
+assert.equal(hiddenStudy.engine.getState().miniaturesReady, false);
+hiddenStudy.engine.setStudyActive(true); hiddenStudy.engine.setRenderingActive(true);
+frame(8);
+await until(() => hiddenStudy.calls.includes('cat-world'), 'Reopening the 3D study resumes deferred work');
+hiddenStudy.engine.setStudyActive(false); hiddenStudy.engine.setRenderingActive(false);
+hiddenStudy.engine.setStudyActive(true); hiddenStudy.engine.setRenderingActive(true);
+frame(4); await settle();
+assert.equal(hiddenStudy.calls.filter(id=>id==='cat-world').length, 1, 'Repeated mode switching uses the one pending cat decode');
+assert(!hiddenStudy.calls.includes('landscape'));
+hiddenStudy.engine.dispose();
 const beforePaint=await pendingWorld({paint:false});beforePaint.engine.dispose();frame(3);await settle();
 assert.deepEqual(beforePaint.calls,[],'Disposal before the first paint callback prevents every deferred asset factory');
 checks.push('Exterior construction waits for an explicit request; priority calls deduplicate, and disposed pending ground/boundary/first-paint work cannot leak or restart');
