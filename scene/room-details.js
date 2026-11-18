@@ -115,7 +115,7 @@ export function addRoomDetails(THREE, { group, palette, desk, chair, research, s
     for (let j = 1; j < 6; j++) box([.004, .002, .54], [(.90 - index * .065) / 2 + .001, .015 + j * .014, -.01], palette.linen, book);
     for (const x of [-.31, .31]) box([.012, .084, .004], [x, .062, .338], palette.brass, book);
   });
-  for (const side of [-1, 1]) {
+  if (!blog.userData.deskProp) for (const side of [-1, 1]) {
     for (let j = 0; j < 4; j++) box([.625, .0014, .006], [side * .337, .011 + j * .008, .421], palette.linen, blog);
     box([.633, .002, .004], [side * .337, -.006, .432], palette.brass, blog);
   }

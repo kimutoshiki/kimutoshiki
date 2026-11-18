@@ -3,6 +3,7 @@
  * removed. The complete architecture retains its proportions; layered display
  * mounts and controlled material finishes make it readable at desk scale.
  */
+import { deskMincho, finishCanvasType } from './desk-type.js';
 import { createOkumaAuditorium } from '../js/models/okuma-auditorium.js?v=20261106-craft1';
 import { createOkumaStatue } from '../js/models/okuma-statue.js?v=20261106-craft1';
 import { createKaratsuCastle } from '../js/models/karatsu-castle.js?v=20261106-craft1';
@@ -61,26 +62,30 @@ function beveledMount(T, width, height, depth, bevel) {
   return geometry;
 }
 
-function nameplate(T, title, subtitle, brass, edgeGeometry, screwGeometry) {
+function nameplate(T, title, subtitle, brass, edgeGeometry, screwGeometry, onTextureLoad) {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 128;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#19352e';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#bca577';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(13, 12, canvas.width - 26, canvas.height - 24);
-  ctx.fillStyle = '#f3e8cc';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = '500 55px "Noto Serif JP", "Yu Mincho", serif';
-  ctx.fillText(title, canvas.width / 2, 51);
-  ctx.fillStyle = '#c8ba94';
-  ctx.font = '21px Georgia, serif';
-  ctx.fillText(subtitle, canvas.width / 2, 94);
+  function draw() {
+    ctx.fillStyle = '#19352e';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#bca577';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(13, 12, canvas.width - 26, canvas.height - 24);
+    ctx.fillStyle = '#f3e8cc';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '500 55px ' + deskMincho;
+    ctx.fillText(title, canvas.width / 2, 51);
+    ctx.fillStyle = '#c8ba94';
+    ctx.font = '21px Georgia, serif';
+    ctx.fillText(subtitle, canvas.width / 2, 94);
+  }
+  draw();
   const texture = new T.CanvasTexture(canvas);
   texture.colorSpace = T.SRGBColorSpace;
+  finishCanvasType(texture, draw, onTextureLoad);
   const backing = new T.Mesh(edgeGeometry, brass);
   backing.scale.set(.772, .102, .008);
   backing.position.set(0, .051, DISPLAY_DEPTH / 2 + .004);
@@ -98,7 +103,7 @@ function nameplate(T, title, subtitle, brass, edgeGeometry, screwGeometry) {
 }
 
 /** Return a standalone tabletop group and the room's standard target records. */
-export async function createDeskLandmarks(T, { optimize = true, waitForFonts = true, yieldBetweenModels = false } = {}) {
+export async function createDeskLandmarks(T, { optimize = true, waitForFonts = true, yieldBetweenModels = false, onTextureLoad } = {}) {
   if (waitForFonts && typeof document !== 'undefined' && document.fonts?.ready) await document.fonts.ready;
   const group = new T.Group();
   group.name = 'Original Waseda and Karatsu desk miniatures';
@@ -138,7 +143,7 @@ export async function createDeskLandmarks(T, { optimize = true, waitForFonts = t
     const base = new T.Mesh(baseGeometry, wood);
     const top = new T.Mesh(topGeometry, felt);
     top.position.y = .065;
-    display.add(base, top, ...nameplate(T, layout.title, layout.subtitle, brass, edgeGeometry, screwGeometry));
+    display.add(base, top, ...nameplate(T, layout.title, layout.subtitle, brass, edgeGeometry, screwGeometry, onTextureLoad));
     // Inlaid display edges give the original miniatures a finished mount.
     for (const [x,z,w,d] of [[0,-.346,.838,.008],[0,.346,.838,.008],[-.421,0,.008,.684],[.421,0,.008,.684]]) {
       const edge = new T.Mesh(edgeGeometry, brass); edge.scale.set(w,.009,d); edge.position.set(x,.054,z); display.add(edge);

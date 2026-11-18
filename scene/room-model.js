@@ -235,7 +235,8 @@ export function createRoom(THREE, assets = {}) {
       const mount = cyl(.045, .045, .035, palette.brass, dx, .004, .811, drawer); mount.rotation.x = Math.PI / 2;
       rod([dx, .004, .825], [dx, -.056, .867], .018, palette.brass, drawer);
     }
-    rod([-.34, -.056, .867], [.34, -.056, .867], .022, palette.brass, drawer);
+    const pull = rod([-.34, -.056, .867], [.34, -.056, .867], .022, palette.brass, drawer);
+    if (assets.createNotebook && index === 0) pull.name = 'Stationery drawer pull';
     const contents = new THREE.Group(); contents.name = index ? 'Travel journal and tickets' : 'Letters and pencils';
     contents.position.set(0, .115, -.18); drawer.add(contents);
     if (!index) {
@@ -325,17 +326,21 @@ export function createRoom(THREE, assets = {}) {
 
   // An open clothbound notebook, with actual page planes and a pencil.
   const blog = new THREE.Group(); blog.position.set(-.72, 2.183, .56); blog.scale.set(.92, 1, .59); blog.rotation.y = -.13; group.add(blog);
-  box(1.39, .038, .89, palette.burgundy, 0, 0, 0, blog, .015);
-  const leftPage = box(.653, .045, .84, palette.paper, -.337, .025, 0, blog, .008); leftPage.rotation.z = .024;
-  const rightPage = box(.653, .045, .84, palette.paper, .337, .025, 0, blog, .008); rightPage.rotation.z = -.024;
-  for (const side of [-1, 1]) {
-    const p = mesh(new THREE.PlaneGeometry(.636, .815), new THREE.MeshStandardMaterial({ map: paperTexture(side < 0 ? '学びの記録' : '日々のこと'), roughness: .97 }), blog, false);
-    p.rotation.x = -Math.PI / 2; p.rotation.y = side * .024; p.position.set(side * .337, .058, 0);
+  if (assets.createNotebook) {
+    assets.createNotebook(blog);
+  } else {
+    box(1.39, .038, .89, palette.burgundy, 0, 0, 0, blog, .015);
+    const leftPage = box(.653, .045, .84, palette.paper, -.337, .025, 0, blog, .008); leftPage.rotation.z = .024;
+    const rightPage = box(.653, .045, .84, palette.paper, .337, .025, 0, blog, .008); rightPage.rotation.z = -.024;
+    for (const side of [-1, 1]) {
+      const p = mesh(new THREE.PlaneGeometry(.636, .815), new THREE.MeshStandardMaterial({ map: paperTexture(side < 0 ? '学びの記録' : '日々のこと'), roughness: .97 }), blog, false);
+      p.rotation.x = -Math.PI / 2; p.rotation.y = side * .024; p.position.set(side * .337, .058, 0);
+    }
+    rod([0, .061, -.42], [0, .061, .42], .009, palette.linen, blog);
+    const ribbon = box(.018, .006, .36, palette.burgundy, .035, .055, .44, blog); ribbon.rotation.y = -.13;
+    rod([.42, .104, -.30], [.73, .104, .33], .018, mat('#bc9750', .76), blog);
+    rod([.73, .104, .33], [.756, .104, .382], .011, palette.ink, blog, .001);
   }
-  rod([0, .061, -.42], [0, .061, .42], .009, palette.linen, blog);
-  const ribbon = box(.018, .006, .36, palette.burgundy, .035, .055, .44, blog); ribbon.rotation.y = -.13;
-  rod([.42, .104, -.30], [.73, .104, .33], .018, mat('#bc9750', .76), blog);
-  rod([.73, .104, .33], [.756, .104, .382], .011, palette.ink, blog, .001);
   target('blog', blog, [-.72, 2.245, .60]);
 
   // Cream envelope, crossed paper folds and a wax seal.
@@ -379,12 +384,12 @@ export function createRoom(THREE, assets = {}) {
     oval(.042,.030,.031,enamel,x+.044,y,z,lamp);
   }
   for(const dx of [-.045,.045])rod([dx,.20,-.01],[dx+.105,.56,-.098],.009,palette.darkBrass,lamp);
-  const shadePivot = new THREE.Group(); lamp.add(shadePivot); shadePivot.position.set(-.38, 1.055, .13); shadePivot.rotation.z = -.13;
+  const shadePivot = new THREE.Group(); lamp.add(shadePivot); shadePivot.position.set(-.38, 1.055, .13); shadePivot.rotation.z = -.13; shadePivot.name = 'Desk lamp shade pivot';
   const shadeMat = new THREE.MeshPhysicalMaterial({ color: '#26352d', roughness: .35, metalness: .36, clearcoat:.3, side: THREE.DoubleSide });
   const shade = mesh(new THREE.ConeGeometry(.33, .24, 32, 1, true), shadeMat, shadePivot); shade.position.y = -.075;
   const rim = mesh(new THREE.TorusGeometry(.33, .013, 6, 32), palette.brass, shadePivot); rim.rotation.x = Math.PI / 2; rim.position.y = -.195;
   const bulbMat = new THREE.MeshStandardMaterial({ color: '#fff0bd', emissive: '#ffc67b', emissiveIntensity: 2 });
-  const bulb = mesh(new THREE.SphereGeometry(.06, 12, 8), bulbMat, shadePivot, false); bulb.position.y = -.15;
+  const bulb = mesh(new THREE.SphereGeometry(.06, 12, 8), bulbMat, shadePivot, false); bulb.position.y = -.15; bulb.name = 'Desk lamp bulb';
   const lampLight = new THREE.PointLight('#ffd094', 3.5, 3.4, 2); lampLight.position.set(-.38, .79, .13); lamp.add(lampLight);
   curve([[0, .09, -.10], [.23, .01, -.34], [.39, -.06, -.35], [.40, -1.1, -.42], [.50, -2.11, -.40]], .009, palette.darkWood, lamp);
   const cup = new THREE.Group(); cup.position.set(4.37, 3.55, -.87); group.add(cup);

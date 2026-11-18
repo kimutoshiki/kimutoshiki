@@ -1,0 +1,1 @@
+var r='"Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", "Study Mincho", serif';function d(e,s,t){let n=document.fonts;if(n?.status!=="loading"||!n.ready)return;let o=!0,i=()=>{o=!1};e.addEventListener("dispose",i),n.ready.then(()=>{e.removeEventListener("dispose",i),o&&(s(),e.needsUpdate=!0,t?.())})}export{r as a,d as b};

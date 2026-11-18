@@ -144,6 +144,18 @@ const hillDayColors=hillMeshes.map(hill=>hill.material.color.getHex());landscape
 assert.ok(hillMeshes.every((hill,i)=>hill.material.color.getHex()!==hillDayColors[i]),'All hill layers respond to actual night lighting');landscape.setTime(skyDay);
 assert.equal(landscape.setInteriorView(true),true);assert.ok(leafBatches.every(mesh=>!mesh.visible));assert.equal(landscape.setInteriorView(true),false);
 assert.equal(landscape.setInteriorView(false),true);assert.ok(leafBatches.every(mesh=>mesh.visible),'Looking outside restores all original leaves');
+const harbour = landscape.group.getObjectByName('Sheltered water');
+const skiff = landscape.group.getObjectByName('Moored wooden sailing skiff');
+assert.ok(harbour && skiff, 'The waterfront contains actual water and a moored boat');
+assert.ok(landscape.group.getObjectByName('Ginkgo trees on the campus walk')?.isInstancedMesh);
+assert.ok(landscape.group.getObjectByName('Windswept coastal pines')?.isInstancedMesh);
+const atHarbour = skiff.position.clone();
+assert.equal(landscape.update(.14, false, atHarbour), false, 'Reduced motion leaves the waterfront still');
+assert.equal(landscape.update(.14, true, HOME.spawn), false, 'The distant harbour has no animation cost at the desk');
+const initialBoatAngle = skiff.rotation.x, initialWaterOffset = harbour.material.map.offset.clone();
+assert.equal(landscape.update(.14, true, atHarbour), true);
+assert.notEqual(skiff.rotation.x, initialBoatAngle);
+assert.ok(harbour.material.map.offset.distanceTo(initialWaterOffset) > 0);
 report.gardenBudget=landscape.stats;
 checks.push('Three grounded shaded hills and all 21,420 original leaves remain within the garden budget; eight spatial batches hide behind the room and restore for exterior views');
 
@@ -353,11 +365,28 @@ class Renderer {
 }
 globalThis.window = new EventTarget(); globalThis.devicePixelRatio = 1;
 globalThis.matchMedia = () => ({ matches: false });
-const frames = new Map(); let frameId = 0, milliseconds = 0;
+const frames = new Map(), clockWakes = new Map();
+let frameId = 0, milliseconds = 0;
+function scheduleClockWake(callback, delay) {
+  const id = ++frameId;
+  clockWakes.set(id, { at: milliseconds + delay, callback });
+  return id;
+}
+
 globalThis.requestAnimationFrame = callback => { const id = ++frameId; frames.set(id, callback); return id; };
 globalThis.cancelAnimationFrame = id => frames.delete(id);
 function frame(count = 1, elapsedMs = 34) {
-  for (let i = 0; i < count; i++) { const callbacks = [...frames.values()]; frames.clear(); milliseconds += elapsedMs; callbacks.forEach(callback => callback(milliseconds)); }
+  for (let i = 0; i < count; i++) {
+    milliseconds += elapsedMs;
+    for (const [id, wake] of [...clockWakes]) {
+      if (wake.at > milliseconds) continue;
+      clockWakes.delete(id);
+      wake.callback();
+    }
+    const callbacks = [...frames.values()];
+    frames.clear();
+    callbacks.forEach(callback => callback(milliseconds));
+  }
 }
 const idleCallbacks=new Map();let idleId=0;
 globalThis.requestIdleCallback=(callback,options)=>{const id=++idleId;idleCallbacks.set(id,{callback,options,queuedAt:performance.now()});return id;};
@@ -381,7 +410,7 @@ async function pendingWorld({ defaultSeated = false, deferExterior = false, star
   const calls = [], errors = [], progress = [], selected = [], events = [], callTimes = new Map(); let ready = 0;
   canvas.addEventListener('worldstate', event => events.push(event.detail));
   const requestCount = runtimeRequests.length;
-  const pending = mountWorld({ canvas, rendererFactory: () => renderer, reducedMotion: false, now, ...(defaultSeated ? {} : { seated: false }),
+  const pending = mountWorld({ canvas, scheduleClockWake, cancelClockWake: id => clockWakes.delete(id), rendererFactory: () => renderer, reducedMotion: false, now, ...(defaultSeated ? {} : { seated: false }),
     loadLandscape() { calls.push('landscape'); return landscapeFactory ? landscapeFactory(T) : deferExterior ? ground.promise : createWorldLandscape(T); },
     loadBoundary() { calls.push('boundary'); return boundaryFactory ? boundaryFactory(T) : deferExterior ? boundary.promise : createGardenBoundary(T,{bounds:WORLD_BOUNDS}); },
     loadLandmarks() { calls.push('landmarks'); return landmarkFactory ? landmarkFactory(T) : model.promise; },
@@ -693,30 +722,114 @@ const seatState = () => seatedWorld.engine.getState();
 const seatPoint = () => { const p=seatState().position;return new T.Vector3(p.x,p.y,p.z); };
 assert.deepEqual(seatPoint().toArray(),HOME.seated.position,'Default camera begins at the authored seated position');
 const seatedBefore = seatPoint(), seatedDirection = initialSeatCamera.getWorldDirection(new T.Vector3());
-seatedWorld.engine.setMovement({forward:1,right:1});seatedWorld.engine.look(1,.3);seatedWorld.engine.zoom(-1);
-key(seatedWorld.canvas,'keydown','w');
-pointer(seatedWorld.canvas,'pointerdown',300,300);pointer(seatedWorld.canvas,'pointermove',650,500);pointer(seatedWorld.canvas,'pointerup',650,500);
-const seatedWheel=new Event('wheel',{cancelable:true});Object.assign(seatedWheel,{deltaY:-100});seatedWorld.canvas.dispatchEvent(seatedWheel);
-assert.equal(seatedWheel.defaultPrevented,false,'A seated scene leaves native wheel scrolling available');
-frame(35);assert.deepEqual(seatPoint(),seatedBefore,'Movement, dragging, wheel and landmark routes cannot move the seated camera');
-assert.ok(seatedWorld.renderer.renders.at(-1).camera.getWorldDirection(new T.Vector3()).distanceTo(seatedDirection)<1e-9,'Seated input preserves the initial desk view');
-key(window,'keyup','w');
+const desk = seatedWorld.engine;
+const { canvas: seatCanvas, renderer: seatRenderer } = seatedWorld;
+const currentCamera = () => seatRenderer.renders.at(-1).camera;
+const direction = () => currentCamera().getWorldDirection(new T.Vector3());
+const angleToDesk = () => direction().angleTo(seatedDirection);
+// Project the actual rendered cover, after the room's static batching step.
+const cover = seatedScene.getObjectByName('Journal cloth cover');
+const hinge = seatedScene.getObjectByName('Journal cover hinge');
+assert.ok(cover && hinge, 'The live room contains a journal with a moveable cover');
+function screenCenter(mesh) {
+  seatedScene.updateMatrixWorld(true);
+  const point = new T.Box3().setFromObject(mesh).getCenter(new T.Vector3()).project(currentCamera());
+  assert.ok(Math.abs(point.x) < 1 && Math.abs(point.y) < 1 && Math.abs(point.z) < 1, 'Prop is inside the production viewport');
+  return [(point.x + 1) * seatCanvas.clientWidth / 2, (1 - point.y) * seatCanvas.clientHeight / 2];
+}
+const [journalX, journalY] = screenCenter(cover);
+const closedAngle = hinge.rotation.z;
+desk.setPaused(false);
+pointer(seatCanvas, 'pointerdown', journalX, journalY);
+pointer(seatCanvas, 'pointerup', journalX, journalY);
+assert.equal(desk.getState().deskProps.notebook, true, 'A direct canvas tap selects the journal in the batched room');
+frame(3);
+const movingAngle = Math.abs(hinge.rotation.z - closedAngle);
+frame(60);
+assert.ok(movingAngle > 0 && Math.abs(hinge.rotation.z - closedAngle) > movingAngle + .2, 'The real cover turns progressively around its spine');
+const drawerHandle = seatedScene.getObjectByName('Stationery drawer pull');
+const drawer = seatedScene.getObjectByName('Writing drawer');
+const lampBulb = seatedScene.getObjectByName('Desk lamp bulb');
+assert.ok(drawer && drawerHandle && lampBulb);
+const drawerClosedZ = drawer.position.z, lampOn = lampBulb.material.emissiveIntensity;
+const [handleX, handleY] = screenCenter(drawerHandle);
+pointer(seatCanvas, 'pointerdown', handleX, handleY);
+pointer(seatCanvas, 'pointerup', handleX, handleY);
+frame(60);
+assert.equal(desk.getState().deskProps.drawer, true);
+assert.ok(drawer.position.z > drawerClosedZ + .5, 'Clicking the drawer pull brings the real tray forward');
+desk.interactDesk('drawer');
+desk.interactDesk('lamp');
+frame(60);
+close(drawer.position.z, drawerClosedZ, .02, 'The actual drawer returns to its recess');
+assert.ok(lampBulb.material.emissiveIntensity < lampOn * .2, 'Turning off the desk light dims its visible bulb');
+desk.interactDesk('lamp');
+frame(60);
+close(lampBulb.material.emissiveIntensity, lampOn, .02, 'Turning the desk light back on restores its brightness');
+desk.interactDesk('notebook');
+frame(60);
+close(hinge.rotation.z, closedAngle, .02, 'The journal can close again after a mesh tap');
+pointer(seatCanvas, 'pointerdown', journalX, journalY);
+pointer(seatCanvas, 'pointermove', journalX + 35, journalY);
+pointer(seatCanvas, 'pointerup', journalX + 35, journalY);
+assert.equal(desk.getState().deskProps.notebook, false, 'Dragging on the cover is a look gesture and does not open the notebook');
+desk.setPaused(true);
+desk.setMovement({forward:1, right:1});
+key(seatCanvas, 'keydown', 'w');
+pointer(seatCanvas, 'pointerdown', 300, 300);
+pointer(seatCanvas, 'pointermove', 500, 360);
+pointer(seatCanvas, 'pointerup', 500, 360);
+frame(10);
+assert.ok(angleToDesk() > .03, 'Dragging while seated changes the actual viewing direction');
+assert.deepEqual(seatPoint(), seatedBefore, 'The seated visitor stays at the desk while looking around');
+key(window, 'keyup', 'w');
+for (const sign of [-1, 1]) {
+  desk.look(sign * 1000, sign * 1000);
+  frame(30);
+  assert.ok(angleToDesk() < .55, 'Extreme drag input stays within the desk view');
+}
+desk.zoom(-1);
+frame(5);
+assert.ok(currentCamera().fov < initialSeatCamera.fov, 'Seated zoom brings the desktop closer without walking');
+const seatedWheel = new Event('wheel', {cancelable: true});
+Object.assign(seatedWheel, {deltaY: -100});
+seatCanvas.dispatchEvent(seatedWheel);
+assert.equal(seatedWheel.defaultPrevented, false, 'The seated canvas leaves native wheel scrolling available');
+assert.deepEqual(seatPoint(), seatedBefore);
+const closedState = desk.getState().deskProps;
+assert.deepEqual(closedState, {notebook: false, lamp: true, drawer: false});
+assert.equal(desk.interactDesk('unknown'), false);
+assert.deepEqual(desk.getState().deskProps, closedState);
+for (const id of Object.keys(closedState)) {
+  assert.equal(desk.interactDesk(id), true);
+  assert.equal(desk.getState().deskProps[id], !closedState[id]);
+  assert.ok(desk.getState().deskStatus);
+  frame(45);
+  assert.equal(desk.interactDesk(id), true);
+  assert.equal(desk.getState().deskProps[id], closedState[id]);
+  frame(45);
+}
+checks.push('Seated drag changes only the viewing angle, clamps extreme input, and the three accessible actions toggle their real desk states');
 assert.ok(!seatedWorld.calls.includes('landscape'),'An idle seated room does not eagerly construct outdoor geometry');
 assert.equal(seatedWorld.engine.standUp(),true);assert.equal(seatState().posture,'standing-up');assert.equal(seatState().outdoorsLoading,true,'Standing immediately promotes delayed outdoor work');
 const riseStart=milliseconds;let previousSeatPoint=seatPoint(),riseFrames=0;
 while(seatState().posture==='standing-up'&&riseFrames<60) {
   seatedWorld.engine.setMovement({forward:1,right:1});frame();riseFrames++;
-  const next=seatPoint();close(next.x,HOME.seated.position[0],1e-10,'Standing never jumps sideways');close(next.z,HOME.seated.position[2],1e-10,'Standing never jumps forward');
+  const next=seatPoint();
+  if (seatState().posture === 'standing-up') {
+    close(next.x, HOME.seated.position[0], 1e-10, 'The chair rise remains in place before entering the world');
+    close(next.z, HOME.seated.position[2], 1e-10);
+  }
   assert.ok(next.y>=previousSeatPoint.y&&next.y-previousSeatPoint.y<.06,'Eye rises smoothly without a vertical teleport');previousSeatPoint=next;
 }
 assert.equal(seatState().posture,'walking');close(seatPoint().y,HOME.eyeHeight,1e-10,'Standing reaches physical eye height');
 assert.ok(riseFrames>=12&&riseFrames<=35,'Standing spans the intended roughly .9-second transition');
 assert.ok(milliseconds-riseStart>=850&&milliseconds-riseStart<1200,'Standing uses elapsed time instead of an instant camera swap');
 await until(()=>seatState().outdoorsReady,'Prioritized garden work finishes independently of the standing animation');
-assert.ok(seatedWorld.engine.leave(),'Standing unlocks walking to the completed garden');
-let postureSteps=0;
-while(seatState().travel&&postureSteps++<4000)frame();
-assert.equal(seatState().mode,'outside');
+frame(2);
+assert.equal(seatState().mode, 'outside', 'Standing opens the walkable exterior without a second control');
+assert.equal(desk.interactDesk('notebook'), false, 'Walking visitors do not trigger hidden desk controls');
+let postureSteps = 0;
 const beforeSit=seatPoint();assert.ok(seatedWorld.engine.sitDown());assert.deepEqual(seatPoint(),beforeSit,'Sit down first routes home without teleporting X/Z');
 previousSeatPoint=seatPoint();let loweringFrames=0;
 while(seatState().posture!=='seated'&&postureSteps++<8000) {
@@ -734,14 +847,13 @@ assert.ok(seatedWorld.renderer.renders.at(-1).camera.quaternion.angleTo(initialS
 const slowStandStart=milliseconds;assert.equal(seatedWorld.engine.standUp(),true);frame(3,250);
 assert.equal(seatState().posture,'standing-up','Three 250 ms frames reach 750 ms, not a per-frame capped animation');
 frame(1,150);assert.equal(seatState().posture,'walking');close(milliseconds-slowStandStart,900,1e-6,'Slow-render standing still finishes in .9 seconds of elapsed time');
-close(seatPoint().x,HOME.seated.position[0],1e-8);close(seatPoint().z,HOME.seated.position[2],1e-8);
-assert.ok(seatedWorld.engine.leave());let slowRouteBudget=4000;while(seatState().travel&&slowRouteBudget-->0)frame();assert.ok(slowRouteBudget>0);
+assert.equal(seatState().mode, 'outside', 'A second rise enters the retained exterior');
 const slowDirection=seatedWorld.renderer.renders.at(-1).camera.getWorldDirection(new T.Vector3());seatedWorld.engine.look(-Math.atan2(slowDirection.x,slowDirection.z),0);seatedWorld.engine.setMovement({forward:1,right:0});
 const slowWalkStart=seatPoint();frame(1,250);close(seatPoint().distanceTo(slowWalkStart),.6,1e-6,'Walking consumes a 250 ms frame in bounded solver steps');
 const stalledWalkStart=seatPoint();frame(1,1500);close(seatPoint().distanceTo(stalledWalkStart),2.4,1e-6,'A long stall catches up at most one second, without losing normal slow-frame speed');seatedWorld.engine.stopMovement();
 assert.ok(seatedWorld.engine.sitDown());let slowSeatBudget=5000;while(seatState().posture!=='seated'&&slowSeatBudget-->0)frame();assert.ok(slowSeatBudget>0);assert.deepEqual(seatPoint().toArray(),HOME.seated.position);
 checks.push('A slow 4-frame standing transition still takes exactly .9 seconds; navigation consumes 250 ms frames and caps long-stall catch-up at one second');
-checks.push('Default first view is seated at 1.18 m with movement blocked; standing rises over .9 seconds without X/Z movement, and sitting walks home before lowering continuously');
+checks.push('Default first view is seated at 1.18 m with movement blocked; standing rises over .9 seconds and enters the garden, and sitting walks home before lowering continuously');
 
 await until(()=>seatedScene.getObjectByName('desk-okuma-auditorium'),'Delayed desk auditorium becomes available for current-time checks');
 let seatedOutdoorAuditorium;
@@ -774,7 +886,10 @@ let initialSkyDisposals=0;initialSky.addEventListener('dispose',()=>initialSkyDi
 currentJapanDate=new Date('2026-11-06T03:15:31Z');frame(32);checkActualTime();
 assert.notEqual(clockMinute.rotation.z,minuteBefore,'A paused scene still advances real clock hands');assert.ok(seatedWorld.renderer.renders.length>clockDraws);
 assert.equal(seatedScene.background,initialSky,'A clock-only second retains the same sky and its GPU caches');assert.equal(initialSkyDisposals,0);
-const fixedClockDraws=seatedWorld.renderer.renders.length;frame(65);assert.equal(seatedWorld.renderer.renders.length,fixedClockDraws,'An unchanged clock and paused scene remain idle');
+const fixedClockDraws=seatedWorld.renderer.renders.length;
+assert.equal(frames.size, 0, 'A paused untouched scene has no pending animation frame');
+assert.equal(clockWakes.size, 1, 'One clock wake keeps local time current');
+frame(65);assert.equal(seatedWorld.renderer.renders.length,fixedClockDraws,'An unchanged clock and paused scene remain idle');
 currentJapanDate=new Date('2026-11-06T09:15:00Z');frame(32);const evening=checkActualTime();assert.equal(evening.phase,'dusk');assert.notEqual(seatedScene.background,initialSky,'A lighting change replaces the identity used by Three cube-map and PMREM caches');assert.notEqual(seatedScene.environment,seatedScene.background,'Detailed background and low-cost lighting map keep separate GPU identities');assert.equal(initialSkyDisposals,1,'Previous sky and its cached GPU maps are released exactly once');
 const eveningSky=seatedScene.background;let eveningSkyDisposals=0;eveningSky.addEventListener('dispose',()=>eveningSkyDisposals++);
 for(const light of gardenLights)assert.ok(light.intensity>0&&light.intensity<34,'Streetlights fade on during Japan dusk');
@@ -788,6 +903,7 @@ assertAuditoriumClockFaces(seatedOutdoorAuditorium,getWorldTime(currentJapanDate
 
 const beforeHidden=seatedWorld.renderer.renders.length;
 document.hidden=true;document.dispatchEvent(new Event('visibilitychange'));
+assert.equal(frames.size, 0); assert.equal(clockWakes.size, 0, 'Backgrounding cancels the pending clock wake');
 currentJapanDate=new Date('2026-11-06T15:00:00Z');frame(40);assert.equal(seatedWorld.renderer.renders.length,beforeHidden,'Hidden scenes suspend clock drawing');
 document.hidden=false;document.dispatchEvent(new Event('visibilitychange'));frame();const midnight=checkActualTime();
 assert.notEqual(seatedScene.background,eveningSky,'Returning to a newly dark sky refreshes the cached texture identity');assert.equal(eveningSkyDisposals,1);
@@ -830,17 +946,17 @@ for(const {bounds} of worldBoxes)for(const obstacle of boundaryFixture.collision
 const boundaryResources=watchResources(boundaryFixture.group);boundaryFixture.dispose();boundaryFixture.dispose();for(const count of boundaryResources.values())assert.equal(count,1,'Boundary and lamp resources dispose exactly once');
 checks.push('Four real brick boundaries block rays and production walking at seated/standing heights, remain clear of original monuments and release resources once');
 
-// Automatic work waits for the post-paint delay and an actual idle opportunity.
+// Waiting at the desk should never construct the outdoor scene, even on an idle device.
 assert.equal(idleCallbacks.size,0,'Prior scene teardown cancels all pending idle work');
-const idleStarted=performance.now(),idleWorld=await pendingWorld({deferExterior:true,startExterior:false});
-assert.deepEqual(idleWorld.calls,['cat-world'],'Cat loading is the only asset factory called immediately after paint');
-await until(()=>idleCallbacks.size===1,'Automatic exterior prewarm queues after the 350 ms delay');
-const [idleToken,idleTask]=idleCallbacks.entries().next().value;
-assert.ok(idleTask.queuedAt-idleWorld.callTimes.get('cat-world')>=325,'Outdoor factory scheduling retains its post-paint delay');
-assert.equal(idleTask.options.timeout,1600);assert.ok(!idleWorld.calls.includes('landscape'),'Queued idle work does not build scenery eagerly');
-idleCallbacks.delete(idleToken);idleTask.callback({didTimeout:false,timeRemaining:()=>10});
-await until(()=>idleWorld.calls.includes('landscape'),'One idle callback starts one actual landscape factory');
-const lateGround=createWorldLandscape(T),lateGroundResources=watchResources(lateGround.group),idlePreparation=idleWorld.engine.prewarmExterior();
+const idleWorld = await pendingWorld({defaultSeated: true, deferExterior: true, startExterior: false});
+assert.deepEqual(idleWorld.calls, ['cat-world']);
+await new Promise(resolve => setTimeout(resolve, 400));
+for (const task of idleCallbacks.values()) task.callback({didTimeout:false, timeRemaining:()=>50});
+frame(90);
+assert.ok(!idleWorld.calls.includes('landscape'), 'Idle seated time does not start the exterior download or construct its geometry');
+const idlePreparation = idleWorld.engine.prewarmExterior();
+await until(() => idleWorld.calls.includes('landscape'), 'Explicit promotion starts ground preparation');
+const lateGround = createWorldLandscape(T), lateGroundResources = watchResources(lateGround.group);
 const idleDraws=idleWorld.renderer.renders.length;idleWorld.engine.dispose();idleWorld.ground.resolve(lateGround);
 assert.equal(await idlePreparation,false);for(const count of lateGroundResources.values())assert.equal(count,1,'A landscape completed after disposal releases every resource exactly once');
 frame(3);assert.equal(idleWorld.renderer.renders.length,idleDraws);assert.ok(!idleWorld.calls.includes('boundary')&&!idleWorld.calls.includes('landmarks'));
@@ -853,7 +969,7 @@ for(const count of [...installedGroundResources.values(),...lateBoundaryResource
 assert.ok(!pendingBoundary.calls.includes('landmarks'));
 const beforePaint=await pendingWorld({paint:false});beforePaint.engine.dispose();frame(3);await settle();
 assert.deepEqual(beforePaint.calls,[],'Disposal before the first paint callback prevents every deferred asset factory');
-checks.push('Exterior construction waits for a 350 ms delay plus idle availability; priority calls deduplicate, and disposed pending ground/boundary/first-paint work cannot leak or restart');
+checks.push('Exterior construction waits for an explicit request; priority calls deduplicate, and disposed pending ground/boundary/first-paint work cannot leak or restart');
 
 // Partial preparation errors are recoverable without rebuilding the live home.
 let boundaryAttempts=0,landmarkAttempts=0,retryWorld;const retryGrounds=[],retryWarnings=[],previousWarn=console.warn;

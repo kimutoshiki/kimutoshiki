@@ -22,10 +22,12 @@ assert.equal((html.match(/data-world-focus=/g) || []).length, 5);
 assert.equal((html.match(/data-walk=/g) || []).length, 4);
 const importExpression = source.match(/await import\('\.\.\/scene\/world\.bundle\.js[^']*'\)/)?.[0];
 assert(importExpression, 'The UI imports the production world bundle asynchronously');
-assert.equal((source.match(/\bimport\s*\(/g) || []).length, 1, 'The lightweight clock does not import a world-time or rendering module');
+const fallbackImport = source.match(/import\('\.\/study-tour\.js[^']*'\)/)?.[0];
+assert(fallbackImport, 'Only a failed WebGL start should load the lightweight tour');
+assert.equal((source.match(/\bimport\s*\(/g) || []).length, 2, 'The UI imports only the engine and its optional fallback');
 // Replace only the module-loader boundary. All production UI handlers, state
 // transitions, first-paint scheduling and failure handling execute unchanged.
-const executable = source.replace(importExpression, 'await testImport()');
+const executable = source.replace(importExpression, 'await testImport()').replace(fallbackImport, 'testFallbackImport()');
 const emit = (target, type, values = {}) => {
   const event = new Event(type, { cancelable: true });
   for (const [key, value] of Object.entries(values)) Object.defineProperty(event, key, { value });
@@ -35,7 +37,7 @@ const tick = async () => { for (let i = 0; i < 6; i++) await Promise.resolve(); 
 const same = (actual, expected, message) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected, message);
 
 function harness({ context = 'supported', reduced = false, importFails = false, observeViewport = false } = {}) {
-  const ids = new Map(), focusButtons = [], walkButtons = [], toggleQueue = new Set();
+  const ids = new Map(), focusButtons = [], walkButtons = [], deskButtons = [], toggleQueue = new Set();
   const document = Object.assign(new EventTarget(), { hidden: false, activeElement: null });
   class Element extends EventTarget {
     hidden = false; disabled = false; tabIndex = -1; textContent = ''; dataset = {}; attributes = new Map(); captures = new Set();
@@ -53,18 +55,20 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
   }
   for (const match of html.matchAll(/<[a-z][^>]*>/gi)) {
     const tag = match[0], id = tag.match(/\bid="([^"]+)"/)?.[1], focus = tag.match(/\bdata-world-focus="([^"]+)"/)?.[1], walk = tag.match(/\bdata-walk="([^"]+)"/)?.[1];
-    if (!id && !focus && !walk) continue;
+    const deskAction = tag.match(/\bdata-desk-action="([^"]+)"/)?.[1];
+    if (!id && !focus && !walk && !deskAction) continue;
     const element = new Element(); element.hidden = /\shidden(?:\s|>)/.test(tag); element.disabled = /\sdisabled(?:\s|>)/.test(tag);
     for (const attribute of tag.matchAll(/([\w-]+)="([^"]*)"/g)) element.setAttribute(attribute[1], attribute[2]);
     for (const name of (element.attributes.get('class') || '').split(/\s+/).filter(Boolean)) element.classList.add(name);
     if (element.attributes.has('tabindex')) element.tabIndex = Number(element.attributes.get('tabindex'));
     if (id) ids.set(id, element);
+    if (deskAction) { element.dataset.deskAction = deskAction; deskButtons.push(element); }
     if (focus) { element.dataset.worldFocus = focus; focusButtons.push(element); }
     if (walk) { element.dataset.walk = walk; walkButtons.push(element); }
   }
   const byId = id => { assert(ids.has(id), `Requested HTML element ${id} exists`); return ids.get(id); };
   const selected = new Map(['.world-poster', '.world-poster img', '.world-poster source', '.skip-link'].map(selector => [selector, new Element()]));
-  Object.assign(document, { getElementById: byId, querySelector: selector => { assert(selected.has(selector), `Known document selector ${selector}`); return selected.get(selector); }, querySelectorAll: selector => { if (selector === '[data-world-focus]') return focusButtons; if (selector === '[data-walk]') return walkButtons; throw new Error('Unexpected selector: ' + selector); } });
+  Object.assign(document, { getElementById: byId, querySelector: selector => { assert(selected.has(selector), `Known document selector ${selector}`); return selected.get(selector); }, querySelectorAll: selector => { if (selector === '[data-world-focus]') return focusButtons; if (selector === '[data-walk]') return walkButtons; if (selector === '[data-desk-action]') return deskButtons; throw new Error('Unexpected selector: ' + selector); } });
   const window = new EventTarget(), media = Object.assign(new EventTarget(), { matches: reduced });
   const frames = new Map(), tasks = new Map(), warnings = [], calls = [];
   const observers = [];
@@ -75,11 +79,18 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
     if (context === 'throw') throw new Error('Simulated GPU creation error');
     return context === 'null' ? null : rendererContext;
   };
-  const engineState = { catReady: false, landmarksReady: false, outdoorsReady: false, paused: reduced, lightingMode: 'auto', focus: 'room', mode: 'inside', travel: false, seated: true };
+  const engineState = { deskProps: { notebook: false, lamp: true, drawer: false }, deskActionSequence: 0, catReady: false, landmarksReady: false, outdoorsReady: false, paused: reduced, lightingMode: 'auto', focus: 'room', mode: 'inside', travel: false, seated: true };
   const record = (name, value) => calls.push({ name, value });
   window.addEventListener('resize', () => record('resize'));
   const engine = {
     getState: () => ({ ...engineState }),
+    interactDesk(id) {
+      if (!engineState.seated || !Object.hasOwn(engineState.deskProps, id)) return false;
+      record('interactDesk', id);
+      engineState.deskProps = { ...engineState.deskProps, [id]: !engineState.deskProps[id] };
+      notify({ deskAction: id, deskStatus: '操作しました', deskActionSequence: engineState.deskActionSequence + 1 });
+      return true;
+    },
     standUp() { record('standUp'); Object.assign(engineState, { seated: false, standing: true, posture: 'walking', mode: 'inside' }); return true; },
     prewarmExterior() { record('prewarmExterior'); return Promise.resolve(); },
     setRenderingActive(value) { record('setRenderingActive', value); },
@@ -105,6 +116,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
     setTimeout: (callback, delay = 0) => { tasks.set(++nextId, { callback, at: now + delay }); return nextId; }, clearTimeout: id => tasks.delete(id),
     setInterval: (callback, interval) => { tasks.set(++nextId, { callback, at: now + interval, interval }); return nextId; }, clearInterval: id => tasks.delete(id),
     console: { warn: (...values) => warnings.push(values) },
+    testFallbackImport: async () => { record('fallbackImport'); throw new Error('Simulated optional tour import failure'); },
     testImport: async () => { imports++; if (importFails) throw new Error('Simulated module import failure'); return { mountWorld: options => { mountOptions = options; assert.equal(options.canvas, byId('world-canvas')); assert.equal(options.rendererContext, rendererContext); Object.assign(engineState, { seated: true, travel: false }); return new Promise(resolve => { resolveMount = resolve; }); } }; },
   });
   new Script(executable).runInContext(scope);
@@ -125,7 +137,7 @@ function harness({ context = 'supported', reduced = false, importFails = false, 
   function notify(next) { Object.assign(engineState, next); emit(byId('world-canvas'), 'worldstate', { detail: { ...engineState } }); }
   function flushToggles() { for (let count = 0; toggleQueue.size; count++) { assert(count < 10); const pending = [...toggleQueue]; toggleQueue.clear(); for (const target of pending) emit(target, 'toggle'); } }
   async function requestStand() { emit(byId('world-stand'), 'click'); runFrame(); await runTask(); await tick(); }
-  return { byId, focusButtons, walkButtons, document, window, media, warnings, calls, engine, engineState, runFrame, runTask, advance, attach, notify, flushToggles, requestStand, selected, observers,
+  return { byId, focusButtons, walkButtons, deskButtons, document, window, media, warnings, calls, engine, engineState, runFrame, runTask, advance, attach, notify, flushToggles, requestStand, selected, observers,
     get pendingFrames() { return frames.size; },
     get imports() { return imports; }, get contextRequests() { return contextRequests; }, get options() { return mountOptions; },
     async finishUnsupported() { await launch; }, count: name => calls.filter(call => call.name === name).length,
@@ -156,6 +168,7 @@ async function booted(options) {
   assert(h.byId('world-stand').disabled, 'onReady before the async mount resolves cannot enable unattached engine actions');
   assert(h.walkButtons.every(button => button.disabled));
   await h.attach();
+  assert.equal(h.count('fallbackImport'), 0, 'Healthy WebGL never imports the lightweight tour');
   assert.equal(h.count('standUp'), 0, 'Automatic engine startup stays seated until requested');
   assertLanding(h); assert(h.byId('main').classList.contains('is-rendered'), 'The initial home shows the actual seated WebGL frame');
   assert(!h.byId('world-stand').disabled);
@@ -165,6 +178,7 @@ async function booted(options) {
 async function mounted(options) {
   const h = await booted(options);
   await h.requestStand();
+  assert(h.deskButtons.every(button => button.disabled), 'Seated prop controls are disabled while walking');
   assert.equal(h.count('standUp'), 1); assert.equal(h.imports, 1); assert.equal(h.contextRequests, 1); assert.equal(h.count('dispose'), 0);
   assert(h.byId('main').classList.contains('is-walking'));
   assert(!h.byId('world-live-controls').hidden && !h.byId('world-help').hidden);
@@ -200,8 +214,9 @@ await clockOnly.advance(120000); emit(clockOnly.window, 'pageshow'); assert.equa
 for (const context of ['null', 'throw']) {
   const h = harness({ context }); assertLanding(h); h.runFrame(); await h.runTask(); await h.finishUnsupported();
   assert.equal(h.contextRequests, 1); assert.equal(h.imports, 0); assert.equal(h.warnings.length, 1); assertUnavailable(h);
+  assert.equal(h.count('fallbackImport'), 1);
   assertLanding(h); assert(h.byId('world-stand').disabled);
-  assert.equal(h.selected.get('.world-poster img').src, 'images/world/seated-night.webp', 'Only WebGL failure requests the fallback picture');
+  assert.equal(h.selected.get('.world-poster img').src, 'images/world/tour/night-0.webp', 'Only WebGL failure requests the fallback picture');
   await h.requestStand(); assert.equal(h.contextRequests, 1, 'A failed stand attempt does not enter a retry loop');
   assert.match(h.byId('world-status').textContent, /メニュー/);
   emit(h.media, 'change', { matches: true }); h.notify({ catReady: true, landmarksReady: true, travel: true });
@@ -393,8 +408,19 @@ assert.equal(seatedAgain.count('dispose'), 0);
 assert(!seatedAgain.byId('world-live-controls').hidden);
 
 const warm = await booted();
+assert.deepEqual(warm.deskButtons.map(button => button.dataset.deskAction).sort(), ['drawer', 'lamp', 'notebook']);
+for (const button of warm.deskButtons) {
+  const id = button.dataset.deskAction;
+  assert(!button.disabled);
+  const before = warm.engineState.deskProps[id];
+  assert.equal(button.attributes.get('aria-pressed'), String(before));
+  emit(button, 'click');
+  assert.equal(warm.calls.at(-1).value, id);
+  assert.equal(button.attributes.get('aria-pressed'), String(!before));
+  assert(warm.byId('world-prop-feedback').textContent.trim());
+}
 emit(warm.byId('world-stand'), 'pointerenter'); emit(warm.byId('world-stand'), 'focus');
-assert.equal(warm.count('prewarmExterior'), 2, 'Hover and keyboard focus give the retained engine an opportunity to prepare the garden');
+assert.equal(warm.count('prewarmExterior'), 0, 'Tabbing through the menu or resting a pointer never fetches exterior assets');
 assert.equal(warm.count('standUp'), 0); assert.equal(warm.imports, 1); assertLanding(warm);
 const observed = harness({ observeViewport: true });
 assert.equal(observed.observers.length, 1); assert.equal(observed.observers[0].target, observed.byId('world-canvas'));
@@ -415,7 +441,7 @@ console.log(JSON.stringify({ result: 'PASS', checks: [
   'Outdoor travel and landmark navigation remain gated until exterior readiness',
   'Exterior failure exposes a retry action, gates loading and restores walking after recovery',
   'Partial landmark failure offers a separate retry while preserving leave and return-home actions',
-  'Stand hover/focus prewarms outdoors; offscreen rendering pauses and observers clean up on departure',
+  'Desk shortcuts mirror the real prop states and are disabled while walking; offscreen rendering pauses',
   'Walk, stop, return, four landmark destinations, cat readiness and contextual captions',
   'Explicit motion choice overrides preferences; lighting cycles auto, day and night',
   'Four-direction pointer capture, diagonals, release, cancel and lost capture',
