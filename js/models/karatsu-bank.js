@@ -6,6 +6,7 @@
  * All surfaces are original geometry and procedural material data; photographs
  * are research references only. Dimensions are not a measured conservation survey.
  */
+import { mergeVertices } from '../vendor/BufferGeometryUtils.js';
 import { surface } from '../../scene/surface-materials.js';
 export function createKaratsuBank(T) {
   const group = new T.Group();
@@ -13,14 +14,14 @@ export function createKaratsuBank(T) {
   const mat = (color, roughness = 0.9, metalness = 0) => new T.MeshStandardMaterial({ color, roughness, metalness });
   const M = {
     brick: mat('#9c553b'), brickDark: mat('#724332'), brickLight: mat('#af6646'),
-    stone: mat('#c7c2b1'), pale: mat('#e2dfcf'), shadowStone: mat('#a3a593'),
-    slate: mat('#3b584e', .69), copper: mat('#376450', .50, .48), copperEdge: mat('#799983', .41, .58),
-    glass: mat('#263d41', .23, .12), glassLight: mat('#45605b', .28, .1),
+    stone: mat('#c3bfb3'), pale: mat('#d8d6cb'), shadowStone: mat('#9d9e94'),
+    render: mat('#f0e9d7'), sash: mat('#854e38', .56),
+    slate: mat('#454b49', .69), copper: mat('#596b66', .57, .32), copperEdge: mat('#89968a', .52, .32),
+    glass: mat('#263d41', .23, .12), glassLight: mat('#526563', .23, .16),
     wood: mat('#704330'), black: mat('#243430', 0.65, 0.12), dark: mat('#1c2826'),
     pavement: mat('#c0b8a4'), paver: mat('#d0c7b4'), road: mat('#6f746e'), curb: mat('#d9d3c4'),
     soil: mat('#645e42'), plant: mat('#5c734c'), plantLight: mat('#829461'), grass: mat('#879269'),
     lamp: new T.MeshStandardMaterial({ color: '#edce88', emissive: '#d6ad60', emissiveIntensity: 0.3, roughness: 0.65 }),
-    mortar: new T.LineBasicMaterial({ color: '#6f3a2a', transparent: true, opacity: 0.43 }),
     pavingLine: new T.LineBasicMaterial({ color: '#999887', transparent: true, opacity: 0.4 })
   };
   // Small repeatable material maps give close views masonry grain and aged
@@ -41,16 +42,39 @@ export function createKaratsuBank(T) {
   for(const key of ['stone','pale','shadowStone']) {M[key].map=stoneGrain;M[key].bumpMap=stoneGrain;M[key].bumpScale=.024;}
   for(const key of ['brick','brickDark','brickLight']) {M[key].map=brickGrain;M[key].bumpMap=brickGrain;M[key].bumpScale=.025;}
   for(const key of ['slate','copper','copperEdge']) {M[key].map=metalGrain;M[key].roughnessMap=metalGrain;M[key].bumpMap=metalGrain;M[key].bumpScale=.018;}
-  surface(M.brick,'brick');
-  for(const key of ['stone','pale','shadowStone'])surface(M[key],'stone',{tint:key==='shadowStone'?'#bebdb6':key==='pale'?'#ffffff':'#e9e7df',roughness:key==='pale'?.79:.86,bumpScale:.010});
-  surface(M.slate,'slate',{roughness:.68,bumpScale:.006});surface(M.wood,'walnut',{tint:'#c8b4a8',roughness:.54,bumpScale:.006});
+  // The thin red facing tiles are smaller than a structural masonry block.
+  for(const [key,tint] of [['brick','#eac4b1'],['brickLight','#f4cab3'],['brickDark','#d8a88d']]) {
+    surface(M[key],'brick',{tint,repeat:[2.7,2.7],roughness:.84,bumpScale:.005});
+  }
+  // The municipal survey identifies exposed granite trim and rendered fields between the red tiles.
+  surface(M.render,'plaster',{tint:'#f9f4e8',roughness:.95,bumpScale:.009});
+  surface(M.slate,'slate',{tint:'#a8ada8',roughness:.68,bumpScale:.006});surface(M.wood,'walnut',{tint:'#c8b4a8',roughness:.54,bumpScale:.006});
   const G = { box: new T.BoxGeometry(1, 1, 1), sphere: new T.IcosahedronGeometry(1, 1) };
   const cache = new Map();
   const mesh = (geo, material, x, y, z, sx = 1, sy = 1, sz = 1, parent = group) => {
     const o = new T.Mesh(geo, material); o.position.set(x, y, z); o.scale.set(sx, sy, sz);
     o.castShadow = true; o.receiveShadow = true; parent.add(o); return o;
   };
-  const box = (x,y,z,w,h,d,m=M.stone,p=group) => mesh(G.box,m,x,y,z,w,h,d,p);
+  const graniteBoxes=new Map();
+  function box(x,y,z,w,h,d,m=M.stone,p=group) {
+    let shape=G.box;
+    if(m.map===stoneGrain) {
+      // The lime fields, small voussoirs and long granite sills have very
+      // different sizes. Keep the grain at one physical scale on dressed stone.
+      const key=[w,h,d].map(size=>size.toFixed(3)).join(',');
+      if(!graniteBoxes.has(key)) {
+        const geometry=G.box.clone(),uv=geometry.getAttribute('uv'),normal=geometry.getAttribute('normal');
+        for(let i=0;i<uv.count;i++) {
+          const horizontal=Math.abs(normal.getX(i))>.5?d:w;
+          const vertical=Math.abs(normal.getY(i))>.5?d:h;
+          uv.setXY(i,uv.getX(i)*horizontal/.65,uv.getY(i)*vertical/.65);
+        }
+        graniteBoxes.set(key,geometry);
+      }
+      shape=graniteBoxes.get(key);
+    }
+    return mesh(shape,m,x,y,z,w,h,d,p);
+  }
   function cylinder(rt, rb, h, segments=12) {
     const key=`c:${rt}:${rb}:${h}:${segments}`;
     if (!cache.has(key)) cache.set(key,new T.CylinderGeometry(rt,rb,h,segments));
@@ -62,9 +86,18 @@ export function createKaratsuBank(T) {
     const o=mesh(cylinder(r,r,1,6),m,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2,1,v.length(),1,p);
     o.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),v.normalize()); return o;
   }
+  // Index the extruded arches, crests and pediments once. Adjacent triangles
+  // share matching positions, normals and UVs, retaining hard stone edges and
+  // allowing these parts to batch with the other indexed façade elements.
+  function indexedExtrusion(shape,options) {
+    const shell=new T.ExtrudeGeometry(shape,options);
+    const indexed=mergeVertices(shell,1e-5);
+    shell.dispose();
+    return indexed;
+  }
   function poly(points,depth,material,x=0,y=0,z=0,parent=group) {
     const s=new T.Shape(); s.moveTo(...points[0]); for (const p of points.slice(1)) s.lineTo(...p); s.closePath();
-    const geo=new T.ExtrudeGeometry(s,{depth,bevelEnabled:false,curveSegments:10});
+    const geo=indexedExtrusion(s,{depth,bevelEnabled:false,curveSegments:10});
     return mesh(geo,material,x,y,z,1,1,1,parent);
   }
   function archGeo(w,stem,depth=0.08) {
@@ -72,7 +105,7 @@ export function createKaratsuBank(T) {
     if (!cache.has(key)) {
       const r=w/2,s=new T.Shape(); s.moveTo(-r,0); s.lineTo(r,0); s.lineTo(r,stem);
       s.absarc(0,stem,r,0,Math.PI,false); s.lineTo(-r,0);
-      cache.set(key,new T.ExtrudeGeometry(s,{depth,bevelEnabled:false,curveSegments:20}));
+      cache.set(key,indexedExtrusion(s,{depth,bevelEnabled:false,curveSegments:20}));
     }
     return cache.get(key);
   }
@@ -83,7 +116,7 @@ export function createKaratsuBank(T) {
       for(let i=0;i<=n;i++){const a=start+(end-start)*i/n;pts.push([Math.cos(a)*(r+t),Math.sin(a)*(r+t)]);}
       for(let i=n;i>=0;i--){const a=start+(end-start)*i/n;pts.push([Math.cos(a)*r,Math.sin(a)*r]);}
       const s=new T.Shape();s.moveTo(...pts[0]);pts.slice(1).forEach(p=>s.lineTo(...p));s.closePath();
-      cache.set(key,new T.ExtrudeGeometry(s,{depth,bevelEnabled:false}));
+      cache.set(key,indexedExtrusion(s,{depth,bevelEnabled:false}));
     }
     return cache.get(key);
   }
@@ -105,23 +138,13 @@ export function createKaratsuBank(T) {
     const lg=new T.BufferGeometry();lg.setAttribute('position',new T.Float32BufferAttribute(lines,3));
     group.add(new T.LineSegments(lg,new T.LineBasicMaterial({color:'#63766c',transparent:true,opacity:0.55})));
   }
-  function brickLines(w,h,base,p,exclude=[]) {
-    const a=[];const skip=(x,y)=>exclude.some(r=>x>r[0]&&x<r[1]&&y>r[2]&&y<r[3]);
-    for(let row=0;row<Math.floor(h/.23);row++) {
-      const y=base+row*.23;
-      for(let x=-w/2;x<w/2;x+=.68) {
-        const mid=x+.34;if(!skip(mid,y))a.push(x,y,.041,Math.min(x+.68,w/2),y,.041);
-        const xx=x+(row%2?.34:0);if(!skip(xx,y+.11))a.push(xx,y,.041,xx,y+.23,.041);
-      }
-    }
-    const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(a,3));p.add(new T.LineSegments(geo,M.mortar));
-  }
   function rectangularWindow(x,y,w,h,p,ornate=true) {
     box(x,y+h/2,.105,w+.2,h+.2,.13,M.dark,p);box(x,y+h/2,.19,w,h,.1,M.glass,p);
-    for(const dx of [-w/2,w/2])box(x+dx,y+h/2,.25,.105,h+.1,.13,M.wood,p);
-    box(x,y+.09,.26,w,.15,.14,M.wood,p);box(x,y+h-.03,.26,w,.15,.14,M.wood,p);
-    for(const dx of (w<1.6?[0]:[-w/6,w/6]))box(x+dx,y+h/2,.26,.065,h,.14,M.wood,p);
-    for(const yy of [.22,.43,.64,.84])box(x,y+h*yy,.27,w,.075,.13,M.wood,p);
+    box(x,y+h*.76,.244,w-.10,h*.40,.02,M.glassLight,p);
+    for(const dx of [-w/2,w/2])box(x+dx,y+h/2,.25,.105,h+.1,.13,M.sash,p);
+    box(x,y+.09,.26,w,.15,.14,M.sash,p);box(x,y+h-.03,.26,w,.15,.14,M.sash,p);
+    for(const dx of (w<1.6?[0]:[-w/6,w/6]))box(x+dx,y+h/2,.26,.065,h,.14,M.sash,p);
+    for(const yy of [.22,.43,.64,.84])box(x,y+h*yy,.27,w,.075,.13,M.sash,p);
     box(x,y-.12,.26,w+.52,.22,.45,M.stone,p);
     if(ornate) {
       box(x,y+h+.20,.20,w+.5,.28,.28,M.stone,p);
@@ -132,14 +155,15 @@ export function createKaratsuBank(T) {
     const r=w/2;
     mesh(archGeo(w+.18,stem,.12),M.dark,x,y-.05,.08,1,1,1,p);
     mesh(archGeo(w,stem,.10),M.glass,x,y,.20,1,1,1,p);
-    mesh(archBand(r-.04,.13,.12),M.wood,x,y+stem,.29,1,1,1,p);
-    for(const dx of [-r,r])box(x+dx,y+stem/2,.29,.13,stem,.16,M.wood,p);
-    box(x,y+.07,.3,w,.14,.17,M.wood,p);box(x,y+stem,.31,w,.12,.16,M.wood,p);
-    for(const dx of [-w/6,w/6])box(x+dx,y+stem/2,.32,.085,stem,.15,M.wood,p);
-    for(const dx of [-w/3,0,w/3])box(x+dx,y+stem/2,.32,.032,stem,.14,M.wood,p);
-    for(const ratio of [.33,.67])box(x,y+stem*ratio,.32,w,.053,.14,M.wood,p);
-    for(let i=1;i<8;i++) {const a=Math.PI*i/8;beam([x,y+stem,.32],[x+Math.cos(a)*r,y+stem+Math.sin(a)*r,.32],.023,M.wood,p);}
-    for(const ratio of [.44,.72])mesh(archBand(r*ratio,.035,.045),M.wood,x,y+stem,.33,1,1,1,p);
+    mesh(archGeo(w-.12,0,.02),M.glassLight,x,y+stem,.305,1,1,1,p).name='South-west arcade fanlight';
+    mesh(archBand(r-.04,.13,.12),M.sash,x,y+stem,.29,1,1,1,p);
+    for(const dx of [-r,r])box(x+dx,y+stem/2,.29,.13,stem,.16,M.sash,p);
+    box(x,y+.07,.3,w,.14,.17,M.sash,p);box(x,y+stem,.31,w,.12,.16,M.sash,p);
+    for(const dx of [-w/6,w/6])box(x+dx,y+stem/2,.32,.085,stem,.15,M.sash,p);
+    for(const dx of [-w/3,0,w/3])box(x+dx,y+stem/2,.32,.032,stem,.14,M.sash,p);
+    for(const ratio of [.33,.67])box(x,y+stem*ratio,.32,w,.053,.14,M.sash,p);
+    for(let i=1;i<6;i++) {const a=Math.PI*i/6;beam([x,y+stem,.32],[x+Math.cos(a)*r,y+stem+Math.sin(a)*r,.32],.023,M.sash,p);}
+    mesh(archBand(r*.55,.035,.045),M.sash,x,y+stem,.35,1,1,1,p);
     // The outer arcade is larger than the glazed fanlight: brick tympanum,
     // alternating granite voussoirs, and layered curved stone cornices.
     mesh(archBand(r+.06,.61,.18),M.brickLight,x,y+stem,.11,1,1,1,p);
@@ -188,6 +212,12 @@ export function createKaratsuBank(T) {
     poly([[-1.6,.15],[1.6,.15],[0,1.12]],.11,M.slate,x,5.40,1.065,p);
     beam([x-2.2,5.43,1.17],[x,6.79,1.17],.13,M.copper,p);beam([x,6.79,1.17],[x+2.2,5.43,1.17],.13,M.copper,p);
     box(x,5.43,1.13,4.6,.12,.32,M.copper,p);
+    // Fan carving in the shadowed triangular tympanum of each street entrance.
+    for(let i=0;i<9;i++) {
+      const a=.24+(Math.PI-.48)*i/8;
+      beam([x,5.70,1.196],[x+Math.cos(a)*.64,5.70+Math.sin(a)*.48,1.196],.035,M.stone,p);
+    }
+    mesh(G.sphere,M.pale,x,5.73,1.20,.14,.11,.06,p);
     for(let s=0;s<3;s++)box(x,.49+s*.13,1.12-s*.25,3.7-s*.25,.17,2.20-s*.45,M.stone,p);
   }
   function crown(x,z) {
@@ -217,44 +247,17 @@ export function createKaratsuBank(T) {
     mesh(G.sphere,M.copperEdge,x,14.91,z,.09,.12,.09);
     cyl(x,15.13,z,.018,.34,M.black,.009,6);
   }
-  function crest(x,y,p,large=false) {
-    if(!large) {
-      const s=new T.Shape();s.moveTo(-.91,0);s.lineTo(.91,0);s.lineTo(.91,.26);
-      s.lineTo(.68,.30);s.absarc(0,.49,.68,0,Math.PI,false);s.lineTo(-.91,.26);s.closePath();
-      const o=mesh(new T.ExtrudeGeometry(s,{depth:.27,bevelEnabled:false,curveSegments:14}),M.pale,x,y,.07,1,1,1,p);
-      o.name='Rounded parapet crest';
-      mesh(archBand(.68,.078,.075),M.copperEdge,x,y+.49,.35,1,1,1,p);
-      const key='medallion';if(!cache.has(key))cache.set(key,new T.TorusGeometry(.30,.055,5,18));
-      mesh(cache.get(key),M.shadowStone,x,y+.62,.36,1,1,1,p);
-      box(x,y+.06,.29,1.92,.13,.35,M.copper,p);
-      beam([x,y+1.16,.27],[x,y+1.88,.27],.022,M.black,p);
-      mesh(G.sphere,M.copperEdge,x,y+1.28,.27,.07,.09,.07, p);
-      return;
-    }
-    // Curved Dutch gable on the narrow street elevation, with its recessed
-    // attic opening and scrolling stone shoulders instead of a flat triangle.
-    const s=new T.Shape();s.moveTo(-2.50,0);s.lineTo(2.50,0);s.lineTo(2.50,.35);
-    s.bezierCurveTo(2.40,.59,1.77,.40,1.68,.97);
-    s.bezierCurveTo(1.48,1.77,.89,1.58,.77,2.01);
-    s.bezierCurveTo(.55,2.71,.12,2.85,0,2.90);
-    s.bezierCurveTo(-.12,2.85,-.55,2.71,-.77,2.01);
-    s.bezierCurveTo(-.89,1.58,-1.48,1.77,-1.68,.97);
-    s.bezierCurveTo(-1.77,.40,-2.40,.59,-2.50,.35);s.closePath();
-    mesh(new T.ExtrudeGeometry(s,{depth:.38,bevelEnabled:false,curveSegments:10}),M.pale,x,y,.06,1,1,1,p);
-    const outline=s.getPoints(50);
-    for(let i=0;i<outline.length-1;i++)beam([x+outline[i].x,y+outline[i].y,.49],[x+outline[i+1].x,y+outline[i+1].y,.49],.085,M.copperEdge,p);
-    mesh(archGeo(1.42,.67,.12),M.dark,x,y+.59,.47,1,1,1,p);
-    mesh(archBand(.71,.19,.15),M.stone,x,y+1.26,.55,1,1,1,p);
-    for(const dx of [-.48,0,.48])box(x+dx,y+1.12,.66,.065,1.0,.12,M.wood,p);
-    box(x,y+.98,.66,1.4,.07,.13,M.wood,p);
-    box(x,y+.58,.61,1.83,.16,.27,M.stone,p);
-    const scrollGeo=new T.TorusGeometry(.23,.07,6,18);
-    for(const dx of [-1.65,1.65])mesh(scrollGeo,M.shadowStone,x+dx,y+.94,.47,1,1,1,p);
-    for(const dx of [-2.08,2.08]) {
-      cyl(x+dx,y+.61,.33,.13,.22,M.copper,.08,8,p);
-      beam([x+dx,y+.73,.33],[x+dx,y+1.35,.33],.021,M.black,p);
-    }
-    beam([x,y+2.9,.35],[x,y+3.75,.35],.025,M.black,p);
+  function crest(x,y,p) {
+    const s=new T.Shape();s.moveTo(-.91,0);s.lineTo(.91,0);s.lineTo(.91,.26);
+    s.lineTo(.68,.30);s.absarc(0,.49,.68,0,Math.PI,false);s.lineTo(-.91,.26);s.closePath();
+    const o=mesh(indexedExtrusion(s,{depth:.27,bevelEnabled:false,curveSegments:14}),M.pale,x,y,.07,1,1,1,p);
+    o.name='Rounded parapet crest';
+    mesh(archBand(.68,.078,.075),M.copperEdge,x,y+.49,.35,1,1,1,p);
+    const key='medallion';if(!cache.has(key))cache.set(key,new T.TorusGeometry(.30,.055,5,18));
+    mesh(cache.get(key),M.shadowStone,x,y+.62,.36,1,1,1,p);
+    box(x,y+.06,.29,1.92,.13,.35,M.copper,p);
+    beam([x,y+1.16,.27],[x,y+1.88,.27],.022,M.black,p);
+    mesh(G.sphere,M.copperEdge,x,y+1.28,.27,.07,.09,.07, p);
   }
 
   // A small street-corner plinth. No geographical text or fabricated signage.
@@ -282,14 +285,14 @@ export function createKaratsuBank(T) {
   const front=wallPlane(0,0,F),back=wallPlane(Math.PI,0,B),left=wallPlane(-Math.PI/2,-14,Z),right=wallPlane(Math.PI/2,14,Z);
   const frontWindows=[-6.1,0,6.1];
   for(const p of [front]) {
-    box(0,10.52,.06,26.8,1.07,.16,M.pale,p);
-    // Broad light render panels, visible in the current city/owner photographs,
+    box(0,10.52,.06,26.8,1.07,.16,M.render,p);
+    // Broad lime render panels, visible in the current city/owner photographs,
     // distinguish this facade from a generic all-brick Victorian bank.
     for(const x of [-9.11,-3.05,3.05,9.11]) {
-      box(x,6.20,.045,1.55,8.70,.085,M.pale,p);
-      box(x,10.15,.087,1.55,1.78,.085,M.pale,p);
+      box(x,6.20,.045,1.24,8.70,.085,M.render,p);
+      box(x,10.15,.087,1.24,1.78,.085,M.render,p);
     }
-    for(const x of [-10.8,10.8])box(x,10.07,.05,2.7,1.9,.08,M.pale,p);
+    for(const x of [-10.8,10.8])box(x,10.07,.05,2.7,1.9,.08,M.render,p);
     for(const x of frontWindows) {
       for(const dx of [-.78,.78]) {
         rectangularWindow(x+dx,2.05,1.08,3.25,p,false);
@@ -301,17 +304,17 @@ export function createKaratsuBank(T) {
       box(x,10.57,.17,.38,1.04,.29,M.stone,p);
     }
     for(const x of [-12.15,-9.14,-3.05,3.05,9.14,12.15]) {
-      box(x,6.6,.06,.30,8.70,.16,M.pale,p);
+      box(x,6.6,.06,.30,8.70,.16,M.render,p);
       for(let row=0;row<14;row++) {
-        const dx=row%2?.56:-.56;
-        box(x+dx,2.20+row*.61,.15,.47,.26,.24,M.stone,p);
+        const dx=row%2?.16:-.16;
+        box(x+dx,2.20+row*.61,.15,1.12,.25,.24,M.stone,p);
       }
       box(x,10.87,.20,.82,.23,.37,M.stone,p);
     }
     for(const x of [-10.8,10.8]) {
       rectangularWindow(x,7.10,1.0,1.92,p,false);
       box(x,9.33,.12,1.42,.22,.25,M.stone,p);
-      box(x,10.15,.075,2.6,1.58,.19,M.pale,p);
+      box(x,10.15,.075,2.6,1.58,.19,M.render,p);
       // Small projecting balcony over each door, with stone brackets.
       box(x,6.91,.41,2.53,.18,.98,M.stone,p);
       for(const dx of [-.87,.87]) {
@@ -322,11 +325,10 @@ export function createKaratsuBank(T) {
       box(x,7.39,.86,2.62,.13,.24,M.stone,p);
       for(const dx of [-1.20,1.20])box(x+dx,7.40,.42,.16,.12,.90,M.stone,p);
     }
-    brickLines(27.7,8.1,1.90,p,frontWindows.flatMap(x=>[[x-1.85,x+1.85,1.8,5.6],[x-1.95,x+1.95,6.15,10.0]]));
   }
   for(const p of [left]) {
-    box(0,10.47,.08,13.9,1.18,.16,M.pale,p);
-    for(const x of [-3.25,3.25])box(x,6.20,.041,1.68,8.70,.082,M.pale,p);
+    box(0,10.47,.08,13.9,1.18,.16,M.render,p);
+    for(const x of [-3.25,3.25])box(x,6.20,.041,1.39,8.70,.082,M.render,p);
     for(const dx of [-.78,.78]) {
       rectangularWindow(dx,2.05,1.09,3.24,p,false);
       box(dx,5.44,.14,1.22,.25,.30,M.shadowStone,p);
@@ -336,14 +338,13 @@ export function createKaratsuBank(T) {
     archedWindow(0,6.98,3.04,1.1,p);
     for(const x of [-5.12,5.12]) {
       rectangularWindow(x,2.07,1.20,3.23,p);rectangularWindow(x,7.20,1.22,1.95,p);
-      box(x,10.01,.08,1.68,1.0,.16,M.pale,p);
+      box(x,10.01,.08,1.68,1.0,.16,M.render,p);
     }
     for(const x of [-3.16,3.16]) {
-      box(x,6.42,.075,.34,8.75,.15,M.pale,p);
-      for(let row=0;row<14;row++)box(x+(row%2?.60:-.60),2.20+row*.61,.16,.50,.26,.24,M.stone,p);
+      box(x,6.42,.075,.34,8.75,.15,M.render,p);
+      for(let row=0;row<14;row++)box(x+(row%2?.17:-.17),2.20+row*.61,.16,1.21,.25,.24,M.stone,p);
       box(x,10.88,.17,.93,.22,.31,M.stone,p);
     }
-    brickLines(14.7,8.1,1.90,p,[[-2.1,2.1,1.8,5.6],[-2.3,2.3,6.0,10.0],[-6.0,-4.2,1.8,9.5],[4.2,6.0,1.8,9.5]]);
   }
   for(const p of [front,left,right,back]) {
     const width=p===front||p===back?W:D;
@@ -362,7 +363,7 @@ export function createKaratsuBank(T) {
   // rear-garden photographs, rather than duplicating the street arcade.
   for(const p of [back,right]) {
     const width=p===back?28:15;
-    box(0,6.45,.032,width-.5,8.86,.06,M.pale,p);
+    box(0,6.45,.032,width-.5,8.86,.06,M.render,p);
     const pairs=p===back?[-9.8,-3.35,3.35,9.8]:[-4.25,3.3];
     for(const center of pairs) {
       const brickWidth=p===back?4.8:4.5;
@@ -376,26 +377,29 @@ export function createKaratsuBank(T) {
       for(const y of [2.27,3.5,4.73,6.67,8.03,9.54])for(const dx of [-brickWidth/2,brickWidth/2])
         box(center+dx,y,.14,.54,.22,.19,M.stone,p);
     }
-    box(0,10.77,.12,width,.47,.20,M.pale,p);
-    const exclusions=pairs.flatMap(c=>[-.94,.94].map(dx=>[c+dx-.7,c+dx+.7,1.8,9.7]));
-    brickLines(width-.1,8.7,1.9,p,exclusions);
+    box(0,10.77,.12,width,.47,.20,M.render,p);
   }
   crown(-13.61,F-.36);crown(13.61,F-.36);
-  // The architectural scroll-gable is on the short end, while low curved
-  // decorative crests sit along the long eaves between the corner crowns.
-  crest(0,11.32,left,true);
+  // Shimizu's completion photograph shows small curved crestings over the end
+  // bays, and separate rendered chimneys rising behind the main roofline.
+  for(const x of [-4.90,4.90])crest(x,11.32,left);
   for(const x of [-10.82,10.82])crest(x,11.35,front);
-  for(const x of [-7.8,7.8]) {
-    box(x,13.41,Z-.65,.70,1.64,.74,M.brickDark);
-    for(const y of [12.92,13.36,13.82])box(x,y,Z-.65,.77,.11,.81,M.stone);
-    box(x,14.21,Z-.65,.98,.22,.95,M.stone);box(x,14.36,Z-.65,.88,.12,.9,M.slate);
+  for(const [x,z,capY] of [[-5.50,1.95,15.02],[5.50,1.95,15.02],
+    [-3.85,-4.62,14.72],[5.50,-4.62,14.72],[10.85,-4.10,14.52]]) {
+    const shaft=box(x,(11.75+capY)/2,z,.73,capY-11.75,.78,M.render);
+    shaft.name='Rendered chimney with double flue';
+    for(const [offset,w,h] of [[-.43,.80,.11],[-.23,.88,.14],[-.07,1.02,.17]]) {
+      box(x,capY+offset,z,w,h,w+.05,M.stone);
+    }
+    box(x,capY+.035,z,1.02,.09,1.07,M.slate);
+    for(const side of [-1,1])box(x+side*.21,capY+.09,z,.23,.025,.55,M.dark);
   }
   // The square rear corner tower is taller than the round street cupolas.
   // Its steep, dormered mansard and roof cresting are visible in the city’s
   // street photograph and the rear-side photographic survey.
   const tx=-10.9,tz=-6.34,tw=6.2,td=5.22,ty=13.67;
   box(tx,12.53,tz,tw,2.52,td,M.brick).name='Raised square rear corner tower';
-  for(const [y,h,pad,m] of [[11.55,.19,.18,M.stone],[12.86,1.14,.13,M.pale],
+  for(const [y,h,pad,m] of [[11.55,.19,.18,M.stone],[12.86,1.14,.13,M.render],
     [13.46,.20,.3,M.shadowStone],[13.64,.16,.56,M.copper]])box(tx,y,tz,tw+pad,h,td+pad,m);
   const towerFaces=[wallPlane(0,tx,tz+td/2),wallPlane(Math.PI,tx,tz-td/2),
     wallPlane(-Math.PI/2,tx-tw/2,tz),wallPlane(Math.PI/2,tx+tw/2,tz)];
@@ -459,7 +463,6 @@ export function createKaratsuBank(T) {
       box(dx,4.82,.16,1.03,.19,.26,M.stone,p);
     }
     for(const x of [-width/2+.12,width/2-.12])for(const y of [2.22,3.85,5.55,7.1,8.7])box(x,y,.10,.40,.27,.18,M.stone,p);
-    brickLines(width-.06,8.1,1.5,p,[-width*.27,width*.27].map(x=>[x-.6,x+.6,2,8.9]));
   }
   box(annexX,3.19,-15.11,annexW,5.38,1.28,M.brickLight);
   box(annexX,.97,-15.11,annexW+.14,.94,1.42,M.stone);
@@ -556,6 +559,9 @@ export function createKaratsuBank(T) {
     'https://karatsu-bank.jp/history.html',
     'https://www.city.karatsu.lg.jp/page/3845.html',
     'https://karatsu-bank.jp/gallery.html',
+    'https://karatsu-bank.jp/img/kyukarap.pdf',
+    'https://www.city.karatsu.lg.jp/uploaded/attachment/15440.pdf',
+    'https://online.bunka.go.jp/heritage/166873/_355074/166873_355074881077139935133_900.jpg',
     'https://kmy4.livedoor.blog/archives/1845594.html',
     'https://www.karatsu-kankou.jp/sp/spots/detail/194/'
   ] };
