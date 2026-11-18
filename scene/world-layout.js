@@ -9,7 +9,7 @@ export const HOME = Object.freeze({
 });
 export const WORLD_BOUNDS = { minX: -48, maxX: 48, minZ: -8, maxZ: 90 };
 /** Wider portrait view keeps the same human eye in the room, never pulls outside. */
-export function worldFov(aspect, seated = true) {
+export function worldFov(aspect, seated = false) {
   const portrait = Math.max(0, Math.min(1, (1.1 - aspect) / .3));
   return (seated ? 59 : 62) + 16 * portrait;
 }
@@ -33,7 +33,7 @@ export const LANDMARK_RESERVATIONS = LANDMARK_SITES.map(site => {
   return {id:'landmark-'+site.key,minX:site.position[0]-halfX,maxX:site.position[0]+halfX,minZ:site.position[1]-halfZ,maxZ:site.position[1]+halfZ};
 });
 export const REVIEW_VIEWS = {
-  seated: { position: HOME.seated.position, target: HOME.seated.target, fov: worldFov(1.5) },
+  seated: { position: HOME.seated.position, target: HOME.seated.target, fov: worldFov(1.5,true) },
   interior: { position: [.70, 1.62, 1.85], target: [-.2, 1, 0], fov: 62 },
   doorway: { position: [-1.296, 1.62, 2.1], target: [-1.296, 1.62, 20], fov: 62 },
   garden: { position: [-1.296, 1.62, 9], target: [0, 6.5, 40], fov: 62 },
