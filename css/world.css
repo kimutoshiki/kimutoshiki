@@ -9,8 +9,8 @@
   --wine: #772d43;
   --wine-dark: #592337;
   --sage: #475647;
-  --serif: "Yu Mincho", YuMincho, "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", Georgia, "Study Mincho", "Study Gothic", serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP", Meiryo, Arial, "Study Gothic", sans-serif;
+  --serif: "Yu Mincho", YuMincho, "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", "Study Mincho", "Study Gothic", Georgia, serif;
+  --sans: "Study Gothic", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP", Meiryo, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
   --latin: "Baskerville", "Palatino Linotype", "Noto Serif", Georgia, var(--serif);
   --rail: clamp(310px, 27.4vw, 414px);
   --gutter: clamp(22px, 2.65vw, 48px);
